@@ -10,6 +10,12 @@
     "origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
     "scale": 1.0
   },
+  "groundTransform": {
+    "translation": { "x": 0, "y": 0.25, "z": 0 },
+    "rotation": { "x": 0, "y": 0, "z": 0 },
+    "origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+    "scale": 2.5
+  },
   "shape": { "base": "collodion:block/developmenttray/developmenttray" },
   "textures": {
     "all": { "base": "game:block/clay/blueclay" },
@@ -18,13 +24,7 @@
     "ext-hi": { "base": "game:block/clay/blueclay" },
     "ext-shadow": { "base": "game:block/clay/blueclay" }
   },
-  "attributes": {
-    "groundStorageTransform": {
-      "translation": { "x": 0, "y": 0, "z": 0 },
-      "rotation": { "x": 0, "y": 0, "z": 0 },
-      "scale": 1
-    }
-  },
+  "attributes": {},
   "behaviors": [
     {
       "name": "GroundStorable",

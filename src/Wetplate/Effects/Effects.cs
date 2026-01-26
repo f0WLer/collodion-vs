@@ -7,35 +7,33 @@ namespace Collodion
 {
     public static partial class WetplateEffects
     {
-        public const string EffectsConfigFileName = "collodion-effects.json";
-
         public static WetplateEffectsConfig LoadOrCreate(ICoreClientAPI capi)
         {
-            WetplateEffectsConfig? cfg = null;
-            try
+            var modSys = CollodionModSystem.ClientInstance ?? capi.ModLoader.GetModSystem<CollodionModSystem>();
+            if (modSys == null)
             {
-                cfg = capi.LoadModConfig<WetplateEffectsConfig>(EffectsConfigFileName);
-            }
-            catch
-            {
-                cfg = null;
+                var fallback = new WetplateEffectsConfig();
+                fallback.ClampInPlace();
+                return fallback;
             }
 
-            if (cfg == null)
+            var cfg = modSys.GetOrLoadClientConfig(capi);
+            bool dirty = false;
+
+            if (cfg.Effects == null)
             {
-                cfg = new WetplateEffectsConfig();
-                try
-                {
-                    capi.StoreModConfig(cfg, EffectsConfigFileName);
-                }
-                catch
-                {
-                    // ignore
-                }
+                cfg.Effects = new WetplateEffectsConfig();
+                dirty = true;
             }
 
-            cfg.ClampInPlace();
-            return cfg;
+            cfg.Effects.ClampInPlace();
+
+            if (dirty)
+            {
+                modSys.SaveClientConfig(capi);
+            }
+
+            return cfg.Effects;
         }
 
         public static void ApplyInPlace(SKBitmap bmp, string seedKey, WetplateEffectsConfig cfg)

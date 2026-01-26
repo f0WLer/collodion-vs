@@ -12,6 +12,12 @@ namespace Collodion
         // Set to 0 or below to disable pings.
         public int PhotoSeenPingIntervalSeconds = 300;
 
+        // Show the zoom mechanism notification in chat/log (e.g. Harmony patch status).
+        public bool ShowZoomMechanismChat = false;
+
+        // Show debug/dev chat messages (e.g. mod load info, zoom mechanism tip).
+        public bool ShowDebugLogs = false;
+
         internal void ClampInPlace()
         {
             // Keep within a reasonable range; 0 or below disables truncation.

@@ -388,14 +388,17 @@ namespace Collodion
                 if (!zoomMechanismTipShownThisViewfinder)
                 {
                     zoomMechanismTipShownThisViewfinder = true;
-                    string? mech = GetZoomMechanismForTip();
-                    if (!string.IsNullOrEmpty(mech))
+                    if (ClientConfig?.ShowDebugLogs == true)
                     {
-                        ClientApi.ShowChatMessage($"Wetplate: viewfinder zoom via {mech}");
-                    }
-                    else
-                    {
-                        ClientApi.ShowChatMessage("Wetplate: viewfinder zoom via Settings.Float (fallback)");
+                        string? mech = GetZoomMechanismForTip();
+                        if (!string.IsNullOrEmpty(mech))
+                        {
+                            ClientApi.ShowChatMessage($"Wetplate: viewfinder zoom via {mech}");
+                        }
+                        else
+                        {
+                            ClientApi.ShowChatMessage("Wetplate: viewfinder zoom via Settings.Float (fallback)");
+                        }
                     }
                 }
 

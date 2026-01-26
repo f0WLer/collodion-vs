@@ -4,12 +4,14 @@ using System.IO;
 using SkiaSharp;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 
 namespace Collodion
 {
     public sealed class ItemFinishedPhotoPlate : ItemPlateBase
     {
+        private const float GroundScale = 2.5f;
         private sealed class CachedRender
         {
             public MultiTextureMeshRef MeshRef;
@@ -75,6 +77,7 @@ namespace Collodion
                 {
                     EnumItemRenderTarget.HandTp => "hand",
                     EnumItemRenderTarget.HandFp => "hand",
+                    EnumItemRenderTarget.Ground => "ground",
                     _ => "gui"
                 };
 #pragma warning restore CS0618
@@ -163,6 +166,11 @@ namespace Collodion
                     MeshData overlay = CreateFrontOverlayQuad(texPos, baseMesh, uvRotationDeg, mirrorX);
 
                     baseMesh.AddMeshData(overlay);
+
+                    if (target == EnumItemRenderTarget.Ground)
+                    {
+                        baseMesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), GroundScale, GroundScale, GroundScale);
+                    }
 
                     int atlasTextureId = texPos.atlasTextureId;
                     MultiTextureMeshRef meshRef = capi.Render.UploadMultiTextureMesh(baseMesh);

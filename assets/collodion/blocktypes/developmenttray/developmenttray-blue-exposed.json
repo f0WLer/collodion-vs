@@ -18,6 +18,12 @@
       "alpha": 230
     }
   },
+  "groundTransform": {
+    "translation": { "x": 0, "y": 0.25, "z": 0 },
+    "rotation": { "x": 0, "y": 0, "z": 0 },
+    "origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+    "scale": 2.5
+  },
   "resistance": 1.0,
   "lightAbsorption": 0,
   "sounds": {

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -6,6 +8,45 @@ namespace Collodion
 {
     public abstract class ItemPlateBase : Item
     {
+        private const float GroundScale = 2.5f;
+        private static readonly object GroundMeshLock = new object();
+        private static readonly Dictionary<string, MultiTextureMeshRef> GroundMeshCache = new Dictionary<string, MultiTextureMeshRef>(StringComparer.OrdinalIgnoreCase);
+
+        private bool TryGetGroundMesh(ICoreClientAPI capi, ItemStack itemstack, out MultiTextureMeshRef? meshRef)
+        {
+            meshRef = null;
+            string code = itemstack?.Collectible?.Code?.ToShortString() ?? Code?.ToShortString() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(code)) return false;
+
+            lock (GroundMeshLock)
+            {
+                if (GroundMeshCache.TryGetValue(code, out var cached) && cached != null)
+                {
+                    meshRef = cached;
+                    return true;
+                }
+            }
+
+            try
+            {
+                capi.Tesselator.TesselateItem(this, out MeshData mesh);
+                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), GroundScale, GroundScale, GroundScale);
+                var uploaded = capi.Render.UploadMultiTextureMesh(mesh);
+
+                lock (GroundMeshLock)
+                {
+                    GroundMeshCache[code] = uploaded;
+                }
+
+                meshRef = uploaded;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
 #pragma warning disable CS0618 // Preserve FP pose behavior on older targets
@@ -15,6 +56,14 @@ namespace Collodion
             try
             {
                 var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+
+                if (target == EnumItemRenderTarget.Ground)
+                {
+                    if (TryGetGroundMesh(capi, itemstack, out var meshRef) && meshRef != null)
+                    {
+                        renderinfo.ModelRef = meshRef;
+                    }
+                }
 
                 // Inventory/hover preview uses the GUI render target and applies its own animated rotation.
                 // For alignment tuning, we want a stable, non-spinning preview.

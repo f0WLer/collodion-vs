@@ -17,10 +17,7 @@ namespace Collodion
         {
             base.Initialize(api);
 
-            if (api.Side == EnumAppSide.Client)
-            {
-                RequestClientMeshRebuild();
-            }
+            ClientRequestMeshRebuild();
         }
 
         public void SetPhoto(string? photoId)
@@ -29,12 +26,7 @@ namespace Collodion
             if (string.Equals(PhotoId, normalized, StringComparison.Ordinal)) return;
 
             PhotoId = normalized;
-            clientNeedsRebuild = true;
-
-            if (Api?.Side == EnumAppSide.Client)
-            {
-                RequestClientMeshRebuild();
-            }
+            ClientRequestMeshRebuild();
 
             MarkDirty(true);
 
@@ -71,12 +63,7 @@ namespace Collodion
             if (string.Equals(FramePlankBlockCode, normalized, StringComparison.Ordinal)) return;
 
             FramePlankBlockCode = normalized;
-            clientNeedsRebuild = true;
-
-            if (Api?.Side == EnumAppSide.Client)
-            {
-                RequestClientMeshRebuild();
-            }
+            ClientRequestMeshRebuild();
 
             MarkDirty(true);
 
@@ -87,38 +74,6 @@ namespace Collodion
             catch { }
         }
 
-        public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
-        {
-            clientTesselationCount++;
-
-            if (Api?.Side == EnumAppSide.Client && clientNeedsRebuild)
-            {
-                clientNeedsRebuild = false;
-                RequestClientMeshRebuild();
-            }
-
-            MeshData? meshToAdd = null;
-            MeshData? frameMeshToAdd = null;
-            lock (clientMeshLock)
-            {
-                meshToAdd = clientMesh;
-                frameMeshToAdd = clientFrameMesh;
-            }
-
-            if (frameMeshToAdd != null)
-            {
-                mesher.AddMeshData(frameMeshToAdd.Clone());
-            }
-
-            if (meshToAdd != null)
-            {
-                mesher.AddMeshData(meshToAdd.Clone());
-            }
-
-            // When we add a custom frame mesh, skip the default (oak) block mesh to avoid double-render.
-            bool skipDefault = frameMeshToAdd != null;
-            return skipDefault || base.OnTesselation(mesher, tessThreadTesselator);
-        }
 
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
@@ -145,12 +100,9 @@ namespace Collodion
             PhotoId = tree.GetString(PhotographAttrs.PhotoId);
             Caption = tree.GetString(PhotographAttrs.Caption);
             FramePlankBlockCode = tree.GetString(PhotographAttrs.FramePlank);
-            clientNeedsRebuild = true;
-
-            if (Api?.Side == EnumAppSide.Client)
-            {
-                RequestClientMeshRebuild();
-            }
+            ClientRequestMeshRebuild();
         }
+
+        partial void ClientRequestMeshRebuild();
     }
 }

@@ -7,7 +7,8 @@
         "br": { "base" : "collodion:item/br" },
         "bl": { "base" : "collodion:item/bl" },
         "gd": { "base" : "collodion:item/gd" },
-        "lg": { "base" : "collodion:item/lg" }
+        "lg": { "base" : "collodion:item/lg" },
+        "oak": { "base": "game:block/wood/debarked/oak" }
     },
     "attributes": {
         "handbook": {
@@ -28,5 +29,11 @@
         "rotation": { "x": 0, "y": 0, "z": 0 },
         "origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
         "scale": 1.0
+    },
+    "groundTransform": {
+        "translation": { "x": 0, "y": 0, "z": 0 },
+        "rotation": { "x": 0, "y": 90, "z": 0 },
+        "origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+        "scale": 2.5
     }
 }

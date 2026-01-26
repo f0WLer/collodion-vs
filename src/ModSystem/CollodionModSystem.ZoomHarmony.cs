@@ -76,7 +76,10 @@ namespace Collodion
                 lastSet3DProjectionMs = 0;
                 lastSet3DProjectionScaledIndex = -1;
 
-                ClientApi.Logger.Notification("Wetplate: " + harmonyProjectionMechanism);
+                if (ClientConfig?.ShowZoomMechanismChat == true || ClientConfig?.ShowDebugLogs == true)
+                {
+                    ClientApi.Logger.Notification("Wetplate: " + harmonyProjectionMechanism);
+                }
                 return true;
             }
             catch (Exception ex)

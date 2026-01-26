@@ -2,9 +2,8 @@
 bin/
 obj/
 
-
-# Visual Studio / Rider
-.vs/
+# Local environment overrides
+.env
 .idea/
 *.user
 *.suo
@@ -12,8 +11,9 @@ obj/
 *.sln.docstates
 *.DotSettings.user
 
-# VS Code (keep tasks/settings)
-.vscode/*.log
+# VS Code 
+.vscode/
+*.code-workspace
 
 # OS junk
 .DS_Store
@@ -31,3 +31,6 @@ reference/
 *.7z
 dist/
 artifacts/
+
+# Local environment overrides
+.env

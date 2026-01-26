@@ -9,11 +9,14 @@ namespace Collodion
         {
             if (ClientApi == null) return;
 
+            var rootCfg = GetOrLoadClientConfig(ClientApi);
+            rootCfg.Effects ??= new WetplateEffectsConfig();
+
             string param = args.PopWord();
 
             if (string.IsNullOrEmpty(param) || param.Equals("show", StringComparison.OrdinalIgnoreCase))
             {
-                var cfg = WetplateEffects.LoadOrCreate(ClientApi);
+                var cfg = rootCfg.Effects;
                 ClientApi.ShowChatMessage($"Wetplate effects: enabled={cfg.Enabled}");
                 ClientApi.ShowChatMessage($"  greyscale={cfg.Greyscale} preGray RGB=({cfg.PreGrayRed:0.00}, {cfg.PreGrayGreen:0.00}, {cfg.PreGrayBlue:0.00})");
                 ClientApi.ShowChatMessage($"  sepia={cfg.SepiaStrength:0.00} contrast={cfg.Contrast:0.00} brightness={cfg.Brightness:0.00}");
@@ -28,9 +31,9 @@ namespace Collodion
 
             if (param.Equals("reset", StringComparison.OrdinalIgnoreCase))
             {
-                var cfg = new WetplateEffectsConfig();
-                cfg.ClampInPlace();
-                ClientApi.StoreModConfig(cfg, WetplateEffects.EffectsConfigFileName);
+                rootCfg.Effects = new WetplateEffectsConfig();
+                rootCfg.Effects.ClampInPlace();
+                SaveClientConfig(ClientApi);
                 CaptureRenderer?.ReloadEffectsConfig();
                 ClientApi.ShowChatMessage("Wetplate: effects reset to defaults");
                 return;
@@ -38,9 +41,10 @@ namespace Collodion
 
             if (param.Equals("enable", StringComparison.OrdinalIgnoreCase))
             {
-                var cfg = WetplateEffects.LoadOrCreate(ClientApi);
+                var cfg = rootCfg.Effects;
                 cfg.Enabled = true;
-                ClientApi.StoreModConfig(cfg, WetplateEffects.EffectsConfigFileName);
+                cfg.ClampInPlace();
+                SaveClientConfig(ClientApi);
                 CaptureRenderer?.ReloadEffectsConfig();
                 ClientApi.ShowChatMessage("Wetplate: effects enabled");
                 return;
@@ -48,9 +52,10 @@ namespace Collodion
 
             if (param.Equals("disable", StringComparison.OrdinalIgnoreCase))
             {
-                var cfg = WetplateEffects.LoadOrCreate(ClientApi);
+                var cfg = rootCfg.Effects;
                 cfg.Enabled = false;
-                ClientApi.StoreModConfig(cfg, WetplateEffects.EffectsConfigFileName);
+                cfg.ClampInPlace();
+                SaveClientConfig(ClientApi);
                 CaptureRenderer?.ReloadEffectsConfig();
                 ClientApi.ShowChatMessage("Wetplate: effects disabled");
                 return;
@@ -65,25 +70,24 @@ namespace Collodion
                     return;
                 }
 
-                string file = which.Equals("indoor", StringComparison.OrdinalIgnoreCase) ? "collodion-effects-indoor.json"
-                             : which.Equals("outdoor", StringComparison.OrdinalIgnoreCase) ? "collodion-effects-outdoor.json"
-                             : string.Empty;
+                bool isIndoor = which.Equals("indoor", StringComparison.OrdinalIgnoreCase);
+                bool isOutdoor = which.Equals("outdoor", StringComparison.OrdinalIgnoreCase);
 
-                if (string.IsNullOrEmpty(file))
+                if (!isIndoor && !isOutdoor)
                 {
                     ClientApi.ShowChatMessage("Wetplate: preset must be 'indoor' or 'outdoor'");
                     return;
                 }
 
-                WetplateEffectsConfig? preset = null;
-                try { preset = ClientApi.LoadModConfig<WetplateEffectsConfig>(file); } catch { preset = null; }
+                WetplateEffectsConfig? preset = isIndoor ? rootCfg.EffectsPresetIndoor : rootCfg.EffectsPresetOutdoor;
 
                 if (preset == null)
                 {
                     // Seed from current active config
-                    var current = WetplateEffects.LoadOrCreate(ClientApi);
-                    preset = current;
-                    try { ClientApi.StoreModConfig(preset, file); } catch { }
+                    var current = rootCfg.Effects ?? new WetplateEffectsConfig();
+                    preset = current.Clone();
+                    if (isIndoor) rootCfg.EffectsPresetIndoor = preset.Clone();
+                    else rootCfg.EffectsPresetOutdoor = preset.Clone();
                 }
 
                 preset.ClampInPlace();
@@ -91,7 +95,9 @@ namespace Collodion
                 try
                 {
                     // Activate preset by writing to the active config
-                    ClientApi.StoreModConfig(preset, WetplateEffects.EffectsConfigFileName);
+                    rootCfg.Effects = preset.Clone();
+                    rootCfg.Effects.ClampInPlace();
+                    SaveClientConfig(ClientApi);
                     CaptureRenderer?.ReloadEffectsConfig();
                     ClientApi.ShowChatMessage($"Wetplate: preset '{which}' activated");
                 }
@@ -114,7 +120,7 @@ namespace Collodion
                     return;
                 }
 
-                var cfg = WetplateEffects.LoadOrCreate(ClientApi);
+                var cfg = rootCfg.Effects;
 
                 switch (prop.ToLowerInvariant())
                 {
@@ -332,7 +338,7 @@ namespace Collodion
                 }
 
                 cfg.ClampInPlace();
-                ClientApi.StoreModConfig(cfg, WetplateEffects.EffectsConfigFileName);
+                SaveClientConfig(ClientApi);
                 CaptureRenderer?.ReloadEffectsConfig();
                 ClientApi.ShowChatMessage($"Wetplate: set {prop} = {valStr}");
                 ClientApi.ShowChatMessage("Note: effects apply to newly taken photos. Use .collodion clearcache to reload existing photos.");

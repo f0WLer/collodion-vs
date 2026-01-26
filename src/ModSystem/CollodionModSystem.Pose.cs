@@ -23,7 +23,6 @@ namespace Collodion
         }
 
         private readonly Dictionary<string, PoseDelta> poseDeltas = new Dictionary<string, PoseDelta>(StringComparer.OrdinalIgnoreCase);
-        private const string PoseConfigFileName = "collodion-posedeltas.json";
 
         public PoseDelta GetPoseDelta(string target)
         {
@@ -41,7 +40,8 @@ namespace Collodion
 
             try
             {
-                var loaded = ClientApi.LoadModConfig<Dictionary<string, PoseDelta>>(PoseConfigFileName);
+                var cfg = GetOrLoadClientConfig(ClientApi);
+                var loaded = cfg.PoseDeltas;
                 if (loaded == null || loaded.Count == 0) return;
 
                 poseDeltas.Clear();
@@ -62,7 +62,9 @@ namespace Collodion
 
             try
             {
-                ClientApi.StoreModConfig(poseDeltas, PoseConfigFileName);
+                var cfg = GetOrLoadClientConfig(ClientApi);
+                cfg.PoseDeltas = new Dictionary<string, PoseDelta>(poseDeltas, StringComparer.OrdinalIgnoreCase);
+                SaveClientConfig(ClientApi);
             }
             catch
             {

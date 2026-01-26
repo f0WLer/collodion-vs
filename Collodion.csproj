@@ -13,6 +13,12 @@
     <VINTAGE_STORY_PATH Condition=" '$(VINTAGE_STORY_PATH)' == '' "></VINTAGE_STORY_PATH>
   </PropertyGroup>
 
+  <PropertyGroup Condition="Exists('$(MSBuildProjectDirectory)\.env')">
+    <_EnvText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\.env'))</_EnvText>
+    <VINTAGE_STORY_PATH Condition=" '$(VINTAGE_STORY_PATH)' == '' ">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvText)', '(?m)^VINTAGE_STORY_PATH\s*=\s*(.+)$').Groups[1].Value.Trim())</VINTAGE_STORY_PATH>
+    <MODS_PATH Condition=" '$(MODS_PATH)' == '' ">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvText)', '(?m)^MODS_PATH\s*=\s*(.+)$').Groups[1].Value.Trim())</MODS_PATH>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- <PackageReference Include="Vintagestory.API" Version="1.21.6" /> -->
   </ItemGroup>
@@ -70,5 +76,13 @@
     <EmbeddedResource Remove="reference\**\*" />
     <None Remove="reference\**\*" />
   </ItemGroup>
+
+  <Target Name="ZipReleaseOutput" AfterTargets="Build" Condition=" '$(Configuration)' == 'Release' ">
+    <Exec Command="powershell -NoProfile -Command &quot;&amp; { $out = '$(TargetDir)'; if (-not $out) { exit 1 }; $zip = Join-Path $out 'Collodion-Release.zip'; if (Test-Path $zip) { Remove-Item $zip -Force }; Compress-Archive -Path (Join-Path $out '*') -DestinationPath $zip }&quot;" />
+  </Target>
+
+  <Target Name="ZipDebugOutputToMods" AfterTargets="Build" Condition=" '$(Configuration)' == 'Debug' and '$(MODS_PATH)' != '' ">
+    <Exec Command="powershell -NoProfile -Command &quot;&amp; { $out = '$(TargetDir)'; $mods = '$(MODS_PATH)'; if (-not (Test-Path $mods)) { New-Item -ItemType Directory -Path $mods | Out-Null }; $zip = Join-Path $mods 'Collodion-Debug.zip'; if (Test-Path $zip) { Remove-Item $zip -Force }; Compress-Archive -Path (Join-Path $out '*') -DestinationPath $zip }&quot;" />
+  </Target>
 
 </Project>

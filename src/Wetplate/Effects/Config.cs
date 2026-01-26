@@ -110,5 +110,10 @@ namespace Collodion
             if (v > max) return max;
             return v;
         }
+
+        public WetplateEffectsConfig Clone()
+        {
+            return (WetplateEffectsConfig)MemberwiseClone();
+        }
     }
 }

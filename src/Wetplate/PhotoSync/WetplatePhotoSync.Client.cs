@@ -38,7 +38,8 @@ namespace Collodion
             string path = GetPhotoPath(photoId);
             if (File.Exists(path)) return;
 
-            double now = mod.ClientApi.World.ElapsedMilliseconds / 1000.0;
+            // Use a monotonic, process-wide clock so reconnecting (new World instance) doesn't break dedupe.
+            double now = Environment.TickCount64 / 1000.0;
             if (clientRequestedAt.TryGetValue(photoId, out double lastAt) && (now - lastAt) < 2.0)
             {
                 return;
@@ -122,6 +123,9 @@ namespace Collodion
                 asm = new IncomingAssembly(packet.TotalSize, packet.ChunkCount);
                 clientIncoming[photoId] = asm;
             }
+
+            if (asm == null) return;
+            asm.LastTouchedMs = Environment.TickCount64;
 
             if (asm.Received[packet.ChunkIndex]) return;
 

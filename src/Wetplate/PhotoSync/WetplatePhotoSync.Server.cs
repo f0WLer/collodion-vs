@@ -12,6 +12,36 @@ namespace Collodion
         // server-side: in-progress uploads by (playerUid|photoId)
         private readonly Dictionary<string, IncomingAssembly> serverIncoming = new Dictionary<string, IncomingAssembly>(StringComparer.OrdinalIgnoreCase);
 
+        // Minimal cleanup so abandoned uploads (disconnects mid-transfer) don't accumulate.
+        private long serverLastPruneMs;
+        private const int ServerPruneIntervalMs = 30_000;
+        private const int ServerUploadStaleMs = 120_000;
+
+        private void ServerMaybePruneIncoming(long nowMs)
+        {
+            if (serverIncoming.Count == 0) return;
+            if (serverLastPruneMs != 0 && (nowMs - serverLastPruneMs) < ServerPruneIntervalMs) return;
+            serverLastPruneMs = nowMs;
+
+            List<string>? toRemove = null;
+            foreach (var kvp in serverIncoming)
+            {
+                var asm = kvp.Value;
+                if (asm == null) continue;
+                if ((nowMs - asm.LastTouchedMs) > ServerUploadStaleMs)
+                {
+                    toRemove ??= new List<string>();
+                    toRemove.Add(kvp.Key);
+                }
+            }
+
+            if (toRemove == null) return;
+            foreach (string key in toRemove)
+            {
+                serverIncoming.Remove(key);
+            }
+        }
+
         public void ServerHandleRequest(IServerPlayer fromPlayer, PhotoBlobRequestPacket packet)
         {
             if (mod.Api == null || mod.ServerChannel == null) return;
@@ -55,6 +85,9 @@ namespace Collodion
             if (fromPlayer == null || packet == null) return;
             if (!packet.IsUpload) return; // ignore downloads on server
 
+            long nowMs = Environment.TickCount64;
+            ServerMaybePruneIncoming(nowMs);
+
             string photoId = NormalizePhotoId(packet.PhotoId);
             if (string.IsNullOrEmpty(photoId)) return;
 
@@ -72,6 +105,8 @@ namespace Collodion
             }
 
             if (asm == null) return;
+
+            asm.LastTouchedMs = nowMs;
 
             if (asm.Received[packet.ChunkIndex]) return;
 

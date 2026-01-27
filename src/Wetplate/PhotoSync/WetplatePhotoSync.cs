@@ -21,6 +21,7 @@ namespace Collodion
             public readonly byte[] Buffer;
             public int ReceivedChunks;
             public readonly bool[] Received;
+            public long LastTouchedMs;
 
             public IncomingAssembly(int totalSize, int chunkCount)
             {
@@ -29,6 +30,7 @@ namespace Collodion
                 Buffer = new byte[totalSize];
                 Received = new bool[chunkCount];
                 ReceivedChunks = 0;
+                LastTouchedMs = Environment.TickCount64;
             }
         }
 

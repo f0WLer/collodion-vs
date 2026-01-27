@@ -77,10 +77,8 @@ namespace Collodion
             try
             {
                 string photoId = PhotoId!;
-                string photoFileName = photoId.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
-                    ? photoId
-                    : $"{photoId}.png";
-                string photoPath = Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos", photoFileName);
+                string photoFileName = WetplatePhotoSync.NormalizePhotoId(photoId);
+                string photoPath = WetplatePhotoSync.GetPhotoPath(photoFileName);
 
                 lock (clientMeshLock)
                 {
@@ -99,6 +97,20 @@ namespace Collodion
                         clientLastError = $"Photo file not found: {photoFileName}";
                         clientOverlayInfo = null;
                     }
+
+                    // If the photo isn't present locally, request it from the server.
+                    // Also note that this block is waiting, so when the photo arrives we can re-tesselate.
+                    try
+                    {
+                        var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+                        modSys?.PhotoSync?.ClientNoteBlockWaitingForPhoto(photoFileName, Pos);
+                        modSys?.PhotoSync?.ClientRequestPhotoIfMissing(photoFileName);
+                    }
+                    catch
+                    {
+                        // ignore
+                    }
+
                     MarkDirty(true);
                     return;
                 }

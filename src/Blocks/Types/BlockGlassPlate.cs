@@ -16,7 +16,8 @@ namespace Collodion
         private CollodionModSystem? modSys;
 
         private static readonly AssetLocation PlainClothCode = new AssetLocation("game", "cloth-plain");
-        private static readonly AssetLocation WashSound = new AssetLocation("sounds/block/wash");
+        private static readonly AssetLocation PolishSound = new AssetLocation("game:sounds/player/chalkdraw");
+        private static readonly AssetLocation CollodionPourSound = new AssetLocation("game:sounds/effect/water-fill");
         private static readonly AssetLocation CollodionPortionCode = new AssetLocation("collodion", "collodionportion");
 
         public override void OnLoaded(ICoreAPI api)
@@ -108,6 +109,12 @@ namespace Collodion
 
             if (isPolish || isCoat)
             {
+                if (world.Side == EnumAppSide.Server)
+                {
+                    AssetLocation sound = isPolish ? PolishSound : CollodionPourSound;
+                    world.PlaySoundAt(sound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
+                }
+
                 return true;
             }
 
@@ -172,7 +179,6 @@ namespace Collodion
                             activeSlot.MarkDirty();
                         }
 
-                        world.PlaySoundAt(WashSound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
                     }
                 }
 
@@ -206,6 +212,7 @@ namespace Collodion
                     world.BlockAccessor.SetBlock(coatedBlock.Id, blockSel.Position);
                     world.BlockAccessor.MarkBlockDirty(blockSel.Position);
                 }
+
             }
 
             return false;

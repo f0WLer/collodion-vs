@@ -8,6 +8,7 @@ namespace Collodion
         private const string AttrPlateStack = "collodionPlateStack";
 
         private readonly object plateLock = new object();
+        private string? lastPlateSignature;
 
         public ItemStack? PlateStack { get; private set; }
 
@@ -39,9 +40,10 @@ namespace Collodion
             {
                 PlateStack = stack.Clone();
                 PlateStack.StackSize = 1;
+                lastPlateSignature = ComputePlateSignature(PlateStack);
             }
 
-            ClientPlateChanged(markBlockDirty: false);
+            ClientPlateChanged(markBlockDirty: true);
             MarkDirty(true);
             return true;
         }
@@ -55,9 +57,10 @@ namespace Collodion
             {
                 stack = PlateStack;
                 PlateStack = null;
+                lastPlateSignature = null;
             }
 
-            ClientPlateChanged(markBlockDirty: false);
+            ClientPlateChanged(markBlockDirty: true);
             MarkDirty(true);
             return stack;
         }
@@ -70,9 +73,10 @@ namespace Collodion
             {
                 PlateStack = stack;
                 PlateStack.StackSize = 1;
+                lastPlateSignature = ComputePlateSignature(PlateStack);
             }
 
-            ClientPlateChanged(markBlockDirty: false);
+            ClientPlateChanged(markBlockDirty: true);
             MarkDirty(true);
             return true;
         }
@@ -87,11 +91,14 @@ namespace Collodion
                 loaded?.ResolveBlockOrItem(worldAccessForResolve);
 
                 bool changed;
+                string? newSig = ComputePlateSignature(loaded);
                 lock (plateLock)
                 {
                     changed = (PlateStack == null) != (loaded == null)
-                        || (PlateStack?.Collectible?.Code != loaded?.Collectible?.Code);
+                        || (PlateStack?.Collectible?.Code != loaded?.Collectible?.Code)
+                        || !string.Equals(lastPlateSignature, newSig, StringComparison.Ordinal);
                     PlateStack = loaded;
+                    lastPlateSignature = newSig;
                 }
 
                 if (changed) ClientPlateChanged(markBlockDirty: true);
@@ -101,6 +108,7 @@ namespace Collodion
                 lock (plateLock)
                 {
                     PlateStack = null;
+                    lastPlateSignature = null;
                 }
 
                 ClientPlateChanged(markBlockDirty: true);
@@ -119,6 +127,26 @@ namespace Collodion
 
             if (toSave != null) tree.SetItemstack(AttrPlateStack, toSave);
             else tree.RemoveAttribute(AttrPlateStack);
+        }
+
+        private static string? ComputePlateSignature(ItemStack? stack)
+        {
+            if (stack?.Collectible?.Code == null) return null;
+
+            string code = stack.Collectible.Code.ToString();
+            string photoId = stack.Attributes?.GetString(WetPlateAttrs.PhotoId) ?? string.Empty;
+            string stage = stack.Attributes?.GetString(WetPlateAttrs.PlateStage) ?? string.Empty;
+            int pours = 0;
+            try
+            {
+                pours = stack.Attributes?.GetInt(WetPlateAttrs.DevelopPours, 0) ?? 0;
+            }
+            catch
+            {
+                pours = 0;
+            }
+
+            return $"{code}|{photoId}|{stage}|{pours}";
         }
 
         partial void ClientPlateChanged(bool markBlockDirty);

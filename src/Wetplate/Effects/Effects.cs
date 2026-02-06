@@ -43,6 +43,13 @@ namespace Collodion
             cfg.ClampInPlace();
             if (!cfg.Enabled) return;
 
+            var effectiveCfg = cfg;
+            if (cfg.DynamicEnabled && cfg.DynamicScale > 0f)
+            {
+                effectiveCfg = cfg.Clone();
+                ApplyDynamicVariance(effectiveCfg, seedKey);
+            }
+
             int w = bmp.Width;
             int h = bmp.Height;
             if (w <= 0 || h <= 0) return;
@@ -57,21 +64,21 @@ namespace Collodion
             using (var paint = new SKPaint { FilterQuality = SKFilterQuality.High })
 #pragma warning restore CS0618
             {
-                paint.ColorFilter = CreateBaseColorFilter(cfg);
+                paint.ColorFilter = CreateBaseColorFilter(effectiveCfg);
                 paint.BlendMode = SKBlendMode.Src;
                 canvas.DrawImage(srcImg, new SKRect(0, 0, w, h), paint);
             }
 
             // 3) Nonlinear contrast curve + 4) Highlight shoulder/clipping
-            ApplyToneCurveAndShoulderInPlace(bmp, cfg);
+            ApplyToneCurveAndShoulderInPlace(bmp, effectiveCfg);
 
             // 5) Sky blowout/bloom + vignette
-            if (cfg.SkyBlowout > 0.001f)
+            if (effectiveCfg.SkyBlowout > 0.001f)
             {
-                ApplySkyBlowout(bmp, rng, cfg);
+                ApplySkyBlowout(bmp, rng, effectiveCfg);
             }
 
-            if (cfg.Vignette > 0.001f)
+            if (effectiveCfg.Vignette > 0.001f)
             {
                 using var canvas = new SKCanvas(bmp);
                 using var paint = new SKPaint { IsAntialias = true };
@@ -79,7 +86,7 @@ namespace Collodion
                 var center = new SKPoint(w / 2f, h / 2f);
                 float radius = Math.Max(w, h) * 0.78f;
 
-                byte a = (byte)(255 * cfg.Vignette);
+                byte a = (byte)(255 * effectiveCfg.Vignette);
                 var colors = new[]
                 {
                     new SKColor(0, 0, 0, 0),
@@ -94,35 +101,67 @@ namespace Collodion
 
             // 6) Development defects (imperfection / uneven chemistry)
             // Note: micro-blur is a cheap stand-in for long-exposure motion softness.
-            if (cfg.MicroBlur > 0.001f)
+            if (effectiveCfg.MicroBlur > 0.001f)
             {
-                ApplyEdgePreservingMicroBlur(bmp, cfg.MicroBlur);
+                ApplyEdgePreservingMicroBlur(bmp, effectiveCfg.MicroBlur);
             }
 
-            if (cfg.Imperfection > 0.001f || cfg.SkyUnevenness > 0.001f)
+            if (effectiveCfg.Imperfection > 0.001f || effectiveCfg.SkyUnevenness > 0.001f)
             {
-                ApplyUnevenDensity(bmp, rng, cfg);
+                ApplyUnevenDensity(bmp, rng, effectiveCfg);
             }
 
             // 7) Grain (silver clumps / density variations)
-            if (cfg.Grain > 0.001f)
+            if (effectiveCfg.Grain > 0.001f)
             {
-                ApplySilverClumpGrain(bmp, rng, cfg);
+                ApplySilverClumpGrain(bmp, rng, effectiveCfg);
             }
 
             // 4) Dust + scratches
-            if (cfg.DustCount > 0 || cfg.ScratchCount > 0)
+            if (effectiveCfg.DustCount > 0 || effectiveCfg.ScratchCount > 0)
             {
                 using var canvas = new SKCanvas(bmp);
-                DrawDust(canvas, w, h, rng, cfg);
-                DrawScratches(canvas, w, h, rng, cfg);
+                DrawDust(canvas, w, h, rng, effectiveCfg);
+                DrawScratches(canvas, w, h, rng, effectiveCfg);
             }
 
             // 9) Very light sepia (optional) at the end
-            if (cfg.SepiaStrength > 0.001f)
+            if (effectiveCfg.SepiaStrength > 0.001f)
             {
-                ApplySepiaAtEnd(bmp, cfg);
+                ApplySepiaAtEnd(bmp, effectiveCfg);
             }
+        }
+
+        private static void ApplyDynamicVariance(WetplateEffectsConfig cfg, string seedKey)
+        {
+            if (cfg == null) return;
+
+            float scale = cfg.DynamicScale;
+            if (scale <= 0f) return;
+
+            var rng = new Random(StableHash((seedKey ?? string.Empty) + "|dyn"));
+
+            cfg.Contrast *= NextScale(rng, scale);
+            cfg.Brightness *= NextScale(rng, scale);
+            cfg.ShadowFloor *= NextScale(rng, scale);
+            cfg.SkyBlowout *= NextScale(rng, scale);
+            cfg.Vignette *= NextScale(rng, scale);
+            cfg.Imperfection *= NextScale(rng, scale);
+            cfg.Grain *= NextScale(rng, scale);
+            cfg.DustOpacity *= NextScale(rng, scale);
+            cfg.ScratchOpacity *= NextScale(rng, scale);
+
+            cfg.DustCount = (int)Math.Round(cfg.DustCount * NextScale(rng, scale));
+            cfg.ScratchCount = (int)Math.Round(cfg.ScratchCount * NextScale(rng, scale));
+
+            cfg.ClampInPlace();
+        }
+
+        private static float NextScale(Random rng, float scale)
+        {
+            // scale is +/- percentage. 0.05 => [0.95, 1.05]
+            double t = (rng.NextDouble() * 2.0) - 1.0;
+            return (float)(1.0 + t * scale);
         }
 
         private static float Clamp01(float v) => v < 0f ? 0f : (v > 1f ? 1f : v);

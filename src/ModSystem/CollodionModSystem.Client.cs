@@ -109,6 +109,7 @@ namespace Collodion
 
             Config.Client ??= new CollodionClientConfig();
             Config.Effects ??= new WetplateEffectsConfig();
+            Config.EffectsDeveloped ??= CollodionConfig.CreateDevelopedEffectsDefaults();
             Config.EffectsPresetIndoor ??= new WetplateEffectsConfig();
             Config.EffectsPresetOutdoor ??= new WetplateEffectsConfig();
             Config.PoseDeltas ??= new Dictionary<string, PoseDelta>();

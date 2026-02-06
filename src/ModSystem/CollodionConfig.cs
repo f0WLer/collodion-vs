@@ -6,6 +6,7 @@ namespace Collodion
     {
         public CollodionClientConfig Client = new CollodionClientConfig();
         public WetplateEffectsConfig Effects = new WetplateEffectsConfig();
+        public WetplateEffectsConfig EffectsDeveloped = CreateDevelopedEffectsDefaults();
 
         // Optional presets (editable via .collodion effects preset ...)
         public WetplateEffectsConfig EffectsPresetIndoor = new WetplateEffectsConfig();
@@ -22,6 +23,9 @@ namespace Collodion
             Effects ??= new WetplateEffectsConfig();
             Effects.ClampInPlace();
 
+            EffectsDeveloped ??= CreateDevelopedEffectsDefaults();
+            EffectsDeveloped.ClampInPlace();
+
             EffectsPresetIndoor ??= new WetplateEffectsConfig();
             EffectsPresetIndoor.ClampInPlace();
 
@@ -30,6 +34,13 @@ namespace Collodion
 
             PoseDeltas ??= CreateDefaultPoseDeltas();
 
+        }
+
+        internal static WetplateEffectsConfig CreateDevelopedEffectsDefaults()
+        {
+            var cfg = new WetplateEffectsConfig();
+            cfg.ClampInPlace();
+            return cfg;
         }
 
         private static Dictionary<string, CollodionModSystem.PoseDelta> CreateDefaultPoseDeltas()

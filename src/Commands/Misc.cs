@@ -37,8 +37,8 @@ namespace Collodion
             if (ClientApi == null) return;
 
             int clearedPhotos = ItemPhotograph.ClearClientRenderCacheAndBumpVersion();
-            int clearedPlates = ItemFinishedPhotoPlate.ClearClientRenderCacheAndBumpVersion();
-            ClientApi.ShowChatMessage($"Wetplate: cleared {clearedPhotos} photo renders + {clearedPlates} finished plate renders (new photos will re-load from disk). ");
+            int clearedPlates = PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
+            ClientApi.ShowChatMessage($"Wetplate: cleared {clearedPhotos} photo renders + {clearedPlates} plate renders (new photos will re-load from disk). ");
         }
 
         private void HandleWetplateHudCommand(Vintagestory.API.Common.CmdArgs args)

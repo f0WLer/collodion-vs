@@ -1,4 +1,5 @@
 using Vintagestory.API.Client;
+using System;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
@@ -7,16 +8,50 @@ namespace Collodion
 {
     public sealed partial class BlockEntityDevelopmentTray
     {
+        private const float PhotoTargetAspect = 10f / 11f;
+        private sealed class PlatePhotoTextureSource : ITexPositionSource
+        {
+            private readonly ITexPositionSource baseSource;
+            private readonly TextureAtlasPosition photoTex;
+
+            public PlatePhotoTextureSource(ITexPositionSource baseSource, TextureAtlasPosition photoTex)
+            {
+                this.baseSource = baseSource;
+                this.photoTex = photoTex;
+            }
+
+            public TextureAtlasPosition this[string textureCode]
+            {
+                get
+                {
+                    if (string.Equals(textureCode, "plate", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return photoTex;
+                    }
+
+                    return baseSource[textureCode];
+                }
+            }
+
+            public Size2i AtlasSize => baseSource.AtlasSize;
+        }
+
         private readonly object clientMeshLock = new object();
-        private MeshData? clientPlateMesh;
+        private MeshData? clientPhotoMesh;
         private bool clientMeshQueued;
         private bool clientNeedsRebuild;
+        private string? clientRenderSignature;
 
         partial void ClientPlateChanged(bool markBlockDirty)
         {
             if (Api?.Side != EnumAppSide.Client) return;
 
             clientNeedsRebuild = true;
+            lock (clientMeshLock)
+            {
+                clientPhotoMesh = null;
+            }
+            clientRenderSignature = null;
             RequestClientMeshRebuild();
 
             if (!markBlockDirty) return;
@@ -35,21 +70,39 @@ namespace Collodion
             }
 
             // OnTesselation runs on the tesselation thread: only read cached meshes here.
+            string? sig = null;
+            try
+            {
+                lock (plateLock)
+                {
+                    sig = BlockEntityDevelopmentTray.ComputePlateSignature(PlateStack);
+                }
+            }
+            catch
+            {
+                sig = null;
+            }
+
+            if (!string.Equals(clientRenderSignature, sig, StringComparison.Ordinal))
+            {
+                clientNeedsRebuild = true;
+            }
+
             if (clientNeedsRebuild)
             {
                 clientNeedsRebuild = false;
                 RequestClientMeshRebuild();
             }
 
-            MeshData? plateMesh;
+            MeshData? photoMesh;
             lock (clientMeshLock)
             {
-                plateMesh = clientPlateMesh;
+                photoMesh = clientPhotoMesh;
             }
 
-            if (plateMesh != null)
+            if (photoMesh != null)
             {
-                mesher.AddMeshData(plateMesh.Clone());
+                mesher.AddMeshData(photoMesh.Clone());
             }
 
             // Return false so the normal tray block mesh still renders.
@@ -86,68 +139,65 @@ namespace Collodion
             if (capi == null) return;
 
             ItemStack? plate;
+            string? sig;
             lock (plateLock)
             {
                 plate = PlateStack?.Clone();
+                sig = BlockEntityDevelopmentTray.ComputePlateSignature(PlateStack);
             }
 
             if (plate?.Collectible?.Code == null)
             {
-                lock (clientMeshLock) clientPlateMesh = null;
+                lock (clientMeshLock) clientPhotoMesh = null;
+                clientRenderSignature = sig;
                 MarkDirty(true);
                 return;
             }
 
-            AssetLocation texBase = plate.Collectible.Code.Path switch
+            if (!ShouldShowTrayPhoto(plate))
             {
-                "exposedplate" => new AssetLocation("collodion", "item/plate-exposed"),
-                "developedplate" => new AssetLocation("collodion", "item/plate-developed"),
-                "finishedphotoplate" => new AssetLocation("collodion", "item/plate-finished"),
-                _ => new AssetLocation("collodion", "item/plate-rough")
-            };
+                lock (clientMeshLock) clientPhotoMesh = null;
+                clientRenderSignature = sig;
+                MarkDirty(true);
+                return;
+            }
 
-            AssetLocation pngLoc = new AssetLocation(texBase.Domain, $"textures/{texBase.Path}.png");
-            IAsset? asset = capi.Assets.TryGet(pngLoc);
-
-            TextureAtlasPosition texPos = capi.BlockTextureAtlas.UnknownTexturePosition;
-            if (asset != null)
+            // Re-tesselate the tray shape but replace the "plate" texture with the photo.
+            MeshData? photoMesh = null;
+            if (PhotoPlateRenderUtil.TryGetPhotoBlockTexture(capi, plate, out TextureAtlasPosition photoTex, out float photoAspect, Pos))
             {
                 try
                 {
-                    AssetLocation atlasKey = new AssetLocation("collodion", $"devtrayplate-{texBase.Path.Replace('/', '-')}");
-                    capi.BlockTextureAtlas.GetOrInsertTexture(
-                        atlasKey,
-                        out int _,
-                        out texPos,
-                        () => asset.ToBitmap(capi),
-                        0.05f
-                    );
+                    ITexPositionSource baseSource = capi.Tesselator.GetTextureSource(Block);
+                    ITexPositionSource texSource = new PlatePhotoTextureSource(baseSource, photoTex);
+
+                    var shape = Block?.Shape?.Clone();
+                    if (shape != null)
+                    {
+                        // Only keep the plate element so we don't duplicate the tray walls.
+                        shape.IgnoreElements = new[] { "base", "wall-n", "wall-s", "wall-e", "wall-w" };
+                        capi.Tesselator.TesselateShape(
+                            "collodion-devtray-platephoto",
+                            Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                            shape,
+                            out photoMesh,
+                            texSource
+                        );
+
+                        StampUvByRotationCropped(photoMesh, photoTex, 90, photoAspect, PhotoTargetAspect);
+
+                        // Nudge up slightly to avoid z-fighting with the base plate.
+                        photoMesh.Translate(0f, 0.0006f, 0f);
+                    }
                 }
                 catch
                 {
-                    texPos = capi.BlockTextureAtlas.UnknownTexturePosition;
+                    photoMesh = null;
                 }
             }
 
-            // Render as a thin, double-sided quad inside the tray.
-            // Using an explicit quad avoids terrain-mesh edge cases with missing per-face counts.
-            const float inset = 1f / 16f;
-            const float baseTopY = 2f / 16f;
-            const float yEps = 0.002f;
-
-            float x1 = inset;
-            float x2 = 1f - inset;
-            float z1 = inset;
-            float z2 = 1f - inset;
-            float y = baseTopY + yEps;
-
-            MeshData mesh = CreateDoubleSidedUpQuad(x1, z1, x2, z2, y).WithTexPos(texPos);
-            mesh.Rgba.Fill((byte)255);
-
-            lock (clientMeshLock)
-            {
-                clientPlateMesh = mesh;
-            }
+            lock (clientMeshLock) clientPhotoMesh = photoMesh;
+            clientRenderSignature = sig;
 
             MarkDirty(true);
             try
@@ -157,66 +207,134 @@ namespace Collodion
             catch { }
         }
 
-        private static MeshData CreateDoubleSidedUpQuad(float x1, float z1, float x2, float z2, float y)
+
+        private static bool ShouldShowTrayPhoto(ItemStack plate)
         {
-            // Terrain-mesh expectations: explicit face counts + packed normals.
-            MeshData m = new MeshData(capacityVertices: 8, capacityIndices: 12, withNormals: false, withUv: true, withRgba: true, withFlags: true);
+            if (plate?.Attributes == null) return false;
 
-            // Two quads (up + down) sharing the same XYZ.
-            m.SetXyz(new float[]
+            int pours = 0;
+            try
             {
-                x1, y, z1,
-                x2, y, z1,
-                x2, y, z2,
-                x1, y, z2,
-                x1, y, z1,
-                x2, y, z1,
-                x2, y, z2,
-                x1, y, z2
-            });
-
-            // UVs in 0..1 range (BL, BR, TR, TL) per quad.
-            m.SetUv(new float[]
+                pours = plate.Attributes.GetInt(WetPlateAttrs.DevelopPours, 0);
+            }
+            catch
             {
-                0f, 1f,
-                1f, 1f,
-                1f, 0f,
-                0f, 0f,
-                0f, 1f,
-                1f, 1f,
-                1f, 0f,
-                0f, 0f
-            });
+                pours = 0;
+            }
 
-            m.SetVerticesCount(8);
+            if (pours > 0) return true;
 
-            // One texture index per face.
-            m.TextureIndices = new byte[2];
-            m.TextureIndicesCount = 2;
+            string stage = plate.Attributes.GetString(WetPlateAttrs.PlateStage) ?? string.Empty;
+            if (stage.Equals("developing", StringComparison.OrdinalIgnoreCase)) return true;
+            if (stage.Equals("developed", StringComparison.OrdinalIgnoreCase)) return true;
+            if (stage.Equals("finished", StringComparison.OrdinalIgnoreCase)) return true;
 
-            // Face IDs (up + down).
-            m.XyzFaces = new byte[] { 4, 5 };
-            m.XyzFacesCount = 2;
+            return false;
+        }
 
-            // Default render pass (solid).
-            m.RenderPassesAndExtraBits = new short[] { 0, 0 };
-            m.RenderPassCount = 2;
+        private static void StampUvByRotationCropped(MeshData mesh, TextureAtlasPosition texPos, int rotationDeg, float sourceAspect, float targetAspect)
+        {
+            if (mesh?.Uv == null || mesh.VerticesCount < 4) return;
 
-            // Packed normals into Flags.
-            int packedUp = VertexFlags.PackNormal(0, 1, 0);
-            int packedDown = VertexFlags.PackNormal(0, -1, 0);
-            for (int i = 0; i < 4; i++) m.Flags[i] = packedUp;
-            for (int i = 4; i < 8; i++) m.Flags[i] = packedDown;
+            GetCroppedTexRect(texPos, sourceAspect, targetAspect, rotationDeg, out float x1, out float x2, out float y1, out float y2);
 
-            // Up face: standard winding. Down face: reversed winding.
-            m.SetIndices(new int[]
+            int rot = ((rotationDeg % 360) + 360) % 360;
+            int quadCount = mesh.VerticesCount / 4;
+            for (int q = 0; q < quadCount; q++)
             {
-                0, 1, 2, 0, 2, 3,
-                4, 6, 5, 4, 7, 6
-            });
-            m.SetIndicesCount(12);
+                int v0 = (q * 4 + 0) * 2;
+                int v1 = (q * 4 + 1) * 2;
+                int v2 = (q * 4 + 2) * 2;
+                int v3 = (q * 4 + 3) * 2;
+                if (v3 + 1 >= mesh.Uv.Length) break;
 
-            return m;
+                switch (rot)
+                {
+                    case 90:
+                        mesh.Uv[v0] = x2; mesh.Uv[v0 + 1] = y2;
+                        mesh.Uv[v1] = x2; mesh.Uv[v1 + 1] = y1;
+                        mesh.Uv[v2] = x1; mesh.Uv[v2 + 1] = y1;
+                        mesh.Uv[v3] = x1; mesh.Uv[v3 + 1] = y2;
+                        break;
+                    case 180:
+                        mesh.Uv[v0] = x2; mesh.Uv[v0 + 1] = y1;
+                        mesh.Uv[v1] = x1; mesh.Uv[v1 + 1] = y1;
+                        mesh.Uv[v2] = x1; mesh.Uv[v2 + 1] = y2;
+                        mesh.Uv[v3] = x2; mesh.Uv[v3 + 1] = y2;
+                        break;
+                    case 270:
+                        mesh.Uv[v0] = x1; mesh.Uv[v0 + 1] = y1;
+                        mesh.Uv[v1] = x1; mesh.Uv[v1 + 1] = y2;
+                        mesh.Uv[v2] = x2; mesh.Uv[v2 + 1] = y2;
+                        mesh.Uv[v3] = x2; mesh.Uv[v3 + 1] = y1;
+                        break;
+                    default:
+                        mesh.Uv[v0] = x1; mesh.Uv[v0 + 1] = y2;
+                        mesh.Uv[v1] = x2; mesh.Uv[v1 + 1] = y2;
+                        mesh.Uv[v2] = x2; mesh.Uv[v2 + 1] = y1;
+                        mesh.Uv[v3] = x1; mesh.Uv[v3 + 1] = y1;
+                        break;
+                }
+            }
+
+            for (int i = 0; i < mesh.Rgba.Length; i++) mesh.Rgba[i] = 255;
+        }
+
+        private static void GetCroppedTexRect(TextureAtlasPosition texPos, float sourceAspect, float targetAspect, int rotationDeg, out float x1, out float x2, out float y1, out float y2)
+        {
+            x1 = texPos.x1;
+            x2 = texPos.x2;
+            y1 = texPos.y1;
+            y2 = texPos.y2;
+
+            if (sourceAspect <= 0 || targetAspect <= 0) return;
+
+            int rot = ((rotationDeg % 360) + 360) % 360;
+            bool rot90 = rot == 90 || rot == 270;
+
+            float effectiveSourceAspect = rot90 ? (1f / sourceAspect) : sourceAspect;
+            if (effectiveSourceAspect <= 0) return;
+
+            if (effectiveSourceAspect > targetAspect)
+            {
+                float keep = targetAspect / effectiveSourceAspect;
+                if (keep < 0f) keep = 0f;
+                if (keep > 1f) keep = 1f;
+                float trim = (1f - keep) * 0.5f;
+
+                if (!rot90)
+                {
+                    float xr = x2 - x1;
+                    x1 += xr * trim;
+                    x2 -= xr * trim;
+                }
+                else
+                {
+                    float yr = y2 - y1;
+                    y1 += yr * trim;
+                    y2 -= yr * trim;
+                }
+
+                return;
+            }
+
+            float keep2 = effectiveSourceAspect / targetAspect;
+            if (keep2 < 0f) keep2 = 0f;
+            if (keep2 > 1f) keep2 = 1f;
+            float trim2 = (1f - keep2) * 0.5f;
+
+            if (!rot90)
+            {
+                float yr = y2 - y1;
+                y1 += yr * trim2;
+                y2 -= yr * trim2;
+            }
+            else
+            {
+                float xr = x2 - x1;
+                x1 += xr * trim2;
+                x2 -= xr * trim2;
+            }
         }
     }
 }

@@ -6,7 +6,9 @@
     "plate": { "base": "collodion:item/plate-developed" }
   },
   "attributes": {
-    "handbook": { "groupBy": ["wetplateplate-*"] }
+    "handbook": { "groupBy": ["wetplateplate-*"] },
+    "renderPhotoOverlay": true,
+    "photoEffectsProfile": "developed"
   },
   "maxstacksize": 1,
   "heldTpIdleAnimation": "holdbothhands",

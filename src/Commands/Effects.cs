@@ -25,6 +25,7 @@ namespace Collodion
                 ClientApi.ShowChatMessage($"  realism: imperfection={cfg.Imperfection:0.00} microblur={cfg.MicroBlur:0.00} skyuneven={cfg.SkyUnevenness:0.00} skytop={cfg.SkyTopFraction:0.00} edgewarmth={cfg.EdgeWarmth:0.00}");
                 ClientApi.ShowChatMessage($"  dust={cfg.DustCount} (opacity={cfg.DustOpacity:0.00})");
                 ClientApi.ShowChatMessage($"  scratches={cfg.ScratchCount} (opacity={cfg.ScratchOpacity:0.00})");
+                ClientApi.ShowChatMessage($"  dynamic={cfg.DynamicEnabled} dynamicscale={cfg.DynamicScale:0.00}");
                 ClientApi.ShowChatMessage("Usage: .collodion effects <show|enable|disable|reset|preset|set> [param] [value]");
                 return;
             }
@@ -116,7 +117,7 @@ namespace Collodion
                 if (string.IsNullOrEmpty(prop) || string.IsNullOrEmpty(valStr))
                 {
                     ClientApi.ShowChatMessage("Wetplate: usage: .collodion effects set <property> <value>");
-                    ClientApi.ShowChatMessage("Properties: greyscale, pregrayred, pregraygreen, pregrayblue, sepia, contrast, brightness, shadowfloor, contraststart, highlightshoulder, highlightthreshold, vignette, skyblowout, grain, imperfection, microblur, skyunevenness, skytopfraction, edgewarmth, dust, dustopacity, scratches, scratchopacity");
+                    ClientApi.ShowChatMessage("Properties: greyscale, pregrayred, pregraygreen, pregrayblue, sepia, contrast, brightness, shadowfloor, contraststart, highlightshoulder, highlightthreshold, vignette, skyblowout, grain, imperfection, microblur, skyunevenness, skytopfraction, edgewarmth, dust, dustopacity, scratches, scratchopacity, dynamic, dynamicscale");
                     return;
                 }
 
@@ -331,6 +332,23 @@ namespace Collodion
                             return;
                         }
                         cfg.ScratchOpacity = sop;
+                        break;
+                    case "dynamic":
+                    case "dynamicenabled":
+                        if (!bool.TryParse(valStr, out bool dyn))
+                        {
+                            ClientApi.ShowChatMessage("Wetplate: dynamic value must be true/false");
+                            return;
+                        }
+                        cfg.DynamicEnabled = dyn;
+                        break;
+                    case "dynamicscale":
+                        if (!float.TryParse(valStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float ds))
+                        {
+                            ClientApi.ShowChatMessage("Wetplate: value must be a number (use . not ,)");
+                            return;
+                        }
+                        cfg.DynamicScale = ds;
                         break;
                     default:
                         ClientApi.ShowChatMessage($"Wetplate: unknown property '{prop}'");

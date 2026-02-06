@@ -11,6 +11,7 @@ namespace Collodion
         public const string WetDurationHours = "collodionWetDurationHours";
         public const string PhotoId = "photoId";
         public const string PlateStage = "collodionPlateStage";
+        public const string DevelopPours = "collodionDevelopPours";
 
         public static double GetRemainingWetHours(IWorldAccessor world, ItemStack stack)
         {

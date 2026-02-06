@@ -70,6 +70,11 @@ namespace Collodion
         public float DustOpacity = 0.07f;
         public float ScratchOpacity = 0.02f;
 
+        // Per-photo dynamic variation (deterministic from photo id).
+        // DynamicScale is a +/- percentage (0.05 => +/-5%) applied to select parameters.
+        public bool DynamicEnabled = false;
+        public float DynamicScale = 0.05f;
+
         internal void ClampInPlace()
         {
             SepiaStrength = Clamp01(SepiaStrength);
@@ -100,6 +105,8 @@ namespace Collodion
 
             DustCount = Math.Max(0, Math.Min(3000, DustCount));
             ScratchCount = Math.Max(0, Math.Min(400, ScratchCount));
+
+            DynamicScale = ClampRange(DynamicScale, 0f, 0.5f);
         }
 
         private static float Clamp01(float v) => v < 0f ? 0f : (v > 1f ? 1f : v);

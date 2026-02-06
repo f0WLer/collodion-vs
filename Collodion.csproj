@@ -17,6 +17,7 @@
     <_EnvText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\.env'))</_EnvText>
     <VINTAGE_STORY_PATH Condition=" '$(VINTAGE_STORY_PATH)' == '' ">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvText)', '(?m)^VINTAGE_STORY_PATH\s*=\s*(.+)$').Groups[1].Value.Trim())</VINTAGE_STORY_PATH>
     <MODS_PATH Condition=" '$(MODS_PATH)' == '' ">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvText)', '(?m)^MODS_PATH\s*=\s*(.+)$').Groups[1].Value.Trim())</MODS_PATH>
+    <MODS_PATH Condition=" '$(MODS_PATH)' == '' ">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvText)', '(?m)^VINTAGE_STORY_MODS_PATH\s*=\s*(.+)$').Groups[1].Value.Trim())</MODS_PATH>
   </PropertyGroup>
 
   <ItemGroup>
@@ -81,8 +82,8 @@
     <Exec Command="powershell -NoProfile -Command &quot;&amp; { $out = '$(TargetDir)'; if (-not $out) { exit 1 }; $zip = Join-Path $out 'Collodion-Release.zip'; if (Test-Path $zip) { Remove-Item $zip -Force }; Compress-Archive -Path (Join-Path $out '*') -DestinationPath $zip }&quot;" />
   </Target>
 
-  <Target Name="ZipDebugOutputToMods" AfterTargets="Build" Condition=" '$(Configuration)' == 'Debug' and '$(MODS_PATH)' != '' ">
-    <Exec Command="powershell -NoProfile -Command &quot;&amp; { $out = '$(TargetDir)'; $mods = '$(MODS_PATH)'; if (-not (Test-Path $mods)) { New-Item -ItemType Directory -Path $mods | Out-Null }; $zip = Join-Path $mods 'Collodion-Debug.zip'; if (Test-Path $zip) { Remove-Item $zip -Force }; Compress-Archive -Path (Join-Path $out '*') -DestinationPath $zip }&quot;" />
+  <Target Name="ZipOutputToMods" AfterTargets="Build" Condition=" '$(MODS_PATH)' != '' ">
+    <Exec Command="powershell -NoProfile -Command &quot;&amp; { $out = '$(TargetDir)'; $mods = '$(MODS_PATH)'; if (-not $out) { exit 1 }; if (-not (Test-Path $mods)) { New-Item -ItemType Directory -Path $mods | Out-Null }; $info = Get-Content '$(MSBuildProjectDirectory)\modinfo.json' | ConvertFrom-Json; $modId = $info.modid; $ver = $info.version; if (-not $modId) { $modId = 'Collodion' }; if (-not $ver) { $ver = 'dev' }; $zipName = ($modId + '-' + $ver + '-' + '$(Configuration)' + '.zip'); $zip = Join-Path $mods $zipName; if (Test-Path $zip) { Remove-Item $zip -Force }; Remove-Item -Path (Join-Path $out '*.pdb'), (Join-Path $out '*.deps.json') -Force -ErrorAction SilentlyContinue; Compress-Archive -Path (Join-Path $out '*') -DestinationPath $zip }&quot;" />
   </Target>
 
 </Project>

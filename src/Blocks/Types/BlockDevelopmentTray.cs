@@ -11,8 +11,20 @@ namespace Collodion
     public sealed class BlockDevelopmentTray : Block
     {
         // Liquid portion itemsPerLitre is 100 in our json.
-        private const int ChemicalUnitsPerUse = 100;
+        private const int ChemicalUnitsPerUse = 20;
         private const int DevelopPoursRequired = 5;
+
+        private const string TimedAttrKey = "collodionDevTrayTimed";
+        internal const string TimedNeedReleaseKey = "collodionDevTrayNeedRelease";
+        private const string TimedActionKey = "action";
+        private const string TimedXKey = "x";
+        private const string TimedYKey = "y";
+        private const string TimedZKey = "z";
+
+        private const string ActionDeveloper = "developer";
+        private const string ActionFixer = "fixer";
+
+        private CollodionModSystem? modSys;
 
         private static readonly AssetLocation ExposedPlateItemCode = new AssetLocation("collodion", "exposedplate");
         private static readonly AssetLocation DevelopedPlateItemCode = new AssetLocation("collodion", "developedplate");
@@ -22,15 +34,78 @@ namespace Collodion
         private static readonly AssetLocation FixerPortionCode = new AssetLocation("collodion", "fixerportion");
         private static readonly AssetLocation ChemicalPourSound = new AssetLocation("game:sounds/effect/water-fill");
 
+        public override void OnLoaded(ICoreAPI api)
+        {
+            base.OnLoaded(api);
+            modSys = api.ModLoader.GetModSystem<CollodionModSystem>();
+        }
+
+        private float GetDeveloperPourSeconds()
+        {
+            float seconds = modSys?.Config?.DevelopmentTrayInteractions?.Developer?.DurationSeconds ?? 1.25f;
+            return seconds < 0.05f ? 0.05f : seconds;
+        }
+
+        private float GetFixerPourSeconds()
+        {
+            float seconds = modSys?.Config?.DevelopmentTrayInteractions?.Fixer?.DurationSeconds ?? 1.25f;
+            return seconds < 0.05f ? 0.05f : seconds;
+        }
+
+        private static void BeginTimed(IPlayer byPlayer, BlockPos pos, string action)
+        {
+            if (byPlayer?.Entity?.Attributes == null || pos == null) return;
+
+            ITreeAttribute tree = byPlayer.Entity.Attributes.GetOrAddTreeAttribute(TimedAttrKey);
+            tree.SetString(TimedActionKey, action);
+            tree.SetInt(TimedXKey, pos.X);
+            tree.SetInt(TimedYKey, pos.Y);
+            tree.SetInt(TimedZKey, pos.Z);
+        }
+
+        private static bool IsTimed(IPlayer byPlayer, BlockPos pos, string action)
+        {
+            if (byPlayer?.Entity?.Attributes == null || pos == null) return false;
+            ITreeAttribute? tree = byPlayer.Entity.Attributes.GetTreeAttribute(TimedAttrKey);
+            if (tree == null) return false;
+            if (!tree.GetString(TimedActionKey, "").Equals(action, System.StringComparison.Ordinal)) return false;
+            return tree.GetInt(TimedXKey) == pos.X && tree.GetInt(TimedYKey) == pos.Y && tree.GetInt(TimedZKey) == pos.Z;
+        }
+
+        private static void ClearTimed(IPlayer byPlayer)
+        {
+            if (byPlayer?.Entity?.Attributes == null) return;
+            byPlayer.Entity.Attributes.RemoveAttribute(TimedAttrKey);
+        }
+
+        private static bool NeedsRelease(IPlayer byPlayer)
+        {
+            try
+            {
+                return byPlayer?.Entity?.Attributes?.GetInt(TimedNeedReleaseKey, 0) != 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static void SetNeedsRelease(IPlayer byPlayer)
+        {
+            try
+            {
+                byPlayer?.Entity?.Attributes?.SetInt(TimedNeedReleaseKey, 1);
+            }
+            catch { }
+        }
+
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (world == null || byPlayer == null || blockSel == null) return false;
 
-            // Client must return true to sync interaction to server.
-            if (world.Side == EnumAppSide.Client)
-            {
-                return true;
-            }
+            // Prevent immediately starting another timed action while RMB is still held.
+            // This is enforced client-side only (server cannot observe mouse button state).
+            if (world.Side == EnumAppSide.Client && NeedsRelease(byPlayer)) return false;
 
             if (world.BlockAccessor.GetBlockEntity(blockSel.Position) is not BlockEntityDevelopmentTray be)
             {
@@ -39,6 +114,62 @@ namespace Collodion
 
             ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
             ItemStack? held = activeSlot?.Itemstack;
+
+            // Client must return true to sync interaction to server.
+            // Only do so when we actually handle the interaction.
+            if (world.Side == EnumAppSide.Client)
+            {
+                // Empty hand: take plate out.
+                if (held == null)
+                {
+                    return be.HasPlate;
+                }
+
+                // Holding a plate: insert (only if tray empty).
+                if (IsInsertablePlate(held))
+                {
+                    return !be.HasPlate;
+                }
+
+                // Holding developer: can attempt timed pour when tray has an exposed/developed plate.
+                if (IsChemicalOrContainerWith(held, DeveloperPortionCode))
+                {
+                    ItemStack? plate = be.PlateStack;
+                    if (plate == null) return false;
+                    bool isExposed = IsPlate(plate, ExposedPlateItemCode);
+                    bool isDeveloped = IsPlate(plate, DevelopedPlateItemCode);
+                    if (!isExposed && !isDeveloped) return false;
+
+                    int currentPours = 0;
+                    try
+                    {
+                        currentPours = plate.Attributes.GetInt(WetPlateAttrs.DevelopPours, isDeveloped ? DevelopPoursRequired : 0);
+                    }
+                    catch
+                    {
+                        currentPours = isDeveloped ? DevelopPoursRequired : 0;
+                    }
+
+                    if (currentPours >= DevelopPoursRequired) return false;
+
+                    // Prime local timed state so client-only visuals can react immediately.
+                    BeginTimed(byPlayer, blockSel.Position, ActionDeveloper);
+                    return true;
+                }
+
+                // Holding fixer: allow attempt when there's a developed plate (server will message if not ready).
+                if (IsChemicalOrContainerWith(held, FixerPortionCode))
+                {
+                    ItemStack? plate = be.PlateStack;
+                    if (plate == null || !IsPlate(plate, DevelopedPlateItemCode)) return false;
+
+                    // Prime local timed state so client-only visuals can react immediately.
+                    BeginTimed(byPlayer, blockSel.Position, ActionFixer);
+                    return true;
+                }
+
+                return false;
+            }
 
             // Empty hand: take plate out.
             if (held == null)
@@ -72,7 +203,7 @@ namespace Collodion
                 return true;
             }
 
-            // Holding developer: exposed -> developed (5 pours to finish development).
+            // Holding developer: start timed develop pour.
             if (IsChemicalOrContainerWith(held, DeveloperPortionCode))
             {
                 if (!be.HasPlate) return false;
@@ -95,36 +226,11 @@ namespace Collodion
 
                 if (currentPours >= DevelopPoursRequired) return false;
 
-                if (!TryConsumeChemical(activeSlot, DeveloperPortionCode))
-                {
-                    Tell(byPlayer, "Wetplate: need developer (at least 1 portion).", blockSel.Position);
-                    return false;
-                }
-
-                ItemStack newPlate = plate;
-                if (isExposed)
-                {
-                    Item? developedItem = world.GetItem(DevelopedPlateItemCode);
-                    if (developedItem == null) return false;
-
-                    newPlate = new ItemStack(developedItem);
-                    try { newPlate.Attributes.MergeTree(plate.Attributes.Clone()); } catch { }
-                }
-
-                int newPours = currentPours + 1;
-                if (newPours > DevelopPoursRequired) newPours = DevelopPoursRequired;
-
-                newPlate.Attributes.SetInt(WetPlateAttrs.DevelopPours, newPours);
-                newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, newPours >= DevelopPoursRequired ? "developed" : "developing");
-
-                be.TrySetPlate(newPlate);
-
-                SwapTrayBlockForPlateStage(world, blockSel.Position, "developed", newPlate);
-                world.PlaySoundAt(ChemicalPourSound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
+                BeginTimed(byPlayer, blockSel.Position, ActionDeveloper);
                 return true;
             }
 
-            // Holding fixer: developed -> finished (after 5 pours).
+            // Holding fixer: start timed fix pour.
             if (IsChemicalOrContainerWith(held, FixerPortionCode))
             {
                 if (!be.HasPlate) return false;
@@ -149,27 +255,179 @@ namespace Collodion
                     return false;
                 }
 
-                if (!TryConsumeChemical(activeSlot, FixerPortionCode))
-                {
-                    Tell(byPlayer, "Wetplate: need fixer (at least 1 portion).", blockSel.Position);
-                    return false;
-                }
-
-                Item? finishedItem = world.GetItem(FinishedPlateItemCode);
-                if (finishedItem == null) return false;
-
-                ItemStack newPlate = new ItemStack(finishedItem);
-                try { newPlate.Attributes.MergeTree(plate.Attributes.Clone()); } catch { }
-                newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, "finished");
-
-                be.TrySetPlate(newPlate);
-
-                SwapTrayBlockForPlateStage(world, blockSel.Position, "finished", newPlate);
-                world.PlaySoundAt(ChemicalPourSound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
+                BeginTimed(byPlayer, blockSel.Position, ActionFixer);
                 return true;
             }
 
             return false;
+        }
+
+        public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (world == null || byPlayer == null || blockSel == null) return false;
+
+            BlockPos pos = blockSel.Position;
+
+            // Timed developer pour.
+            if (IsTimed(byPlayer, pos, ActionDeveloper))
+            {
+                if (world.BlockAccessor.GetBlockEntity(pos) is not BlockEntityDevelopmentTray be) { ClearTimed(byPlayer); return false; }
+
+                ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
+                ItemStack? held = activeSlot?.Itemstack;
+                if (held == null || !IsChemicalOrContainerWith(held, DeveloperPortionCode)) { ClearTimed(byPlayer); return false; }
+
+                ItemStack? plate = be.PlateStack;
+                if (plate == null) { ClearTimed(byPlayer); return false; }
+                bool isExposed = IsPlate(plate, ExposedPlateItemCode);
+                bool isDeveloped = IsPlate(plate, DevelopedPlateItemCode);
+                if (!isExposed && !isDeveloped) { ClearTimed(byPlayer); return false; }
+
+                int currentPours = 0;
+                try
+                {
+                    currentPours = plate.Attributes.GetInt(WetPlateAttrs.DevelopPours, isDeveloped ? DevelopPoursRequired : 0);
+                }
+                catch
+                {
+                    currentPours = isDeveloped ? DevelopPoursRequired : 0;
+                }
+
+                if (currentPours >= DevelopPoursRequired) { ClearTimed(byPlayer); return false; }
+
+                float duration = GetDeveloperPourSeconds();
+                if (secondsUsed < duration) return true;
+
+                // Latch until RMB release to prevent auto-starting the next pour.
+                if (world.Side == EnumAppSide.Client) SetNeedsRelease(byPlayer);
+
+                if (world.Side == EnumAppSide.Server)
+                {
+                    if (!TryConsumeChemical(activeSlot, DeveloperPortionCode))
+                    {
+                        Tell(byPlayer, "Wetplate: need developer (at least 1 portion).", pos);
+                        ClearTimed(byPlayer);
+                        return false;
+                    }
+
+                    ItemStack newPlate = plate;
+                    if (isExposed)
+                    {
+                        Item? developedItem = world.GetItem(DevelopedPlateItemCode);
+                        if (developedItem == null) { ClearTimed(byPlayer); return false; }
+
+                        newPlate = new ItemStack(developedItem);
+                        try { newPlate.Attributes.MergeTree(plate.Attributes.Clone()); } catch { }
+                    }
+
+                    int newPours = currentPours + 1;
+                    if (newPours > DevelopPoursRequired) newPours = DevelopPoursRequired;
+
+                    newPlate.Attributes.SetInt(WetPlateAttrs.DevelopPours, newPours);
+                    newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, newPours >= DevelopPoursRequired ? "developed" : "developing");
+
+                    be.TrySetPlate(newPlate);
+                    SwapTrayBlockForPlateStage(world, pos, "developed", newPlate);
+                    world.PlaySoundAt(ChemicalPourSound, pos.X + 0.5, pos.Y + 0.5, pos.Z + 0.5, null);
+                }
+
+                ClearTimed(byPlayer);
+                return false;
+            }
+
+            // Timed fixer pour.
+            if (IsTimed(byPlayer, pos, ActionFixer))
+            {
+                if (world.BlockAccessor.GetBlockEntity(pos) is not BlockEntityDevelopmentTray be) { ClearTimed(byPlayer); return false; }
+
+                ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
+                ItemStack? held = activeSlot?.Itemstack;
+                if (held == null || !IsChemicalOrContainerWith(held, FixerPortionCode)) { ClearTimed(byPlayer); return false; }
+
+                ItemStack? plate = be.PlateStack;
+                if (plate == null) { ClearTimed(byPlayer); return false; }
+                if (!IsPlate(plate, DevelopedPlateItemCode)) { ClearTimed(byPlayer); return false; }
+
+                int pours = 0;
+                try
+                {
+                    pours = plate.Attributes.GetInt(WetPlateAttrs.DevelopPours, DevelopPoursRequired);
+                }
+                catch
+                {
+                    pours = DevelopPoursRequired;
+                }
+
+                if (pours < DevelopPoursRequired)
+                {
+                    if (world.Side == EnumAppSide.Server)
+                    {
+                        Tell(byPlayer, $"Wetplate: plate not fully developed ({pours}/{DevelopPoursRequired}).", pos);
+                    }
+                    ClearTimed(byPlayer);
+                    return false;
+                }
+
+                float duration = GetFixerPourSeconds();
+                if (secondsUsed < duration) return true;
+
+                // Latch until RMB release to prevent auto-starting the next action.
+                if (world.Side == EnumAppSide.Client) SetNeedsRelease(byPlayer);
+
+                if (world.Side == EnumAppSide.Server)
+                {
+                    if (!TryConsumeChemical(activeSlot, FixerPortionCode))
+                    {
+                        Tell(byPlayer, "Wetplate: need fixer (at least 1 portion).", pos);
+                        ClearTimed(byPlayer);
+                        return false;
+                    }
+
+                    Item? finishedItem = world.GetItem(FinishedPlateItemCode);
+                    if (finishedItem == null) { ClearTimed(byPlayer); return false; }
+
+                    ItemStack newPlate = new ItemStack(finishedItem);
+                    try { newPlate.Attributes.MergeTree(plate.Attributes.Clone()); } catch { }
+                    newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, "finished");
+
+                    be.TrySetPlate(newPlate);
+                    SwapTrayBlockForPlateStage(world, pos, "finished", newPlate);
+                    world.PlaySoundAt(ChemicalPourSound, pos.X + 0.5, pos.Y + 0.5, pos.Z + 0.5, null);
+                }
+
+                ClearTimed(byPlayer);
+                return false;
+            }
+
+            return false;
+        }
+
+        public override void OnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (byPlayer == null) return;
+
+            // If a timed action completed, latch until RMB is actually released.
+            // (OnBlockInteractStop may fire both on completion and on RMB release, so do NOT clear here.)
+            try
+            {
+                if (world?.Side == EnumAppSide.Client && blockSel?.Position != null)
+                {
+                    BlockPos pos = blockSel.Position;
+                    if (IsTimed(byPlayer, pos, ActionDeveloper) && secondsUsed >= GetDeveloperPourSeconds())
+                    {
+                        SetNeedsRelease(byPlayer);
+                    }
+                    else if (IsTimed(byPlayer, pos, ActionFixer) && secondsUsed >= GetFixerPourSeconds())
+                    {
+                        SetNeedsRelease(byPlayer);
+                    }
+                }
+            }
+            catch { }
+
+            // Clear any in-progress timed interaction for this player.
+            ClearTimed(byPlayer);
+            base.OnBlockInteractStop(secondsUsed, world, byPlayer, blockSel);
         }
 
         public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)

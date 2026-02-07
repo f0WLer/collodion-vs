@@ -12,6 +12,8 @@ namespace Collodion
 
         public ItemStack? PlateStack { get; private set; }
 
+        partial void ClientInitialize(ICoreAPI api);
+
         public bool HasPlate
         {
             get
@@ -29,6 +31,8 @@ namespace Collodion
 
             // If we already have a plate (loaded from disk), ensure the chunk is rebuilt so it shows.
             ClientPlateChanged(markBlockDirty: true);
+
+            ClientInitialize(api);
         }
 
         public bool TryInsertPlate(ItemStack stack)

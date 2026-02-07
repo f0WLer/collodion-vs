@@ -61,6 +61,10 @@ namespace Collodion
             // (especially when aiming at air). Poll RMB state as a fallback.
             viewfinderTickListenerId = api.Event.RegisterGameTickListener(OnClientViewfinderTick, 20, 0);
 
+            // Dev tray: ensure timed interactions require an RMB release between stages.
+            // Clear the latch only when RMB is actually up.
+            api.Event.RegisterGameTickListener(OnClientDevTrayLatchTick, 20, 0);
+
             // Patch Set3DProjection so viewfinder can zoom reliably.
             TryEnsureHarmonyProjectionZoomPatch();
             // Note: do NOT also force RenderAPI.Set3DProjection per-frame; that can lead to

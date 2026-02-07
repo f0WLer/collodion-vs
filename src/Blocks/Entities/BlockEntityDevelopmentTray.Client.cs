@@ -3,12 +3,25 @@ using System;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
+using Vintagestory.API.Datastructures;
 
 namespace Collodion
 {
     public sealed partial class BlockEntityDevelopmentTray
     {
+        private const string TimedAttrKey = "collodionDevTrayTimed";
+        private const string TimedActionKey = "action";
+        private const string TimedXKey = "x";
+        private const string TimedYKey = "y";
+        private const string TimedZKey = "z";
+        private const string ActionDeveloper = "developer";
+
         private const float PhotoTargetAspect = 10f / 11f;
+        private const byte DeveloperOverlayAlpha = 210;
+
+        private static readonly AssetLocation DeveloperOverlayTextureAsset = new AssetLocation("collodion", "textures/block/liquid/developer.png");
+        private static readonly AssetLocation DeveloperOverlayAtlasKey = new AssetLocation("collodion", "devtray-developer-overlay");
+
         private sealed class PlatePhotoTextureSource : ITexPositionSource
         {
             private readonly ITexPositionSource baseSource;
@@ -38,9 +51,35 @@ namespace Collodion
 
         private readonly object clientMeshLock = new object();
         private MeshData? clientPhotoMesh;
+        private MeshData? clientDeveloperOverlayMesh;
         private bool clientMeshQueued;
         private bool clientNeedsRebuild;
         private string? clientRenderSignature;
+        private bool clientDeveloperOverlayActive;
+
+        partial void ClientInitialize(ICoreAPI api)
+        {
+            if (api?.Side != EnumAppSide.Client) return;
+
+            // Poll local player state on the main thread and request re-tesselation when it changes.
+            try
+            {
+                RegisterGameTickListener(_ =>
+                {
+                    if (Api?.Side != EnumAppSide.Client) return;
+                    ICoreClientAPI capi = (ICoreClientAPI)Api;
+                    bool shouldShow = ShouldShowDeveloperOverlay(capi);
+                    if (shouldShow == clientDeveloperOverlayActive) return;
+
+                    clientDeveloperOverlayActive = shouldShow;
+                    clientNeedsRebuild = true;
+                    RequestClientMeshRebuild();
+
+                    try { capi.World.BlockAccessor.MarkBlockDirty(Pos); } catch { }
+                }, 50);
+            }
+            catch { }
+        }
 
         partial void ClientPlateChanged(bool markBlockDirty)
         {
@@ -50,6 +89,7 @@ namespace Collodion
             lock (clientMeshLock)
             {
                 clientPhotoMesh = null;
+                clientDeveloperOverlayMesh = null;
             }
             clientRenderSignature = null;
             RequestClientMeshRebuild();
@@ -95,14 +135,21 @@ namespace Collodion
             }
 
             MeshData? photoMesh;
+            MeshData? overlayMesh;
             lock (clientMeshLock)
             {
                 photoMesh = clientPhotoMesh;
+                overlayMesh = clientDeveloperOverlayMesh;
             }
 
             if (photoMesh != null)
             {
                 mesher.AddMeshData(photoMesh.Clone());
+            }
+
+            if (overlayMesh != null)
+            {
+                mesher.AddMeshData(overlayMesh.Clone());
             }
 
             // Return false so the normal tray block mesh still renders.
@@ -148,15 +195,27 @@ namespace Collodion
 
             if (plate?.Collectible?.Code == null)
             {
-                lock (clientMeshLock) clientPhotoMesh = null;
+                lock (clientMeshLock)
+                {
+                    clientPhotoMesh = null;
+                    clientDeveloperOverlayMesh = null;
+                }
                 clientRenderSignature = sig;
                 MarkDirty(true);
                 return;
             }
 
-            if (!ShouldShowTrayPhoto(plate))
+            bool showPhoto = ShouldShowTrayPhoto(plate);
+
+            // If we're not showing the photo, we may still want to show the temporary developer overlay
+            // (e.g., the very first developer pour on an exposed plate).
+            if (!showPhoto && !clientDeveloperOverlayActive)
             {
-                lock (clientMeshLock) clientPhotoMesh = null;
+                lock (clientMeshLock)
+                {
+                    clientPhotoMesh = null;
+                    clientDeveloperOverlayMesh = null;
+                }
                 clientRenderSignature = sig;
                 MarkDirty(true);
                 return;
@@ -164,7 +223,7 @@ namespace Collodion
 
             // Re-tesselate the tray shape but replace the "plate" texture with the photo.
             MeshData? photoMesh = null;
-            if (PhotoPlateRenderUtil.TryGetPhotoBlockTexture(capi, plate, out TextureAtlasPosition photoTex, out float photoAspect, Pos))
+            if (showPhoto && PhotoPlateRenderUtil.TryGetPhotoBlockTexture(capi, plate, out TextureAtlasPosition photoTex, out float photoAspect, Pos))
             {
                 try
                 {
@@ -197,6 +256,45 @@ namespace Collodion
             }
 
             lock (clientMeshLock) clientPhotoMesh = photoMesh;
+
+            // Optional: developer liquid overlay (local-only, only while RMB held).
+            MeshData? devOverlayMesh = null;
+            if (clientDeveloperOverlayActive)
+            {
+                if (TryGetDeveloperOverlayTexture(capi, out TextureAtlasPosition devTex))
+                {
+                    try
+                    {
+                        ITexPositionSource baseSource = capi.Tesselator.GetTextureSource(Block);
+                        ITexPositionSource texSource = new PlatePhotoTextureSource(baseSource, devTex);
+
+                        var shape = Block?.Shape?.Clone();
+                        if (shape != null)
+                        {
+                            // Only keep the plate element so we don't duplicate the tray walls.
+                            shape.IgnoreElements = new[] { "base", "wall-n", "wall-s", "wall-e", "wall-w" };
+                            capi.Tesselator.TesselateShape(
+                                "collodion-devtray-devoverlay",
+                                Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                                shape,
+                                out devOverlayMesh,
+                                texSource
+                            );
+
+                            // Put it above the photo mesh.
+                            devOverlayMesh.Translate(0f, 0.0012f, 0f);
+
+                            ForceTransparentPass(devOverlayMesh);
+                        }
+                    }
+                    catch
+                    {
+                        devOverlayMesh = null;
+                    }
+                }
+            }
+
+            lock (clientMeshLock) clientDeveloperOverlayMesh = devOverlayMesh;
             clientRenderSignature = sig;
 
             MarkDirty(true);
@@ -205,6 +303,93 @@ namespace Collodion
                 capi.World.BlockAccessor.MarkBlockDirty(Pos);
             }
             catch { }
+        }
+
+        private bool ShouldShowDeveloperOverlay(ICoreClientAPI capi)
+        {
+            try
+            {
+                if (capi?.World?.Player?.Entity?.Attributes == null) return false;
+
+                ITreeAttribute? tree = capi.World.Player.Entity.Attributes.GetTreeAttribute(TimedAttrKey);
+                if (tree == null) return false;
+
+                if (!string.Equals(tree.GetString(TimedActionKey, ""), ActionDeveloper, StringComparison.Ordinal)) return false;
+
+                return tree.GetInt(TimedXKey) == Pos.X && tree.GetInt(TimedYKey) == Pos.Y && tree.GetInt(TimedZKey) == Pos.Z;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool TryGetDeveloperOverlayTexture(ICoreClientAPI capi, out TextureAtlasPosition texPos)
+        {
+            texPos = capi.BlockTextureAtlas.UnknownTexturePosition;
+
+            try
+            {
+                // We intentionally insert into the *block* atlas, because this overlay is rendered as terrain mesh.
+                capi.BlockTextureAtlas.GetOrInsertTexture(
+                    DeveloperOverlayAtlasKey,
+                    out int _,
+                    out texPos,
+                    () =>
+                    {
+                        try
+                        {
+                            var asset = capi.Assets.TryGet(DeveloperOverlayTextureAsset);
+                            if (asset != null)
+                            {
+                                var bmp = capi.Render.BitmapCreateFromPng(asset.Data);
+                                // Terrain transparency is primarily driven by per-texture alpha.
+                                // Multiply the source alpha so we don't require a bespoke semi-transparent PNG.
+                                // (MulAlpha is safe even if the PNG is fully opaque.)
+                                try { bmp?.MulAlpha(DeveloperOverlayAlpha); } catch { }
+                                return bmp;
+                            }
+                        }
+                        catch { }
+
+                        return null;
+                    },
+                    0.05f
+                );
+
+                return texPos != null && texPos != capi.BlockTextureAtlas.UnknownTexturePosition;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static void ForceTransparentPass(MeshData mesh)
+        {
+            if (mesh == null) return;
+
+            int quadCount = mesh.VerticesCount / 4;
+            if (quadCount <= 0) return;
+
+            short[] passes = mesh.RenderPassesAndExtraBits;
+            if (passes == null || passes.Length < quadCount)
+            {
+                passes = new short[quadCount];
+            }
+
+            const ushort passMask = 0xFC00;
+            ushort passVal = (ushort)EnumChunkRenderPass.Transparent;
+            for (int i = 0; i < quadCount; i++)
+            {
+                // Lower 10 bits are the render pass.
+                ushort existing = (ushort)passes[i];
+                ushort updated = (ushort)((existing & passMask) | passVal);
+                passes[i] = (short)updated;
+            }
+
+            mesh.RenderPassesAndExtraBits = passes;
+            mesh.RenderPassCount = quadCount;
         }
 
 

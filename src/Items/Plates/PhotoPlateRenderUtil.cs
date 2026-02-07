@@ -662,54 +662,7 @@ namespace Collodion
             SKPixmap pixmap = bmp.PeekPixels();
             if (pixmap == null)
             {
-                // Fallback: should be rare.
-                for (int y = 0; y < h; y++)
-                {
-                    for (int x = 0; x < w; x++)
-                    {
-                        var c = bmp.GetPixel(x, y);
-
-                        float r = c.Red / 255f;
-                        float g = c.Green / 255f;
-                        float b = c.Blue / 255f;
-
-                        r = blackPoint + r * (1f - blackPoint);
-                        g = blackPoint + g * (1f - blackPoint);
-                        b = blackPoint + b * (1f - blackPoint);
-
-                        r = 0.5f + (r - 0.5f) * contrast;
-                        g = 0.5f + (g - 0.5f) * contrast;
-                        b = 0.5f + (b - 0.5f) * contrast;
-
-                        r = r + (1f - r) * whiteHaze;
-                        g = g + (1f - g) * whiteHaze;
-                        b = b + (1f - b) * whiteHaze;
-
-                        if (edgeFade > 0f)
-                        {
-                            float nx = (x + 0.5f) / w - 0.5f;
-                            float ny = (y + 0.5f) / h - 0.5f;
-                            float dist = (float)System.Math.Sqrt(nx * nx + ny * ny);
-                            float edge = dist / 0.7071f;
-                            if (edge > 1f) edge = 1f;
-                            float fade = edge * edgeFade;
-                            r = r + (1f - r) * fade;
-                            g = g + (1f - g) * fade;
-                            b = b + (1f - b) * fade;
-                        }
-
-                        r = r + (1f - r) * (1f - opacity);
-                        g = g + (1f - g) * (1f - opacity);
-                        b = b + (1f - b) * (1f - opacity);
-
-                        byte rr = (byte)(Clamp01(r) * 255f);
-                        byte gg = (byte)(Clamp01(g) * 255f);
-                        byte bb = (byte)(Clamp01(b) * 255f);
-
-                        bmp.SetPixel(x, y, new SKColor(rr, gg, bb, 255));
-                    }
-                }
-
+                ApplyDevelopmentStageVisualsSlow(bmp, w, h, blackPoint, contrast, whiteHaze, edgeFade, opacity);
                 return;
             }
 
@@ -717,54 +670,7 @@ namespace Collodion
             int bpp = pixmap.BytesPerPixel;
             if (bpp != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
             {
-                // Fallback: uncommon decode format.
-                for (int y = 0; y < h; y++)
-                {
-                    for (int x = 0; x < w; x++)
-                    {
-                        var c = bmp.GetPixel(x, y);
-
-                        float r = c.Red / 255f;
-                        float g = c.Green / 255f;
-                        float b = c.Blue / 255f;
-
-                        r = blackPoint + r * (1f - blackPoint);
-                        g = blackPoint + g * (1f - blackPoint);
-                        b = blackPoint + b * (1f - blackPoint);
-
-                        r = 0.5f + (r - 0.5f) * contrast;
-                        g = 0.5f + (g - 0.5f) * contrast;
-                        b = 0.5f + (b - 0.5f) * contrast;
-
-                        r = r + (1f - r) * whiteHaze;
-                        g = g + (1f - g) * whiteHaze;
-                        b = b + (1f - b) * whiteHaze;
-
-                        if (edgeFade > 0f)
-                        {
-                            float nx = (x + 0.5f) / w - 0.5f;
-                            float ny = (y + 0.5f) / h - 0.5f;
-                            float dist = (float)System.Math.Sqrt(nx * nx + ny * ny);
-                            float edge = dist / 0.7071f;
-                            if (edge > 1f) edge = 1f;
-                            float fade = edge * edgeFade;
-                            r = r + (1f - r) * fade;
-                            g = g + (1f - g) * fade;
-                            b = b + (1f - b) * fade;
-                        }
-
-                        r = r + (1f - r) * (1f - opacity);
-                        g = g + (1f - g) * (1f - opacity);
-                        b = b + (1f - b) * (1f - opacity);
-
-                        byte rr = (byte)(Clamp01(r) * 255f);
-                        byte gg = (byte)(Clamp01(g) * 255f);
-                        byte bb = (byte)(Clamp01(b) * 255f);
-
-                        bmp.SetPixel(x, y, new SKColor(rr, gg, bb, 255));
-                    }
-                }
-
+                ApplyDevelopmentStageVisualsSlow(bmp, w, h, blackPoint, contrast, whiteHaze, edgeFade, opacity);
                 return;
             }
 
@@ -823,35 +729,15 @@ namespace Collodion
                         float g = g8 / 255f;
                         float b = b8 / 255f;
 
-                        r = blackPoint + r * (1f - blackPoint);
-                        g = blackPoint + g * (1f - blackPoint);
-                        b = blackPoint + b * (1f - blackPoint);
-
-                        r = 0.5f + (r - 0.5f) * contrast;
-                        g = 0.5f + (g - 0.5f) * contrast;
-                        b = 0.5f + (b - 0.5f) * contrast;
-
-                        r = r + (1f - r) * whiteHaze;
-                        g = g + (1f - g) * whiteHaze;
-                        b = b + (1f - b) * whiteHaze;
-
+                        float edgeFadeAmount = 0f;
                         if (doEdgeFade)
                         {
                             float edge = (float)System.Math.Sqrt(nx2[x] + yTerm) * invCorner;
                             if (edge > 1f) edge = 1f;
-                            float fade = edge * edgeFade;
-                            r = r + (1f - r) * fade;
-                            g = g + (1f - g) * fade;
-                            b = b + (1f - b) * fade;
+                            edgeFadeAmount = edge * edgeFade;
                         }
 
-                        r = r + (1f - r) * (1f - opacity);
-                        g = g + (1f - g) * (1f - opacity);
-                        b = b + (1f - b) * (1f - opacity);
-
-                        if (r < 0f) r = 0f; else if (r > 1f) r = 1f;
-                        if (g < 0f) g = 0f; else if (g > 1f) g = 1f;
-                        if (b < 0f) b = 0f; else if (b > 1f) b = 1f;
+                        ApplyDevelopmentStageTransform(ref r, ref g, ref b, blackPoint, contrast, whiteHaze, edgeFadeAmount, opacity);
 
                         byte rr = (byte)(r * 255f);
                         byte gg = (byte)(g * 255f);
@@ -874,6 +760,70 @@ namespace Collodion
                     }
                 }
             }
+        }
+
+        private static void ApplyDevelopmentStageVisualsSlow(SKBitmap bmp, int w, int h, float blackPoint, float contrast, float whiteHaze, float edgeFade, float opacity)
+        {
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    var c = bmp.GetPixel(x, y);
+
+                    float r = c.Red / 255f;
+                    float g = c.Green / 255f;
+                    float b = c.Blue / 255f;
+
+                    float edgeFadeAmount = 0f;
+                    if (edgeFade > 0f)
+                    {
+                        float nx = (x + 0.5f) / w - 0.5f;
+                        float ny = (y + 0.5f) / h - 0.5f;
+                        float dist = (float)System.Math.Sqrt(nx * nx + ny * ny);
+                        float edge = dist / 0.7071f;
+                        if (edge > 1f) edge = 1f;
+                        edgeFadeAmount = edge * edgeFade;
+                    }
+
+                    ApplyDevelopmentStageTransform(ref r, ref g, ref b, blackPoint, contrast, whiteHaze, edgeFadeAmount, opacity);
+
+                    byte rr = (byte)(r * 255f);
+                    byte gg = (byte)(g * 255f);
+                    byte bb = (byte)(b * 255f);
+
+                    bmp.SetPixel(x, y, new SKColor(rr, gg, bb, 255));
+                }
+            }
+        }
+
+        private static void ApplyDevelopmentStageTransform(ref float r, ref float g, ref float b, float blackPoint, float contrast, float whiteHaze, float edgeFadeAmount, float opacity)
+        {
+            r = blackPoint + r * (1f - blackPoint);
+            g = blackPoint + g * (1f - blackPoint);
+            b = blackPoint + b * (1f - blackPoint);
+
+            r = 0.5f + (r - 0.5f) * contrast;
+            g = 0.5f + (g - 0.5f) * contrast;
+            b = 0.5f + (b - 0.5f) * contrast;
+
+            r = r + (1f - r) * whiteHaze;
+            g = g + (1f - g) * whiteHaze;
+            b = b + (1f - b) * whiteHaze;
+
+            if (edgeFadeAmount > 0f)
+            {
+                r = r + (1f - r) * edgeFadeAmount;
+                g = g + (1f - g) * edgeFadeAmount;
+                b = b + (1f - b) * edgeFadeAmount;
+            }
+
+            r = r + (1f - r) * (1f - opacity);
+            g = g + (1f - g) * (1f - opacity);
+            b = b + (1f - b) * (1f - opacity);
+
+            if (r < 0f) r = 0f; else if (r > 1f) r = 1f;
+            if (g < 0f) g = 0f; else if (g > 1f) g = 1f;
+            if (b < 0f) b = 0f; else if (b > 1f) b = 1f;
         }
 
         private static float Lerp(float a, float b, float t)

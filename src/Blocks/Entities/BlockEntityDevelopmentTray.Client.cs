@@ -9,18 +9,16 @@ namespace Collodion
 {
     public sealed partial class BlockEntityDevelopmentTray
     {
-        private const string TimedAttrKey = "collodionDevTrayTimed";
-        private const string TimedActionKey = "action";
-        private const string TimedXKey = "x";
-        private const string TimedYKey = "y";
-        private const string TimedZKey = "z";
-        private const string ActionDeveloper = "developer";
-
         private const float PhotoTargetAspect = 10f / 11f;
         private const byte DeveloperOverlayAlpha = 210;
+        private const float DeveloperOverlayScale = 1.32f;
+        private const float DeveloperOverlayAlphaStart = 1.0f;
+        private const float DeveloperOverlayAlphaEnd = 0.35f;
 
         private static readonly AssetLocation DeveloperOverlayTextureAsset = new AssetLocation("collodion", "textures/block/liquid/developer.png");
         private static readonly AssetLocation DeveloperOverlayAtlasKey = new AssetLocation("collodion", "devtray-developer-overlay");
+        private static readonly AssetLocation FixerOverlayTextureAsset = new AssetLocation("collodion", "textures/block/liquid/fixer.png");
+        private static readonly AssetLocation FixerOverlayAtlasKey = new AssetLocation("collodion", "devtray-fixer-overlay");
 
         private sealed class PlatePhotoTextureSource : ITexPositionSource
         {
@@ -56,6 +54,9 @@ namespace Collodion
         private bool clientNeedsRebuild;
         private string? clientRenderSignature;
         private bool clientDeveloperOverlayActive;
+        private float clientDeveloperOverlayAlpha = 1.0f;
+        private long clientDeveloperOverlayLastRebuildMs;
+        private string? clientOverlayAction;
 
         partial void ClientInitialize(ICoreAPI api)
         {
@@ -68,10 +69,40 @@ namespace Collodion
                 {
                     if (Api?.Side != EnumAppSide.Client) return;
                     ICoreClientAPI capi = (ICoreClientAPI)Api;
-                    bool shouldShow = ShouldShowDeveloperOverlay(capi);
-                    if (shouldShow == clientDeveloperOverlayActive) return;
+                    long nowMs;
+                    try
+                    {
+                        nowMs = (long)capi.World.ElapsedMilliseconds;
+                    }
+                    catch
+                    {
+                        nowMs = Environment.TickCount64;
+                    }
 
-                    clientDeveloperOverlayActive = shouldShow;
+                    bool shouldShow = TryGetPourOverlayAlpha(capi, out float alpha, out string action);
+                    if (shouldShow)
+                    {
+                        bool actionChanged = !string.Equals(action, clientOverlayAction, StringComparison.Ordinal);
+                        bool alphaChanged = Math.Abs(alpha - clientDeveloperOverlayAlpha) > 0.001f;
+                        bool stale = nowMs - clientDeveloperOverlayLastRebuildMs > 200;
+                        if (clientDeveloperOverlayActive && !alphaChanged && !stale && !actionChanged) return;
+
+                        clientDeveloperOverlayActive = true;
+                        clientDeveloperOverlayAlpha = alpha;
+                        clientDeveloperOverlayLastRebuildMs = nowMs;
+                        clientOverlayAction = action;
+                        clientNeedsRebuild = true;
+                        RequestClientMeshRebuild();
+
+                        try { capi.World.BlockAccessor.MarkBlockDirty(Pos); } catch { }
+                        return;
+                    }
+
+                    if (!clientDeveloperOverlayActive) return;
+
+                    clientDeveloperOverlayActive = false;
+                    clientDeveloperOverlayLastRebuildMs = 0;
+                    clientOverlayAction = null;
                     clientNeedsRebuild = true;
                     RequestClientMeshRebuild();
 
@@ -88,8 +119,11 @@ namespace Collodion
             clientNeedsRebuild = true;
             lock (clientMeshLock)
             {
-                clientPhotoMesh = null;
-                clientDeveloperOverlayMesh = null;
+                // Keep existing meshes until the rebuild completes to avoid brief transparency.
+                if (!clientDeveloperOverlayActive)
+                {
+                    clientDeveloperOverlayMesh = null;
+                }
             }
             clientRenderSignature = null;
             RequestClientMeshRebuild();
@@ -223,6 +257,7 @@ namespace Collodion
 
             // Re-tesselate the tray shape but replace the "plate" texture with the photo.
             MeshData? photoMesh = null;
+            bool builtPhotoMesh = false;
             if (showPhoto && PhotoPlateRenderUtil.TryGetPhotoBlockTexture(capi, plate, out TextureAtlasPosition photoTex, out float photoAspect, Pos))
             {
                 try
@@ -243,10 +278,11 @@ namespace Collodion
                             texSource
                         );
 
-                        StampUvByRotationCropped(photoMesh, photoTex, 90, photoAspect, PhotoTargetAspect);
+                        StampUvByRotationCropped(photoMesh, photoTex, 270, photoAspect, PhotoTargetAspect);
 
                         // Nudge up slightly to avoid z-fighting with the base plate.
                         photoMesh.Translate(0f, 0.0006f, 0f);
+                        builtPhotoMesh = true;
                     }
                 }
                 catch
@@ -255,13 +291,24 @@ namespace Collodion
                 }
             }
 
-            lock (clientMeshLock) clientPhotoMesh = photoMesh;
+            lock (clientMeshLock)
+            {
+                if (builtPhotoMesh)
+                {
+                    clientPhotoMesh = photoMesh;
+                }
+                else if (!showPhoto)
+                {
+                    clientPhotoMesh = null;
+                }
+            }
 
             // Optional: developer liquid overlay (local-only, only while RMB held).
             MeshData? devOverlayMesh = null;
+            bool builtOverlayMesh = false;
             if (clientDeveloperOverlayActive)
             {
-                if (TryGetDeveloperOverlayTexture(capi, out TextureAtlasPosition devTex))
+                if (TryGetOverlayTexture(capi, clientDeveloperOverlayAlpha, clientOverlayAction, out TextureAtlasPosition devTex))
                 {
                     try
                     {
@@ -271,7 +318,7 @@ namespace Collodion
                         var shape = Block?.Shape?.Clone();
                         if (shape != null)
                         {
-                            // Only keep the plate element so we don't duplicate the tray walls.
+                            // Keep the overlay on the plate element, then scale it up slightly.
                             shape.IgnoreElements = new[] { "base", "wall-n", "wall-s", "wall-e", "wall-w" };
                             capi.Tesselator.TesselateShape(
                                 "collodion-devtray-devoverlay",
@@ -281,10 +328,15 @@ namespace Collodion
                                 texSource
                             );
 
+                            // Scale up around center so it extends past the plate edges.
+                            devOverlayMesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), DeveloperOverlayScale, 1f, DeveloperOverlayScale);
+
                             // Put it above the photo mesh.
                             devOverlayMesh.Translate(0f, 0.0012f, 0f);
 
                             ForceTransparentPass(devOverlayMesh);
+                            ApplyOverlayAlpha(devOverlayMesh, clientDeveloperOverlayAlpha);
+                            builtOverlayMesh = true;
                         }
                     }
                     catch
@@ -294,7 +346,17 @@ namespace Collodion
                 }
             }
 
-            lock (clientMeshLock) clientDeveloperOverlayMesh = devOverlayMesh;
+            lock (clientMeshLock)
+            {
+                if (builtOverlayMesh)
+                {
+                    clientDeveloperOverlayMesh = devOverlayMesh;
+                }
+                else if (!clientDeveloperOverlayActive)
+                {
+                    clientDeveloperOverlayMesh = null;
+                }
+            }
             clientRenderSignature = sig;
 
             MarkDirty(true);
@@ -305,18 +367,69 @@ namespace Collodion
             catch { }
         }
 
-        private bool ShouldShowDeveloperOverlay(ICoreClientAPI capi)
+        private bool TryGetPourOverlayAlpha(ICoreClientAPI capi, out float alpha, out string action)
         {
+            alpha = DeveloperOverlayAlphaStart;
+            action = string.Empty;
             try
             {
                 if (capi?.World?.Player?.Entity?.Attributes == null) return false;
 
-                ITreeAttribute? tree = capi.World.Player.Entity.Attributes.GetTreeAttribute(TimedAttrKey);
+                ITreeAttribute? tree = capi.World.Player.Entity.Attributes.GetTreeAttribute(BlockDevelopmentTray.TimedAttrKey);
                 if (tree == null) return false;
 
-                if (!string.Equals(tree.GetString(TimedActionKey, ""), ActionDeveloper, StringComparison.Ordinal)) return false;
+                string timedAction = tree.GetString(BlockDevelopmentTray.TimedActionKey, "");
+                bool isDeveloper = string.Equals(timedAction, BlockDevelopmentTray.ActionDeveloper, StringComparison.Ordinal);
+                bool isFixer = string.Equals(timedAction, BlockDevelopmentTray.ActionFixer, StringComparison.Ordinal);
+                if (!isDeveloper && !isFixer) return false;
 
-                return tree.GetInt(TimedXKey) == Pos.X && tree.GetInt(TimedYKey) == Pos.Y && tree.GetInt(TimedZKey) == Pos.Z;
+                if (tree.GetInt(BlockDevelopmentTray.TimedXKey) != Pos.X
+                    || tree.GetInt(BlockDevelopmentTray.TimedYKey) != Pos.Y
+                    || tree.GetInt(BlockDevelopmentTray.TimedZKey) != Pos.Z)
+                {
+                    return false;
+                }
+
+                long startMs = 0;
+                int durationMs = 0;
+                try
+                {
+                    startMs = tree.GetLong(BlockDevelopmentTray.TimedStartMsKey, 0);
+                    durationMs = tree.GetInt(BlockDevelopmentTray.TimedDurationMsKey, 0);
+                }
+                catch
+                {
+                    startMs = 0;
+                    durationMs = 0;
+                }
+
+                if (durationMs <= 0)
+                {
+                    durationMs = (int)Math.Round((isFixer ? GetFixerPourSeconds(capi) : GetDeveloperPourSeconds(capi)) * 1000f);
+                }
+
+                long nowMs;
+                try
+                {
+                    nowMs = (long)capi.World.ElapsedMilliseconds;
+                }
+                catch
+                {
+                    nowMs = Environment.TickCount64;
+                }
+
+                float t = 0f;
+                if (startMs > 0 && durationMs > 0)
+                {
+                    t = (nowMs - startMs) / (float)durationMs;
+                }
+
+                if (t < 0f) t = 0f;
+                if (t > 1f) t = 1f;
+
+                alpha = Lerp(DeveloperOverlayAlphaStart, DeveloperOverlayAlphaEnd, t);
+                action = timedAction;
+                return true;
             }
             catch
             {
@@ -324,29 +437,96 @@ namespace Collodion
             }
         }
 
-        private static bool TryGetDeveloperOverlayTexture(ICoreClientAPI capi, out TextureAtlasPosition texPos)
+        private static float GetFixerPourSeconds(ICoreClientAPI capi)
+        {
+            float seconds = 1.25f;
+            try
+            {
+                var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+                seconds = modSys?.Config?.DevelopmentTrayInteractions?.Fixer?.DurationSeconds ?? seconds;
+            }
+            catch { }
+
+            return seconds < 0.05f ? 0.05f : seconds;
+        }
+
+        private static float GetDeveloperPourSeconds(ICoreClientAPI capi)
+        {
+            float seconds = 2.00f;
+            try
+            {
+                var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+                seconds = modSys?.Config?.DevelopmentTrayInteractions?.Developer?.DurationSeconds ?? seconds;
+            }
+            catch { }
+
+            return seconds < 0.05f ? 0.05f : seconds;
+        }
+
+        private static void ApplyOverlayAlpha(MeshData mesh, float alpha)
+        {
+            if (mesh?.Rgba == null || mesh.Rgba.Length == 0) return;
+
+            if (alpha < 0f) alpha = 0f;
+            if (alpha > 1f) alpha = 1f;
+
+            byte a = (byte)(alpha * 255f);
+            for (int i = 0; i < mesh.Rgba.Length; i += 4)
+            {
+                mesh.Rgba[i + 0] = 255;
+                mesh.Rgba[i + 1] = 255;
+                mesh.Rgba[i + 2] = 255;
+                mesh.Rgba[i + 3] = a;
+            }
+        }
+
+        private static float Lerp(float a, float b, float t)
+        {
+            if (t < 0f) t = 0f;
+            if (t > 1f) t = 1f;
+            return a + (b - a) * t;
+        }
+
+        private static bool TryGetOverlayTexture(ICoreClientAPI capi, float alpha, string? action, out TextureAtlasPosition texPos)
         {
             texPos = capi.BlockTextureAtlas.UnknownTexturePosition;
+
+            const int AlphaSteps = 40;
+            int alphaStep = (int)Math.Round(alpha * AlphaSteps);
+            if (alphaStep < 0) alphaStep = 0;
+            if (alphaStep > AlphaSteps) alphaStep = AlphaSteps;
+            if (alpha >= 0.999f) alphaStep = AlphaSteps;
+
+            float stepScale = alphaStep / (float)AlphaSteps;
+            byte effectiveAlpha = (byte)Math.Max(0, Math.Min(255, (int)Math.Round(DeveloperOverlayAlpha * stepScale)));
+
+            bool isFixer = string.Equals(action, BlockDevelopmentTray.ActionFixer, StringComparison.Ordinal);
+            AssetLocation baseAtlasKey = isFixer ? FixerOverlayAtlasKey : DeveloperOverlayAtlasKey;
+            AssetLocation baseAsset = isFixer ? FixerOverlayTextureAsset : DeveloperOverlayTextureAsset;
+
+            AssetLocation atlasKey = alphaStep == AlphaSteps
+                ? baseAtlasKey
+                : new AssetLocation("collodion", (isFixer ? "devtray-fixer-overlay" : "devtray-developer-overlay") + $"-a{alphaStep}");
 
             try
             {
                 // We intentionally insert into the *block* atlas, because this overlay is rendered as terrain mesh.
                 capi.BlockTextureAtlas.GetOrInsertTexture(
-                    DeveloperOverlayAtlasKey,
+                    atlasKey,
                     out int _,
                     out texPos,
                     () =>
                     {
                         try
                         {
-                            var asset = capi.Assets.TryGet(DeveloperOverlayTextureAsset);
+                            var asset = capi.Assets.TryGet(baseAsset);
                             if (asset != null)
                             {
                                 var bmp = capi.Render.BitmapCreateFromPng(asset.Data);
                                 // Terrain transparency is primarily driven by per-texture alpha.
                                 // Multiply the source alpha so we don't require a bespoke semi-transparent PNG.
                                 // (MulAlpha is safe even if the PNG is fully opaque.)
-                                try { bmp?.MulAlpha(DeveloperOverlayAlpha); } catch { }
+                                try { bmp?.MulAlpha(effectiveAlpha); } catch { }
                                 return bmp;
                             }
                         }
@@ -378,14 +558,10 @@ namespace Collodion
                 passes = new short[quadCount];
             }
 
-            const ushort passMask = 0xFC00;
             ushort passVal = (ushort)EnumChunkRenderPass.Transparent;
             for (int i = 0; i < quadCount; i++)
             {
-                // Lower 10 bits are the render pass.
-                ushort existing = (ushort)passes[i];
-                ushort updated = (ushort)((existing & passMask) | passVal);
-                passes[i] = (short)updated;
+                passes[i] = (short)passVal;
             }
 
             mesh.RenderPassesAndExtraBits = passes;

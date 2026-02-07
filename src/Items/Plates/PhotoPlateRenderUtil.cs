@@ -656,55 +656,222 @@ namespace Collodion
             int h = bmp.Height;
             if (w <= 0 || h <= 0) return;
 
+            // Important: SKBitmap.GetPixel/SetPixel are extremely slow for full-image processing.
+            // The development stages (pours 1-4) can get hit right when the tray mesh rebuilds,
+            // so do this via raw pixel access to avoid visible hitching.
+            SKPixmap pixmap = bmp.PeekPixels();
+            if (pixmap == null)
+            {
+                // Fallback: should be rare.
+                for (int y = 0; y < h; y++)
+                {
+                    for (int x = 0; x < w; x++)
+                    {
+                        var c = bmp.GetPixel(x, y);
+
+                        float r = c.Red / 255f;
+                        float g = c.Green / 255f;
+                        float b = c.Blue / 255f;
+
+                        r = blackPoint + r * (1f - blackPoint);
+                        g = blackPoint + g * (1f - blackPoint);
+                        b = blackPoint + b * (1f - blackPoint);
+
+                        r = 0.5f + (r - 0.5f) * contrast;
+                        g = 0.5f + (g - 0.5f) * contrast;
+                        b = 0.5f + (b - 0.5f) * contrast;
+
+                        r = r + (1f - r) * whiteHaze;
+                        g = g + (1f - g) * whiteHaze;
+                        b = b + (1f - b) * whiteHaze;
+
+                        if (edgeFade > 0f)
+                        {
+                            float nx = (x + 0.5f) / w - 0.5f;
+                            float ny = (y + 0.5f) / h - 0.5f;
+                            float dist = (float)System.Math.Sqrt(nx * nx + ny * ny);
+                            float edge = dist / 0.7071f;
+                            if (edge > 1f) edge = 1f;
+                            float fade = edge * edgeFade;
+                            r = r + (1f - r) * fade;
+                            g = g + (1f - g) * fade;
+                            b = b + (1f - b) * fade;
+                        }
+
+                        r = r + (1f - r) * (1f - opacity);
+                        g = g + (1f - g) * (1f - opacity);
+                        b = b + (1f - b) * (1f - opacity);
+
+                        byte rr = (byte)(Clamp01(r) * 255f);
+                        byte gg = (byte)(Clamp01(g) * 255f);
+                        byte bb = (byte)(Clamp01(b) * 255f);
+
+                        bmp.SetPixel(x, y, new SKColor(rr, gg, bb, 255));
+                    }
+                }
+
+                return;
+            }
+
+            SKColorType ct = pixmap.ColorType;
+            int bpp = pixmap.BytesPerPixel;
+            if (bpp != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
+            {
+                // Fallback: uncommon decode format.
+                for (int y = 0; y < h; y++)
+                {
+                    for (int x = 0; x < w; x++)
+                    {
+                        var c = bmp.GetPixel(x, y);
+
+                        float r = c.Red / 255f;
+                        float g = c.Green / 255f;
+                        float b = c.Blue / 255f;
+
+                        r = blackPoint + r * (1f - blackPoint);
+                        g = blackPoint + g * (1f - blackPoint);
+                        b = blackPoint + b * (1f - blackPoint);
+
+                        r = 0.5f + (r - 0.5f) * contrast;
+                        g = 0.5f + (g - 0.5f) * contrast;
+                        b = 0.5f + (b - 0.5f) * contrast;
+
+                        r = r + (1f - r) * whiteHaze;
+                        g = g + (1f - g) * whiteHaze;
+                        b = b + (1f - b) * whiteHaze;
+
+                        if (edgeFade > 0f)
+                        {
+                            float nx = (x + 0.5f) / w - 0.5f;
+                            float ny = (y + 0.5f) / h - 0.5f;
+                            float dist = (float)System.Math.Sqrt(nx * nx + ny * ny);
+                            float edge = dist / 0.7071f;
+                            if (edge > 1f) edge = 1f;
+                            float fade = edge * edgeFade;
+                            r = r + (1f - r) * fade;
+                            g = g + (1f - g) * fade;
+                            b = b + (1f - b) * fade;
+                        }
+
+                        r = r + (1f - r) * (1f - opacity);
+                        g = g + (1f - g) * (1f - opacity);
+                        b = b + (1f - b) * (1f - opacity);
+
+                        byte rr = (byte)(Clamp01(r) * 255f);
+                        byte gg = (byte)(Clamp01(g) * 255f);
+                        byte bb = (byte)(Clamp01(b) * 255f);
+
+                        bmp.SetPixel(x, y, new SKColor(rr, gg, bb, 255));
+                    }
+                }
+
+                return;
+            }
+
+            bool bgra = ct == SKColorType.Bgra8888;
+            bool doEdgeFade = edgeFade > 0f;
+
+            float invW = 1f / w;
+            float invH = 1f / h;
+            float invCorner = 1f / 0.7071f;
+
+            float[] nx2 = new float[w];
+            for (int x = 0; x < w; x++)
+            {
+                float nx = (x + 0.5f) * invW - 0.5f;
+                nx2[x] = nx * nx;
+            }
+
+            float[] ny2 = new float[h];
             for (int y = 0; y < h; y++)
             {
-                for (int x = 0; x < w; x++)
+                float ny = (y + 0.5f) * invH - 0.5f;
+                ny2[y] = ny * ny;
+            }
+
+            unsafe
+            {
+                byte* basePtr = (byte*)pixmap.GetPixels().ToPointer();
+                int rowBytes = pixmap.RowBytes;
+
+                for (int y = 0; y < h; y++)
                 {
-                    var c = bmp.GetPixel(x, y);
+                    byte* row = basePtr + y * rowBytes;
+                    float yTerm = ny2[y];
 
-                    float r = c.Red / 255f;
-                    float g = c.Green / 255f;
-                    float b = c.Blue / 255f;
-
-                    // Lift shadows (black point).
-                    r = blackPoint + r * (1f - blackPoint);
-                    g = blackPoint + g * (1f - blackPoint);
-                    b = blackPoint + b * (1f - blackPoint);
-
-                    // Contrast around mid-gray.
-                    r = 0.5f + (r - 0.5f) * contrast;
-                    g = 0.5f + (g - 0.5f) * contrast;
-                    b = 0.5f + (b - 0.5f) * contrast;
-
-                    // White haze overlay.
-                    r = r + (1f - r) * whiteHaze;
-                    g = g + (1f - g) * whiteHaze;
-                    b = b + (1f - b) * whiteHaze;
-
-                    // Edge fade (reduces edge artifacts early in development).
-                    if (edgeFade > 0f)
+                    for (int x = 0; x < w; x++)
                     {
-                        float nx = (x + 0.5f) / w - 0.5f;
-                        float ny = (y + 0.5f) / h - 0.5f;
-                        float dist = (float)System.Math.Sqrt(nx * nx + ny * ny);
-                        float edge = dist / 0.7071f; // 0 at center, ~1 at corner
-                        if (edge > 1f) edge = 1f;
-                        float fade = edge * edgeFade;
-                        r = r + (1f - r) * fade;
-                        g = g + (1f - g) * fade;
-                        b = b + (1f - b) * fade;
+                        int i = x * 4;
+                        byte r8;
+                        byte g8;
+                        byte b8;
+
+                        if (bgra)
+                        {
+                            b8 = row[i + 0];
+                            g8 = row[i + 1];
+                            r8 = row[i + 2];
+                        }
+                        else
+                        {
+                            r8 = row[i + 0];
+                            g8 = row[i + 1];
+                            b8 = row[i + 2];
+                        }
+
+                        float r = r8 / 255f;
+                        float g = g8 / 255f;
+                        float b = b8 / 255f;
+
+                        r = blackPoint + r * (1f - blackPoint);
+                        g = blackPoint + g * (1f - blackPoint);
+                        b = blackPoint + b * (1f - blackPoint);
+
+                        r = 0.5f + (r - 0.5f) * contrast;
+                        g = 0.5f + (g - 0.5f) * contrast;
+                        b = 0.5f + (b - 0.5f) * contrast;
+
+                        r = r + (1f - r) * whiteHaze;
+                        g = g + (1f - g) * whiteHaze;
+                        b = b + (1f - b) * whiteHaze;
+
+                        if (doEdgeFade)
+                        {
+                            float edge = (float)System.Math.Sqrt(nx2[x] + yTerm) * invCorner;
+                            if (edge > 1f) edge = 1f;
+                            float fade = edge * edgeFade;
+                            r = r + (1f - r) * fade;
+                            g = g + (1f - g) * fade;
+                            b = b + (1f - b) * fade;
+                        }
+
+                        r = r + (1f - r) * (1f - opacity);
+                        g = g + (1f - g) * (1f - opacity);
+                        b = b + (1f - b) * (1f - opacity);
+
+                        if (r < 0f) r = 0f; else if (r > 1f) r = 1f;
+                        if (g < 0f) g = 0f; else if (g > 1f) g = 1f;
+                        if (b < 0f) b = 0f; else if (b > 1f) b = 1f;
+
+                        byte rr = (byte)(r * 255f);
+                        byte gg = (byte)(g * 255f);
+                        byte bb = (byte)(b * 255f);
+
+                        if (bgra)
+                        {
+                            row[i + 0] = bb;
+                            row[i + 1] = gg;
+                            row[i + 2] = rr;
+                            row[i + 3] = 255;
+                        }
+                        else
+                        {
+                            row[i + 0] = rr;
+                            row[i + 1] = gg;
+                            row[i + 2] = bb;
+                            row[i + 3] = 255;
+                        }
                     }
-
-                    // Low opacity (blend toward white).
-                    r = r + (1f - r) * (1f - opacity);
-                    g = g + (1f - g) * (1f - opacity);
-                    b = b + (1f - b) * (1f - opacity);
-
-                    byte rr = (byte)(Clamp01(r) * 255f);
-                    byte gg = (byte)(Clamp01(g) * 255f);
-                    byte bb = (byte)(Clamp01(b) * 255f);
-
-                    bmp.SetPixel(x, y, new SKColor(rr, gg, bb, 255));
                 }
             }
         }

@@ -8,7 +8,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-    <AssemblyName>Collodion</AssemblyName>
+    <AssemblyName>collodion</AssemblyName>
     <!-- Set this to your Vintage Story install directory. -->
     <VINTAGE_STORY_PATH Condition=" '$(VINTAGE_STORY_PATH)' == '' "></VINTAGE_STORY_PATH>
   </PropertyGroup>
@@ -18,6 +18,12 @@
     <VINTAGE_STORY_PATH Condition=" '$(VINTAGE_STORY_PATH)' == '' ">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvText)', '(?m)^VINTAGE_STORY_PATH\s*=\s*(.+)$').Groups[1].Value.Trim())</VINTAGE_STORY_PATH>
     <MODS_PATH Condition=" '$(MODS_PATH)' == '' ">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvText)', '(?m)^MODS_PATH\s*=\s*(.+)$').Groups[1].Value.Trim())</MODS_PATH>
     <MODS_PATH Condition=" '$(MODS_PATH)' == '' ">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvText)', '(?m)^VINTAGE_STORY_MODS_PATH\s*=\s*(.+)$').Groups[1].Value.Trim())</MODS_PATH>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
   </PropertyGroup>
 
   <ItemGroup>

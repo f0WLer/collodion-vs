@@ -278,7 +278,13 @@ namespace Collodion
                             texSource
                         );
 
-                        StampUvByRotationCropped(photoMesh, photoTex, 270, photoAspect, PhotoTargetAspect);
+                        int rotationDeg = 270;
+                        if (IsMultiplayerClient(capi))
+                        {
+                            rotationDeg = (rotationDeg + 90) % 360;
+                        }
+
+                        StampUvByRotationCropped(photoMesh, photoTex, rotationDeg, photoAspect, PhotoTargetAspect);
 
                         // Nudge up slightly to avoid z-fighting with the base plate.
                         photoMesh.Translate(0f, 0.0006f, 0f);
@@ -435,6 +441,84 @@ namespace Collodion
             {
                 return false;
             }
+        }
+
+        private static bool IsMultiplayerClient(ICoreClientAPI capi)
+        {
+            if (capi == null) return false;
+
+            if (TryGetBoolProperty(capi, out bool isSingle, "IsSinglePlayer", "IsSingleplayer"))
+            {
+                return !isSingle;
+            }
+
+            object? world = capi.World;
+            if (world != null)
+            {
+                if (TryGetBoolProperty(world, out bool worldSingle, "IsSinglePlayer", "IsSingleplayer"))
+                {
+                    return !worldSingle;
+                }
+
+                if (TryGetBoolProperty(world, out bool isRemote, "IsRemoteServer", "IsRemote"))
+                {
+                    return isRemote;
+                }
+            }
+
+            object? worldData = null;
+            try { worldData = capi.World?.Player?.WorldData; } catch { worldData = null; }
+            if (worldData != null && TryGetBoolProperty(worldData, out bool dataSingle, "IsSinglePlayer", "IsSingleplayer"))
+            {
+                return !dataSingle;
+            }
+
+            return false;
+        }
+
+        private static bool TryGetBoolProperty(object obj, out bool value, params string[] names)
+        {
+            value = false;
+            if (obj == null || names == null) return false;
+
+            var t = obj.GetType();
+            const System.Reflection.BindingFlags Flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
+
+            foreach (string name in names)
+            {
+                if (string.IsNullOrWhiteSpace(name)) continue;
+                try
+                {
+                    var prop = t.GetProperty(name, Flags);
+                    if (prop != null && prop.PropertyType == typeof(bool))
+                    {
+                        object? v = prop.GetValue(obj);
+                        if (v is bool b)
+                        {
+                            value = b;
+                            return true;
+                        }
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    var field = t.GetField(name, Flags);
+                    if (field != null && field.FieldType == typeof(bool))
+                    {
+                        object? v = field.GetValue(obj);
+                        if (v is bool b)
+                        {
+                            value = b;
+                            return true;
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            return false;
         }
 
         private static float GetFixerPourSeconds(ICoreClientAPI capi)

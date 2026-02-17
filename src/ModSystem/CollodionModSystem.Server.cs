@@ -315,6 +315,8 @@ namespace Collodion
             exposedStack.Attributes.SetString("timestamp", DateTime.Now.ToString());
             exposedStack.Attributes.SetString("photographer", player.PlayerName);
             exposedStack.Attributes.SetString(WetPlateAttrs.PlateStage, "exposed");
+            exposedStack.Attributes.SetDouble(WetPlateAttrs.HoldStillSeconds, packet.HoldStillSeconds);
+            exposedStack.Attributes.SetDouble(WetPlateAttrs.HoldStillMovement, packet.HoldStillMovement);
 
             ServerTouchPhotoSeen(photoId);
 

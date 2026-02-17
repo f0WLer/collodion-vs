@@ -19,6 +19,8 @@ namespace Collodion
     {
         private const float RmbReleaseGraceSeconds = 0.04f;
         private const float ViewfinderZoomMultiplier = 0.65f;
+        private const float HoldStillDurationSeconds = 1.5f;
+        private const float HoldStillLookWeight = 0.35f;
 
         private long viewfinderTickListenerId;
         private bool suppressViewfinderUntilRmbReleased;
@@ -26,6 +28,19 @@ namespace Collodion
         private float rmbUpSeconds;
         private bool lastLmbDown;
         private bool lastRmbDown;
+
+        private bool holdStillActive;
+        private float holdStillRemainingSeconds;
+        private float holdStillMovementScore;
+        private bool holdStillCaptureReady;
+        private string? holdStillPhotoId;
+        private double holdStillLastX;
+        private double holdStillLastY;
+        private double holdStillLastZ;
+        private float holdStillLastYaw;
+        private float holdStillLastPitch;
+        private bool holdStillHasLastSample;
+        private long lastHoldStillChatMs;
 
         private long lastShutterGateChatMs;
 
@@ -54,6 +69,8 @@ namespace Collodion
                 lock (viewfinderLock) return viewfinderDepth > 0;
             }
         }
+
+        private bool IsHoldStillPending => holdStillActive || holdStillCaptureReady;
 
         public void BeginViewfinderMode()
         {
@@ -228,6 +245,15 @@ namespace Collodion
                 return false;
             }
 
+            if (IsHoldStillPending)
+            {
+                if (!silentIfBusy)
+                {
+                    ClientApi.ShowChatMessage("Wetplate: hold still to finish the exposure.");
+                }
+                return false;
+            }
+
             // If the player wants an immersive, HUD-free viewfinder, rely on the game's built-in gui-less mode.
             MaybeShowF4GuiLessTip();
 
@@ -247,9 +273,10 @@ namespace Collodion
                 {
                     captureInProgress = false;
                     // Send to server + play sound after capture completes.
-                    ClientChannel.SendPacket(new PhotoTakenPacket() { PhotoId = fn });
                     PhotoSync?.ClientOnPhotoCreated(fn);
                     ClientApi.World.PlaySoundAt(new AssetLocation("game:sounds/effect/woodclick"), byEntity, null, true, 32, 1f);
+
+                    MarkHoldStillCaptureReady(fn);
 
                     // Capture is already done (we are in the onSuccess callback), so it is safe to exit immediately.
                     EndViewfinderMode();
@@ -257,6 +284,7 @@ namespace Collodion
                 onError: (ex) =>
                 {
                     captureInProgress = false;
+                    CancelHoldStillTracking();
                     ClientApi.Logger.Error("Wetplate HUD-less capture failed: " + ex);
                     ClientApi.ShowChatMessage("Wetplate: capture failed (see log). Falling back may be needed.");
 
@@ -275,13 +303,138 @@ namespace Collodion
             }
 
             captureInProgress = true;
+            StartHoldStillTracking(byEntity, fileName);
 
             return true;
+        }
+
+        private void StartHoldStillTracking(EntityAgent player, string photoId)
+        {
+            holdStillActive = HoldStillDurationSeconds > 0f;
+            holdStillRemainingSeconds = HoldStillDurationSeconds;
+            holdStillMovementScore = 0f;
+            holdStillCaptureReady = false;
+            holdStillPhotoId = photoId;
+            holdStillHasLastSample = false;
+            CaptureHoldStillSample(player, accumulate: false);
+
+            if (!holdStillActive)
+            {
+                holdStillRemainingSeconds = 0f;
+                TrySendHoldStillPhotoPacket();
+            }
+        }
+
+        private void MarkHoldStillCaptureReady(string photoId)
+        {
+            if (string.IsNullOrEmpty(photoId)) return;
+
+            holdStillPhotoId = photoId;
+            holdStillCaptureReady = true;
+            TrySendHoldStillPhotoPacket();
+        }
+
+        private void CancelHoldStillTracking()
+        {
+            holdStillActive = false;
+            holdStillRemainingSeconds = 0f;
+            holdStillMovementScore = 0f;
+            holdStillCaptureReady = false;
+            holdStillPhotoId = null;
+            holdStillHasLastSample = false;
+        }
+
+        private void UpdateHoldStillTracking(float dt)
+        {
+            if (!holdStillActive) return;
+
+
+            var playerEnt = ClientApi?.World?.Player?.Entity;
+            if (playerEnt != null)
+            {
+                CaptureHoldStillSample(playerEnt, accumulate: true);
+            }
+
+            holdStillRemainingSeconds -= dt;
+            if (holdStillRemainingSeconds <= 0f)
+            {
+                holdStillActive = false;
+                holdStillRemainingSeconds = 0f;
+                TrySendHoldStillPhotoPacket();
+            }
+        }
+
+        private void CaptureHoldStillSample(EntityAgent player, bool accumulate)
+        {
+            var pos = player.Pos;
+            if (pos == null) return;
+
+            double x = pos.X;
+            double y = pos.Y;
+            double z = pos.Z;
+            float yaw = pos.Yaw;
+            float pitch = pos.Pitch;
+
+            if (accumulate && holdStillHasLastSample)
+            {
+                double dx = x - holdStillLastX;
+                double dy = y - holdStillLastY;
+                double dz = z - holdStillLastZ;
+                float distance = (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
+
+                float yawDelta = AngleDeltaRadians(holdStillLastYaw, yaw);
+                float pitchDelta = pitch - holdStillLastPitch;
+                float lookDelta = Math.Abs(yawDelta) + Math.Abs(pitchDelta);
+
+                holdStillMovementScore += distance + lookDelta * HoldStillLookWeight;
+            }
+
+            holdStillLastX = x;
+            holdStillLastY = y;
+            holdStillLastZ = z;
+            holdStillLastYaw = yaw;
+            holdStillLastPitch = pitch;
+            holdStillHasLastSample = true;
+        }
+
+        private static float AngleDeltaRadians(float from, float to)
+        {
+            float diff = from - to;
+            float twoPi = (float)(Math.PI * 2.0);
+
+            while (diff > Math.PI) diff -= twoPi;
+            while (diff < -Math.PI) diff += twoPi;
+
+            return diff;
+        }
+
+        private void TrySendHoldStillPhotoPacket()
+        {
+            if (ClientChannel == null) return;
+            if (!holdStillCaptureReady) return;
+            if (holdStillActive) return;
+
+            string? photoId = holdStillPhotoId;
+            if (string.IsNullOrEmpty(photoId)) return;
+
+            ClientChannel.SendPacket(new PhotoTakenPacket()
+            {
+                PhotoId = photoId,
+                HoldStillSeconds = HoldStillDurationSeconds,
+                HoldStillMovement = holdStillMovementScore
+            });
+
+            holdStillPhotoId = null;
+            holdStillCaptureReady = false;
+            holdStillMovementScore = 0f;
+            holdStillHasLastSample = false;
         }
 
         private void OnClientViewfinderTick(float dt)
         {
             if (ClientApi == null) return;
+
+            UpdateHoldStillTracking(dt);
 
             ItemSlot? activeSlot = ClientApi.World.Player?.InventoryManager?.ActiveHotbarSlot;
             bool holdingCamera = activeSlot?.Itemstack?.Item is ItemWetplateCamera;
@@ -315,6 +468,16 @@ namespace Collodion
                     {
                         if (offhand != null && offhand.Empty)
                         {
+                            if (IsHoldStillPending)
+                            {
+                                long nowMs = Environment.TickCount64;
+                                if (nowMs - lastHoldStillChatMs > 1000)
+                                {
+                                    lastHoldStillChatMs = nowMs;
+                                    ClientApi.ShowChatMessage("Wetplate: hold still to finish the exposure.");
+                                }
+                                return;
+                            }
                             ClientChannel.SendPacket(new CameraLoadPlatePacket { Load = false });
                         }
                     }

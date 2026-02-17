@@ -1,0 +1,52 @@
+{
+  "editor": {
+    "allAngles": false,
+    "entityTextureMode": true
+  },
+  "textureWidth": 16,
+  "textureHeight": 16,
+  "textures": {
+    "leather": "leather"
+  },
+  "elements": [
+    {
+      "name": "strapTop",
+      "from": [2, 10, 6],
+      "to": [14, 11, 10],
+      "faces": {
+        "north": { "texture": "#leather", "uv": [0, 0, 12, 1] },
+        "east": { "texture": "#leather", "uv": [0, 0, 4, 1] },
+        "south": { "texture": "#leather", "uv": [0, 0, 12, 1] },
+        "west": { "texture": "#leather", "uv": [0, 0, 4, 1] },
+        "up": { "texture": "#leather", "uv": [0, 0, 12, 4] },
+        "down": { "texture": "#leather", "uv": [0, 0, 12, 4] }
+      }
+    },
+    {
+      "name": "strapSide",
+      "from": [2, 4, 6],
+      "to": [4, 11, 10],
+      "faces": {
+        "north": { "texture": "#leather", "uv": [0, 0, 2, 7] },
+        "east": { "texture": "#leather", "uv": [0, 0, 4, 7] },
+        "south": { "texture": "#leather", "uv": [0, 0, 2, 7] },
+        "west": { "texture": "#leather", "uv": [0, 0, 4, 7] },
+        "up": { "texture": "#leather", "uv": [0, 0, 2, 4] },
+        "down": { "texture": "#leather", "uv": [0, 0, 2, 4] }
+      }
+    },
+    {
+      "name": "pouch",
+      "from": [3, 3, 6],
+      "to": [7, 8, 10],
+      "faces": {
+        "north": { "texture": "#leather", "uv": [0, 0, 4, 5] },
+        "east": { "texture": "#leather", "uv": [0, 0, 4, 5] },
+        "south": { "texture": "#leather", "uv": [0, 0, 4, 5] },
+        "west": { "texture": "#leather", "uv": [0, 0, 4, 5] },
+        "up": { "texture": "#leather", "uv": [0, 0, 4, 4] },
+        "down": { "texture": "#leather", "uv": [0, 0, 4, 4] }
+      }
+    }
+  ]
+}

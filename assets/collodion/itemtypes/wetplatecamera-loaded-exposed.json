@@ -1,16 +1,15 @@
 {
-    "code": "wetplatecamera",
+    "code": "wetplatecamera-loaded-exposed",
     "class": "WetplateCamera",
     "heldTpIdleAnimation": "holdbothhands",
     "heldRightReadyAnimation": "holdbothhands",
-    "shape": { "base": "collodion:item/camera" },
+    "shape": { "base": "collodion:item/camera-loaded" },
     "textures": {
         "oak": { "base": "game:block/wood/debarked/oak" },
         "tinbronze": { "base": "game:block/metal/sheet-plain/tinbronze1" },
         "blackleather": { "base": "game:block/leather/black" },
         "clearquartz": { "base": "game:item/resource/ungraded/clearquartz" },
-        "silveredplate" : { "base": "collodion:item/plate-silvered"},
-        "exposedplate" : { "base": "collodion:item/plate-exposed"}
+        "loadedplate": { "base": "collodion:item/plate-exposed" }
     },
     "attributes": {
         "handbook": {
@@ -19,7 +18,7 @@
     },
     "behaviors": [],
     "maxstacksize": 1,
-    "creativeinventory": { "general": ["*"], "items": ["*"] },
+    "creativeinventory": { "general": [] },
     "guiTransform": {
         "translation": { "x": 0, "y": 0, "z": 0 },
         "rotation": { "x": 0, "y": 0, "z": 0 },

@@ -1,0 +1,94 @@
+{
+	"editor": {
+		"backDropShape": "C:/Program Files (x86)/Vintagestory/assets/game/shapes/entity/humanoid/seraph-faceless",
+		"collapsedPaths": "Root/CameraRoot",
+		"allAngles": false,
+		"entityTextureMode": true
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textureSizes": {
+	},
+	"textures": {
+	},
+	"elements": [
+		{
+			"name": "SlingRoot",
+			"stepParentName": "UpperTorso",
+			"from": [ 0.0, 0.0, 0.0 ],
+			"to": [ 0.0, 0.0, 0.0 ],
+			"uv": [ 999.0, 999.0 ],
+			"faces": {
+				"north": { "texture": "#null", "uv": [ 0.0, 0.5, 0.5, 1.0 ], "enabled": false },
+				"east": { "texture": "#null", "uv": [ 0.5, 0.5, 1.0, 1.0 ], "enabled": false },
+				"south": { "texture": "#null", "uv": [ 1.0, 0.5, 1.5, 1.0 ], "enabled": false },
+				"west": { "texture": "#null", "uv": [ 1.5, 0.5, 2.0, 1.0 ], "enabled": false },
+				"up": { "texture": "#null", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
+				"down": { "texture": "#null", "uv": [ 0.5, 0.0, 1.0, 0.5 ], "enabled": false }
+			},
+			"children": [
+				{
+					"name": "strapDiagonal",
+					"from": [ -7.5, -3.0, -0.5 ],
+					"to": [ 4.0, -2.5, 0.0 ],
+					"uv": [ 0.0, 0.0 ],
+					"rotationOrigin": [ 0.0, 0.0, 0.0 ],
+					"rotationY": 90.0,
+					"rotationZ": -59.0,
+					"faces": {
+						"north": { "texture": "#leather", "uv": [ 0.0, 0.5, 11.5, 1.0 ] },
+						"east": { "texture": "#leather", "uv": [ 11.5, 0.5, 12.0, 1.0 ] },
+						"south": { "texture": "#leather", "uv": [ 12.0, 0.5, 23.5, 1.0 ] },
+						"west": { "texture": "#leather", "uv": [ 23.5, 0.5, 24.0, 1.0 ] },
+						"up": { "texture": "#leather", "uv": [ 0.0, 0.0, 11.5, 0.5 ] },
+						"down": { "texture": "#leather", "uv": [ 11.5, 0.0, 23.0, 0.5 ] }
+					}
+				},
+				{
+					"name": "strapDiagonal2",
+					"from": [ -7.25, -2.5, 5.5 ],
+					"to": [ 4.25, -2.0, 6.0 ],
+					"uv": [ 0.0, 0.0 ],
+					"rotationOrigin": [ 0.0, 0.0, 0.0 ],
+					"rotationY": 85.0,
+					"rotationZ": -59.0,
+					"faces": {
+						"north": { "texture": "#leather", "uv": [ 0.0, 0.5, 11.5, 1.0 ] },
+						"east": { "texture": "#leather", "uv": [ 11.5, 0.5, 12.0, 1.0 ] },
+						"south": { "texture": "#leather", "uv": [ 12.0, 0.5, 23.5, 1.0 ] },
+						"west": { "texture": "#leather", "uv": [ 23.5, 0.5, 24.0, 1.0 ] },
+						"up": { "texture": "#leather", "uv": [ 0.0, 0.0, 11.5, 0.5 ] },
+						"down": { "texture": "#leather", "uv": [ 11.5, 0.0, 23.0, 0.5 ] }
+					}
+				},
+				{
+					"name": "strapTop",
+					"from": [ 0.0, 4.75, 5.75 ],
+					"to": [ 5.0, 5.25, 6.25 ],
+					"uv": [ 0.0, 0.0 ],
+					"faces": {
+						"north": { "texture": "#leather", "uv": [ 0.0, 0.5, 5.0, 1.0 ] },
+						"east": { "texture": "#leather", "uv": [ 5.0, 0.5, 5.5, 1.0 ] },
+						"south": { "texture": "#leather", "uv": [ 5.5, 0.5, 10.5, 1.0 ] },
+						"west": { "texture": "#leather", "uv": [ 10.5, 0.5, 11.0, 1.0 ] },
+						"up": { "texture": "#leather", "uv": [ 0.0, 0.0, 5.0, 0.5 ] },
+						"down": { "texture": "#leather", "uv": [ 5.0, 0.0, 10.0, 0.5 ] }
+					}
+				},
+				{
+					"name": "strapBottom",
+					"from": [ -0.5, -5.0, -0.25 ],
+					"to": [ 6.0, -4.5, 0.25 ],
+					"uv": [ 0.0, 0.0 ],
+					"faces": {
+						"north": { "texture": "#leather", "uv": [ 0.0, 0.5, 6.5, 1.0 ] },
+						"east": { "texture": "#leather", "uv": [ 6.5, 0.5, 7.0, 1.0 ] },
+						"south": { "texture": "#leather", "uv": [ 7.0, 0.5, 13.5, 1.0 ] },
+						"west": { "texture": "#leather", "uv": [ 13.5, 0.5, 14.0, 1.0 ] },
+						"up": { "texture": "#leather", "uv": [ 0.0, 0.0, 6.5, 0.5 ] },
+						"down": { "texture": "#leather", "uv": [ 6.5, 0.0, 13.0, 0.5 ] }
+					}
+				}
+			]
+		}
+	]}

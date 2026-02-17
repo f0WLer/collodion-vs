@@ -21,6 +21,9 @@ namespace Collodion
                 .SetMessageHandler<PhotoBlobChunkPacket>((p) => PhotoSync?.ClientHandleChunk(p))
                 .SetMessageHandler<PhotoBlobAckPacket>((p) => PhotoSync?.ClientHandleAck(p));
 
+            api.Input.RegisterHotKey("collodion-toggle-camerasling", "Toggle camera in sling", GlKeys.R, HotkeyType.CharacterControls);
+            api.Input.SetHotKeyHandler("collodion-toggle-camerasling", OnCameraSlingHotkey);
+
             try
             {
                 var asm = typeof(CollodionModSystem).Assembly;
@@ -164,6 +167,13 @@ namespace Collodion
 
             clientLastPhotoSeenPingMs[photoId] = nowMs;
             ClientChannel.SendPacket(new PhotoSeenPacket { PhotoId = photoId });
+        }
+
+        private bool OnCameraSlingHotkey(KeyCombination _)
+        {
+            if (ClientApi?.World?.Player == null || ClientChannel == null) return false;
+            ClientChannel.SendPacket(new CameraSlingTogglePacket());
+            return true;
         }
     }
 }

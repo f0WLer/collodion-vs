@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
+using Vintagestory.API.Common.Entities;
 
 namespace Collodion
 {
@@ -24,6 +26,7 @@ namespace Collodion
             ServerChannel = api.Network.GetChannel("collodion");
             ServerChannel.SetMessageHandler<PhotoTakenPacket>(OnPhotoTakenReceived);
             ServerChannel.SetMessageHandler<CameraLoadPlatePacket>(OnCameraLoadPlateReceived);
+            ServerChannel.SetMessageHandler<CameraSlingTogglePacket>(OnCameraSlingToggleReceived);
             PhotoSync = new WetplatePhotoSync(this);
 
             serverPhotoLastSeenIndex = LoadOrCreateServerPhotoLastSeenIndex(api);
@@ -131,6 +134,197 @@ namespace Collodion
 
         private static readonly AssetLocation SilveredPlateItemCode = new AssetLocation("collodion", "silveredplate");
         private static readonly AssetLocation ExposedPlateItemCode = new AssetLocation("collodion", "exposedplate");
+        private static readonly AssetLocation WetplateCameraBaseCode = new AssetLocation("collodion", "wetplatecamera");
+        private static readonly AssetLocation WetplateCameraLoadedSilveredCode = new AssetLocation("collodion", "wetplatecamera-loaded-silvered");
+        private static readonly AssetLocation WetplateCameraLoadedExposedCode = new AssetLocation("collodion", "wetplatecamera-loaded-exposed");
+        private static readonly AssetLocation CameraSlingEmptyCode = new AssetLocation("collodion", "camerasling-empty");
+        private static readonly AssetLocation CameraSlingFullCode = new AssetLocation("collodion", "camerasling-full");
+
+        private static bool InventoryHasLeftShoulderSlot(InventoryBase inventory)
+        {
+            foreach (ItemSlot? slot in inventory)
+            {
+                if (slot != null && IsLeftShoulderSlot(slot)) return true;
+            }
+
+            return false;
+        }
+
+        private static InventoryBase? GetGearInventory(IServerPlayer player)
+        {
+            object? invManager = player.InventoryManager;
+            if (invManager == null) return null;
+
+            var getOwnInventoryMethod = invManager.GetType().GetMethod("GetOwnInventory", new[] { typeof(string) });
+            if (getOwnInventoryMethod != null)
+            {
+                string[] candidates = { "character", "gear", "clothes" };
+                foreach (string className in candidates)
+                {
+                    if (getOwnInventoryMethod.Invoke(invManager, new object[] { className }) is InventoryBase inventory && InventoryHasLeftShoulderSlot(inventory))
+                    {
+                        return inventory;
+                    }
+                }
+            }
+
+            var inventoriesProp = invManager.GetType().GetProperty("Inventories");
+            if (inventoriesProp?.GetValue(invManager) is IDictionary dict)
+            {
+                foreach (DictionaryEntry entry in dict)
+                {
+                    if (entry.Value is InventoryBase inventory && InventoryHasLeftShoulderSlot(inventory))
+                    {
+                        return inventory;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsLeftShoulderSlot(ItemSlot slot)
+        {
+            var slotTypeProp = slot.GetType().GetProperty("SlotType");
+            if (slotTypeProp?.GetValue(slot) is string slotType)
+            {
+                return string.Equals(slotType, "leftshouldergear", StringComparison.OrdinalIgnoreCase);
+            }
+
+            return false;
+        }
+
+        private ItemSlot? GetEquippedLeftShoulderSlingSlot(IServerPlayer player)
+        {
+            InventoryBase? gearInventory = GetGearInventory(player);
+            if (gearInventory == null) return null;
+
+            foreach (ItemSlot? slot in gearInventory)
+            {
+                if (slot?.Itemstack?.Item is not ItemCameraSling) continue;
+                if (!IsLeftShoulderSlot(slot)) continue;
+                return slot;
+            }
+
+            return null;
+        }
+
+        private void SetSlingCode(ItemSlot slingSlot, AssetLocation code)
+        {
+            if (Api == null || slingSlot.Itemstack == null) return;
+            if (slingSlot.Itemstack.Collectible?.Code == code) return;
+
+            Item? item = Api.World.GetItem(code);
+            if (item == null) return;
+
+            ItemStack replacement = new ItemStack(item);
+            replacement.Attributes.MergeTree(slingSlot.Itemstack.Attributes.Clone());
+            slingSlot.Itemstack = replacement;
+            slingSlot.MarkDirty();
+        }
+
+        private static bool CameraHasLoadedPlate(ItemStack? cameraStack)
+        {
+            if (cameraStack == null) return false;
+            string loaded = cameraStack.Attributes.GetString(ItemWetplateCamera.AttrLoadedPlate, string.Empty);
+            return !string.IsNullOrWhiteSpace(loaded);
+        }
+
+        private static AssetLocation? GetLoadedPlateCode(ItemStack? cameraStack)
+        {
+            if (cameraStack == null) return null;
+
+            string loaded = cameraStack.Attributes.GetString(ItemWetplateCamera.AttrLoadedPlate, string.Empty);
+            if (string.IsNullOrWhiteSpace(loaded)) return null;
+
+            try
+            {
+                return new AssetLocation(loaded);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static AssetLocation GetLoadedCameraCodeForPlate(AssetLocation? loadedPlateCode)
+        {
+            if (loadedPlateCode == ExposedPlateItemCode) return WetplateCameraLoadedExposedCode;
+            return WetplateCameraLoadedSilveredCode;
+        }
+
+        private void SetCameraCode(ItemSlot cameraSlot, AssetLocation code)
+        {
+            if (Api == null || cameraSlot.Itemstack == null) return;
+            if (cameraSlot.Itemstack.Collectible?.Code == code) return;
+
+            Item? item = Api.World.GetItem(code);
+            if (item == null) return;
+
+            ItemStack replacement = new ItemStack(item, cameraSlot.Itemstack.StackSize);
+            replacement.Attributes.MergeTree(cameraSlot.Itemstack.Attributes.Clone());
+            cameraSlot.Itemstack = replacement;
+            cameraSlot.MarkDirty();
+        }
+
+        private void OnCameraSlingToggleReceived(IServerPlayer player, CameraSlingTogglePacket _packet)
+        {
+            if (Api == null) return;
+
+            ItemSlot? slingSlot = GetEquippedLeftShoulderSlingSlot(player);
+            if (slingSlot?.Itemstack == null) return;
+
+            ItemSlot? activeSlot = player.InventoryManager.ActiveHotbarSlot;
+            if (activeSlot == null) return;
+
+            ItemStack slingStack = slingSlot.Itemstack;
+            ItemStack? activeStack = activeSlot.Itemstack;
+
+            ItemStack? storedCamera = null;
+            try
+            {
+                storedCamera = slingStack.Attributes.GetItemstack(ItemCameraSling.AttrStoredCameraStack, null);
+                storedCamera?.ResolveBlockOrItem(Api.World);
+            }
+            catch
+            {
+                storedCamera = null;
+            }
+
+            if (activeStack?.Item is ItemWetplateCamera && storedCamera == null)
+            {
+                ItemStack moved = activeStack.Clone();
+                moved.StackSize = 1;
+
+                slingStack.Attributes.SetItemstack(ItemCameraSling.AttrStoredCameraStack, moved);
+
+                activeSlot.TakeOutWhole();
+                activeSlot.MarkDirty();
+
+                SetSlingCode(slingSlot, CameraSlingFullCode);
+                return;
+            }
+
+            if (activeSlot.Empty && storedCamera != null)
+            {
+                storedCamera.StackSize = 1;
+                activeSlot.Itemstack = storedCamera;
+                activeSlot.MarkDirty();
+
+                if (CameraHasLoadedPlate(storedCamera))
+                {
+                    SetCameraCode(activeSlot, GetLoadedCameraCodeForPlate(GetLoadedPlateCode(storedCamera)));
+                }
+                else
+                {
+                    SetCameraCode(activeSlot, WetplateCameraBaseCode);
+                }
+
+                slingStack.Attributes.RemoveAttribute(ItemCameraSling.AttrStoredCameraStack);
+
+                SetSlingCode(slingSlot, CameraSlingEmptyCode);
+            }
+        }
 
         private void OnCameraLoadPlateReceived(IServerPlayer player, CameraLoadPlatePacket packet)
         {
@@ -175,6 +369,7 @@ namespace Collodion
                 offhandSlot.MarkDirty();
 
                 cameraStack.Attributes.SetString(ItemWetplateCamera.AttrLoadedPlate, code.ToString());
+                SetCameraCode(cameraSlot, GetLoadedCameraCodeForPlate(code));
                 cameraSlot.MarkDirty();
                 return;
             }
@@ -230,6 +425,7 @@ namespace Collodion
             // Clear the camera state.
             cameraStack.Attributes.RemoveAttribute(ItemWetplateCamera.AttrLoadedPlate);
             cameraStack.Attributes.RemoveAttribute(ItemWetplateCamera.AttrLoadedPlateStack);
+            SetCameraCode(cameraSlot, WetplateCameraBaseCode);
             cameraSlot.MarkDirty();
         }
 
@@ -323,6 +519,7 @@ namespace Collodion
             // Keep the exposed (now photo-bearing) plate loaded in the camera.
             cameraStack.Attributes.SetItemstack(ItemWetplateCamera.AttrLoadedPlateStack, exposedStack);
             cameraStack.Attributes.SetString(ItemWetplateCamera.AttrLoadedPlate, ExposedPlateItemCode.ToString());
+            SetCameraCode(cameraSlot, WetplateCameraLoadedExposedCode);
             cameraSlot?.MarkDirty();
         }
     }

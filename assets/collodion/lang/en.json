@@ -1,6 +1,14 @@
 {
     "item-wetplatecamera": "Wetplate Camera",
     "itemdesc-wetplatecamera": "A heavy wooden box used to capture moments in time on glass plates.",
+    "item-wetplatecamera-loaded-silvered": "Wetplate Camera",
+    "itemdesc-wetplatecamera-loaded-silvered": "A heavy wooden box used to capture moments in time on glass plates.",
+    "item-wetplatecamera-loaded-exposed": "Wetplate Camera",
+    "itemdesc-wetplatecamera-loaded-exposed": "A heavy wooden box used to capture moments in time on glass plates.",
+    "item-camerasling-empty": "Camera Sling",
+    "itemdesc-camerasling-empty": "Wear on the left shoulder and press R to stow or draw your camera.",
+    "item-camerasling-full": "Camera Sling",
+    "itemdesc-camerasling-full": "Wear on the left shoulder and press R to stow or draw your camera.",
     
     "item-collodionportion": "Collodion",
     "incontainer-item-collodionportion": "Collodion",

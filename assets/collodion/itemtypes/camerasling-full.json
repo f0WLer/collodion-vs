@@ -1,0 +1,26 @@
+{
+    "code": "camerasling-full",
+    "class": "CameraSling",
+    "maxstacksize": 1,
+    "shape": { "base": "collodion:item/sling-full" },
+    "textures": {
+        "leather": { "base": "game:block/leather/plain" },
+        "oak": { "base": "game:block/wood/debarked/oak" },
+        "tinbronze": { "base": "game:block/metal/sheet-plain/tinbronze1" }
+    },
+    "attributes": {
+        "attachableToEntity": {
+            "categoryCode": "leftshouldergear",
+            "attachedShape": { "base": "item/sling-full-attached" }
+        },
+        "wearableAttachment": true,
+        "clothescategories": ["leftshouldergear"],
+        "clothescategory": "leftshouldergear",
+        "warmthByType": { "*": 0 },
+        "handbook": {
+            "groupBy": ["camerasling-*"]
+        }
+    },
+    "creativeinventory": { "general": [] },
+    "behaviors": []
+}

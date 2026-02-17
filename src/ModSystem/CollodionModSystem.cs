@@ -22,6 +22,11 @@ namespace Collodion
         public bool Load { get; set; }
     }
 
+    [ProtoContract]
+    public class CameraSlingTogglePacket
+    {
+    }
+
     public partial class CollodionModSystem : ModSystem
     {
         public static CollodionModSystem? ClientInstance { get; private set; }
@@ -49,6 +54,7 @@ namespace Collodion
         {
             this.Api = api;
             api.RegisterItemClass("WetplateCamera", typeof(ItemWetplateCamera));
+            api.RegisterItemClass("CameraSling", typeof(ItemCameraSling));
             api.RegisterItemClass("FramedPhotograph", typeof(ItemFramedPhotograph));
             api.RegisterItemClass("GlassPlate", typeof(ItemGlassPlate));
             api.RegisterItemClass("SilveredPlate", typeof(ItemSilveredPlate));
@@ -66,6 +72,7 @@ namespace Collodion
             api.Network.RegisterChannel("collodion")
                 .RegisterMessageType(typeof(PhotoTakenPacket))
                 .RegisterMessageType(typeof(CameraLoadPlatePacket))
+                .RegisterMessageType(typeof(CameraSlingTogglePacket))
                 .RegisterMessageType(typeof(PhotoBlobRequestPacket))
                 .RegisterMessageType(typeof(PhotoBlobChunkPacket))
                 .RegisterMessageType(typeof(PhotoBlobAckPacket))

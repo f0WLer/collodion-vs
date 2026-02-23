@@ -1,6 +1,6 @@
 {
   "code": "developedplate",
-  "class": "GenericPlate",
+  "class": "DevelopedPlate",
   "shape": { "base": "collodion:item/plates/plate" },
   "textures": {
     "plate": { "base": "collodion:item/plate-developed" }

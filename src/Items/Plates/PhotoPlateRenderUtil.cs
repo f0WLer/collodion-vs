@@ -16,6 +16,7 @@ namespace Collodion
         // Plate/frame visible area is 5w x 5.5h => aspect = 10/11.
         private const float PhotoTargetAspect = 10f / 11f;
         private const int DevelopPoursRequired = 5;
+        private const float MovementEffectMin = 0.001f;
 
         private sealed class CachedRender
         {
@@ -145,6 +146,10 @@ namespace Collodion
                 if (developPours > DevelopPoursRequired) developPours = DevelopPoursRequired;
             }
 
+            float movementScore = GetMovementScore(itemstack);
+            bool hasMovementEffects = movementScore > MovementEffectMin;
+            int movementCacheBucket = QuantizeMovementScore(movementScore);
+
             int versionSnapshot;
             string cacheKey;
             lock (CacheLock)
@@ -162,7 +167,7 @@ namespace Collodion
                 };
 #pragma warning restore CS0618
 
-                cacheKey = $"{photoFileName}|{variant}|r{((uvRotationDeg % 360) + 360) % 360}|mx{(mirrorX ? 1 : 0)}|fx{effectsProfile}|dp{developPours}|v{versionSnapshot}";
+                cacheKey = $"{photoFileName}|{variant}|r{((uvRotationDeg % 360) + 360) % 360}|mx{(mirrorX ? 1 : 0)}|fx{effectsProfile}|dp{developPours}|mv{movementCacheBucket}|v{versionSnapshot}";
                 if (MeshCache.TryGetValue(cacheKey, out CachedRender? cached) && cached != null)
                 {
                     renderinfo.ModelRef = cached.MeshRef;
@@ -184,12 +189,22 @@ namespace Collodion
 
             string renderPath = sourcePath;
             string renderFileName = photoFileName;
-            if (!string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("developed", StringComparison.OrdinalIgnoreCase))
+            bool useDevelopedStage = !string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("developed", StringComparison.OrdinalIgnoreCase);
+            if (useDevelopedStage || hasMovementEffects)
             {
-                string derivedFileName = GetDerivedPhotoFileName(photoFileName, $"developed{developPours}");
-                string derivedPath = GetDerivedPhotoPath(photoFileName, $"developed{developPours}");
+                string profileTag = useDevelopedStage
+                    ? $"developed{developPours}"
+                    : "base";
 
-                if (TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|developed|{developPours}", developPours))
+                if (hasMovementEffects)
+                {
+                    profileTag = $"{profileTag}-mv{movementCacheBucket}";
+                }
+
+                string derivedFileName = GetDerivedPhotoFileName(photoFileName, profileTag);
+                string derivedPath = GetDerivedPhotoPath(photoFileName, profileTag);
+
+                if (TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{profileTag}", useDevelopedStage, developPours, movementScore))
                 {
                     renderPath = derivedPath;
                     renderFileName = derivedFileName;
@@ -312,6 +327,10 @@ namespace Collodion
                 if (developPours > DevelopPoursRequired) developPours = DevelopPoursRequired;
             }
 
+            float movementScore = GetMovementScore(itemstack);
+            bool hasMovementEffects = movementScore > MovementEffectMin;
+            int movementCacheBucket = QuantizeMovementScore(movementScore);
+
             int versionSnapshot;
             lock (CacheLock) versionSnapshot = AtlasVersion;
 
@@ -332,12 +351,22 @@ namespace Collodion
 
             string renderPath = sourcePath;
             string renderFileName = photoFileName;
-            if (!string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("developed", StringComparison.OrdinalIgnoreCase))
+            bool useDevelopedStage = !string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("developed", StringComparison.OrdinalIgnoreCase);
+            if (useDevelopedStage || hasMovementEffects)
             {
-                string derivedFileName = GetDerivedPhotoFileName(photoFileName, $"developed{developPours}");
-                string derivedPath = GetDerivedPhotoPath(photoFileName, $"developed{developPours}");
+                string profileTag = useDevelopedStage
+                    ? $"developed{developPours}"
+                    : "base";
 
-                if (TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|developed|{developPours}", developPours))
+                if (hasMovementEffects)
+                {
+                    profileTag = $"{profileTag}-mv{movementCacheBucket}";
+                }
+
+                string derivedFileName = GetDerivedPhotoFileName(photoFileName, profileTag);
+                string derivedPath = GetDerivedPhotoPath(photoFileName, profileTag);
+
+                if (TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{profileTag}", useDevelopedStage, developPours, movementScore))
                 {
                     renderPath = derivedPath;
                     renderFileName = derivedFileName;
@@ -355,7 +384,7 @@ namespace Collodion
                 }
 
                 string photoKey = Path.GetFileNameWithoutExtension(renderFileName);
-                AssetLocation texLoc = new AssetLocation("collodion", $"photo-block-{photoKey}-v{versionSnapshot}");
+                AssetLocation texLoc = new AssetLocation("collodion", $"photo-block-{photoKey}-mv{movementCacheBucket}-v{versionSnapshot}");
 
                 capi.BlockTextureAtlas.GetOrInsertTexture(
                     texLoc,
@@ -567,7 +596,7 @@ namespace Collodion
             return Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos", "derived", derivedFileName);
         }
 
-        private static bool TryEnsureDerivedPhoto(ICoreClientAPI capi, string sourcePath, string derivedPath, string seedKey, int developPours)
+        private static bool TryEnsureDerivedPhoto(ICoreClientAPI capi, string sourcePath, string derivedPath, string seedKey, bool useDevelopedStage, int developPours, float movementScore)
         {
             try
             {
@@ -592,9 +621,14 @@ namespace Collodion
                 if (t < 0f) t = 0f;
                 if (t > 1f) t = 1f;
 
-                if (t < 0.999f)
+                if (useDevelopedStage && t < 0.999f)
                 {
                     ApplyDevelopmentStageVisuals(src, t);
+                }
+
+                if (movementScore > MovementEffectMin)
+                {
+                    ApplyExposureMotionArtifacts(src, seedKey, movementScore);
                 }
 
                 using var image = SKImage.FromBitmap(src);
@@ -760,6 +794,94 @@ namespace Collodion
                     }
                 }
             }
+        }
+
+        private static float GetMovementScore(ItemStack? itemstack)
+        {
+            if (itemstack?.Attributes == null) return 0f;
+
+            try
+            {
+                double movement = itemstack.Attributes.GetDouble(WetPlateAttrs.HoldStillMovement, 0);
+                if (movement <= 0) return 0f;
+                if (movement > 1000) movement = 1000;
+                return (float)movement;
+            }
+            catch
+            {
+                return 0f;
+            }
+        }
+
+        private static int QuantizeMovementScore(float movementScore)
+        {
+            float clamped = movementScore;
+            if (clamped < 0f) clamped = 0f;
+            if (clamped > 1000f) clamped = 1000f;
+            return (int)Math.Round(clamped * 100f);
+        }
+
+        private static void ApplyExposureMotionArtifacts(SKBitmap bmp, string seedKey, float movementScore)
+        {
+            if (bmp == null || bmp.Width <= 1 || bmp.Height <= 1) return;
+
+            float normalized = movementScore / 1.8f;
+            if (normalized < 0f) normalized = 0f;
+            if (normalized > 1f) normalized = 1f;
+            if (normalized <= 0.01f) return;
+
+            int hash = seedKey?.GetHashCode() ?? 0;
+            float angle = (float)((hash & 1023) / 1023.0 * Math.PI * 2.0);
+            float dirX = (float)Math.Cos(angle);
+            float dirY = (float)Math.Sin(angle);
+
+            float radius = 0.75f + normalized * 4.5f;
+            int samples = 2 + (int)Math.Round(normalized * 4f);
+            float trailAlpha = 0.08f + normalized * 0.22f;
+
+            float ghostOffsetX = -dirY * (0.5f + normalized * 2.2f);
+            float ghostOffsetY = dirX * (0.5f + normalized * 2.2f);
+            float ghostAlpha = 0.05f + normalized * 0.16f;
+
+            using var source = bmp.Copy();
+            if (source == null) return;
+
+            using var sourceImage = SKImage.FromBitmap(source);
+            using var canvas = new SKCanvas(bmp);
+            canvas.Clear(SKColors.Black);
+
+            using var basePaint = new SKPaint
+            {
+                BlendMode = SKBlendMode.Src,
+                IsAntialias = false,
+                Color = new SKColor(255, 255, 255, 255)
+            };
+            canvas.DrawImage(sourceImage, 0f, 0f, basePaint);
+
+            using var trailPaint = new SKPaint
+            {
+                BlendMode = SKBlendMode.SrcOver,
+                IsAntialias = false
+            };
+
+            for (int i = 1; i <= samples; i++)
+            {
+                float t = i / (float)samples;
+                float shift = radius * t;
+                byte alpha = (byte)(255f * (trailAlpha / (samples * 2f)));
+                trailPaint.Color = new SKColor(255, 255, 255, alpha);
+
+                canvas.DrawImage(sourceImage, dirX * shift, dirY * shift, trailPaint);
+                canvas.DrawImage(sourceImage, -dirX * shift, -dirY * shift, trailPaint);
+            }
+
+            using var ghostPaint = new SKPaint
+            {
+                BlendMode = SKBlendMode.SrcOver,
+                IsAntialias = false,
+                Color = new SKColor(255, 255, 255, (byte)(255f * ghostAlpha))
+            };
+            canvas.DrawImage(sourceImage, ghostOffsetX, ghostOffsetY, ghostPaint);
         }
 
         private static void ApplyDevelopmentStageVisualsSlow(SKBitmap bmp, int w, int h, float blackPoint, float contrast, float whiteHaze, float edgeFade, float opacity)

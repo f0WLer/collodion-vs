@@ -13,6 +13,8 @@ namespace Collodion
 
         public string? FramePlankBlockCode { get; private set; }
 
+        public float ExposureMovement { get; private set; }
+
         public override void Initialize(ICoreAPI api)
         {
             base.Initialize(api);
@@ -74,6 +76,23 @@ namespace Collodion
             catch { }
         }
 
+        public void SetExposureMovement(float movement)
+        {
+            if (movement < 0f) movement = 0f;
+            if (Math.Abs(ExposureMovement - movement) < 0.0001f) return;
+
+            ExposureMovement = movement;
+            ClientRequestMeshRebuild();
+
+            MarkDirty(true);
+
+            try
+            {
+                Api?.World?.BlockAccessor?.MarkBlockEntityDirty(Pos);
+            }
+            catch { }
+        }
+
 
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
@@ -92,6 +111,11 @@ namespace Collodion
             {
                 tree.SetString(PhotographAttrs.FramePlank, FramePlankBlockCode);
             }
+
+            if (ExposureMovement > 0f)
+            {
+                tree.SetFloat(WetPlateAttrs.HoldStillMovement, ExposureMovement);
+            }
         }
 
         public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldAccessForResolve)
@@ -100,6 +124,7 @@ namespace Collodion
             PhotoId = tree.GetString(PhotographAttrs.PhotoId);
             Caption = tree.GetString(PhotographAttrs.Caption);
             FramePlankBlockCode = tree.GetString(PhotographAttrs.FramePlank);
+            ExposureMovement = tree.GetFloat(WetPlateAttrs.HoldStillMovement, 0f);
             ClientRequestMeshRebuild();
         }
 

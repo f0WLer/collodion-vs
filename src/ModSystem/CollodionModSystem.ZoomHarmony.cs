@@ -136,7 +136,7 @@ namespace Collodion
             bool shouldZoom = inst?.IsViewfinderActive == true;
             if (shouldZoom)
             {
-                float mult = ViewfinderZoomMultiplier;
+                float mult = inst?.Config?.Viewfinder?.ZoomMultiplier ?? 0.65f;
                 outFov = ClampZoomedFov(inFov * mult, inFov);
                 scaledIndex = 1;
             }

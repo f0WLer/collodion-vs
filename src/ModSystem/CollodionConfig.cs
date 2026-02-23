@@ -8,6 +8,9 @@ namespace Collodion
         public WetplateEffectsConfig Effects = new WetplateEffectsConfig();
         public WetplateEffectsConfig EffectsDeveloped = CreateDevelopedEffectsDefaults();
 
+        // Viewfinder capture behavior (client-side capture flow).
+        public ViewfinderConfig Viewfinder = new ViewfinderConfig();
+
         // Timed interaction configuration (shared by client/server).
         public DevelopmentTrayInteractionConfig DevelopmentTrayInteractions = new DevelopmentTrayInteractionConfig();
 
@@ -40,6 +43,8 @@ namespace Collodion
             DevelopmentTrayInteractions ??= new DevelopmentTrayInteractionConfig();
             DevelopmentTrayInteractions.ClampInPlace();
 
+            Viewfinder ??= new ViewfinderConfig();
+            Viewfinder.ClampInPlace();
         }
 
         internal static WetplateEffectsConfig CreateDevelopedEffectsDefaults()
@@ -157,6 +162,25 @@ namespace Collodion
         {
             if (DurationSeconds < 0.05f) DurationSeconds = 0.05f;
             if (DurationSeconds > 30f) DurationSeconds = 30f;
+        }
+    }
+
+    public sealed class ViewfinderConfig
+    {
+        public float ZoomMultiplier = 0.65f;
+        public float HoldStillDurationSeconds = 4f;
+        public float HoldStillLookWeight = 0.35f;
+
+        internal void ClampInPlace()
+        {
+            if (ZoomMultiplier < 0.2f) ZoomMultiplier = 0.2f;
+            if (ZoomMultiplier > 1f) ZoomMultiplier = 1f;
+
+            if (HoldStillDurationSeconds < 0f) HoldStillDurationSeconds = 0f;
+            if (HoldStillDurationSeconds > 30f) HoldStillDurationSeconds = 30f;
+
+            if (HoldStillLookWeight < 0f) HoldStillLookWeight = 0f;
+            if (HoldStillLookWeight > 5f) HoldStillLookWeight = 5f;
         }
     }
 }

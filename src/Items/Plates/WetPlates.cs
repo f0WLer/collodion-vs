@@ -9,6 +9,7 @@ namespace Collodion
     {
         public const string WetCreatedTotalHours = "collodionWetCreatedTotalHours";
         public const string WetDurationHours = "collodionWetDurationHours";
+        public const double DefaultWetDurationHours = 0.2;
         public const string PhotoId = "photoId";
         public const string PlateStage = "collodionPlateStage";
         public const string DevelopPours = "collodionDevelopPours";
@@ -41,36 +42,12 @@ namespace Collodion
                 stack.Attributes.SetDouble(WetDurationHours, durationHours);
             }
         }
-    }
 
-    public class ItemSilveredPlate : ItemPlateBase
-    {
-        // Default wet time (in-game hours). 0.2h = 12 minutes.
-        private const double DefaultWetDurationHours = 0.2;
-
-        public override void OnCreatedByCrafting(ItemSlot[] allInputslots, ItemSlot outputSlot, GridRecipe recipe)
+        public static void AppendWetnessInfo(IWorldAccessor world, ItemStack stack, System.Text.StringBuilder dsc)
         {
-            base.OnCreatedByCrafting(allInputslots, outputSlot, recipe);
+            if (stack == null || dsc == null) return;
 
-            if (api?.World == null) return;
-            ItemStack? outStack = outputSlot?.Itemstack;
-            if (outStack == null) return;
-
-            WetPlateAttrs.EnsureWetTimer(api.World, outStack, DefaultWetDurationHours);
-        }
-
-        public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
-        {
-            base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
-
-            ItemStack? stack = inSlot?.Itemstack;
-            if (stack == null) return;
-
-            // Silvered plates are usually created via barrel recipes (not crafting),
-            // so initialize wetness timing lazily the first time we can.
-            WetPlateAttrs.EnsureWetTimer(world, stack, DefaultWetDurationHours);
-
-            double hoursLeft = WetPlateAttrs.GetRemainingWetHours(world, stack);
+            double hoursLeft = GetRemainingWetHours(world, stack);
             if (hoursLeft > 0)
             {
                 int minutesLeft = (int)Math.Ceiling(hoursLeft * 60);
@@ -83,6 +60,33 @@ namespace Collodion
         }
     }
 
+    public class ItemSilveredPlate : ItemPlateBase
+    {
+        public override void OnCreatedByCrafting(ItemSlot[] allInputslots, ItemSlot outputSlot, GridRecipe recipe)
+        {
+            base.OnCreatedByCrafting(allInputslots, outputSlot, recipe);
+
+            if (api?.World == null) return;
+            ItemStack? outStack = outputSlot?.Itemstack;
+            if (outStack == null) return;
+
+            WetPlateAttrs.EnsureWetTimer(api.World, outStack, WetPlateAttrs.DefaultWetDurationHours);
+        }
+
+        public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
+        {
+            base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
+
+            ItemStack? stack = inSlot?.Itemstack;
+            if (stack == null) return;
+
+            // Silvered plates are usually created via barrel recipes (not crafting),
+            // so initialize wetness timing lazily the first time we can.
+            WetPlateAttrs.EnsureWetTimer(world, stack, WetPlateAttrs.DefaultWetDurationHours);
+            WetPlateAttrs.AppendWetnessInfo(world, stack, dsc);
+        }
+    }
+
     public class ItemExposedPlate : ItemPlateBase
     {
         public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
@@ -92,7 +96,22 @@ namespace Collodion
             ItemStack? stack = inSlot?.Itemstack;
             if (stack == null) return;
 
-            string photoId = stack.Attributes.GetString(WetPlateAttrs.PhotoId) ?? string.Empty;
+            WetPlateAttrs.EnsureWetTimer(world, stack, WetPlateAttrs.DefaultWetDurationHours);
+            WetPlateAttrs.AppendWetnessInfo(world, stack, dsc);
+        }
+    }
+
+    public class ItemDevelopedPlate : ItemPlateBase
+    {
+        public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
+        {
+            base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
+
+            ItemStack? stack = inSlot?.Itemstack;
+            if (stack == null) return;
+
+            WetPlateAttrs.EnsureWetTimer(world, stack, WetPlateAttrs.DefaultWetDurationHours);
+            WetPlateAttrs.AppendWetnessInfo(world, stack, dsc);
         }
     }
 }

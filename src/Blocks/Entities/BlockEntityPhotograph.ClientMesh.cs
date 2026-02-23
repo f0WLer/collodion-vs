@@ -3,6 +3,7 @@ using System.IO;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.API.Datastructures;
 
 namespace Collodion
 {
@@ -146,25 +147,44 @@ namespace Collodion
                     return;
                 }
 
-                byte[] pngBytes = File.ReadAllBytes(photoPath);
-
-                float photoAspect = 1f;
-                if (TryGetPngDimensions(pngBytes, out int pngW, out int pngH) && pngH > 0)
+                ItemStack? frameStack = null;
+                try
                 {
-                    photoAspect = pngW / (float)pngH;
+                    Item? frameItem = capi.World.GetItem(new AssetLocation("collodion", "framedphotograph"));
+                    if (frameItem != null)
+                    {
+                        frameStack = new ItemStack(frameItem);
+                        var attrs = new TreeAttribute();
+                        attrs.SetString(WetPlateAttrs.PhotoId, photoId);
+                        if (ExposureMovement > 0f)
+                        {
+                            attrs.SetFloat(WetPlateAttrs.HoldStillMovement, ExposureMovement);
+                        }
+                        frameStack.Attributes = attrs;
+                    }
+                }
+                catch
+                {
+                    frameStack = null;
                 }
 
-                string textureKey = $"photo-{Path.GetFileNameWithoutExtension(photoFileName)}";
-                AssetLocation texLoc = new AssetLocation("collodion", textureKey);
+                if (frameStack == null || !PhotoPlateRenderUtil.TryGetPhotoBlockTexture(capi, frameStack, out TextureAtlasPosition texPos, out float photoAspect, Pos))
+                {
+                    lock (clientMeshLock)
+                    {
+                        clientMesh = null;
+                        clientFrameMesh = frameMesh;
+                        clientTexPos = null;
+                        clientTextureId = 0;
+                        clientLastError = $"Failed to prepare frame photo texture: {photoFileName}";
+                        clientOverlayInfo = null;
+                    }
 
-                TextureAtlasPosition texPos;
-                capi.BlockTextureAtlas.GetOrInsertTexture(
-                    texLoc,
-                    out clientTextureId,
-                    out texPos,
-                    () => capi.Render.BitmapCreateFromPng(pngBytes),
-                    0.05f
-                );
+                    MarkDirty(true);
+                    return;
+                }
+
+                clientTextureId = texPos.atlasTextureId;
 
                 MeshData newMesh = GeneratePhotoMeshForBlock(capi, texPos, photoAspect);
                 lock (clientMeshLock)

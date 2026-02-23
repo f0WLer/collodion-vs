@@ -18,9 +18,6 @@ namespace Collodion
     public partial class CollodionModSystem
     {
         private const float RmbReleaseGraceSeconds = 0.04f;
-        private const float ViewfinderZoomMultiplier = 0.65f;
-        private const float HoldStillDurationSeconds = 1.5f;
-        private const float HoldStillLookWeight = 0.35f;
 
         private long viewfinderTickListenerId;
         private bool suppressViewfinderUntilRmbReleased;
@@ -72,6 +69,10 @@ namespace Collodion
 
         private bool IsHoldStillPending => holdStillActive || holdStillCaptureReady;
 
+        private float ViewfinderZoomMultiplierCfg => Config?.Viewfinder?.ZoomMultiplier ?? 0.65f;
+        private float HoldStillDurationSecondsCfg => Config?.Viewfinder?.HoldStillDurationSeconds ?? 4f;
+        private float HoldStillLookWeightCfg => Config?.Viewfinder?.HoldStillLookWeight ?? 0.35f;
+
         public void BeginViewfinderMode()
         {
             if (ClientApi == null) return;
@@ -112,7 +113,7 @@ namespace Collodion
                     float old = SafeGetFov(getter, fallback: 70f);
                     runtimeOldFov = old;
 
-                    float newFov = ClampFov(old * ViewfinderZoomMultiplier, old);
+                    float newFov = ClampFov(old * ViewfinderZoomMultiplierCfg, old);
                     runtimeTargetFov = newFov;
                     SafeSetFov(setter, newFov);
                     return;
@@ -125,7 +126,7 @@ namespace Collodion
                     float old = ClientApi.Settings.Float.Get(key, 70f);
                     viewfinderOldFloatSettings[key] = old;
 
-                    float newFov = old * ViewfinderZoomMultiplier;
+                    float newFov = old * ViewfinderZoomMultiplierCfg;
                     newFov = Math.Max(30f, Math.Min(110f, newFov));
                     viewfinderTargetFloatSettings[key] = newFov;
                     ClientApi.Settings.Float.Set(key, newFov, true);
@@ -310,8 +311,8 @@ namespace Collodion
 
         private void StartHoldStillTracking(EntityAgent player, string photoId)
         {
-            holdStillActive = HoldStillDurationSeconds > 0f;
-            holdStillRemainingSeconds = HoldStillDurationSeconds;
+            holdStillActive = HoldStillDurationSecondsCfg > 0f;
+            holdStillRemainingSeconds = HoldStillDurationSecondsCfg;
             holdStillMovementScore = 0f;
             holdStillCaptureReady = false;
             holdStillPhotoId = photoId;
@@ -386,7 +387,7 @@ namespace Collodion
                 float pitchDelta = pitch - holdStillLastPitch;
                 float lookDelta = Math.Abs(yawDelta) + Math.Abs(pitchDelta);
 
-                holdStillMovementScore += distance + lookDelta * HoldStillLookWeight;
+                holdStillMovementScore += distance + lookDelta * HoldStillLookWeightCfg;
             }
 
             holdStillLastX = x;
@@ -420,7 +421,7 @@ namespace Collodion
             ClientChannel.SendPacket(new PhotoTakenPacket()
             {
                 PhotoId = photoId,
-                HoldStillSeconds = HoldStillDurationSeconds,
+                HoldStillSeconds = HoldStillDurationSecondsCfg,
                 HoldStillMovement = holdStillMovementScore
             });
 

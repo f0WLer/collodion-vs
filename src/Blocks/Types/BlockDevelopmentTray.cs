@@ -272,6 +272,7 @@ namespace Collodion
                     if (!TryGetDeveloperPourContext(be, out _, out _, out _, out int currentPours)) return false;
 
                     if (currentPours >= DevelopPoursRequired) return false;
+                    if (!HasConsumableChemical(activeSlot, DeveloperPortionCode, ChemicalUnitsPerUse)) return false;
 
                     // Prime local timed state so client-only visuals can react immediately.
                     BeginTimed(byPlayer, blockSel.Position, ActionDeveloper, GetDeveloperPourSeconds());
@@ -282,6 +283,7 @@ namespace Collodion
                 if (IsHoldingChemical(activeSlot, FixerPortionCode))
                 {
                     if (!TryGetFixerPourContext(be, out _, out _)) return false;
+                    if (!HasConsumableChemical(activeSlot, FixerPortionCode, ChemicalUnitsPerUse)) return false;
 
                     // Prime local timed state so client-only visuals can react immediately.
                     BeginTimed(byPlayer, blockSel.Position, ActionFixer, GetFixerPourSeconds());
@@ -329,6 +331,11 @@ namespace Collodion
                 if (!TryGetDeveloperPourContext(be, out _, out _, out _, out int currentPours)) return false;
 
                 if (currentPours >= DevelopPoursRequired) return false;
+                if (!HasConsumableChemical(activeSlot, DeveloperPortionCode, ChemicalUnitsPerUse))
+                {
+                    Tell(byPlayer, "Wetplate: need developer (at least 1 portion).", blockSel.Position);
+                    return false;
+                }
 
                 world.PlaySoundAt(ChemicalPourSound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
                 BeginTimed(byPlayer, blockSel.Position, ActionDeveloper, GetDeveloperPourSeconds());
@@ -343,6 +350,12 @@ namespace Collodion
                 if (pours < DevelopPoursRequired)
                 {
                     Tell(byPlayer, $"Wetplate: plate not fully developed ({pours}/{DevelopPoursRequired}).", blockSel.Position);
+                    return false;
+                }
+
+                if (!HasConsumableChemical(activeSlot, FixerPortionCode, ChemicalUnitsPerUse))
+                {
+                    Tell(byPlayer, "Wetplate: need fixer (at least 1 portion).", blockSel.Position);
                     return false;
                 }
 
@@ -367,6 +380,15 @@ namespace Collodion
 
                 ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
                 if (!IsHoldingChemical(activeSlot, DeveloperPortionCode)) { ClearTimed(byPlayer); return false; }
+                if (!HasConsumableChemical(activeSlot, DeveloperPortionCode, ChemicalUnitsPerUse))
+                {
+                    if (world.Side == EnumAppSide.Server)
+                    {
+                        Tell(byPlayer, "Wetplate: need developer (at least 1 portion).", pos);
+                    }
+                    ClearTimed(byPlayer);
+                    return false;
+                }
 
                 if (!TryGetDeveloperPourContext(be, out ItemStack plate, out bool isExposed, out bool isDeveloped, out int currentPours))
                 {
@@ -404,6 +426,15 @@ namespace Collodion
 
                 ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
                 if (!IsHoldingChemical(activeSlot, FixerPortionCode)) { ClearTimed(byPlayer); return false; }
+                if (!HasConsumableChemical(activeSlot, FixerPortionCode, ChemicalUnitsPerUse))
+                {
+                    if (world.Side == EnumAppSide.Server)
+                    {
+                        Tell(byPlayer, "Wetplate: need fixer (at least 1 portion).", pos);
+                    }
+                    ClearTimed(byPlayer);
+                    return false;
+                }
 
                 if (!TryGetFixerPourContext(be, out ItemStack plate, out int pours))
                 {
@@ -633,6 +664,18 @@ namespace Collodion
             return HasChemicalInAttributes(stack?.Attributes, code);
         }
 
+        private static bool HasConsumableChemical(ItemSlot? activeSlot, AssetLocation portionCode, int amount)
+        {
+            if (activeSlot?.Itemstack == null) return false;
+
+            if (IsChemical(activeSlot.Itemstack, portionCode))
+            {
+                return activeSlot.Itemstack.StackSize >= amount;
+            }
+
+            return HasSufficientChemicalInAttributes(activeSlot.Itemstack.Attributes, portionCode, amount);
+        }
+
         private static bool HasChemicalInAttributes(ITreeAttribute? attrs, AssetLocation portionCode)
         {
             if (attrs == null) return false;
@@ -749,6 +792,53 @@ namespace Collodion
                 if (attr is ITreeAttribute subtree)
                 {
                     if (TryConsumeChemicalFromAttributes(subtree, portionCode, amount)) return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool HasSufficientChemicalInAttributes(ITreeAttribute? attrs, AssetLocation portionCode, int amount)
+        {
+            if (attrs == null) return false;
+
+            foreach (var kvp in attrs)
+            {
+                IAttribute attr = kvp.Value;
+                if (attr == null) continue;
+
+                if (attr is ItemstackAttribute itemAttr)
+                {
+                    ItemStack contained = itemAttr.value;
+                    if (MatchesPortionCode(contained?.Collectible?.Code, portionCode))
+                    {
+                        if (contained != null && contained.StackSize >= amount) return true;
+                    }
+                }
+
+                if (attr is TreeArrayAttribute arr && arr.value != null)
+                {
+                    for (int i = 0; i < arr.value.Length; i++)
+                    {
+                        ITreeAttribute entry = arr.value[i];
+                        if (entry == null) continue;
+
+                        string codeStr = entry.GetString("code", null) ?? string.Empty;
+                        if (!MatchesPortionCode(codeStr, portionCode)) continue;
+
+                        int stackSize = entry.GetInt("stacksize", entry.GetInt("quantity", -1));
+                        if (stackSize < 0)
+                        {
+                            if (entry.GetBool("makefull", false)) stackSize = 1000;
+                        }
+
+                        if (stackSize >= amount) return true;
+                    }
+                }
+
+                if (attr is ITreeAttribute subtree)
+                {
+                    if (HasSufficientChemicalInAttributes(subtree, portionCode, amount)) return true;
                 }
             }
 

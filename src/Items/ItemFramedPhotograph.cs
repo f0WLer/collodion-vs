@@ -167,6 +167,19 @@ namespace Collodion
                 {
                     // ignore
                 }
+
+                try
+                {
+                    float movement = stack.Attributes.GetFloat(WetPlateAttrs.HoldStillMovement, 0f);
+                    if (movement > 0f)
+                    {
+                        be.SetExposureMovement(movement);
+                    }
+                }
+                catch
+                {
+                    // ignore
+                }
             }
 
             slot.TakeOut(1);

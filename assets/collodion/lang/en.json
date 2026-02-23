@@ -93,6 +93,7 @@
     "block-developmenttray-fire-exposed": "Development Tray (Fire Clay)",
     "block-developmenttray-fire-developed": "Development Tray (Fire Clay)",
     "block-developmenttray-fire-finished": "Development Tray (Fire Clay)",
+    "block-cameraslingwall": "Wall-Mounted Camera Sling",
 
     "item-developmenttray-raw-blue": "Unfired Development Tray (Blue Clay)",
     "itemdesc-developmenttray-raw-blue": "A clay tray that must be fired before use.",

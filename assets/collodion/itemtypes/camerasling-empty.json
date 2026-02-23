@@ -4,7 +4,8 @@
     "maxstacksize": 1,
     "shape": { "base": "collodion:item/sling-empty" },
     "textures": {
-        "leather": { "base": "game:block/leather/plain" }
+        "leather": { "base": "game:block/leather/plain" },
+        "tinbronze": { "base": "game:block/metal/sheet-plain/tinbronze1" }
     },
     "attributes": {
         "attachableToEntity": {

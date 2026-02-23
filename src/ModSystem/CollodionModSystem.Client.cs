@@ -172,8 +172,72 @@ namespace Collodion
         private bool OnCameraSlingHotkey(KeyCombination _)
         {
             if (ClientApi?.World?.Player == null || ClientChannel == null) return false;
-            ClientChannel.SendPacket(new CameraSlingTogglePacket());
+
+            var packet = new CameraSlingTogglePacket();
+            try
+            {
+                object? sel = ClientApi.World.Player.CurrentBlockSelection;
+                if (sel != null)
+                {
+                    object? pos = GetMemberValue(sel, "Position");
+                    object? face = GetMemberValue(sel, "Face");
+                    if (pos == null || face == null)
+                    {
+                        ClientChannel.SendPacket(packet);
+                        return true;
+                    }
+
+                    int x = GetIntMemberValue(pos, "X");
+                    int y = GetIntMemberValue(pos, "Y");
+                    int z = GetIntMemberValue(pos, "Z");
+                    string faceCode = GetMemberValue(face, "Code")?.ToString() ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(faceCode))
+                    {
+                        packet.TryWallMount = true;
+                        packet.TargetX = x;
+                        packet.TargetY = y;
+                        packet.TargetZ = z;
+                        packet.TargetFaceCode = faceCode;
+                    }
+                }
+            }
+            catch
+            {
+                // ignore and send basic toggle packet
+            }
+
+            ClientChannel.SendPacket(packet);
             return true;
+        }
+
+        private static object? GetMemberValue(object instance, string memberName)
+        {
+            var type = instance.GetType();
+
+            var prop = type.GetProperty(memberName);
+            if (prop != null)
+            {
+                try { return prop.GetValue(instance); }
+                catch { }
+            }
+
+            var field = type.GetField(memberName);
+            if (field != null)
+            {
+                try { return field.GetValue(instance); }
+                catch { }
+            }
+
+            return null;
+        }
+
+        private static int GetIntMemberValue(object instance, string memberName)
+        {
+            object? value = GetMemberValue(instance, memberName);
+            if (value == null) return 0;
+
+            try { return Convert.ToInt32(value); }
+            catch { return 0; }
         }
     }
 }

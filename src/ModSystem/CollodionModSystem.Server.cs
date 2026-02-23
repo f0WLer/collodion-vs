@@ -3,6 +3,7 @@ using System.Collections;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.MathTools;
 
 namespace Collodion
 {
@@ -139,6 +140,7 @@ namespace Collodion
         private static readonly AssetLocation WetplateCameraLoadedExposedCode = new AssetLocation("collodion", "wetplatecamera-loaded-exposed");
         private static readonly AssetLocation CameraSlingEmptyCode = new AssetLocation("collodion", "camerasling-empty");
         private static readonly AssetLocation CameraSlingFullCode = new AssetLocation("collodion", "camerasling-full");
+        private static readonly AssetLocation CameraSlingWallCode = new AssetLocation("collodion", "cameraslingwall");
 
         private static bool InventoryHasLeftShoulderSlot(InventoryBase inventory)
         {
@@ -267,6 +269,62 @@ namespace Collodion
             cameraSlot.MarkDirty();
         }
 
+        private bool TryStowCameraOnWall(IServerPlayer player, CameraSlingTogglePacket packet, ItemSlot slingSlot, ItemSlot activeSlot, ItemStack slingStack, ItemStack activeStack)
+        {
+            if (Api == null || packet == null) return false;
+            if (!packet.TryWallMount) return false;
+            if (string.IsNullOrWhiteSpace(packet.TargetFaceCode)) return false;
+
+            BlockFacing? face = BlockFacing.FromCode(packet.TargetFaceCode);
+            if (face == null || !face.IsHorizontal) return false;
+
+            BlockPos targetPos = new BlockPos(packet.TargetX, packet.TargetY, packet.TargetZ);
+            BlockPos placePos = targetPos.AddCopy(face);
+
+            string orientation = face.Opposite.Code;
+            Block? wallBlock = Api.World.GetBlock(new AssetLocation(CameraSlingWallCode.Domain, $"{CameraSlingWallCode.Path}-{orientation}"));
+            if (wallBlock == null || wallBlock.Id <= 0) return false;
+
+            Block existing = Api.World.BlockAccessor.GetBlock(placePos);
+            if (existing != null && existing.Id != 0 && !existing.IsReplacableBy(wallBlock)) return false;
+
+            Item? fullSlingItem = Api.World.GetItem(CameraSlingFullCode);
+            if (fullSlingItem == null) return false;
+
+            ItemStack movedCamera = activeStack.Clone();
+            movedCamera.StackSize = 1;
+
+            ItemStack mountedSling = new ItemStack(fullSlingItem);
+            try
+            {
+                mountedSling.Attributes.MergeTree(slingStack.Attributes.Clone());
+            }
+            catch
+            {
+                // ignore
+            }
+
+            mountedSling.Attributes.SetItemstack(ItemCameraSling.AttrStoredCameraStack, movedCamera);
+
+            Api.World.BlockAccessor.SetBlock(wallBlock.Id, placePos);
+
+            if (Api.World.BlockAccessor.GetBlockEntity(placePos) is not BlockEntityWallMountedCameraSling be)
+            {
+                Api.World.BlockAccessor.SetBlock(0, placePos);
+                return false;
+            }
+
+            be.SetSlingStack(mountedSling);
+
+            activeSlot.TakeOutWhole();
+            activeSlot.MarkDirty();
+
+            slingSlot.TakeOutWhole();
+            slingSlot.MarkDirty();
+
+            return true;
+        }
+
         private void OnCameraSlingToggleReceived(IServerPlayer player, CameraSlingTogglePacket _packet)
         {
             if (Api == null) return;
@@ -293,6 +351,11 @@ namespace Collodion
 
             if (activeStack?.Item is ItemWetplateCamera && storedCamera == null)
             {
+                if (TryStowCameraOnWall(player, _packet, slingSlot, activeSlot, slingStack, activeStack))
+                {
+                    return;
+                }
+
                 ItemStack moved = activeStack.Clone();
                 moved.StackSize = 1;
 
@@ -511,7 +574,7 @@ namespace Collodion
             exposedStack.Attributes.SetString("timestamp", DateTime.Now.ToString());
             exposedStack.Attributes.SetString("photographer", player.PlayerName);
             exposedStack.Attributes.SetString(WetPlateAttrs.PlateStage, "exposed");
-            exposedStack.Attributes.SetDouble(WetPlateAttrs.HoldStillSeconds, packet.HoldStillSeconds);
+            exposedStack.Attributes.RemoveAttribute(WetPlateAttrs.HoldStillSeconds);
             exposedStack.Attributes.SetDouble(WetPlateAttrs.HoldStillMovement, packet.HoldStillMovement);
 
             ServerTouchPhotoSeen(photoId);

@@ -1,0 +1,73 @@
+{
+  "code": "cameraslingwall",
+  "class": "WallMountedCameraSling",
+  "entityClass": "BlockEntityWallMountedCameraSling",
+  "creativeinventory": { "general": [] },
+  "blockmaterial": "Wood",
+  "drawtype": "json",
+  "shape": {
+    "base": "collodion:item/camera-hanging",
+    "rotateYByType": {
+      "*-north": 0,
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90
+    }
+  },
+  "faceCullMode": "NeverCull",
+  "sideao": { "all": false },
+  "behaviors": [
+    { "name": "HorizontalAttachable" }
+  ],
+  "textures": {
+    "leather": { "base": "game:block/leather/plain" },
+    "oak": { "base": "game:block/wood/debarked/oak" },
+    "bl": { "base": "game:block/wood/debarked/oak" },
+    "br": { "base": "game:block/wood/debarked/oak" },
+    "gd": { "base": "game:block/metal/sheet-plain/tinbronze1" },
+    "lg": { "base": "game:block/clearquartz" }
+  },
+  "variantgroups": [
+    {
+      "code": "side",
+      "loadFromProperties": "abstract/horizontalorientation"
+    }
+  ],
+  "resistance": 1,
+  "sounds": {
+    "place": "game:block/leather",
+    "break": "game:block/leather",
+    "hit": "game:block/leather"
+  },
+  "collisionbox": {
+    "x1": 0.15,
+    "y1": 0.15,
+    "z1": 0.7,
+    "x2": 0.85,
+    "y2": 0.85,
+    "z2": 1.0,
+    "rotateYByType": {
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90,
+      "*-north": 0
+    }
+  },
+  "selectionbox": {
+    "x1": 0.1,
+    "y1": 0.1,
+    "z1": 0.65,
+    "x2": 0.9,
+    "y2": 0.9,
+    "z2": 1.0,
+    "rotateYByType": {
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90,
+      "*-north": 0
+    }
+  },
+  "lightAbsorption": 0,
+  "sidesolid": { "all": "false" },
+  "sideopaque": { "all": "false" }
+}

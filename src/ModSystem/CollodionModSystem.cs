@@ -31,6 +31,20 @@ namespace Collodion
     [ProtoContract]
     public class CameraSlingTogglePacket
     {
+        [ProtoMember(1)]
+        public bool TryWallMount { get; set; }
+
+        [ProtoMember(2)]
+        public int TargetX { get; set; }
+
+        [ProtoMember(3)]
+        public int TargetY { get; set; }
+
+        [ProtoMember(4)]
+        public int TargetZ { get; set; }
+
+        [ProtoMember(5)]
+        public string TargetFaceCode { get; set; } = string.Empty;
     }
 
     public partial class CollodionModSystem : ModSystem
@@ -65,14 +79,17 @@ namespace Collodion
             api.RegisterItemClass("GlassPlate", typeof(ItemGlassPlate));
             api.RegisterItemClass("SilveredPlate", typeof(ItemSilveredPlate));
             api.RegisterItemClass("ExposedPlate", typeof(ItemExposedPlate));
+            api.RegisterItemClass("DevelopedPlate", typeof(ItemDevelopedPlate));
             api.RegisterItemClass("GenericPlate", typeof(ItemGenericPlate));
             api.RegisterItemClass("FinishedPhotoPlate", typeof(ItemFinishedPhotoPlate));
 
             api.RegisterBlockClass("GlassPlate", typeof(BlockGlassPlate));
             api.RegisterBlockClass("BlockFramedPhotograph", typeof(BlockFramedPhotograph));
             api.RegisterBlockClass("DevelopmentTray", typeof(BlockDevelopmentTray));
+            api.RegisterBlockClass("WallMountedCameraSling", typeof(BlockWallMountedCameraSling));
             api.RegisterBlockEntityClass("BlockEntityPhotograph", typeof(BlockEntityPhotograph));
             api.RegisterBlockEntityClass("BlockEntityDevelopmentTray", typeof(BlockEntityDevelopmentTray));
+            api.RegisterBlockEntityClass("BlockEntityWallMountedCameraSling", typeof(BlockEntityWallMountedCameraSling));
             
             // Register Network Channel
             api.Network.RegisterChannel("collodion")

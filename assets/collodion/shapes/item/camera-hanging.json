@@ -13,8 +13,10 @@
 	"elements": [
 		{
 			"name": "CameraRoot",
-			"from": [ 0.0, 0.0, 0.0 ],
-			"to": [ 0.0, 0.0, 0.0 ],
+			"from": [ 0.0, 8.0, -12.0 ],
+			"to": [ 0.0, 8.0, -12.0 ],
+			"rotationOrigin": [ 0.0, 0.0, 0.0 ],
+			"rotationX": 90.0,
 			"faces": {
 				"north": { "texture": "#null", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
 				"east": { "texture": "#null", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
@@ -249,6 +251,70 @@
 									}
 								}
 							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Sling1",
+			"from": [ 5.375, 6.25, 7.875 ],
+			"to": [ 5.625, 12.5, 8.375 ],
+			"rotationOrigin": [ 5.125, 6.5, 8.125 ],
+			"rotationZ": -25.0,
+			"faces": {
+				"north": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 6.0 ] },
+				"east": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 6.0 ] },
+				"south": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 6.0 ] },
+				"west": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 6.0 ] },
+				"up": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+				"down": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 0.5 ] }
+			}
+		},
+		{
+			"name": "Sling2",
+			"from": [ 11.125, 6.25, 7.875 ],
+			"to": [ 11.375, 12.5, 8.375 ],
+			"rotationOrigin": [ 10.875, 6.5, 8.125 ],
+			"rotationY": -180.0,
+			"rotationZ": -25.0,
+			"faces": {
+				"north": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 6.0 ] },
+				"east": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 6.0 ] },
+				"south": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 6.0 ] },
+				"west": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 6.0 ] },
+				"up": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+				"down": { "texture": "#leather", "uv": [ 0.0, 0.0, 0.5, 0.5 ] }
+			},
+			"children": [
+				{
+					"name": "NailStem",
+					"from": [ 0.125, 6.125, -0.125 ],
+					"to": [ 0.175, 6.175, 0.375 ],
+					"rotationOrigin": [ 0.0, 6.0, 0.0 ],
+					"faces": {
+						"north": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+						"east": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+						"south": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+						"west": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+						"up": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+						"down": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] }
+					},
+					"children": [
+						{
+							"name": "NailHead",
+							"from": [ -0.05, -0.08, 0.0 ],
+							"to": [ 0.15, 0.12, 0.05 ],
+							"rotationOrigin": [ 0.0, 0.0, 0.0 ],
+							"rotationZ": 22.5,
+							"faces": {
+								"north": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+								"east": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+								"south": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+								"west": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+								"up": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+								"down": { "texture": "#tinbronze", "uv": [ 0.0, 0.0, 0.5, 0.5 ] }
+							}
 						}
 					]
 				}

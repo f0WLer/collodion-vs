@@ -58,13 +58,6 @@ namespace Collodion
         {
             return new Dictionary<string, CollodionModSystem.PoseDelta>(System.StringComparer.OrdinalIgnoreCase)
             {
-                ["gui"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 18.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = -45.0f, Rz = 180.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 3.0f
-                },
                 ["photo-gui"] = new CollodionModSystem.PoseDelta
                 {
                     Tx = 2.0f, Ty = 10.0f, Tz = 0.0f,
@@ -81,8 +74,10 @@ namespace Collodion
                 },
                 ["tp"] = new CollodionModSystem.PoseDelta
                 {
-                    Tx = -1.0500001f, Ty = -0.8f, Tz = -0.35000002f,
-                    Rx = 25.0f, Ry = 200.0f, Rz = 75.0f,
+                    // No-op by default: tpHandTransform is defined in the item JSON.
+                    // Keeping this empty avoids double-applying offsets on fresh installs.
+                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
+                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
                     Ox = 0.5f, Oy = 0.5f, Oz = 0.5f,
                     Scale = 1.0f
                 },

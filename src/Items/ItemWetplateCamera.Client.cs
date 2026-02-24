@@ -73,20 +73,27 @@ namespace Collodion
             if (string.IsNullOrEmpty(poseTarget)) return;
 
             // Inventory/hover preview uses the GUI render target and applies its own animated rotation.
-            // Provide a centered, fully-specified baseline transform so the preview spins in place.
+            // Preserve the JSON guiTransform (if present), but ensure we have a safe transform and
+            // enable Rotate so the preview spins.
             if (target == EnumItemRenderTarget.Gui)
             {
-                var t = new ModelTransform();
-                t.Translation = new FastVec3f(0f, 0f, 0f);
-                t.Rotation = new FastVec3f(0f, 0f, 0f);
-                t.Origin.X = 0.5f;
-                t.Origin.Y = 0.5f;
-                t.Origin.Z = 0.5f;
+                var t = renderinfo.Transform == null
+                    ? new ModelTransform()
+                    : RenderPoseUtil.CloneTransform(renderinfo.Transform);
+
+                if (renderinfo.Transform == null)
+                {
+                    t.Translation = new FastVec3f(0f, 0f, 0f);
+                    t.Rotation = new FastVec3f(0f, 0f, 0f);
+                    t.Origin.X = 0.5f;
+                    t.Origin.Y = 0.5f;
+                    t.Origin.Z = 0.5f;
+                    t.ScaleXYZ = new FastVec3f(1f, 1f, 1f);
+                }
+
                 t.Rotate = true;
-                t.ScaleXYZ = new FastVec3f(1f, 1f, 1f);
                 renderinfo.Transform = t;
             }
-
 
             // IMPORTANT: do NOT mutate renderinfo.Transform in-place.
             // VS may reuse the same ModelTransform instance between frames; adding deltas

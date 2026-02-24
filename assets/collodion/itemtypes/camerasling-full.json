@@ -2,7 +2,7 @@
     "code": "camerasling-full",
     "class": "CameraSling",
     "maxstacksize": 1,
-    "shape": { "base": "collodion:item/camera-hanging" },
+    "shape": { "base": "collodion:item/sling-full-attached" },
     "textures": {
         "leather": { "base": "game:block/leather/plain" },
         "oak": { "base": "game:block/wood/debarked/oak" },

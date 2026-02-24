@@ -10,7 +10,7 @@ namespace Collodion
         private static readonly AssetLocation FinishedPlateCode = new AssetLocation("collodion:finishedphotoplate");
         private static readonly AssetLocation FramedPhotoCode = new AssetLocation("collodion:framedphotograph");
 
-        public override void OnCreatedByCrafting(ItemSlot[] allInputslots, ItemSlot outputSlot, GridRecipe byRecipe)
+        public override void OnCreatedByCrafting(ItemSlot[] allInputslots, ItemSlot outputSlot, IRecipeBase byRecipe)
         {
             base.OnCreatedByCrafting(allInputslots, outputSlot, byRecipe);
 
@@ -115,7 +115,7 @@ namespace Collodion
                 placePos = pos.UpCopy();
 
                 // Face toward player
-                BlockFacing playerFacing = BlockFacing.HorizontalFromAngle((float)byEntity.Pos.Yaw);
+                BlockFacing playerFacing = BlockFacing.HorizontalFromAngle((float)byEntity.Pos.Yaw) ?? BlockFacing.NORTH;
                 string orientation = playerFacing.Opposite.Code;
                 blockCode = new AssetLocation("collodion", $"framedphotographground-{orientation}");
             }
@@ -124,13 +124,13 @@ namespace Collodion
                 return;
             }
 
-            Block existingBlock = world.BlockAccessor.GetBlock(placePos);
-            if (existingBlock.Id != 0 && !existingBlock.IsReplacableBy(existingBlock))
+            Block? existingBlock = world.BlockAccessor.GetBlock(placePos);
+            if (existingBlock != null && existingBlock.Id != 0 && !existingBlock.IsReplacableBy(existingBlock))
             {
                 return;
             }
 
-            Block framedBlock = world.GetBlock(blockCode);
+            Block? framedBlock = world.GetBlock(blockCode);
             if (framedBlock == null)
             {
                 return;

@@ -62,7 +62,7 @@ namespace Collodion
 
     public class ItemSilveredPlate : ItemPlateBase
     {
-        public override void OnCreatedByCrafting(ItemSlot[] allInputslots, ItemSlot outputSlot, GridRecipe recipe)
+        public override void OnCreatedByCrafting(ItemSlot[] allInputslots, ItemSlot outputSlot, IRecipeBase recipe)
         {
             base.OnCreatedByCrafting(allInputslots, outputSlot, recipe);
 

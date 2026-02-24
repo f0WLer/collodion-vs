@@ -145,14 +145,17 @@ namespace Collodion
 
         private static bool TryGetDeveloperPourContext(BlockEntityDevelopmentTray be, out ItemStack plate, out bool isExposed, out bool isDeveloped, out int currentPours)
         {
-            plate = be.PlateStack;
-            if (plate == null)
+            ItemStack? trayPlate = be.PlateStack;
+            if (trayPlate == null)
             {
+                plate = default!;
                 isExposed = false;
                 isDeveloped = false;
                 currentPours = 0;
                 return false;
             }
+
+            plate = trayPlate;
 
             isExposed = IsPlate(plate, ExposedPlateItemCode);
             isDeveloped = IsPlate(plate, DevelopedPlateItemCode);
@@ -168,12 +171,15 @@ namespace Collodion
 
         private static bool TryGetFixerPourContext(BlockEntityDevelopmentTray be, out ItemStack plate, out int pours)
         {
-            plate = be.PlateStack;
-            if (plate == null)
+            ItemStack? trayPlate = be.PlateStack;
+            if (trayPlate == null)
             {
+                plate = default!;
                 pours = 0;
                 return false;
             }
+
+            plate = trayPlate;
 
             if (!IsPlate(plate, DevelopedPlateItemCode))
             {

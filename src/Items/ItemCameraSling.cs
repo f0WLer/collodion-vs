@@ -219,7 +219,10 @@ namespace Collodion
             Block existing = api.World.BlockAccessor.GetBlock(placePos);
             if (existing != null && existing.Id != 0 && !existing.IsReplacableBy(wallBlock)) return false;
 
-            ItemStack mountedSling = handSlot.Itemstack.Clone();
+            ItemStack? slingStack = handSlot.Itemstack;
+            if (slingStack == null) return false;
+
+            ItemStack mountedSling = slingStack.Clone();
             mountedSling.StackSize = 1;
 
             api.World.BlockAccessor.SetBlock(wallBlock.Id, placePos);

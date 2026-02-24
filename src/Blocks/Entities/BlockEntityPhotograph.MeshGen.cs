@@ -278,7 +278,7 @@ namespace Collodion
                 }
 
                 AssetLocation variantLoc = new AssetLocation(baseLoc.Domain, $"{baseLoc.Path}-{side}");
-                Block overlayBlock = capi.World.GetBlock(variantLoc);
+                Block? overlayBlock = capi.World.GetBlock(variantLoc);
                 if (overlayBlock == null || overlayBlock.Id == 0)
                 {
                     lock (clientMeshLock) clientOverlayInfo = $"photoshape={photoshape} variant={variantLoc} overlayBlock=<missing>";

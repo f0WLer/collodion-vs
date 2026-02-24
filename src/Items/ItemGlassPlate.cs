@@ -22,7 +22,7 @@ namespace Collodion
                 return;
             }
 
-            ItemStack stack = slot.Itemstack;
+            ItemStack? stack = slot.Itemstack;
             if (stack == null) return;
 
             string state = Attributes?["plateBlockState"].AsString("rough") ?? "rough";
@@ -37,7 +37,7 @@ namespace Collodion
                 return;
             }
 
-            Block plateBlock = world.GetBlock(new AssetLocation("collodion", $"plate-{state}"));
+            Block? plateBlock = world.GetBlock(new AssetLocation("collodion", $"plate-{state}"));
             if (plateBlock == null) return;
 
             world.BlockAccessor.SetBlock(plateBlock.Id, placePos);

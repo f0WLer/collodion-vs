@@ -18,6 +18,7 @@ namespace Collodion
     public partial class CollodionModSystem
     {
         private const float RmbReleaseGraceSeconds = 0.04f;
+        private const float HoldStillLookContributionScale = 2f;
 
         private long viewfinderTickListenerId;
         private bool suppressViewfinderUntilRmbReleased;
@@ -387,7 +388,7 @@ namespace Collodion
                 float pitchDelta = pitch - holdStillLastPitch;
                 float lookDelta = Math.Abs(yawDelta) + Math.Abs(pitchDelta);
 
-                holdStillMovementScore += distance + lookDelta * HoldStillLookWeightCfg;
+                holdStillMovementScore += distance + lookDelta * HoldStillLookWeightCfg * HoldStillLookContributionScale;
             }
 
             holdStillLastX = x;
@@ -409,6 +410,11 @@ namespace Collodion
             return diff;
         }
 
+        private static float TruncateToTwoDecimals(float value)
+        {
+            return MathF.Truncate(value * 100f) / 100f;
+        }
+
         private void TrySendHoldStillPhotoPacket()
         {
             if (ClientChannel == null) return;
@@ -422,7 +428,7 @@ namespace Collodion
             {
                 PhotoId = photoId,
                 HoldStillSeconds = HoldStillDurationSecondsCfg,
-                HoldStillMovement = holdStillMovementScore
+                HoldStillMovement = TruncateToTwoDecimals(holdStillMovementScore)
             });
 
             holdStillPhotoId = null;

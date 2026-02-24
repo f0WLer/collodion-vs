@@ -22,10 +22,7 @@
   "textures": {
     "leather": { "base": "game:block/leather/plain" },
     "oak": { "base": "game:block/wood/debarked/oak" },
-    "bl": { "base": "game:block/wood/debarked/oak" },
-    "br": { "base": "game:block/wood/debarked/oak" },
-    "gd": { "base": "game:block/metal/sheet-plain/tinbronze1" },
-    "lg": { "base": "game:block/clearquartz" }
+    "tinbronze": { "base": "game:block/metal/sheet-plain/tinbronze1" }
   },
   "variantgroups": [
     {

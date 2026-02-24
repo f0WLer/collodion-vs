@@ -115,7 +115,7 @@ namespace Collodion
                 placePos = pos.UpCopy();
 
                 // Face toward player
-                BlockFacing playerFacing = BlockFacing.HorizontalFromAngle((float)byEntity.Pos.Yaw) ?? BlockFacing.NORTH;
+                BlockFacing playerFacing = BlockFacing.HorizontalFromAngle(GetEntityYawRadians(byEntity)) ?? BlockFacing.NORTH;
                 string orientation = playerFacing.Opposite.Code;
                 blockCode = new AssetLocation("collodion", $"framedphotographground-{orientation}");
             }
@@ -184,6 +184,45 @@ namespace Collodion
 
             slot.TakeOut(1);
             slot.MarkDirty();
+        }
+
+        private static float GetEntityYawRadians(EntityAgent entity)
+        {
+            if (entity == null) return 0f;
+
+            object? pos = GetMemberValue(entity, "Pos")
+                ?? GetMemberValue(entity, "SidedPos")
+                ?? GetMemberValue(entity, "ServerPos")
+                ?? GetMemberValue(entity, "LocalPos");
+
+            if (pos == null) return 0f;
+
+            object? yaw = GetMemberValue(pos, "Yaw");
+            if (yaw == null) return 0f;
+
+            try { return Convert.ToSingle(yaw); }
+            catch { return 0f; }
+        }
+
+        private static object? GetMemberValue(object instance, string memberName)
+        {
+            var type = instance.GetType();
+
+            var prop = type.GetProperty(memberName);
+            if (prop != null)
+            {
+                try { return prop.GetValue(instance); }
+                catch { }
+            }
+
+            var field = type.GetField(memberName);
+            if (field != null)
+            {
+                try { return field.GetValue(instance); }
+                catch { }
+            }
+
+            return null;
         }
     }
 }

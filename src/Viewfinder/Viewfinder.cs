@@ -367,14 +367,7 @@ namespace Collodion
 
         private void CaptureHoldStillSample(EntityAgent player, bool accumulate)
         {
-            var pos = player.Pos;
-            if (pos == null) return;
-
-            double x = pos.X;
-            double y = pos.Y;
-            double z = pos.Z;
-            float yaw = pos.Yaw;
-            float pitch = pos.Pitch;
+            if (!TryGetEntitySpatialSample(player, out double x, out double y, out double z, out float yaw, out float pitch)) return;
 
             if (accumulate && holdStillHasLastSample)
             {
@@ -396,6 +389,84 @@ namespace Collodion
             holdStillLastYaw = yaw;
             holdStillLastPitch = pitch;
             holdStillHasLastSample = true;
+        }
+
+        private static bool TryGetEntitySpatialSample(EntityAgent player, out double x, out double y, out double z, out float yaw, out float pitch)
+        {
+            x = 0;
+            y = 0;
+            z = 0;
+            yaw = 0f;
+            pitch = 0f;
+
+            object? pos = GetMemberValueViewfinder(player, "Pos")
+                ?? GetMemberValueViewfinder(player, "SidedPos")
+                ?? GetMemberValueViewfinder(player, "ServerPos")
+                ?? GetMemberValueViewfinder(player, "LocalPos");
+
+            if (pos == null) return false;
+            if (!TryGetDoubleMemberValue(pos, "X", out x)) return false;
+            if (!TryGetDoubleMemberValue(pos, "Y", out y)) return false;
+            if (!TryGetDoubleMemberValue(pos, "Z", out z)) return false;
+
+            TryGetFloatMemberValue(pos, "Yaw", out yaw);
+            TryGetFloatMemberValue(pos, "Pitch", out pitch);
+            return true;
+        }
+
+        private static object? GetMemberValueViewfinder(object instance, string memberName)
+        {
+            var type = instance.GetType();
+
+            var prop = type.GetProperty(memberName);
+            if (prop != null)
+            {
+                try { return prop.GetValue(instance); }
+                catch { }
+            }
+
+            var field = type.GetField(memberName);
+            if (field != null)
+            {
+                try { return field.GetValue(instance); }
+                catch { }
+            }
+
+            return null;
+        }
+
+        private static bool TryGetDoubleMemberValue(object instance, string memberName, out double value)
+        {
+            value = 0;
+            object? member = GetMemberValueViewfinder(instance, memberName);
+            if (member == null) return false;
+
+            try
+            {
+                value = Convert.ToDouble(member);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool TryGetFloatMemberValue(object instance, string memberName, out float value)
+        {
+            value = 0f;
+            object? member = GetMemberValueViewfinder(instance, memberName);
+            if (member == null) return false;
+
+            try
+            {
+                value = Convert.ToSingle(member);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static float AngleDeltaRadians(float from, float to)

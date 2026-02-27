@@ -8,6 +8,7 @@ namespace Collodion
     public partial class ItemWetplateCamera
     {
         private static readonly object GroundMeshLock = new object();
+        private static readonly Vec3f GroundMeshScaleCenter = new Vec3f(0.5f, 0.5f, 0.5f);
         private static MultiTextureMeshRef? groundMeshRef;
 
         private bool TryGetGroundMesh(ICoreClientAPI capi, out MultiTextureMeshRef? meshRef)
@@ -26,12 +27,19 @@ namespace Collodion
                 capi.Tesselator.TesselateItem(this, out MeshData mesh);
 
                 // Scale around center
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 2.5f, 2.5f, 2.5f);
+                mesh.Scale(GroundMeshScaleCenter, 2.5f, 2.5f, 2.5f);
 
                 var meshRefLocal = capi.Render.UploadMultiTextureMesh(mesh);
 
                 lock (GroundMeshLock)
                 {
+                    if (groundMeshRef != null)
+                    {
+                        meshRef = groundMeshRef;
+                        meshRefLocal.Dispose();
+                        return true;
+                    }
+
                     groundMeshRef = meshRefLocal;
                 }
 
@@ -126,6 +134,19 @@ namespace Collodion
             if (api.Side != EnumAppSide.Client) return;
 
             // Viewfinder mode exit is driven by tick polling.
+        }
+
+        public override void OnUnloaded(ICoreAPI api)
+        {
+            base.OnUnloaded(api);
+
+            if (api.Side != EnumAppSide.Client) return;
+
+            lock (GroundMeshLock)
+            {
+                groundMeshRef?.Dispose();
+                groundMeshRef = null;
+            }
         }
     }
 }

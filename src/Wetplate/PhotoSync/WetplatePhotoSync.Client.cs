@@ -19,6 +19,11 @@ namespace Collodion
         private readonly object clientWaitLock = new object();
         private readonly Dictionary<string, HashSet<BlockPos>> clientBlocksWaitingForPhoto = new Dictionary<string, HashSet<BlockPos>>(StringComparer.OrdinalIgnoreCase);
 
+        private long clientLastStateCleanupMs;
+        private const long ClientStateCleanupIntervalMs = 15_000;
+        private const double ClientRequestRetainSeconds = 300.0;
+        private const long ClientIncomingStaleMs = 120_000;
+
         public void ClientOnPhotoCreated(string photoId)
         {
             if (mod.ClientApi == null || mod.ClientChannel == null) return;
@@ -39,7 +44,10 @@ namespace Collodion
             if (File.Exists(path)) return;
 
             // Use a monotonic, process-wide clock so reconnecting (new World instance) doesn't break dedupe.
-            double now = Environment.TickCount64 / 1000.0;
+            long nowMs = Environment.TickCount64;
+            double now = nowMs / 1000.0;
+            ClientMaybeCleanupState(nowMs, now);
+
             if (clientRequestedAt.TryGetValue(photoId, out double lastAt) && (now - lastAt) < 2.0)
             {
                 return;
@@ -110,6 +118,9 @@ namespace Collodion
             if (packet == null) return;
             if (packet.IsUpload) return; // ignore uploads on client
 
+            long nowMs = Environment.TickCount64;
+            ClientMaybeCleanupState(nowMs, nowMs / 1000.0);
+
             string photoId = NormalizePhotoId(packet.PhotoId);
             if (string.IsNullOrEmpty(photoId)) return;
 
@@ -125,7 +136,7 @@ namespace Collodion
             }
 
             if (asm == null) return;
-            asm.LastTouchedMs = Environment.TickCount64;
+            asm.LastTouchedMs = nowMs;
 
             if (asm.Received[packet.ChunkIndex]) return;
 
@@ -163,6 +174,53 @@ namespace Collodion
             catch (Exception ex)
             {
                 mod.ClientApi.Logger.Warning($"Wetplate: failed writing downloaded photo {photoId}: {ex.Message}");
+            }
+        }
+
+        private void ClientMaybeCleanupState(long nowMs, double nowSeconds)
+        {
+            if (nowMs - clientLastStateCleanupMs < ClientStateCleanupIntervalMs) return;
+            clientLastStateCleanupMs = nowMs;
+
+            if (clientRequestedAt.Count > 0)
+            {
+                List<string>? staleRequestKeys = null;
+                foreach (KeyValuePair<string, double> kvp in clientRequestedAt)
+                {
+                    if (nowSeconds - kvp.Value <= ClientRequestRetainSeconds) continue;
+                    staleRequestKeys ??= new List<string>();
+                    staleRequestKeys.Add(kvp.Key);
+                }
+
+                if (staleRequestKeys != null)
+                {
+                    foreach (string key in staleRequestKeys)
+                    {
+                        clientRequestedAt.Remove(key);
+                    }
+                }
+            }
+
+            if (clientIncoming.Count > 0)
+            {
+                List<string>? staleIncomingKeys = null;
+                foreach (KeyValuePair<string, IncomingAssembly> kvp in clientIncoming)
+                {
+                    IncomingAssembly asm = kvp.Value;
+                    if (asm == null) continue;
+                    if (nowMs - asm.LastTouchedMs <= ClientIncomingStaleMs) continue;
+
+                    staleIncomingKeys ??= new List<string>();
+                    staleIncomingKeys.Add(kvp.Key);
+                }
+
+                if (staleIncomingKeys != null)
+                {
+                    foreach (string key in staleIncomingKeys)
+                    {
+                        clientIncoming.Remove(key);
+                    }
+                }
             }
         }
 

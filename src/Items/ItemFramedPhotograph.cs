@@ -10,6 +10,77 @@ namespace Collodion
         private static readonly AssetLocation FinishedPlateCode = new AssetLocation("collodion:finishedphotoplate");
         private static readonly AssetLocation FramedPhotoCode = new AssetLocation("collodion:framedphotograph");
 
+        private static bool IsFramedPhotoBlock(Block? block)
+        {
+            string path = block?.Code?.Path ?? string.Empty;
+            return path.StartsWith("framedphotographground", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("framedphotographwall", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool TryGetAdjacentFramePlacement(Block? existingBlock, BlockSelection blockSel, out BlockPos placePos, out AssetLocation blockCode)
+        {
+            placePos = null!;
+            blockCode = null!;
+
+            if (existingBlock?.Code == null || blockSel?.Position == null || blockSel.HitPosition == null) return false;
+            if (!IsFramedPhotoBlock(existingBlock)) return false;
+
+            string path = existingBlock.Code.Path ?? string.Empty;
+            BlockFacing? offset = null;
+
+            if (path.StartsWith("framedphotographground", StringComparison.OrdinalIgnoreCase))
+            {
+                double dx = blockSel.HitPosition.X - 0.5;
+                double dz = blockSel.HitPosition.Z - 0.5;
+
+                if (Math.Abs(dx) >= Math.Abs(dz))
+                {
+                    offset = dx >= 0 ? BlockFacing.EAST : BlockFacing.WEST;
+                }
+                else
+                {
+                    offset = dz >= 0 ? BlockFacing.SOUTH : BlockFacing.NORTH;
+                }
+            }
+            else if (path.StartsWith("framedphotographwall", StringComparison.OrdinalIgnoreCase))
+            {
+                double dy = blockSel.HitPosition.Y - 0.5;
+                int dash = path.LastIndexOf('-');
+                string side = dash >= 0 && dash < path.Length - 1 ? path[(dash + 1)..] : string.Empty;
+
+                if (side.Equals("north", StringComparison.OrdinalIgnoreCase) || side.Equals("south", StringComparison.OrdinalIgnoreCase))
+                {
+                    double dx = blockSel.HitPosition.X - 0.5;
+                    if (Math.Abs(dy) >= Math.Abs(dx))
+                    {
+                        offset = dy >= 0 ? BlockFacing.UP : BlockFacing.DOWN;
+                    }
+                    else
+                    {
+                        offset = dx >= 0 ? BlockFacing.EAST : BlockFacing.WEST;
+                    }
+                }
+                else if (side.Equals("east", StringComparison.OrdinalIgnoreCase) || side.Equals("west", StringComparison.OrdinalIgnoreCase))
+                {
+                    double dz = blockSel.HitPosition.Z - 0.5;
+                    if (Math.Abs(dy) >= Math.Abs(dz))
+                    {
+                        offset = dy >= 0 ? BlockFacing.UP : BlockFacing.DOWN;
+                    }
+                    else
+                    {
+                        offset = dz >= 0 ? BlockFacing.SOUTH : BlockFacing.NORTH;
+                    }
+                }
+            }
+
+            if (offset == null) return false;
+
+            placePos = blockSel.Position.AddCopy(offset);
+            blockCode = existingBlock.Code;
+            return true;
+        }
+
         public override void OnCreatedByCrafting(ItemSlot[] allInputslots, ItemSlot outputSlot, GridRecipe byRecipe)
         {
             base.OnCreatedByCrafting(allInputslots, outputSlot, byRecipe);
@@ -102,26 +173,35 @@ namespace Collodion
             AssetLocation blockCode;
             BlockPos placePos;
 
-            // Wall placement (like mounted photographs)
-            if (face == BlockFacing.NORTH || face == BlockFacing.EAST || face == BlockFacing.SOUTH || face == BlockFacing.WEST)
+            Block clickedBlock = world.BlockAccessor.GetBlock(pos);
+            if (TryGetAdjacentFramePlacement(clickedBlock, blockSel, out BlockPos adjacentPos, out AssetLocation adjacentCode))
             {
-                placePos = pos.AddCopy(face);
-                string orientation = face.Opposite.Code; // face outward from wall
-                blockCode = new AssetLocation("collodion", $"framedphotographwall-{orientation}");
-            }
-            // Ground placement (place on top of a block)
-            else if (face == BlockFacing.UP)
-            {
-                placePos = pos.UpCopy();
-
-                // Face toward player
-                BlockFacing playerFacing = BlockFacing.HorizontalFromAngle((float)byEntity.Pos.Yaw);
-                string orientation = playerFacing.Opposite.Code;
-                blockCode = new AssetLocation("collodion", $"framedphotographground-{orientation}");
+                placePos = adjacentPos;
+                blockCode = adjacentCode;
             }
             else
             {
-                return;
+                // Wall placement (like mounted photographs)
+                if (face == BlockFacing.NORTH || face == BlockFacing.EAST || face == BlockFacing.SOUTH || face == BlockFacing.WEST)
+                {
+                    placePos = pos.AddCopy(face);
+                    string orientation = face.Opposite.Code; // face outward from wall
+                    blockCode = new AssetLocation("collodion", $"framedphotographwall-{orientation}");
+                }
+                // Ground placement (place on top of a block)
+                else if (face == BlockFacing.UP)
+                {
+                    placePos = pos.UpCopy();
+
+                    // Face toward player
+                    BlockFacing playerFacing = BlockFacing.HorizontalFromAngle((float)byEntity.Pos.Yaw);
+                    string orientation = playerFacing.Opposite.Code;
+                    blockCode = new AssetLocation("collodion", $"framedphotographground-{orientation}");
+                }
+                else
+                {
+                    return;
+                }
             }
 
             Block framedBlock = world.GetBlock(blockCode);

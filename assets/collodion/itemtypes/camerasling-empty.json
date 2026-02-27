@@ -21,5 +21,11 @@
         }
     },
     "creativeinventory": { "general": ["*"] },
-    "behaviors": []
+    "behaviors": [],
+    "guiTransform": {
+        "translation": { "x": -5, "y": 5, "z": 0 },
+        "rotation": { "x": 45, "y": -45, "z": 180 },
+        "origin": { "x": 0, "y": 0, "z": 0 },
+        "scale": 4.0
+    }
 }

@@ -7,6 +7,8 @@ namespace Collodion
 {
     public partial class CollodionModSystem
     {
+    private long clientPhotoSeenLastPruneMs;
+
         public override void StartClientSide(ICoreClientAPI api)
         {
             ClientApi = api;
@@ -66,7 +68,7 @@ namespace Collodion
 
             // Dev tray: ensure timed interactions require an RMB release between stages.
             // Clear the latch only when RMB is actually up.
-            api.Event.RegisterGameTickListener(OnClientDevTrayLatchTick, 20, 0);
+            clientDevTrayLatchTickListenerId = api.Event.RegisterGameTickListener(OnClientDevTrayLatchTick, 20, 0);
 
             // Patch Set3DProjection so viewfinder can zoom reliably.
             TryEnsureHarmonyProjectionZoomPatch();
@@ -158,6 +160,29 @@ namespace Collodion
             catch
             {
                 return;
+            }
+
+            // Keep the dedupe map bounded during long sessions.
+            if (nowMs - clientPhotoSeenLastPruneMs >= 30_000)
+            {
+                clientPhotoSeenLastPruneMs = nowMs;
+
+                long retainMs = Math.Max(300_000L, intervalSeconds * 4000L);
+                List<string>? staleKeys = null;
+                foreach (KeyValuePair<string, long> kvp in clientLastPhotoSeenPingMs)
+                {
+                    if (nowMs - kvp.Value <= retainMs) continue;
+                    staleKeys ??= new List<string>();
+                    staleKeys.Add(kvp.Key);
+                }
+
+                if (staleKeys != null)
+                {
+                    foreach (string key in staleKeys)
+                    {
+                        clientLastPhotoSeenPingMs.Remove(key);
+                    }
+                }
             }
 
             if (clientLastPhotoSeenPingMs.TryGetValue(photoId, out long lastMs))

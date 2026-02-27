@@ -284,6 +284,9 @@ namespace Collodion
                             rotationDeg = (rotationDeg + 90) % 360;
                         }
 
+                        // Tray photos need an additional 90° counter-clockwise turn.
+                        rotationDeg = (rotationDeg + 270) % 360;
+
                         StampUvByRotationCropped(photoMesh, photoTex, rotationDeg, photoAspect, PhotoTargetAspect);
 
                         // Nudge up slightly to avoid z-fighting with the base plate.

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
@@ -64,30 +65,6 @@ namespace Collodion
             return true;
         }
 
-        private static bool IsMostlyBlack(SKBitmap bmp)
-        {
-            // Sampled luminance check to detect "black square" outputs.
-            var pixels = bmp.Pixels;
-            if (pixels == null || pixels.Length == 0) return true;
-
-            int samples = 0;
-            double sum = 0;
-            int step = Math.Max(1, pixels.Length / 2048);
-
-            for (int i = 0; i < pixels.Length; i += step)
-            {
-                var c = pixels[i];
-                // Perceived luminance (0..255)
-                sum += 0.2126 * c.Red + 0.7152 * c.Green + 0.0722 * c.Blue;
-                samples++;
-            }
-
-            if (samples == 0) return true;
-            double avg = sum / samples;
-            // Wetplate effects intentionally darken the image - use a lower threshold
-            return avg < 2.0;
-        }
-
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
             PendingCapture? toProcess;
@@ -103,78 +80,80 @@ namespace Collodion
             {
                 int width = capi.Render.FrameWidth;
                 int height = capi.Render.FrameHeight;
+                int pixelByteCount = width * height * 4;
 
-                byte[] pixels = new byte[width * height * 4];
+                byte[] pixels = ArrayPool<byte>.Shared.Rent(pixelByteCount);
                 GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
 
-                // Ensure we read from the default framebuffer.
-                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
-                GL.ReadBuffer(ReadBufferMode.Back);
-                GL.Finish();
-                GL.ReadPixels(0, 0, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
-
-                // If we got a blank image, try reading the front buffer as a fallback.
-                if (LooksBlank(pixels))
-                {
-                    GL.ReadBuffer(ReadBufferMode.Front);
-                    GL.Finish();
-                    GL.ReadPixels(0, 0, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
-                }
-
-                // Some framebuffers provide an undefined/zero alpha channel.
-                // Ensure we treat captures as fully opaque, otherwise post-processing may turn into a black image.
-                for (int i = 3; i < pixels.Length; i += 4)
-                {
-                    pixels[i] = 255;
-                }
-
-                var srcInfo = new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Opaque);
-                using var srcBitmap = new SKBitmap(srcInfo);
-                Marshal.Copy(pixels, 0, srcBitmap.GetPixels(), pixels.Length);
-
-                const int maxDim = 512;
-                float scale = Math.Min(1f, maxDim / (float)Math.Max(width, height));
-                int outW = Math.Max(1, (int)(width * scale));
-                int outH = Math.Max(1, (int)(height * scale));
-
-                var dstInfo = new SKImageInfo(outW, outH, SKColorType.Bgra8888, SKAlphaType.Opaque);
-                using var dstBitmap = new SKBitmap(dstInfo);
-                using (var canvas = new SKCanvas(dstBitmap))
-                {
-                    canvas.Clear(SKColors.Black);
-                    // Flip only vertically to correct GL framebuffer orientation
-                    canvas.Scale(1, -1);
-                    canvas.Translate(0, -outH);
-                    using var srcImage = SKImage.FromBitmap(srcBitmap);
-                    canvas.DrawImage(srcImage, new SKRect(0, 0, outW, outH));
-                }
-
-                // Keep a raw copy if effects are enabled, so we can fall back if the result is unusably dark.
-                SKBitmap? rawCopy = null;
-                if (effectsConfig != null && effectsConfig.Enabled)
-                {
-                    rawCopy = dstBitmap.Copy();
-                }
-
-                // Apply wetplate-style post-processing (optional, configurable).
                 try
                 {
-                    WetplateEffects.ApplyInPlace(dstBitmap, toProcess.FileName, effectsConfig ?? new WetplateEffectsConfig());
+                    // Ensure we read from the default framebuffer.
+                    GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
+                    GL.ReadBuffer(ReadBufferMode.Back);
+                    GL.Finish();
+                    GL.ReadPixels(0, 0, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
+
+                    // If we got a blank image, try reading the front buffer as a fallback.
+                    if (LooksBlank(pixels))
+                    {
+                        GL.ReadBuffer(ReadBufferMode.Front);
+                        GL.Finish();
+                        GL.ReadPixels(0, 0, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
+                    }
+
+                    // Some framebuffers provide an undefined/zero alpha channel.
+                    // Ensure we treat captures as fully opaque, otherwise post-processing may turn into a black image.
+                    for (int i = 3; i < pixelByteCount; i += 4)
+                    {
+                        pixels[i] = 255;
+                    }
+
+                    var srcInfo = new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Opaque);
+                    using var srcBitmap = new SKBitmap(srcInfo);
+                    Marshal.Copy(pixels, 0, srcBitmap.GetPixels(), pixelByteCount);
+
+                    const int maxDim = 512;
+                    float scale = Math.Min(1f, maxDim / (float)Math.Max(width, height));
+                    int outW = Math.Max(1, (int)(width * scale));
+                    int outH = Math.Max(1, (int)(height * scale));
+
+                    var dstInfo = new SKImageInfo(outW, outH, SKColorType.Bgra8888, SKAlphaType.Opaque);
+                    using var dstBitmap = new SKBitmap(dstInfo);
+                    using (var canvas = new SKCanvas(dstBitmap))
+                    {
+                        canvas.Clear(SKColors.Black);
+                        // Flip only vertically to correct GL framebuffer orientation
+                        canvas.Scale(1, -1);
+                        canvas.Translate(0, -outH);
+                        using var srcImage = SKImage.FromBitmap(srcBitmap);
+                        canvas.DrawImage(srcImage, new SKRect(0, 0, outW, outH));
+                    }
+
+                    // Apply wetplate-style post-processing (optional, configurable).
+                    try
+                    {
+                        WetplateEffects.ApplyInPlace(dstBitmap, toProcess.FileName, effectsConfig);
+                    }
+                    catch (Exception effectEx)
+                    {
+                        capi.Logger.Error($"PhotoCapture: Effects failed: {effectEx.Message}");
+                    }
+
+                    using var finalImage = SKImage.FromBitmap(dstBitmap);
+                    using var pngData = finalImage.Encode(SKEncodedImageFormat.Png, 90);
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(toProcess.FullPath)!);
+                    using (var output = File.Open(toProcess.FullPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        pngData.SaveTo(output);
+                    }
+
+                    toProcess.OnSuccess(toProcess.FileName);
                 }
-                catch (Exception effectEx)
+                finally
                 {
-                    capi.Logger.Error($"PhotoCapture: Effects failed: {effectEx.Message}");
+                    ArrayPool<byte>.Shared.Return(pixels);
                 }
-
-                rawCopy?.Dispose();
-
-                using var finalImage = SKImage.FromBitmap(dstBitmap);
-                using var pngData = finalImage.Encode(SKEncodedImageFormat.Png, 90);
-
-                Directory.CreateDirectory(Path.GetDirectoryName(toProcess.FullPath)!);
-                File.WriteAllBytes(toProcess.FullPath, pngData.ToArray());
-
-                toProcess.OnSuccess(toProcess.FileName);
             }
             catch (Exception ex)
             {

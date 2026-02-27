@@ -57,7 +57,7 @@ namespace Collodion
         }
 
         private static readonly object CacheLock = new object();
-        private static readonly Dictionary<string, CachedPhotoRender> PhotoMeshCache = new Dictionary<string, CachedPhotoRender>();
+        private static readonly Dictionary<string, CachedPhotoRender> PhotoMeshCache = new Dictionary<string, CachedPhotoRender>(StringComparer.OrdinalIgnoreCase);
 
         // Bumping this version changes the atlas key used for inserted photo textures,
         // allowing on-disk image changes to be picked up without restarting.

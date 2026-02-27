@@ -111,14 +111,15 @@ namespace Collodion
                 string photoId = PhotoId!;
                 string photoFileName = WetplatePhotoSync.NormalizePhotoId(photoId);
                 string photoPath = WetplatePhotoSync.GetPhotoPath(photoFileName);
+                bool photoExists = File.Exists(photoPath);
 
                 lock (clientMeshLock)
                 {
                     clientPhotoPath = photoPath;
-                    clientPhotoFileExists = File.Exists(photoPath);
+                    clientPhotoFileExists = photoExists;
                 }
 
-                if (!File.Exists(photoPath))
+                if (!photoExists)
                 {
                     lock (clientMeshLock)
                     {
@@ -197,12 +198,6 @@ namespace Collodion
 
                 clientMeshBuildCount++;
                 MarkDirty(true);
-
-                try
-                {
-                    capi.World.BlockAccessor.MarkBlockDirty(Pos);
-                }
-                catch { }
             }
             catch (Exception ex)
             {

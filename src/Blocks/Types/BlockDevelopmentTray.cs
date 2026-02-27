@@ -145,14 +145,17 @@ namespace Collodion
 
         private static bool TryGetDeveloperPourContext(BlockEntityDevelopmentTray be, out ItemStack plate, out bool isExposed, out bool isDeveloped, out int currentPours)
         {
-            plate = be.PlateStack;
-            if (plate == null)
+            ItemStack? plateStack = be.PlateStack;
+            if (plateStack == null)
             {
+                plate = null!;
                 isExposed = false;
                 isDeveloped = false;
                 currentPours = 0;
                 return false;
             }
+
+            plate = plateStack;
 
             isExposed = IsPlate(plate, ExposedPlateItemCode);
             isDeveloped = IsPlate(plate, DevelopedPlateItemCode);
@@ -168,12 +171,15 @@ namespace Collodion
 
         private static bool TryGetFixerPourContext(BlockEntityDevelopmentTray be, out ItemStack plate, out int pours)
         {
-            plate = be.PlateStack;
-            if (plate == null)
+            ItemStack? plateStack = be.PlateStack;
+            if (plateStack == null)
             {
+                plate = null!;
                 pours = 0;
                 return false;
             }
+
+            plate = plateStack;
 
             if (!IsPlate(plate, DevelopedPlateItemCode))
             {
@@ -516,7 +522,7 @@ namespace Collodion
             }
             else
             {
-                drops.AddRange(base.GetDrops(world, pos, byPlayer, dropQuantityMultiplier) ?? new ItemStack[0]);
+                drops.AddRange(base.GetDrops(world, pos, byPlayer, dropQuantityMultiplier) ?? Array.Empty<ItemStack>());
             }
 
             if (world?.BlockAccessor?.GetBlockEntity(pos) is BlockEntityDevelopmentTray be && be.PlateStack != null)

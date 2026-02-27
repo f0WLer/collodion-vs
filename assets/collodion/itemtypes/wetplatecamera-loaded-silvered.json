@@ -20,10 +20,10 @@
     "maxstacksize": 1,
     "creativeinventory": { "general": [] },
     "guiTransform": {
-        "translation": { "x": 0, "y": 0, "z": 0 },
-        "rotation": { "x": 0, "y": 0, "z": 0 },
-        "origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
-        "scale": 1.0
+        "translation": { "x": 0, "y": -30.0, "z": 0 },
+        "rotation": { "x": -45.0, "y": 45.0, "z": 180.0 },
+        "origin": { "x": 0.0, "y": 0.0, "z": 0.0 },
+        "scale": 3.0
     },
     "tpHandTransform": {
         "translation": { "x": -1.8, "y": -1.6, "z": -0.5 },

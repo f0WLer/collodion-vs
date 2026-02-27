@@ -67,6 +67,7 @@ namespace Collodion
         private PhotoLastSeenIndex? serverPhotoLastSeenIndex;
         private bool serverPhotoLastSeenDirty;
         private long? serverPhotoLastSeenFlushListenerId;
+        private long? clientDevTrayLatchTickListenerId;
 
         private readonly Dictionary<string, long> clientLastPhotoSeenPingMs = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
@@ -101,6 +102,67 @@ namespace Collodion
                 .RegisterMessageType(typeof(PhotoBlobAckPacket))
                 .RegisterMessageType(typeof(PhotoCaptionSetPacket))
                 .RegisterMessageType(typeof(PhotoSeenPacket));
+        }
+
+        public override void Dispose()
+        {
+            try
+            {
+                if (ClientApi != null)
+                {
+                    if (CaptureRenderer != null)
+                    {
+                        try
+                        {
+                            ClientApi.Event.UnregisterRenderer(CaptureRenderer, EnumRenderStage.AfterBlit);
+                        }
+                        catch { }
+
+                        try
+                        {
+                            CaptureRenderer.Dispose();
+                        }
+                        catch { }
+                    }
+
+                    if (viewfinderTickListenerId > 0)
+                    {
+                        try { ClientApi.Event.UnregisterGameTickListener(viewfinderTickListenerId); } catch { }
+                        viewfinderTickListenerId = 0;
+                    }
+
+                    if (clientDevTrayLatchTickListenerId.HasValue && clientDevTrayLatchTickListenerId.Value > 0)
+                    {
+                        try { ClientApi.Event.UnregisterGameTickListener(clientDevTrayLatchTickListenerId.Value); } catch { }
+                        clientDevTrayLatchTickListenerId = null;
+                    }
+                }
+
+                if (Api is ICoreServerAPI sapi)
+                {
+                    if (serverPhotoLastSeenFlushListenerId.HasValue && serverPhotoLastSeenFlushListenerId.Value > 0)
+                    {
+                        try { sapi.Event.UnregisterGameTickListener(serverPhotoLastSeenFlushListenerId.Value); } catch { }
+                        serverPhotoLastSeenFlushListenerId = null;
+                    }
+
+                    try { ServerMaybeFlushPhotoLastSeenIndex(sapi); } catch { }
+                }
+            }
+            finally
+            {
+                CaptureRenderer = null;
+                PhotoSync = null;
+                ClientChannel = null;
+                ServerChannel = null;
+
+                if (ReferenceEquals(ClientInstance, this))
+                {
+                    ClientInstance = null;
+                }
+
+                base.Dispose();
+            }
         }
     }
 }

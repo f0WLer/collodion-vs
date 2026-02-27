@@ -32,6 +32,7 @@ namespace Collodion
 
         private static readonly object CacheLock = new object();
         private static readonly Dictionary<string, CachedRender> MeshCache = new Dictionary<string, CachedRender>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, float> BlockPhotoAspectCache = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase);
         private static int AtlasVersion = 0;
 
         public static int ClearClientRenderCacheAndBumpVersion()
@@ -46,6 +47,7 @@ namespace Collodion
                 }
 
                 MeshCache.Clear();
+                BlockPhotoAspectCache.Clear();
                 AtlasVersion++;
             }
 
@@ -375,12 +377,32 @@ namespace Collodion
 
             try
             {
-                byte[] pngBytes = File.ReadAllBytes(renderPath);
+                byte[]? pngBytesForInsert = null;
 
-                photoAspect = 1f;
-                if (TryGetPngDimensions(pngBytes, out int pngW, out int pngH) && pngH > 0)
+                bool hasCachedAspect;
+                lock (CacheLock)
                 {
-                    photoAspect = pngW / (float)pngH;
+                    hasCachedAspect = BlockPhotoAspectCache.TryGetValue(renderPath, out float cachedAspect);
+                    if (hasCachedAspect)
+                    {
+                        photoAspect = cachedAspect;
+                    }
+                }
+
+                if (!hasCachedAspect)
+                {
+                    pngBytesForInsert = File.ReadAllBytes(renderPath);
+
+                    photoAspect = 1f;
+                    if (TryGetPngDimensions(pngBytesForInsert, out int pngW, out int pngH) && pngH > 0)
+                    {
+                        photoAspect = pngW / (float)pngH;
+                    }
+
+                    lock (CacheLock)
+                    {
+                        BlockPhotoAspectCache[renderPath] = photoAspect;
+                    }
                 }
 
                 string photoKey = Path.GetFileNameWithoutExtension(renderFileName);
@@ -390,7 +412,7 @@ namespace Collodion
                     texLoc,
                     out int _,
                     out texPos,
-                    () => capi.Render.BitmapCreateFromPng(pngBytes),
+                    () => capi.Render.BitmapCreateFromPng(pngBytesForInsert ?? File.ReadAllBytes(renderPath)),
                     0.05f
                 );
                 return texPos != null && texPos != capi.BlockTextureAtlas.UnknownTexturePosition;

@@ -31,17 +31,16 @@ namespace Collodion
             BlockPos placePos = blockSel.Position.UpCopy();
             var world = api.World;
 
+            Block plateBlock = world.GetBlock(new AssetLocation("collodion", $"plate-{state}"));
+            if (plateBlock == null) return;
+
             Block existing = world.BlockAccessor.GetBlock(placePos);
-            if (existing.Id != 0 && !existing.IsReplacableBy(existing))
+            if (existing.Id != 0 && !existing.IsReplacableBy(plateBlock))
             {
                 return;
             }
 
-            Block plateBlock = world.GetBlock(new AssetLocation("collodion", $"plate-{state}"));
-            if (plateBlock == null) return;
-
             world.BlockAccessor.SetBlock(plateBlock.Id, placePos);
-            world.BlockAccessor.MarkBlockDirty(placePos);
 
             slot.TakeOut(1);
             slot.MarkDirty();

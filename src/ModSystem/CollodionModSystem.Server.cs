@@ -433,7 +433,6 @@ namespace Collodion
 
                 cameraStack.Attributes.SetString(ItemWetplateCamera.AttrLoadedPlate, code.ToString());
                 SetCameraCode(cameraSlot, GetLoadedCameraCodeForPlate(code));
-                cameraSlot.MarkDirty();
                 return;
             }
 
@@ -489,7 +488,6 @@ namespace Collodion
             cameraStack.Attributes.RemoveAttribute(ItemWetplateCamera.AttrLoadedPlate);
             cameraStack.Attributes.RemoveAttribute(ItemWetplateCamera.AttrLoadedPlateStack);
             SetCameraCode(cameraSlot, WetplateCameraBaseCode);
-            cameraSlot.MarkDirty();
         }
 
         private void OnPhotoCaptionSet(IServerPlayer player, PhotoCaptionSetPacket packet)
@@ -583,7 +581,6 @@ namespace Collodion
             cameraStack.Attributes.SetItemstack(ItemWetplateCamera.AttrLoadedPlateStack, exposedStack);
             cameraStack.Attributes.SetString(ItemWetplateCamera.AttrLoadedPlate, ExposedPlateItemCode.ToString());
             SetCameraCode(cameraSlot, WetplateCameraLoadedExposedCode);
-            cameraSlot?.MarkDirty();
         }
     }
 }

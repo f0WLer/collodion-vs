@@ -124,14 +124,14 @@ namespace Collodion
                 return;
             }
 
-            Block existingBlock = world.BlockAccessor.GetBlock(placePos);
-            if (existingBlock.Id != 0 && !existingBlock.IsReplacableBy(existingBlock))
+            Block framedBlock = world.GetBlock(blockCode);
+            if (framedBlock == null)
             {
                 return;
             }
 
-            Block framedBlock = world.GetBlock(blockCode);
-            if (framedBlock == null)
+            Block existingBlock = world.BlockAccessor.GetBlock(placePos);
+            if (existingBlock.Id != 0 && !existingBlock.IsReplacableBy(framedBlock))
             {
                 return;
             }

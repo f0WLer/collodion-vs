@@ -11,6 +11,8 @@ namespace Collodion
     {
     // Plate/frame visible area is 5w x 5.5h => aspect = 10/11.
     private const float PhotoTargetAspect = 10f / 11f;
+    private static readonly string[] PreferredPlankTextureKeys = { "all", "side", "north", "south", "east", "west", "up", "down" };
+    private static readonly AssetLocation FallbackFramedPhotographGround = new AssetLocation("collodion", "framedphotographground");
 
         private sealed class SingleTextureSource : ITexPositionSource
         {
@@ -77,8 +79,7 @@ namespace Collodion
 
                         TextureAtlasPosition chosenTexPos = capi.BlockTextureAtlas.UnknownTexturePosition;
 
-                        string[] preferredKeys = new[] { "all", "side", "north", "south", "east", "west", "up", "down" };
-                        foreach (string key in preferredKeys)
+                        foreach (string key in PreferredPlankTextureKeys)
                         {
                             try
                             {
@@ -125,7 +126,7 @@ namespace Collodion
             {
                 capi.Tesselator.TesselateShape(
                     "collodion-frame",
-                    Block?.Code ?? new AssetLocation("collodion", "framedphotographground"),
+                    Block?.Code ?? FallbackFramedPhotographGround,
                     shape,
                     out MeshData frameMesh,
                     texSource

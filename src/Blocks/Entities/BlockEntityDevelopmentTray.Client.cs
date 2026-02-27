@@ -366,11 +366,6 @@ namespace Collodion
             clientRenderSignature = sig;
 
             MarkDirty(true);
-            try
-            {
-                capi.World.BlockAccessor.MarkBlockDirty(Pos);
-            }
-            catch { }
         }
 
         private bool TryGetPourOverlayAlpha(ICoreClientAPI capi, out float alpha, out string action)

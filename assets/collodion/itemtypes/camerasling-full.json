@@ -2,7 +2,7 @@
     "code": "camerasling-full",
     "class": "CameraSling",
     "maxstacksize": 1,
-    "shape": { "base": "collodion:item/sling-full-attached" },
+    "shape": { "base": "collodion:item/sling-full" },
     "textures": {
         "leather": { "base": "game:block/leather/plain" },
         "oak": { "base": "game:block/wood/debarked/oak" },
@@ -23,5 +23,11 @@
         }
     },
     "creativeinventory": { "general": [] },
-    "behaviors": []
+    "behaviors": [],
+    "guiTransform": {
+        "translation": { "x": -39, "y": -44, "z": 0 },
+        "rotation": { "x": -45, "y": 45, "z": -180 },
+        "origin": { "x": 0.6, "y": 0.6, "z": 0 },
+        "scale": 3.5
+    }
 }

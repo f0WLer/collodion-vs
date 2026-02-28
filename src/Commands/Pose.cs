@@ -1,27 +1,90 @@
 using System;
+using Vintagestory.API.Client;
+using Vintagestory.API.Common;
 
 namespace Collodion
 {
     public partial class CollodionModSystem
     {
+        private bool TryGetSlingGuiBaseTransform(string poseKey, out ModelTransform baseTransform)
+        {
+            baseTransform = new ModelTransform();
+            if (ClientApi?.World == null) return false;
+
+            if (!poseKey.EndsWith("-gui", StringComparison.OrdinalIgnoreCase)) return false;
+
+            AssetLocation itemCode;
+            if (poseKey.StartsWith("sling-empty-", StringComparison.OrdinalIgnoreCase))
+            {
+                itemCode = new AssetLocation("collodion", "camerasling-empty");
+            }
+            else if (poseKey.StartsWith("sling-full-", StringComparison.OrdinalIgnoreCase))
+            {
+                itemCode = new AssetLocation("collodion", "camerasling-full");
+            }
+            else if (poseKey.StartsWith("sling-", StringComparison.OrdinalIgnoreCase))
+            {
+                // Back-compat key: treat generic sling as empty sling.
+                itemCode = new AssetLocation("collodion", "camerasling-empty");
+            }
+            else
+            {
+                return false;
+            }
+
+            Item? item = ClientApi.World.GetItem(itemCode);
+            if (item?.GuiTransform == null) return false;
+
+            baseTransform = RenderPoseUtil.CloneTransform(item.GuiTransform);
+            return true;
+        }
+
+        private void ShowJsonReadyPose(string poseKey, PoseDelta d)
+        {
+            if (!TryGetSlingGuiBaseTransform(poseKey, out ModelTransform baseTransform)) return;
+
+            float tx = baseTransform.Translation.X + d.Tx;
+            float ty = baseTransform.Translation.Y + d.Ty;
+            float tz = baseTransform.Translation.Z + d.Tz;
+
+            float rx = baseTransform.Rotation.X + d.Rx;
+            float ry = baseTransform.Rotation.Y + d.Ry;
+            float rz = baseTransform.Rotation.Z + d.Rz;
+
+            float ox = baseTransform.Origin.X + d.Ox;
+            float oy = baseTransform.Origin.Y + d.Oy;
+            float oz = baseTransform.Origin.Z + d.Oz;
+
+            float baseScale = baseTransform.ScaleXYZ.X;
+            float scale = baseScale * d.Scale;
+
+            string f(float v) => v.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+
+            ClientApi?.ShowChatMessage($"Wetplate pose json[{poseKey}]: {{\"translation\":{{\"x\":{f(tx)},\"y\":{f(ty)},\"z\":{f(tz)}}},\"rotation\":{{\"x\":{f(rx)},\"y\":{f(ry)},\"z\":{f(rz)}}},\"origin\":{{\"x\":{f(ox)},\"y\":{f(oy)},\"z\":{f(oz)}}},\"scale\":{f(scale)}}}");
+        }
+
         private void HandleWetplatePoseCommand(Vintagestory.API.Common.CmdArgs args)
         {
             if (ClientApi == null) return;
 
-            // .collodion pose [photo|camera|plate] <target> <op> <axis> <amount>
+            // .collodion pose [photo|camera|plate|sling|slingempty|slingfull] <target> <op> <axis> <amount>
             // targets (camera): fp, tp, gui
             // targets (photo): fp, tp, gui, ground
             // targets (plate): fp, tp, gui, ground
+            // targets (sling*, all sling selectors): tp, gui, ground
             // ops: t (translate), r (rotate), o (origin), s (scale), show, reset, export
             string first = args.PopWord() ?? "fp";
 
             bool isPhoto = first.Equals("photo", StringComparison.OrdinalIgnoreCase) || first.Equals("photograph", StringComparison.OrdinalIgnoreCase);
             bool isCamera = first.Equals("camera", StringComparison.OrdinalIgnoreCase);
             bool isPlate = first.Equals("plate", StringComparison.OrdinalIgnoreCase) || first.Equals("plates", StringComparison.OrdinalIgnoreCase);
+            bool isSling = first.Equals("sling", StringComparison.OrdinalIgnoreCase) || first.Equals("camerasling", StringComparison.OrdinalIgnoreCase);
+            bool isSlingEmpty = first.Equals("slingempty", StringComparison.OrdinalIgnoreCase) || first.Equals("emptysling", StringComparison.OrdinalIgnoreCase) || first.Equals("cameraslingempty", StringComparison.OrdinalIgnoreCase);
+            bool isSlingFull = first.Equals("slingfull", StringComparison.OrdinalIgnoreCase) || first.Equals("fullsling", StringComparison.OrdinalIgnoreCase) || first.Equals("cameraslingfull", StringComparison.OrdinalIgnoreCase);
 
             string target;
             string op;
-            if (isPhoto || isCamera || isPlate)
+            if (isPhoto || isCamera || isPlate || isSling || isSlingEmpty || isSlingFull)
             {
                 target = args.PopWord() ?? "fp";
                 op = args.PopWord() ?? "show";
@@ -42,6 +105,18 @@ namespace Collodion
             {
                 poseKey = $"plate-{target}";
             }
+            else if (isSling)
+            {
+                poseKey = $"sling-{target}";
+            }
+            else if (isSlingEmpty)
+            {
+                poseKey = $"sling-empty-{target}";
+            }
+            else if (isSlingFull)
+            {
+                poseKey = $"sling-full-{target}";
+            }
             else
             {
                 // camera (default)
@@ -54,7 +129,8 @@ namespace Collodion
             {
                 ClientApi.ShowChatMessage($"Wetplate pose[{poseKey}]: t=({d.Tx:0.###},{d.Ty:0.###},{d.Tz:0.###}) r=({d.Rx:0.###},{d.Ry:0.###},{d.Rz:0.###}) s={d.Scale:0.###}");
                 ClientApi.ShowChatMessage($"Wetplate pose[{poseKey}]: o=({d.Ox:0.###},{d.Oy:0.###},{d.Oz:0.###})");
-                ClientApi.ShowChatMessage("Usage: .collodion pose [photo|camera|plate] <fp|tp|gui|ground> t|r|o <x|y|z> <value> (sets) OR ... add <delta> OR ... s <value> OR ... reset OR ... export");
+                ShowJsonReadyPose(poseKey, d);
+                ClientApi.ShowChatMessage("Usage: .collodion pose [photo|camera|plate|sling|slingempty|slingfull] <fp|tp|gui|ground> t|r|o <x|y|z> <value> (sets) OR ... add <delta> OR ... s <value> OR ... reset OR ... export");
                 return;
             }
 
@@ -64,6 +140,7 @@ namespace Collodion
                 string f(float v) => v.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
 
                 ClientApi.ShowChatMessage($"Wetplate pose export [{poseKey}]: {{\"translation\":{{\"x\":{f(d.Tx)},\"y\":{f(d.Ty)},\"z\":{f(d.Tz)}}},\"rotation\":{{\"x\":{f(d.Rx)},\"y\":{f(d.Ry)},\"z\":{f(d.Rz)}}},\"origin\":{{\"x\":{f(d.Ox)},\"y\":{f(d.Oy)},\"z\":{f(d.Oz)}}},\"scale\":{f(d.Scale)}}}");
+                ShowJsonReadyPose(poseKey, d);
                 ClientApi.ShowChatMessage("Tip: You can also just send collodion-posedeltas.json from your VS config folder.");
                 return;
             }

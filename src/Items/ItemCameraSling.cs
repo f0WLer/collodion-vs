@@ -6,7 +6,7 @@ using Vintagestory.API.MathTools;
 
 namespace Collodion
 {
-    public class ItemCameraSling : Item
+    public partial class ItemCameraSling : Item
     {
         public const string AttrStoredCameraStack = "collodionStoredCameraStack";
         private static readonly AssetLocation CameraSlingFullCode = new AssetLocation("collodion", "camerasling-full");

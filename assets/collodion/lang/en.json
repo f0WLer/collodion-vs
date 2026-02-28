@@ -6,9 +6,9 @@
     "item-wetplatecamera-loaded-exposed": "Wetplate Camera",
     "itemdesc-wetplatecamera-loaded-exposed": "A heavy wooden box used to capture moments in time on glass plates.",
     "item-camerasling-empty": "Camera Sling",
-    "itemdesc-camerasling-empty": "Wear on the left shoulder and press R to stow or draw your camera.",
-    "item-camerasling-full": "Camera Sling",
-    "itemdesc-camerasling-full": "Wear on the left shoulder and press R to stow or draw your camera.",
+    "itemdesc-camerasling-empty": "Wear on the left shoulder and press R to stow or draw your camera.\nStowing while looking at a wall will hang the camera up.",
+    "item-camerasling-full": "Camera (Folded)",
+    "itemdesc-camerasling-full": "Can be worn on the left shoulder or hung on the wall with CTRL + SHIFT + RMB.",
     
     "item-collodionportion": "Collodion",
     "incontainer-item-collodionportion": "Collodion",

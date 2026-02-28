@@ -11,7 +11,7 @@
     "scale": 1.0
   },
   "groundTransform": {
-    "translation": { "x": 0, "y": 0.25, "z": 0 },
+    "translation": { "x": 0, "y": 0, "z": 0 },
     "rotation": { "x": 0, "y": 0, "z": 0 },
     "origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
     "scale": 2.5
@@ -24,7 +24,13 @@
     "ext-hi": { "base": "game:block/clay/fireclay" },
     "ext-shadow": { "base": "game:block/clay/fireclay" }
   },
-  "attributes": {},
+  "attributes": {
+    "groundStorageTransform": {
+      "translation": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "scale": 2.5
+    }
+  },
   "behaviors": [
     {
       "name": "GroundStorable",

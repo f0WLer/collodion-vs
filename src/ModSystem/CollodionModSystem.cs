@@ -88,9 +88,11 @@ namespace Collodion
             api.RegisterBlockClass("BlockFramedPhotograph", typeof(BlockFramedPhotograph));
             api.RegisterBlockClass("DevelopmentTray", typeof(BlockDevelopmentTray));
             api.RegisterBlockClass("WallMountedCameraSling", typeof(BlockWallMountedCameraSling));
+            api.RegisterBlockClass("PlateBox", typeof(BlockPlateBox));
             api.RegisterBlockEntityClass("BlockEntityPhotograph", typeof(BlockEntityPhotograph));
             api.RegisterBlockEntityClass("BlockEntityDevelopmentTray", typeof(BlockEntityDevelopmentTray));
             api.RegisterBlockEntityClass("BlockEntityWallMountedCameraSling", typeof(BlockEntityWallMountedCameraSling));
+            api.RegisterBlockEntityClass("BlockEntityPlateBox", typeof(BlockEntityPlateBox));
             
             // Register Network Channel
             api.Network.RegisterChannel("collodion")

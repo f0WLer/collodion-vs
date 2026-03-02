@@ -9,6 +9,7 @@ namespace Collodion
     {
         public const string WetCreatedTotalHours = "collodionWetCreatedTotalHours";
         public const string WetDurationHours = "collodionWetDurationHours";
+        public const string StoredRemainingWetHours = "collodionStoredRemainingWetHours";
         public const double DefaultWetDurationHours = 0.2;
         public const string PhotoId = "photoId";
         public const string PlateStage = "collodionPlateStage";
@@ -18,11 +19,19 @@ namespace Collodion
 
         public static double GetRemainingWetHours(IWorldAccessor world, ItemStack stack)
         {
-            if (world?.Calendar == null || stack?.Attributes == null) return 0;
+            if (stack?.Attributes == null) return 0;
+
+            if (world?.Calendar == null)
+            {
+                return Math.Max(0, stack.Attributes.GetDouble(StoredRemainingWetHours, 0));
+            }
 
             double created = stack.Attributes.GetDouble(WetCreatedTotalHours, -1);
             double duration = stack.Attributes.GetDouble(WetDurationHours, 0);
-            if (created < 0 || duration <= 0) return 0;
+            if (created < 0 || duration <= 0)
+            {
+                return Math.Max(0, stack.Attributes.GetDouble(StoredRemainingWetHours, 0));
+            }
 
             double elapsed = world.Calendar.TotalHours - created;
             return Math.Max(0, duration - elapsed);
@@ -57,6 +66,52 @@ namespace Collodion
             {
                 dsc.AppendLine(Lang.Get("collodion:wetplate-dry"));
             }
+        }
+
+        public static void PauseWetTimerForStorage(IWorldAccessor world, ItemStack stack)
+        {
+            if (stack?.Attributes == null) return;
+
+            double duration = stack.Attributes.GetDouble(WetDurationHours, 0);
+            if (duration <= 0)
+            {
+                stack.Attributes.RemoveAttribute(StoredRemainingWetHours);
+                return;
+            }
+
+            double remaining = GetRemainingWetHours(world, stack);
+            if (remaining < 0) remaining = 0;
+
+            stack.Attributes.SetDouble(StoredRemainingWetHours, remaining);
+            stack.Attributes.RemoveAttribute(WetCreatedTotalHours);
+            stack.Attributes.RemoveAttribute(WetDurationHours);
+        }
+
+        public static void ResumeWetTimerFromStorage(IWorldAccessor world, ItemStack stack)
+        {
+            if (stack?.Attributes == null) return;
+
+            double remaining = stack.Attributes.GetDouble(StoredRemainingWetHours, -1);
+            if (remaining < 0) return;
+
+            stack.Attributes.RemoveAttribute(StoredRemainingWetHours);
+
+            if (remaining <= 0)
+            {
+                stack.Attributes.RemoveAttribute(WetCreatedTotalHours);
+                stack.Attributes.RemoveAttribute(WetDurationHours);
+                return;
+            }
+
+            if (world?.Calendar == null)
+            {
+                stack.Attributes.SetDouble(WetDurationHours, remaining);
+                stack.Attributes.RemoveAttribute(WetCreatedTotalHours);
+                return;
+            }
+
+            stack.Attributes.SetDouble(WetCreatedTotalHours, world.Calendar.TotalHours);
+            stack.Attributes.SetDouble(WetDurationHours, remaining);
         }
     }
 

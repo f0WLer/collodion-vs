@@ -67,10 +67,11 @@ namespace Collodion
         {
             if (ClientApi == null) return;
 
-            // .collodion pose [photo|camera|plate|sling|slingempty|slingfull] <target> <op> <axis> <amount>
+            // .collodion pose [photo|camera|plate|platebox|sling|slingempty|slingfull] <target> <op> <axis> <amount>
             // targets (camera): fp, tp, gui
             // targets (photo): fp, tp, gui, ground
             // targets (plate): fp, tp, gui, ground
+            // targets (platebox): fp, tp, gui, ground
             // targets (sling*, all sling selectors): tp, gui, ground
             // ops: t (translate), r (rotate), o (origin), s (scale), show, reset, export
             string first = args.PopWord() ?? "fp";
@@ -78,13 +79,14 @@ namespace Collodion
             bool isPhoto = first.Equals("photo", StringComparison.OrdinalIgnoreCase) || first.Equals("photograph", StringComparison.OrdinalIgnoreCase);
             bool isCamera = first.Equals("camera", StringComparison.OrdinalIgnoreCase);
             bool isPlate = first.Equals("plate", StringComparison.OrdinalIgnoreCase) || first.Equals("plates", StringComparison.OrdinalIgnoreCase);
+            bool isPlateBox = first.Equals("platebox", StringComparison.OrdinalIgnoreCase) || first.Equals("box", StringComparison.OrdinalIgnoreCase);
             bool isSling = first.Equals("sling", StringComparison.OrdinalIgnoreCase) || first.Equals("camerasling", StringComparison.OrdinalIgnoreCase);
             bool isSlingEmpty = first.Equals("slingempty", StringComparison.OrdinalIgnoreCase) || first.Equals("emptysling", StringComparison.OrdinalIgnoreCase) || first.Equals("cameraslingempty", StringComparison.OrdinalIgnoreCase);
             bool isSlingFull = first.Equals("slingfull", StringComparison.OrdinalIgnoreCase) || first.Equals("fullsling", StringComparison.OrdinalIgnoreCase) || first.Equals("cameraslingfull", StringComparison.OrdinalIgnoreCase);
 
             string target;
             string op;
-            if (isPhoto || isCamera || isPlate || isSling || isSlingEmpty || isSlingFull)
+            if (isPhoto || isCamera || isPlate || isPlateBox || isSling || isSlingEmpty || isSlingFull)
             {
                 target = args.PopWord() ?? "fp";
                 op = args.PopWord() ?? "show";
@@ -104,6 +106,10 @@ namespace Collodion
             else if (isPlate)
             {
                 poseKey = $"plate-{target}";
+            }
+            else if (isPlateBox)
+            {
+                poseKey = $"platebox-{target}";
             }
             else if (isSling)
             {
@@ -130,7 +136,7 @@ namespace Collodion
                 ClientApi.ShowChatMessage($"Wetplate pose[{poseKey}]: t=({d.Tx:0.###},{d.Ty:0.###},{d.Tz:0.###}) r=({d.Rx:0.###},{d.Ry:0.###},{d.Rz:0.###}) s={d.Scale:0.###}");
                 ClientApi.ShowChatMessage($"Wetplate pose[{poseKey}]: o=({d.Ox:0.###},{d.Oy:0.###},{d.Oz:0.###})");
                 ShowJsonReadyPose(poseKey, d);
-                ClientApi.ShowChatMessage("Usage: .collodion pose [photo|camera|plate|sling|slingempty|slingfull] <fp|tp|gui|ground> t|r|o <x|y|z> <value> (sets) OR ... add <delta> OR ... s <value> OR ... reset OR ... export");
+                ClientApi.ShowChatMessage("Usage: .collodion pose [photo|camera|plate|platebox|sling|slingempty|slingfull] <fp|tp|gui|ground> t|r|o <x|y|z> <value> (sets) OR ... add <delta> OR ... s <value> OR ... reset OR ... export");
                 return;
             }
 

@@ -29,6 +29,38 @@ namespace Collodion
             PartialSelection = false;
         }
 
+        public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
+        {
+#pragma warning disable CS0618 // Preserve FP pose behavior on older targets
+            base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
+#pragma warning restore CS0618
+
+            try
+            {
+                var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+
+#pragma warning disable CS0618
+                string poseKey = target switch
+                {
+                    EnumItemRenderTarget.HandFp => "platebox-fp",
+                    EnumItemRenderTarget.HandTp => "platebox-tp",
+                    EnumItemRenderTarget.Gui => "platebox-gui",
+                    EnumItemRenderTarget.Ground => "platebox-ground",
+                    _ => string.Empty
+                };
+#pragma warning restore CS0618
+
+                if (!string.IsNullOrWhiteSpace(poseKey))
+                {
+                    RenderPoseUtil.ApplyPoseDelta(modSys, poseKey, ref renderinfo);
+                }
+            }
+            catch
+            {
+                // Keep rendering functional even if pose tuning fails.
+            }
+        }
+
         public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
         {
             ItemStack? stack = CreateDropStack(world, pos);

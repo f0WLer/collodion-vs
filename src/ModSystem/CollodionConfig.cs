@@ -122,6 +122,34 @@ namespace Collodion
                     Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
                     Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
                     Scale = 1.0f
+                },
+                ["platebox-fp"] = new CollodionModSystem.PoseDelta
+                {
+                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
+                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
+                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
+                    Scale = 1.0f
+                },
+                ["platebox-tp"] = new CollodionModSystem.PoseDelta
+                {
+                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
+                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
+                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
+                    Scale = 1.0f
+                },
+                ["platebox-gui"] = new CollodionModSystem.PoseDelta
+                {
+                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
+                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
+                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
+                    Scale = 1.0f
+                },
+                ["platebox-ground"] = new CollodionModSystem.PoseDelta
+                {
+                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
+                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
+                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
+                    Scale = 1.0f
                 }
             };
         }

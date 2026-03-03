@@ -87,9 +87,13 @@ namespace Collodion
 
             // Only generate a frame override mesh when a plank has been applied.
             // When null, the default oak JSON mesh will render as normal.
-            MeshData? frameMesh = string.IsNullOrWhiteSpace(FramePlankBlockCode) ? null : GenerateFrameMeshForBlock(capi);
+            bool hasFrameOverride = !string.IsNullOrWhiteSpace(FramePlankBlockCode) || !string.IsNullOrWhiteSpace(FramePlankBlockCode2);
+            MeshData? frameMesh = hasFrameOverride ? GenerateFrameMeshForBlock(capi) : null;
 
-            if (string.IsNullOrWhiteSpace(PhotoId))
+            string? primaryPhotoId = string.IsNullOrWhiteSpace(PhotoId) ? null : PhotoId;
+            string? secondaryPhotoId = string.IsNullOrWhiteSpace(PhotoId2) ? null : PhotoId2;
+
+            if (primaryPhotoId == null && secondaryPhotoId == null)
             {
                 lock (clientMeshLock)
                 {
@@ -108,68 +112,50 @@ namespace Collodion
 
             try
             {
-                string photoId = PhotoId!;
-                string photoFileName = WetplatePhotoSync.NormalizePhotoId(photoId);
-                string photoPath = WetplatePhotoSync.GetPhotoPath(photoFileName);
-                bool photoExists = File.Exists(photoPath);
+                MeshData? newMesh = null;
+                TextureAtlasPosition? firstTexPos = null;
+                string? firstPhotoPath = null;
+                bool firstPhotoExists = false;
+                string? firstError = null;
 
-                lock (clientMeshLock)
+                if (!string.IsNullOrWhiteSpace(primaryPhotoId))
                 {
-                    clientPhotoPath = photoPath;
-                    clientPhotoFileExists = photoExists;
+                    if (TryBuildPhotoMeshForId(capi, primaryPhotoId!, 1, out MeshData? photoMesh1, out TextureAtlasPosition? texPos1, out string? path1, out bool exists1, out string? error1))
+                    {
+                        newMesh = photoMesh1;
+                        firstTexPos = texPos1;
+                        firstPhotoPath = path1;
+                        firstPhotoExists = exists1;
+                    }
+                    else
+                    {
+                        firstError = error1;
+                    }
                 }
 
-                if (!photoExists)
+                if (!string.IsNullOrWhiteSpace(secondaryPhotoId))
                 {
-                    lock (clientMeshLock)
+                    if (TryBuildPhotoMeshForId(capi, secondaryPhotoId!, 2, out MeshData? photoMesh2, out TextureAtlasPosition? texPos2, out string? path2, out bool exists2, out string? error2))
                     {
-                        clientMesh = null;
-                        clientFrameMesh = frameMesh;
-                        clientTexPos = null;
-                        clientTextureId = 0;
-                        clientLastError = $"Photo file not found: {photoFileName}";
-                        clientOverlayInfo = null;
-                    }
-
-                    // If the photo isn't present locally, request it from the server.
-                    // Also note that this block is waiting, so when the photo arrives we can re-tesselate.
-                    try
-                    {
-                        var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
-                        modSys?.PhotoSync?.ClientNoteBlockWaitingForPhoto(photoFileName, Pos);
-                        modSys?.PhotoSync?.ClientRequestPhotoIfMissing(photoFileName);
-                    }
-                    catch
-                    {
-                        // ignore
-                    }
-
-                    MarkDirty(true);
-                    return;
-                }
-
-                ItemStack? frameStack = null;
-                try
-                {
-                    Item? frameItem = capi.World.GetItem(new AssetLocation("collodion", "framedphotograph"));
-                    if (frameItem != null)
-                    {
-                        frameStack = new ItemStack(frameItem);
-                        var attrs = new TreeAttribute();
-                        attrs.SetString(WetPlateAttrs.PhotoId, photoId);
-                        if (ExposureMovement > 0f)
+                        if (newMesh == null)
                         {
-                            attrs.SetFloat(WetPlateAttrs.HoldStillMovement, ExposureMovement);
+                            newMesh = photoMesh2;
+                            firstTexPos = texPos2;
+                            firstPhotoPath = path2;
+                            firstPhotoExists = exists2;
                         }
-                        frameStack.Attributes = attrs;
+                        else
+                        {
+                            newMesh.AddMeshData(photoMesh2);
+                        }
+                    }
+                    else if (firstError == null)
+                    {
+                        firstError = error2;
                     }
                 }
-                catch
-                {
-                    frameStack = null;
-                }
 
-                if (frameStack == null || !PhotoPlateRenderUtil.TryGetPhotoBlockTexture(capi, frameStack, out TextureAtlasPosition texPos, out float photoAspect, Pos))
+                if (newMesh == null)
                 {
                     lock (clientMeshLock)
                     {
@@ -177,7 +163,7 @@ namespace Collodion
                         clientFrameMesh = frameMesh;
                         clientTexPos = null;
                         clientTextureId = 0;
-                        clientLastError = $"Failed to prepare frame photo texture: {photoFileName}";
+                        clientLastError = firstError ?? "Failed to prepare framed photo texture";
                         clientOverlayInfo = null;
                     }
 
@@ -185,12 +171,12 @@ namespace Collodion
                     return;
                 }
 
-                clientTextureId = texPos.atlasTextureId;
-
-                MeshData newMesh = GeneratePhotoMeshForBlock(capi, texPos, photoAspect);
+                clientTextureId = firstTexPos?.atlasTextureId ?? 0;
                 lock (clientMeshLock)
                 {
-                    clientTexPos = texPos;
+                    clientPhotoPath = firstPhotoPath;
+                    clientPhotoFileExists = firstPhotoExists;
+                    clientTexPos = firstTexPos;
                     clientMesh = newMesh;
                     clientFrameMesh = frameMesh;
                     clientLastError = null;
@@ -211,6 +197,66 @@ namespace Collodion
                 }
                 MarkDirty(true);
             }
+        }
+
+        private bool TryBuildPhotoMeshForId(ICoreClientAPI capi, string photoId, int photoSlot, out MeshData? mesh, out TextureAtlasPosition? texPos, out string photoPath, out bool photoExists, out string? error)
+        {
+            mesh = null;
+            texPos = null;
+            error = null;
+
+            string photoFileName = WetplatePhotoSync.NormalizePhotoId(photoId);
+            photoPath = WetplatePhotoSync.GetPhotoPath(photoFileName);
+            photoExists = File.Exists(photoPath);
+
+            if (!photoExists)
+            {
+                error = $"Photo file not found: {photoFileName}";
+
+                try
+                {
+                    var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+                    modSys?.PhotoSync?.ClientNoteBlockWaitingForPhoto(photoFileName, Pos);
+                    modSys?.PhotoSync?.ClientRequestPhotoIfMissing(photoFileName);
+                }
+                catch
+                {
+                    // ignore
+                }
+
+                return false;
+            }
+
+            ItemStack? frameStack = null;
+            try
+            {
+                Item? frameItem = capi.World.GetItem(new AssetLocation("collodion", "framedphotograph"));
+                if (frameItem != null)
+                {
+                    frameStack = new ItemStack(frameItem);
+                    var attrs = new TreeAttribute();
+                    attrs.SetString(WetPlateAttrs.PhotoId, photoId);
+                    if (ExposureMovement > 0f)
+                    {
+                        attrs.SetFloat(WetPlateAttrs.HoldStillMovement, ExposureMovement);
+                    }
+                    frameStack.Attributes = attrs;
+                }
+            }
+            catch
+            {
+                frameStack = null;
+            }
+
+            if (frameStack == null || !PhotoPlateRenderUtil.TryGetPhotoBlockTexture(capi, frameStack, out TextureAtlasPosition localTexPos, out float photoAspect, Pos))
+            {
+                error = $"Failed to prepare frame photo texture: {photoFileName}";
+                return false;
+            }
+
+            mesh = GeneratePhotoMeshForBlock(capi, localTexPos, photoAspect, photoSlot);
+            texPos = localTexPos;
+            return true;
         }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -12,6 +11,11 @@ namespace Collodion
     // Plate/frame visible area is 5w x 5.5h => aspect = 10/11.
     private const float PhotoTargetAspect = 10f / 11f;
     private static readonly string[] PreferredPlankTextureKeys = { "all", "side", "north", "south", "east", "west", "up", "down" };
+    private static readonly string[] IgnorePhotoElements = { "Photo", "Photo1", "Photo2" };
+    private static readonly string[] IgnoreDoubleFramePrimaryWall = { "Frame2", "Photo", "Photo1", "Photo2" };
+    private static readonly string[] IgnoreDoubleFrameSecondaryWall = { "Frame", "Photo", "Photo1", "Photo2" };
+    private static readonly string[] IgnoreDoubleFramePrimaryGround = { "Frame2", "Photo", "Photo1", "Photo2" };
+    private static readonly string[] IgnoreDoubleFrameSecondaryGround = { "Frame1", "Photo", "Photo1", "Photo2" };
     private static readonly AssetLocation FallbackFramedPhotographGround = new AssetLocation("collodion", "framedphotographground");
 
         private sealed class SingleTextureSource : ITexPositionSource
@@ -38,6 +42,41 @@ namespace Collodion
             var shape = Block?.Shape;
             if (shape == null) return null;
 
+            bool isDoubleWall = path.StartsWith("framedphotographwall2", StringComparison.OrdinalIgnoreCase);
+            bool isDoubleGround = path.StartsWith("framedphotographground2", StringComparison.OrdinalIgnoreCase);
+            bool isDouble = isDoubleWall || isDoubleGround;
+
+            if (isDouble)
+            {
+                MeshData? combined = null;
+
+                string[] primaryIgnore = isDoubleWall ? IgnoreDoubleFramePrimaryWall : IgnoreDoubleFramePrimaryGround;
+                string[] secondaryIgnore = isDoubleWall ? IgnoreDoubleFrameSecondaryWall : IgnoreDoubleFrameSecondaryGround;
+
+                MeshData? part1 = GenerateFrameMeshPart(capi, shape, FramePlankBlockCode, primaryIgnore);
+
+                if (part1 != null)
+                {
+                    combined = part1;
+                }
+
+                MeshData? part2 = GenerateFrameMeshPart(capi, shape, FramePlankBlockCode2, secondaryIgnore);
+
+                if (part2 != null)
+                {
+                    if (combined == null)
+                    {
+                        combined = part2;
+                    }
+                    else
+                    {
+                        combined.AddMeshData(part2);
+                    }
+                }
+
+                return combined;
+            }
+
             // Wall frames include a built-in "Photo" panel in the base shape.
             // When we re-tesselate the whole shape using a single plank texture, that panel becomes a solid plank and
             // can fully cover the actual photo overlay plane. Excluding it matches the ground frame behavior.
@@ -46,7 +85,7 @@ namespace Collodion
                 try
                 {
                     var cloned = shape.Clone();
-                    cloned.IgnoreElements = new[] { "Photo" };
+                    cloned.IgnoreElements = IgnorePhotoElements;
                     shape = cloned;
                 }
                 catch
@@ -68,58 +107,9 @@ namespace Collodion
 
             // Optional: if a plank has been applied, re-map all frame textures to that plank.
             string? plankCode = FramePlankBlockCode;
-            if (!string.IsNullOrWhiteSpace(plankCode))
+            if (TryGetPlankTextureSource(capi, plankCode, out ITexPositionSource? mappedTexSource))
             {
-                try
-                {
-                    Block? plankBlock = capi.World.GetBlock(new AssetLocation(plankCode));
-                    if (plankBlock != null && plankBlock.Id != 0)
-                    {
-                        ITexPositionSource plankTexSource = capi.Tesselator.GetTextureSource(plankBlock);
-
-                        TextureAtlasPosition chosenTexPos = capi.BlockTextureAtlas.UnknownTexturePosition;
-
-                        foreach (string key in PreferredPlankTextureKeys)
-                        {
-                            try
-                            {
-                                TextureAtlasPosition pos = plankTexSource[key];
-                                if (pos != null && pos != capi.BlockTextureAtlas.UnknownTexturePosition)
-                                {
-                                    chosenTexPos = pos;
-                                    break;
-                                }
-                            }
-                            catch { }
-                        }
-
-                        if (chosenTexPos == capi.BlockTextureAtlas.UnknownTexturePosition && plankBlock.Textures != null)
-                        {
-                            foreach (string key in plankBlock.Textures.Keys)
-                            {
-                                try
-                                {
-                                    TextureAtlasPosition pos = plankTexSource[key];
-                                    if (pos != null && pos != capi.BlockTextureAtlas.UnknownTexturePosition)
-                                    {
-                                        chosenTexPos = pos;
-                                        break;
-                                    }
-                                }
-                                catch { }
-                            }
-                        }
-
-                        if (chosenTexPos != capi.BlockTextureAtlas.UnknownTexturePosition)
-                        {
-                            texSource = new SingleTextureSource(chosenTexPos, capi.BlockTextureAtlas.Size);
-                        }
-                    }
-                }
-                catch
-                {
-                    // fall back to default texSource
-                }
+                texSource = mappedTexSource;
             }
 
             try
@@ -140,9 +130,135 @@ namespace Collodion
             }
         }
 
-        private MeshData GeneratePhotoMeshForBlock(ICoreClientAPI capi, TextureAtlasPosition texPos, float photoAspect)
+        private MeshData? GenerateFrameMeshPart(ICoreClientAPI capi, CompositeShape shape, string? plankCode, string[] ignoreElements)
+        {
+            CompositeShape localShape;
+            try
+            {
+                localShape = shape.Clone();
+                localShape.IgnoreElements = ignoreElements;
+            }
+            catch
+            {
+                return null;
+            }
+
+            ITexPositionSource texSource;
+            try
+            {
+                texSource = capi.Tesselator.GetTextureSource(Block);
+            }
+            catch
+            {
+                return null;
+            }
+
+            if (TryGetPlankTextureSource(capi, plankCode, out ITexPositionSource? mappedTexSource))
+            {
+                texSource = mappedTexSource;
+            }
+
+            try
+            {
+                capi.Tesselator.TesselateShape(
+                    "collodion-frame-part",
+                    Block?.Code ?? FallbackFramedPhotographGround,
+                    localShape,
+                    out MeshData frameMesh,
+                    texSource
+                );
+
+                return frameMesh;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private bool TryGetPlankTextureSource(ICoreClientAPI capi, string? plankCode, out ITexPositionSource texSource)
+        {
+            texSource = null!;
+            if (string.IsNullOrWhiteSpace(plankCode)) return false;
+
+            try
+            {
+                Block? plankBlock = capi.World.GetBlock(new AssetLocation(plankCode));
+                if (plankBlock == null || plankBlock.Id == 0) return false;
+
+                ITexPositionSource plankTexSource = capi.Tesselator.GetTextureSource(plankBlock);
+                TextureAtlasPosition chosenTexPos = capi.BlockTextureAtlas.UnknownTexturePosition;
+
+                foreach (string key in PreferredPlankTextureKeys)
+                {
+                    try
+                    {
+                        TextureAtlasPosition pos = plankTexSource[key];
+                        if (pos != null && pos != capi.BlockTextureAtlas.UnknownTexturePosition)
+                        {
+                            chosenTexPos = pos;
+                            break;
+                        }
+                    }
+                    catch { }
+                }
+
+                if (chosenTexPos == capi.BlockTextureAtlas.UnknownTexturePosition && plankBlock.Textures != null)
+                {
+                    foreach (string key in plankBlock.Textures.Keys)
+                    {
+                        try
+                        {
+                            TextureAtlasPosition pos = plankTexSource[key];
+                            if (pos != null && pos != capi.BlockTextureAtlas.UnknownTexturePosition)
+                            {
+                                chosenTexPos = pos;
+                                break;
+                            }
+                        }
+                        catch { }
+                    }
+                }
+
+                if (chosenTexPos == capi.BlockTextureAtlas.UnknownTexturePosition) return false;
+
+                texSource = new SingleTextureSource(chosenTexPos, capi.BlockTextureAtlas.Size);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private MeshData GeneratePhotoMeshForBlock(ICoreClientAPI capi, TextureAtlasPosition texPos, float photoAspect, int photoSlot)
         {
             string path = Block?.Code?.Path ?? string.Empty;
+
+            if (path.StartsWith("framedphotographwall2", StringComparison.OrdinalIgnoreCase))
+            {
+                string attrName = photoSlot == 2 ? "photoshape2" : "photoshape";
+                if (TryGetPhotoPlaneMeshFromBlockAttribute(capi, texPos, photoAspect, attrName, out MeshData planeMesh))
+                {
+                    return planeMesh;
+                }
+
+                // Fallback to single-photo placement if authored element lookup fails.
+                return GenerateFramedWallPhotoMesh(capi, texPos, photoAspect);
+            }
+
+            if (path.StartsWith("framedphotographground2", StringComparison.OrdinalIgnoreCase))
+            {
+                string attrName = photoSlot == 2 ? "photoshape2" : "photoshape";
+                if (TryGetPhotoPlaneMeshFromBlockAttribute(capi, texPos, photoAspect, attrName, out MeshData planeMesh))
+                {
+                    return planeMesh;
+                }
+
+                // Fallback to single-photo placement if authored element lookup fails.
+                return GenerateFramedGroundPhotoMesh(capi, texPos, photoAspect);
+            }
+
             if (path.StartsWith("framedphotographwall", StringComparison.OrdinalIgnoreCase))
             {
                 return GenerateFramedWallPhotoMesh(capi, texPos, photoAspect);
@@ -160,7 +276,7 @@ namespace Collodion
         {
             // KosPhotography-style: tesselate a dedicated "photo plane" block mesh defined by the frame block.
             // This avoids terrain-pipeline edge cases and lets model authors control exact placement.
-            if (TryGetPhotoPlaneMeshFromBlockAttribute(capi, texPos, photoAspect, out MeshData planeMesh))
+            if (TryGetPhotoPlaneMeshFromBlockAttribute(capi, texPos, photoAspect, "photoshape", out MeshData planeMesh))
             {
                 return planeMesh;
             }
@@ -207,7 +323,7 @@ namespace Collodion
 
         private MeshData GenerateFramedGroundPhotoMesh(ICoreClientAPI capi, TextureAtlasPosition texPos, float photoAspect)
         {
-            if (TryGetPhotoPlaneMeshFromBlockAttribute(capi, texPos, photoAspect, out MeshData planeMesh))
+            if (TryGetPhotoPlaneMeshFromBlockAttribute(capi, texPos, photoAspect, "photoshape", out MeshData planeMesh))
             {
                 return planeMesh;
             }
@@ -253,16 +369,16 @@ namespace Collodion
             return mesh;
         }
 
-        private bool TryGetPhotoPlaneMeshFromBlockAttribute(ICoreClientAPI capi, TextureAtlasPosition texPos, float photoAspect, out MeshData mesh)
+        private bool TryGetPhotoPlaneMeshFromBlockAttribute(ICoreClientAPI capi, TextureAtlasPosition texPos, float photoAspect, string attrName, out MeshData mesh)
         {
             mesh = default!;
 
             try
             {
-                string? photoshape = Block?.Attributes?["photoshape"]?.AsString(null);
+                string? photoshape = Block?.Attributes?[attrName]?.AsString(null);
                 if (string.IsNullOrWhiteSpace(photoshape))
                 {
-                    lock (clientMeshLock) clientOverlayInfo = "photoshape=<missing>";
+                    lock (clientMeshLock) clientOverlayInfo = $"{attrName}=<missing>";
                     return false;
                 }
 
@@ -282,7 +398,7 @@ namespace Collodion
                 Block overlayBlock = capi.World.GetBlock(variantLoc);
                 if (overlayBlock == null || overlayBlock.Id == 0)
                 {
-                    lock (clientMeshLock) clientOverlayInfo = $"photoshape={photoshape} variant={variantLoc} overlayBlock=<missing>";
+                    lock (clientMeshLock) clientOverlayInfo = $"{attrName}={photoshape} variant={variantLoc} overlayBlock=<missing>";
                     return false;
                 }
 
@@ -306,14 +422,14 @@ namespace Collodion
 
                 lock (clientMeshLock)
                 {
-                    clientOverlayInfo = $"photoshape={photoshape} variant={variantLoc} overlayBlock={overlayBlock.Code} verts={planeMesh.VerticesCount} indices={planeMesh.IndicesCount} uvRotation={((uvRotationDeg % 360) + 360) % 360}";
+                    clientOverlayInfo = $"{attrName}={photoshape} variant={variantLoc} overlayBlock={overlayBlock.Code} verts={planeMesh.VerticesCount} indices={planeMesh.IndicesCount} uvRotation={((uvRotationDeg % 360) + 360) % 360}";
                 }
                 mesh = planeMesh;
                 return true;
             }
             catch
             {
-                lock (clientMeshLock) clientOverlayInfo = "photoshape=<exception>";
+                lock (clientMeshLock) clientOverlayInfo = $"{attrName}=<exception>";
                 return false;
             }
         }

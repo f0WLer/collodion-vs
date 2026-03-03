@@ -1,0 +1,20 @@
+{
+  "textureWidth": 16,
+  "textureHeight": 16,
+  "textures": {},
+  "elements": [
+    {
+      "name": "PhotoPlane",
+      "from": [2.15, 5.0, -0.75],
+      "to": [6.15, 9.44, 0.25],
+      "faces": {
+        "south": { "texture": "#photo", "uv": [0, 0, 12, 12] },
+        "north": { "texture": "#photo", "uv": [0, 0, 12, 12], "enabled": false },
+        "east": { "texture": "#photo", "uv": [0, 0, 1, 12], "enabled": false },
+        "west": { "texture": "#photo", "uv": [0, 0, 1, 12], "enabled": false },
+        "up": { "texture": "#photo", "uv": [0, 0, 12, 1], "enabled": false },
+        "down": { "texture": "#photo", "uv": [0, 0, 12, 1], "enabled": false }
+      }
+    }
+  ]
+}

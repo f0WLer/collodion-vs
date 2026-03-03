@@ -10,11 +10,53 @@ namespace Collodion
         private static readonly AssetLocation FinishedPlateCode = new AssetLocation("collodion:finishedphotoplate");
         private static readonly AssetLocation FramedPhotoCode = new AssetLocation("collodion:framedphotograph");
 
+        private static bool TryGetOrientationSuffix(AssetLocation? code, out string side)
+        {
+            side = string.Empty;
+            string path = code?.Path ?? string.Empty;
+            int dash = path.LastIndexOf('-');
+            if (dash < 0 || dash >= path.Length - 1) return false;
+
+            side = path[(dash + 1)..];
+            return !string.IsNullOrWhiteSpace(side);
+        }
+
         private static bool IsFramedPhotoBlock(Block? block)
         {
             string path = block?.Code?.Path ?? string.Empty;
             return path.StartsWith("framedphotographground", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("framedphotographwall", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool TryGetMergedFrameBlockCode(Block? existingBlock, out AssetLocation blockCode)
+        {
+            blockCode = null!;
+
+            string path = existingBlock?.Code?.Path ?? string.Empty;
+            AssetLocation? code = existingBlock?.Code;
+            if (code == null) return false;
+
+            if (path.StartsWith("framedphotographwall2-", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("framedphotographground2-", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (path.StartsWith("framedphotographwall-", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!TryGetOrientationSuffix(code, out string side)) return false;
+                blockCode = new AssetLocation(code.Domain, $"framedphotographwall2-{side}");
+                return true;
+            }
+
+            if (path.StartsWith("framedphotographground-", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!TryGetOrientationSuffix(code, out string side)) return false;
+                blockCode = new AssetLocation(code.Domain, $"framedphotographground2-{side}");
+                return true;
+            }
+
+            return false;
         }
 
         private static bool TryGetAdjacentFramePlacement(Block? existingBlock, BlockSelection blockSel, out BlockPos placePos, out AssetLocation blockCode)
@@ -77,7 +119,16 @@ namespace Collodion
             if (offset == null) return false;
 
             placePos = blockSel.Position.AddCopy(offset);
-            blockCode = existingBlock.Code;
+            if (path.StartsWith("framedphotographwall", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!TryGetOrientationSuffix(existingBlock.Code, out string side)) return false;
+                blockCode = new AssetLocation(existingBlock.Code.Domain, $"framedphotographwall-{side}");
+            }
+            else
+            {
+                if (!TryGetOrientationSuffix(existingBlock.Code, out string side)) return false;
+                blockCode = new AssetLocation(existingBlock.Code.Domain, $"framedphotographground-{side}");
+            }
             return true;
         }
 
@@ -139,6 +190,8 @@ namespace Collodion
             {
                 ITreeAttribute cloned = inFrame.Attributes?.Clone() ?? new TreeAttribute();
                 cloned.RemoveAttribute(PhotographAttrs.FramePlank);
+                cloned.RemoveAttribute(PhotographAttrs.FramePlank2);
+                cloned.RemoveAttribute(PhotographAttrs.PhotoId2);
                 outStack.Attributes = cloned;
             }
             catch
@@ -172,9 +225,30 @@ namespace Collodion
 
             AssetLocation blockCode;
             BlockPos placePos;
+            bool isMergeUpgrade = false;
+
+            string existingPrimaryPhotoId = string.Empty;
+            string existingCaption = string.Empty;
+            string existingFramePlank1 = string.Empty;
+            string existingFramePlank2 = string.Empty;
+            float existingMovement = 0f;
 
             Block clickedBlock = world.BlockAccessor.GetBlock(pos);
-            if (TryGetAdjacentFramePlacement(clickedBlock, blockSel, out BlockPos adjacentPos, out AssetLocation adjacentCode))
+            if (TryGetMergedFrameBlockCode(clickedBlock, out AssetLocation mergedCode)
+                && world.BlockAccessor.GetBlockEntity(pos) is BlockEntityPhotograph existingBe
+                && !string.IsNullOrWhiteSpace(existingBe.PhotoId)
+                && string.IsNullOrWhiteSpace(existingBe.PhotoId2))
+            {
+                placePos = pos;
+                blockCode = mergedCode;
+                isMergeUpgrade = true;
+                existingPrimaryPhotoId = existingBe.PhotoId ?? string.Empty;
+                existingCaption = existingBe.Caption ?? string.Empty;
+                existingFramePlank1 = existingBe.FramePlankBlockCode ?? string.Empty;
+                existingFramePlank2 = existingBe.FramePlankBlockCode2 ?? string.Empty;
+                existingMovement = existingBe.ExposureMovement;
+            }
+            else if (TryGetAdjacentFramePlacement(clickedBlock, blockSel, out BlockPos adjacentPos, out AssetLocation adjacentCode))
             {
                 placePos = adjacentPos;
                 blockCode = adjacentCode;
@@ -211,7 +285,7 @@ namespace Collodion
             }
 
             Block existingBlock = world.BlockAccessor.GetBlock(placePos);
-            if (existingBlock.Id != 0 && !existingBlock.IsReplacableBy(framedBlock))
+            if (!isMergeUpgrade && existingBlock.Id != 0 && !existingBlock.IsReplacableBy(framedBlock))
             {
                 return;
             }
@@ -220,11 +294,36 @@ namespace Collodion
 
             if (world.BlockAccessor.GetBlockEntity(placePos) is BlockEntityPhotograph be)
             {
-                be.SetPhoto(photoId);
+                string primaryPhotoId = photoId;
+                string secondaryPhotoId = string.Empty;
+                string primaryFramePlank = stack.Attributes.GetString(PhotographAttrs.FramePlank) ?? string.Empty;
+                string secondaryFramePlank = string.Empty;
+
+                if (isMergeUpgrade && !string.IsNullOrWhiteSpace(existingPrimaryPhotoId))
+                {
+                    primaryPhotoId = existingPrimaryPhotoId;
+                    secondaryPhotoId = photoId;
+                    primaryFramePlank = existingFramePlank1;
+                    secondaryFramePlank = stack.Attributes.GetString(PhotographAttrs.FramePlank) ?? string.Empty;
+
+                    if (string.IsNullOrWhiteSpace(secondaryFramePlank) && !string.IsNullOrWhiteSpace(existingFramePlank2))
+                    {
+                        secondaryFramePlank = existingFramePlank2;
+                    }
+                }
+
+                be.SetPhoto(primaryPhotoId);
+                be.SetPhoto2(string.IsNullOrWhiteSpace(secondaryPhotoId) ? null : secondaryPhotoId);
+                be.SetFramePlankBlockCode(string.IsNullOrWhiteSpace(primaryFramePlank) ? null : primaryFramePlank);
+                be.SetFramePlankBlockCode2(string.IsNullOrWhiteSpace(secondaryFramePlank) ? null : secondaryFramePlank);
 
                 try
                 {
                     string caption = stack.Attributes.GetString(PhotographAttrs.Caption) ?? string.Empty;
+                    if (isMergeUpgrade && !string.IsNullOrWhiteSpace(existingCaption))
+                    {
+                        caption = existingCaption;
+                    }
                     if (!string.IsNullOrWhiteSpace(caption))
                     {
                         be.SetCaption(caption);
@@ -237,20 +336,11 @@ namespace Collodion
 
                 try
                 {
-                    string framePlank = stack.Attributes.GetString(PhotographAttrs.FramePlank) ?? string.Empty;
-                    if (!string.IsNullOrWhiteSpace(framePlank))
-                    {
-                        be.SetFramePlankBlockCode(framePlank);
-                    }
-                }
-                catch
-                {
-                    // ignore
-                }
-
-                try
-                {
                     float movement = stack.Attributes.GetFloat(WetPlateAttrs.HoldStillMovement, 0f);
+                    if (isMergeUpgrade && existingMovement > movement)
+                    {
+                        movement = existingMovement;
+                    }
                     if (movement > 0f)
                     {
                         be.SetExposureMovement(movement);

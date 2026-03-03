@@ -1,0 +1,61 @@
+{
+  "code": "framedphotographground2",
+  "class": "BlockFramedPhotograph",
+  "entityClass": "BlockEntityPhotograph",
+  "creativeinventory": { "general": [ "*-north" ] },
+  "blockmaterial": "Wood",
+  "drawtype": "json",
+  "shape": {
+    "base": "collodion:block/photos/framedground2",
+    "rotateYByType": {
+      "*-north": 0,
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90
+    }
+  },
+  "faceCullMode": "NeverCull",
+  "sideao": { "all": false },
+  "behaviors": [
+    { "name": "Unstable" },
+    { "name": "HorizontalOrientable" }
+  ],
+  "textures": {
+    "oak": { "base": "game:block/wood/debarked/oak" }
+  },
+  "attributes": {
+    "photoshape": "collodion:photooverlayground2a",
+    "photoshape2": "collodion:photooverlayground2b",
+    "photoUvRotation": 90
+  },
+  "variantgroups": [
+    {
+      "code": "side",
+      "loadFromProperties": "abstract/horizontalorientation"
+    }
+  ],
+  "resistance": 1.5,
+  "sounds": {
+    "place": "game:block/planks",
+    "break": "game:block/planks",
+    "hit": "game:block/planks"
+  },
+  "collisionbox": null,
+  "selectionbox": {
+    "x1": 0.125,
+    "y1": 0,
+    "z1": 0.125,
+    "x2": 0.875,
+    "y2": 0.125,
+    "z2": 0.875,
+    "rotateYByType": {
+      "*-north": 0,
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90
+    }
+  },
+  "lightAbsorption": 0,
+  "sidesolid": { "all": "false" },
+  "sideopaque": { "all": "false" }
+}

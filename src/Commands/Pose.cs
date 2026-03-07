@@ -147,14 +147,13 @@ namespace Collodion
 
                 ClientApi.ShowChatMessage($"Wetplate pose export [{poseKey}]: {{\"translation\":{{\"x\":{f(d.Tx)},\"y\":{f(d.Ty)},\"z\":{f(d.Tz)}}},\"rotation\":{{\"x\":{f(d.Rx)},\"y\":{f(d.Ry)},\"z\":{f(d.Rz)}}},\"origin\":{{\"x\":{f(d.Ox)},\"y\":{f(d.Oy)},\"z\":{f(d.Oz)}}},\"scale\":{f(d.Scale)}}}");
                 ShowJsonReadyPose(poseKey, d);
-                ClientApi.ShowChatMessage("Tip: You can also just send collodion-posedeltas.json from your VS config folder.");
+                ClientApi.ShowChatMessage("Tip: Pose deltas are session-only; copy this output into item JSON when finalized.");
                 return;
             }
 
             if (op.Equals("reset", StringComparison.OrdinalIgnoreCase))
             {
                 poseDeltas[poseKey] = new PoseDelta();
-                SavePoseDeltas();
                 ClientApi.ShowChatMessage($"Wetplate pose[{poseKey}] reset.");
                 return;
             }
@@ -168,7 +167,6 @@ namespace Collodion
                     return;
                 }
                 d.Scale = Math.Max(0.01f, s);
-                SavePoseDeltas();
                 ClientApi.ShowChatMessage($"Wetplate pose[{poseKey}] scale={d.Scale:0.###}");
                 return;
             }
@@ -234,7 +232,6 @@ namespace Collodion
                     return;
             }
 
-            SavePoseDeltas();
             ClientApi.ShowChatMessage($"Wetplate pose[{poseKey}]: t=({d.Tx:0.###},{d.Ty:0.###},{d.Tz:0.###}) r=({d.Rx:0.###},{d.Ry:0.###},{d.Rz:0.###}) o=({d.Ox:0.###},{d.Oy:0.###},{d.Oz:0.###}) s={d.Scale:0.###}");
         }
     }

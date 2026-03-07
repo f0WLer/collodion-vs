@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Collodion
 {
     public sealed class CollodionConfig
@@ -18,9 +16,6 @@ namespace Collodion
         public WetplateEffectsConfig EffectsPresetIndoor = new WetplateEffectsConfig();
         public WetplateEffectsConfig EffectsPresetOutdoor = new WetplateEffectsConfig();
 
-        // Live pose deltas (client-only)
-        public Dictionary<string, CollodionModSystem.PoseDelta> PoseDeltas = CreateDefaultPoseDeltas();
-
         internal void ClampInPlace()
         {
             Client ??= new CollodionClientConfig();
@@ -38,8 +33,6 @@ namespace Collodion
             EffectsPresetOutdoor ??= new WetplateEffectsConfig();
             EffectsPresetOutdoor.ClampInPlace();
 
-            PoseDeltas ??= CreateDefaultPoseDeltas();
-
             DevelopmentTrayInteractions ??= new DevelopmentTrayInteractionConfig();
             DevelopmentTrayInteractions.ClampInPlace();
 
@@ -52,106 +45,6 @@ namespace Collodion
             var cfg = new WetplateEffectsConfig();
             cfg.ClampInPlace();
             return cfg;
-        }
-
-        private static Dictionary<string, CollodionModSystem.PoseDelta> CreateDefaultPoseDeltas()
-        {
-            return new Dictionary<string, CollodionModSystem.PoseDelta>(System.StringComparer.OrdinalIgnoreCase)
-            {
-                ["photo-gui"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 2.0f, Ty = 10.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 2.0f
-                },
-                ["photo-tp"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 1.0f
-                },
-                ["tp"] = new CollodionModSystem.PoseDelta
-                {
-                    // No-op by default: tpHandTransform is defined in the item JSON.
-                    // Keeping this empty avoids double-applying offsets on fresh installs.
-                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.5f, Oy = 0.5f, Oz = 0.5f,
-                    Scale = 1.0f
-                },
-                ["plate"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 1.0f
-                },
-                ["fp"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 1.0f
-                },
-                ["plate-gui"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 10.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 45.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 2.0f
-                },
-                ["plate-tp"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 1.0f
-                },
-                ["plate-fp"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 1.0f
-                },
-                ["plate-s"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 1.0f
-                },
-                ["platebox-fp"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 1.0f
-                },
-                ["platebox-tp"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 1.0f
-                },
-                ["platebox-gui"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 1.0f
-                },
-                ["platebox-ground"] = new CollodionModSystem.PoseDelta
-                {
-                    Tx = 0.0f, Ty = 0.0f, Tz = 0.0f,
-                    Rx = 0.0f, Ry = 0.0f, Rz = 0.0f,
-                    Ox = 0.0f, Oy = 0.0f, Oz = 0.0f,
-                    Scale = 1.0f
-                }
-            };
         }
     }
 

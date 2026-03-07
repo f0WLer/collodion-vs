@@ -34,43 +34,5 @@ namespace Collodion
             return delta;
         }
 
-        private void LoadPoseDeltas()
-        {
-            if (ClientApi == null) return;
-
-            try
-            {
-                var cfg = GetOrLoadClientConfig(ClientApi);
-                var loaded = cfg.PoseDeltas;
-                if (loaded == null || loaded.Count == 0) return;
-
-                poseDeltas.Clear();
-                foreach (var kvp in loaded)
-                {
-                    poseDeltas[kvp.Key] = kvp.Value;
-                }
-            }
-            catch
-            {
-                // ignore
-            }
-        }
-
-        private void SavePoseDeltas()
-        {
-            if (ClientApi == null) return;
-
-            try
-            {
-                var cfg = GetOrLoadClientConfig(ClientApi);
-                cfg.PoseDeltas = new Dictionary<string, PoseDelta>(poseDeltas, StringComparer.OrdinalIgnoreCase);
-                SaveClientConfig(ClientApi);
-            }
-            catch
-            {
-                // ignore
-            }
-        }
-
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Vintagestory.API.Client;
 
 namespace Collodion
@@ -75,8 +74,6 @@ namespace Collodion
             // Note: do NOT also force RenderAPI.Set3DProjection per-frame; that can lead to
             // mismatched projections (e.g., skybox-only zoom). The hook on
             // ClientMain.Set3DProjection affects the actual world projection.
-
-            LoadPoseDeltas();
         }
 
         private CollodionConfig LoadOrCreateConfig(ICoreClientAPI capi)
@@ -121,7 +118,6 @@ namespace Collodion
             Config.EffectsDeveloped ??= CollodionConfig.CreateDevelopedEffectsDefaults();
             Config.EffectsPresetIndoor ??= new WetplateEffectsConfig();
             Config.EffectsPresetOutdoor ??= new WetplateEffectsConfig();
-            Config.PoseDeltas ??= new Dictionary<string, PoseDelta>();
 
             Config.ClampInPlace();
             ClientConfig = Config.Client;

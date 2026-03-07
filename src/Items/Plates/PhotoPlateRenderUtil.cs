@@ -85,6 +85,16 @@ namespace Collodion
         {
             if (capi == null || itemstack == null) return false;
 
+            string overlayFace = "south";
+            try
+            {
+                overlayFace = itemstack.Collectible?.Attributes?["photoOverlayFace"]?.AsString("south") ?? "south";
+            }
+            catch
+            {
+                overlayFace = "south";
+            }
+
             string photoId = itemstack.Attributes?.GetString(WetPlateAttrs.PhotoId) ?? string.Empty;
             if (string.IsNullOrEmpty(photoId)) return false;
 
@@ -243,10 +253,20 @@ namespace Collodion
                     // Base mesh from the item shape/texture (plate-finished / plate-developed).
                     capi.Tesselator.TesselateItem(item, out MeshData baseMesh);
 
-                    // Add a thin overlay quad on the "south" (+Z) face of the plate shape.
-                    MeshData overlay = CreateFrontOverlayQuad(texPos, baseMesh, uvRotationDeg, mirrorX, photoAspect);
-
-                    baseMesh.AddMeshData(overlay);
+                    // Add a thin overlay quad on the configured face of the plate shape.
+                    string overlayFaceNorm = (overlayFace ?? "south").Trim().ToLowerInvariant();
+                    if (overlayFaceNorm == "both")
+                    {
+                        MeshData overlaySouth = CreateOverlayQuad(texPos, baseMesh, uvRotationDeg, mirrorX, photoAspect, "south");
+                        MeshData overlayNorth = CreateOverlayQuad(texPos, baseMesh, uvRotationDeg, mirrorX, photoAspect, "north");
+                        baseMesh.AddMeshData(overlaySouth);
+                        baseMesh.AddMeshData(overlayNorth);
+                    }
+                    else
+                    {
+                        MeshData overlay = CreateOverlayQuad(texPos, baseMesh, uvRotationDeg, mirrorX, photoAspect, overlayFaceNorm);
+                        baseMesh.AddMeshData(overlay);
+                    }
 
                     if (target == EnumItemRenderTarget.Ground)
                     {
@@ -425,12 +445,13 @@ namespace Collodion
             return false;
         }
 
-        private static MeshData CreateFrontOverlayQuad(TextureAtlasPosition texPos, MeshData baseMesh, int uvRotationDeg, bool mirrorX, float photoAspect)
+        private static MeshData CreateOverlayQuad(TextureAtlasPosition texPos, MeshData baseMesh, int uvRotationDeg, bool mirrorX, float photoAspect, string face)
         {
             // Derive the photo quad from the current plate model bounds so shape changes
             // (e.g. recent re-centering for GUI spin) don't break placement.
             float minX = float.PositiveInfinity;
             float minY = float.PositiveInfinity;
+            float minZ = float.PositiveInfinity;
             float maxX = float.NegativeInfinity;
             float maxY = float.NegativeInfinity;
             float maxZ = float.NegativeInfinity;
@@ -442,6 +463,7 @@ namespace Collodion
                 // Fallback: centered quad, should never happen for a real item mesh.
                 minX = 0.1f;
                 minY = 0.1f;
+                minZ = 0.49f;
                 maxX = 0.9f;
                 maxY = 0.9f;
                 maxZ = 0.5f;
@@ -458,6 +480,7 @@ namespace Collodion
                 if (x > maxX) maxX = x;
                 if (y < minY) minY = y;
                 if (y > maxY) maxY = y;
+                if (z < minZ) minZ = z;
                 if (z > maxZ) maxZ = z;
             }
 
@@ -467,17 +490,110 @@ namespace Collodion
             float x2 = maxX;
             float y1 = minY;
             float y2 = maxY;
-            float zFront = maxZ + eps;
+            float z1 = minZ;
+            float z2 = maxZ;
+
+            float[] quad;
+            int packed;
+            int[] indices;
+
+            switch (face)
+            {
+                case "north":
+                    {
+                        float z = minZ - eps;
+                        quad = new float[]
+                        {
+                            x1, y1, z,
+                            x2, y1, z,
+                            x2, y2, z,
+                            x1, y2, z
+                        };
+                        packed = VertexFlags.PackNormal(0, 0, -1);
+                        indices = new int[] { 0, 2, 1, 0, 3, 2 };
+                        break;
+                    }
+
+                case "up":
+                    {
+                        float y = maxY + eps;
+                        quad = new float[]
+                        {
+                            x1, y, z1,
+                            x2, y, z1,
+                            x2, y, z2,
+                            x1, y, z2
+                        };
+                        packed = VertexFlags.PackNormal(0, 1, 0);
+                        indices = new int[] { 0, 2, 1, 0, 3, 2 };
+                        break;
+                    }
+
+                case "down":
+                    {
+                        float y = minY - eps;
+                        quad = new float[]
+                        {
+                            x1, y, z1,
+                            x2, y, z1,
+                            x2, y, z2,
+                            x1, y, z2
+                        };
+                        packed = VertexFlags.PackNormal(0, -1, 0);
+                        indices = new int[] { 0, 1, 2, 0, 2, 3 };
+                        break;
+                    }
+
+                case "east":
+                    {
+                        float x = maxX + eps;
+                        quad = new float[]
+                        {
+                            x, y1, z1,
+                            x, y1, z2,
+                            x, y2, z2,
+                            x, y2, z1
+                        };
+                        packed = VertexFlags.PackNormal(1, 0, 0);
+                        indices = new int[] { 0, 2, 1, 0, 3, 2 };
+                        break;
+                    }
+
+                case "west":
+                    {
+                        float x = minX - eps;
+                        quad = new float[]
+                        {
+                            x, y1, z1,
+                            x, y1, z2,
+                            x, y2, z2,
+                            x, y2, z1
+                        };
+                        packed = VertexFlags.PackNormal(-1, 0, 0);
+                        indices = new int[] { 0, 1, 2, 0, 2, 3 };
+                        break;
+                    }
+
+                case "south":
+                default:
+                    {
+                        float z = maxZ + eps;
+                        quad = new float[]
+                        {
+                            x1, y1, z,
+                            x2, y1, z,
+                            x2, y2, z,
+                            x1, y2, z
+                        };
+                        packed = VertexFlags.PackNormal(0, 0, 1);
+                        indices = new int[] { 0, 1, 2, 0, 2, 3 };
+                        break;
+                    }
+            }
 
             MeshData m = new MeshData(capacityVertices: 4, capacityIndices: 6, withNormals: false, withUv: true, withRgba: true, withFlags: true);
 
-            m.SetXyz(new float[]
-            {
-                x1, y1, zFront,
-                x2, y1, zFront,
-                x2, y2, zFront,
-                x1, y2, zFront
-            });
+            m.SetXyz(quad);
 
             // UVs in 0..1 range (BL, BR, TR, TL).
             // Baseline UVs are un-mirrored; any rotation is applied via ApplyUvRotationCw().
@@ -511,10 +627,9 @@ namespace Collodion
             m.RenderPassesAndExtraBits = new short[] { 0 };
             m.RenderPassCount = 1;
 
-            int packed = VertexFlags.PackNormal(0, 0, 1);
             for (int i = 0; i < 4; i++) m.Flags[i] = packed;
 
-            m.SetIndices(new int[] { 0, 1, 2, 0, 2, 3 });
+            m.SetIndices(indices);
             m.SetIndicesCount(6);
 
             // Scale UVs into atlas space and fill TextureIndices.

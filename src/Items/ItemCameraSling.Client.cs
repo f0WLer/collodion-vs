@@ -48,7 +48,7 @@ namespace Collodion
                     t.ScaleXYZ = new FastVec3f(1f, 1f, 1f);
                 }
 
-                t.Rotate = true;
+                t.Rotate = false;
                 renderinfo.Transform = t;
             }
 

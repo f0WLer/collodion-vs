@@ -65,17 +65,8 @@ namespace Collodion
                     }
                 }
 
-                // Inventory/hover preview uses the GUI render target and applies its own animated rotation.
-                // For alignment tuning, we want a stable, non-spinning preview.
-                if (target == EnumItemRenderTarget.Gui)
-                {
-                    var t = new ModelTransform();
-                    t.Origin.X = 0.5f;
-                    t.Origin.Y = 0.5f;
-                    t.Origin.Z = 0.5f;
-                    t.ScaleXYZ = new FastVec3f(1f, 1f, 1f);
-                    renderinfo.Transform = t;
-                }
+                // Preserve JSON-defined guiTransform/tpHandTransform/fpHandTransform.
+                // We only layer optional development pose deltas on top.
 
                 // NOTE: EnumItemRenderTarget.HandFp is obsolete in newer API, but still correct on 1.21.6.
 #pragma warning disable CS0618

@@ -22,6 +22,7 @@ namespace Collodion
             dst.Origin.Z = src.Origin.Z;
 
             dst.ScaleXYZ = src.ScaleXYZ;
+            dst.Rotate = src.Rotate;
             return dst;
         }
 
@@ -46,6 +47,13 @@ namespace Collodion
             renderinfo.Transform.Origin.Z += d.Oz;
 
             renderinfo.Transform.ScaleXYZ *= d.Scale;
+
+            // Keep inventory/hover preview stationary for GUI pose targets.
+            if (poseKey.EndsWith("-gui", System.StringComparison.OrdinalIgnoreCase)
+                || poseKey.Equals("gui", System.StringComparison.OrdinalIgnoreCase))
+            {
+                renderinfo.Transform.Rotate = false;
+            }
         }
     }
 }

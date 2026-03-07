@@ -27,9 +27,9 @@
         "scale": 3.0
     },
     "tpHandTransform": {
-        "translation": { "x": -1.8, "y": -1.6, "z": -0.5 },
-        "rotation": { "x": 130, "y": 160, "z": 75 },
-        "origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+        "translation": { "x": -0.4, "y": 0, "z": -0.6 },
+        "rotation": { "x": -80, "y": 5, "z": -110 },
+        "origin": { "x": 0.5, "y": 0, "z": 0.5 },
         "scale": 1.0
     },
     "groundTransform": {

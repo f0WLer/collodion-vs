@@ -9,6 +9,10 @@ namespace Collodion
     {
         public const string AttrLoadedPlate = "collodionLoadedPlate";
         public const string AttrLoadedPlateStack = "collodionLoadedPlateStack";
+        internal const string ExposureTimedAttrKey = "collodionCameraExposureTimed";
+        internal const string ExposureTimedStartMsKey = "startMs";
+        internal const string ExposureTimedDurationMsKey = "durationMs";
+        internal const string ExposureLmbPrevKey = "lmbPrev";
 
         public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handling)
         {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Vintagestory.API.Common;
 using Vintagestory.API.Client;
+using Vintagestory.API.Datastructures;
 
 namespace Collodion
 {
@@ -69,6 +70,14 @@ namespace Collodion
         }
 
         private bool IsHoldStillPending => holdStillActive || holdStillCaptureReady;
+
+        private static bool IsTimedExposurePending(EntityAgent? byEntity)
+        {
+            ITreeAttribute? tree = byEntity?.Attributes?.GetTreeAttribute(ItemWetplateCamera.ExposureTimedAttrKey);
+            if (tree == null) return false;
+
+            return tree.GetInt(ItemWetplateCamera.ExposureTimedDurationMsKey, 0) > 0;
+        }
 
         private float ViewfinderZoomMultiplierCfg => Config?.Viewfinder?.ZoomMultiplier ?? 0.65f;
         private float HoldStillDurationSecondsCfg => Config?.Viewfinder?.HoldStillDurationSeconds ?? 4f;
@@ -206,14 +215,16 @@ namespace Collodion
         {
             if (ClientApi == null || ClientChannel == null || CaptureRenderer == null) return false;
 
-            if (!IsViewfinderActive)
+            bool rightDownNow = GetRightMouseDown();
+
+            if (!IsViewfinderActive && !rightDownNow)
             {
                 // Only allow shutter while aiming.
                 return false;
             }
 
             // Prevent "late shutter" after RMB release.
-            if (!GetRightMouseDown())
+            if (!rightDownNow)
             {
                 return false;
             }
@@ -280,8 +291,23 @@ namespace Collodion
 
                     MarkHoldStillCaptureReady(fn);
 
-                    // Capture is already done (we are in the onSuccess callback), so it is safe to exit immediately.
-                    EndViewfinderMode();
+                    // Keep viewfinder open while timed exposure is active so exposure completion
+                    // logic in ItemWetplateCamera can run to the end.
+                    bool timedExposureActive = false;
+                    try
+                    {
+                        ITreeAttribute? exposureTree = byEntity?.Attributes?.GetTreeAttribute(ItemWetplateCamera.ExposureTimedAttrKey);
+                        timedExposureActive = exposureTree != null && exposureTree.GetInt(ItemWetplateCamera.ExposureTimedDurationMsKey, 0) > 0;
+                    }
+                    catch
+                    {
+                        timedExposureActive = false;
+                    }
+
+                    if (!timedExposureActive)
+                    {
+                        EndViewfinderMode();
+                    }
                 },
                 onError: (ex) =>
                 {
@@ -445,10 +471,11 @@ namespace Collodion
 
             ItemSlot? activeSlot = ClientApi.World.Player?.InventoryManager?.ActiveHotbarSlot;
             bool holdingCamera = activeSlot?.Itemstack?.Item is ItemWetplateCamera;
+            EntityAgent? playerEnt = ClientApi.World.Player?.Entity;
+            bool timedExposurePending = IsTimedExposurePending(playerEnt);
 
             bool rightDown = GetRightMouseDown();
             bool leftDown = GetLeftMouseDown();
-            bool leftPressed = leftDown && !lastLmbDown;
             lastLmbDown = leftDown;
 
             bool rightPressed = rightDown && !lastRmbDown;
@@ -521,6 +548,14 @@ namespace Collodion
 
             if (!rightDown)
             {
+                if (timedExposurePending)
+                {
+                    // Exposure already started: keep viewfinder active until timer completes.
+                    rmbUpSeconds = 0f;
+                    if (!IsViewfinderActive) BeginViewfinderMode();
+                    return;
+                }
+
                 rmbUpSeconds += dt;
                 if (!captureInProgress && rmbUpSeconds > RmbReleaseGraceSeconds)
                 {
@@ -536,15 +571,8 @@ namespace Collodion
             if (suppressViewfinderUntilRmbReleased) return;
             if (!IsViewfinderActive) BeginViewfinderMode();
 
-            // Shutter: LMB rising edge while in viewfinder.
-            if (!captureInProgress && IsViewfinderActive && leftPressed)
-            {
-                var playerEnt = ClientApi.World.Player?.Entity;
-                if (playerEnt != null)
-                {
-                    RequestPhotoCaptureFromViewfinder(playerEnt, silentIfBusy: true);
-                }
-            }
+            // Shutter capture is driven by ItemWetplateCamera held-interact callbacks while RMB
+            // viewfinder is active so we can use the engine's standard timed interaction meter.
         }
 
         private void EnsureViewfinderZoomApplied()

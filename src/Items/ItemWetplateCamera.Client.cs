@@ -104,9 +104,29 @@ namespace Collodion
 
         private static readonly object GroundMeshLock = new object();
         private static readonly Vec3f GroundMeshScaleCenter = new Vec3f(0.5f, 0.5f, 0.5f);
-        private static readonly AssetLocation ExposureStartSound = new AssetLocation("game", "sounds/tool/padlock");
-        private static readonly AssetLocation ExposureFinishSound = new AssetLocation("game", "sounds/tool/reinforce");
+        private static readonly AssetLocation ExposureStartSound = new AssetLocation("collodion", "sounds/exposure-start");
+        private static readonly AssetLocation ExposureFinishSound = new AssetLocation("collodion", "sounds/exposure-end");
         private static MultiTextureMeshRef? groundMeshRef;
+
+        private static float NextRandomPitch(IWorldAccessor? world)
+        {
+            float basePitch = 0.92f;
+            float spread = 0.16f;
+
+            try
+            {
+                if (world?.Rand != null)
+                {
+                    return basePitch + (float)world.Rand.NextDouble() * spread;
+                }
+            }
+            catch
+            {
+                // Fallback below.
+            }
+
+            return 1f;
+        }
 
         private bool TryGetGroundMesh(ICoreClientAPI capi, out MultiTextureMeshRef? meshRef)
         {
@@ -232,7 +252,7 @@ namespace Collodion
                         BeginTimedExposure(byEntity, startExposureSeconds);
                         try
                         {
-                            api.World.PlaySoundAt(ExposureStartSound, byEntity, null, true, 16f, 1f);
+                            api.World.PlaySoundAt(ExposureStartSound, byEntity, null, true, 16f, NextRandomPitch(api.World));
                         }
                         catch
                         {
@@ -259,7 +279,7 @@ namespace Collodion
 
             try
             {
-                api.World.PlaySoundAt(ExposureFinishSound, byEntity, null, true, 16f, 1f);
+                api.World.PlaySoundAt(ExposureFinishSound, byEntity, null, true, 16f, NextRandomPitch(api.World));
             }
             catch
             {

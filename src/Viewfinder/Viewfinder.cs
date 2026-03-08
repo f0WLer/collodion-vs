@@ -47,6 +47,7 @@ namespace Collodion
         private bool f4TipShownEver;
 
         private static readonly string[] ViewfinderFloatKeysToZoom = { "fieldOfView", "fpHandsFoV" };
+        private static readonly AssetLocation ViewfinderEnterSound = new AssetLocation("collodion", "sounds/rustle");
 
         // Viewfinder effect: FOV zoom
         private readonly object viewfinderLock = new object();
@@ -60,6 +61,23 @@ namespace Collodion
         private float runtimeTargetFov;
         private string? runtimeFovMechanism;
         private bool zoomMechanismTipShownThisViewfinder;
+
+        private float NextViewfinderRandomPitch()
+        {
+            try
+            {
+                if (ClientApi?.World?.Rand != null)
+                {
+                    return 0.92f + (float)ClientApi.World.Rand.NextDouble() * 0.16f;
+                }
+            }
+            catch
+            {
+                // Fallback below.
+            }
+
+            return 1f;
+        }
 
         public bool IsViewfinderActive
         {
@@ -102,6 +120,19 @@ namespace Collodion
 
                 f4TipShownThisViewfinder = false;
                 MaybeShowF4GuiLessTip();
+
+                try
+                {
+                    EntityAgent? playerEnt = ClientApi.World?.Player?.Entity;
+                    if (playerEnt != null)
+                    {
+                        ClientApi.World.PlaySoundAt(ViewfinderEnterSound, playerEnt, null, true, 16f, NextViewfinderRandomPitch());
+                    }
+                }
+                catch
+                {
+                    // Sound should not block entering viewfinder mode.
+                }
 
                 // Preferred zoom: Spyglass-style patch of Set3DProjection(float,float).
                 // This is the most reliable way to force a visual zoom on clients where settings

@@ -141,6 +141,10 @@ namespace Collodion
         private static readonly AssetLocation CameraSlingEmptyCode = new AssetLocation("collodion", "camerasling-empty");
         private static readonly AssetLocation CameraSlingFullCode = new AssetLocation("collodion", "camerasling-full");
         private static readonly AssetLocation CameraSlingWallCode = new AssetLocation("collodion", "cameraslingwall");
+        private static readonly AssetLocation PadlockSound = new AssetLocation("game", "sounds/tool/padlock");
+        private static readonly AssetLocation LeatherSound = new AssetLocation("game", "sounds/wearable/leather3");
+        private static readonly AssetLocation CameraPlateLoadSound = new AssetLocation("collodion", "sounds/glass-slide1");
+        private static readonly AssetLocation CameraPlateUnloadSound = new AssetLocation("collodion", "sounds/glass-slide2");
 
         private static bool InventoryHasLeftShoulderSlot(InventoryBase inventory)
         {
@@ -269,6 +273,44 @@ namespace Collodion
             cameraSlot.MarkDirty();
         }
 
+        private float NextRandomPitch()
+        {
+            try
+            {
+                if (Api?.World?.Rand != null)
+                {
+                    return 0.92f + (float)Api.World.Rand.NextDouble() * 0.16f;
+                }
+            }
+            catch
+            {
+                // Fallback below.
+            }
+
+            return 1f;
+        }
+
+        private void PlayEntitySound(Entity? entity, AssetLocation sound, float pitch = 1f)
+        {
+            if (Api?.World == null || entity == null) return;
+
+            try
+            {
+                Api.World.PlaySoundAt(sound, entity, null, true, 16f, pitch);
+            }
+            catch
+            {
+                // Do not fail gameplay actions because a sound failed.
+            }
+        }
+
+        private void PlaySlingSwapSoundPair(IServerPlayer player)
+        {
+            Entity? entity = player?.Entity;
+            PlayEntitySound(entity, PadlockSound, 1f);
+            PlayEntitySound(entity, LeatherSound, 1f);
+        }
+
         private bool TryStowCameraOnWall(IServerPlayer player, CameraSlingTogglePacket packet, ItemSlot slingSlot, ItemSlot activeSlot, ItemStack slingStack, ItemStack activeStack)
         {
             if (Api == null || packet == null) return false;
@@ -365,6 +407,7 @@ namespace Collodion
                 activeSlot.MarkDirty();
 
                 SetSlingCode(slingSlot, CameraSlingFullCode);
+                PlaySlingSwapSoundPair(player);
                 return;
             }
 
@@ -386,6 +429,7 @@ namespace Collodion
                 slingStack.Attributes.RemoveAttribute(ItemCameraSling.AttrStoredCameraStack);
 
                 SetSlingCode(slingSlot, CameraSlingEmptyCode);
+                PlaySlingSwapSoundPair(player);
             }
         }
 
@@ -433,6 +477,7 @@ namespace Collodion
 
                 cameraStack.Attributes.SetString(ItemWetplateCamera.AttrLoadedPlate, code.ToString());
                 SetCameraCode(cameraSlot, GetLoadedCameraCodeForPlate(code));
+                PlayEntitySound(player?.Entity, CameraPlateLoadSound, NextRandomPitch());
                 return;
             }
 
@@ -488,6 +533,7 @@ namespace Collodion
             cameraStack.Attributes.RemoveAttribute(ItemWetplateCamera.AttrLoadedPlate);
             cameraStack.Attributes.RemoveAttribute(ItemWetplateCamera.AttrLoadedPlateStack);
             SetCameraCode(cameraSlot, WetplateCameraBaseCode);
+            PlayEntitySound(player?.Entity, CameraPlateUnloadSound, NextRandomPitch());
         }
 
         private void OnPhotoCaptionSet(IServerPlayer player, PhotoCaptionSetPacket packet)

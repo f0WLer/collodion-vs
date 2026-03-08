@@ -22,6 +22,13 @@ namespace Collodion
             new Cuboidf(12.5f / 16f, 0.5f / 16f, 4.5f / 16f, 13.0f / 16f, 8.2f / 16f, 11.5f / 16f),
             new Cuboidf(14.0f / 16f, 0.5f / 16f, 4.5f / 16f, 14.5f / 16f, 8.2f / 16f, 11.5f / 16f)
         };
+        private static readonly AssetLocation PadlockSound = new AssetLocation("game", "sounds/tool/padlock");
+        private static readonly AssetLocation[] PlateSetSounds =
+        {
+            new AssetLocation("collodion", "sounds/glass-set1"),
+            new AssetLocation("collodion", "sounds/glass-set2"),
+            new AssetLocation("collodion", "sounds/glass-set3")
+        };
 
         public override void OnLoaded(ICoreAPI api)
         {
@@ -173,6 +180,7 @@ namespace Collodion
 
                 activeSlot.TakeOut(1);
                 activeSlot.MarkDirty();
+                PlayRandomPlateSetSound(world, blockSel.Position, byPlayer);
                 return true;
             }
 
@@ -193,6 +201,7 @@ namespace Collodion
                     {
                         sourceSlot.TakeOut(1);
                         sourceSlot.MarkDirty();
+                        PlayRandomPlateSetSound(world, blockSel.Position, byPlayer);
                         return true;
                     }
                 }
@@ -222,6 +231,8 @@ namespace Collodion
                 {
                     world.SpawnItemEntity(taken, blockSel.Position.ToVec3d().Add(0.5, 0.5, 0.5));
                 }
+
+                PlayRandomPlateSetSound(world, blockSel.Position, byPlayer);
 
                 return true;
             }
@@ -334,7 +345,13 @@ namespace Collodion
 
             if (world.BlockAccessor.GetBlock(pos)?.Code == targetCode)
             {
-                return be.SetOpen(open) || be.IsOpen == open;
+                bool changedSameBlock = be.SetOpen(open) || be.IsOpen == open;
+                if (changedSameBlock)
+                {
+                    PlayOpenCloseSoundPair(world, pos);
+                }
+
+                return changedSameBlock;
             }
 
             var snapshot = new TreeAttribute();
@@ -349,10 +366,48 @@ namespace Collodion
                 newBe.MarkDirty(true);
                 try { world.BlockAccessor.MarkBlockEntityDirty(pos); } catch { }
                 try { world.BlockAccessor.MarkBlockDirty(pos); } catch { }
+                PlayOpenCloseSoundPair(world, pos);
                 return true;
             }
 
             return false;
+        }
+
+        private static void PlayOpenCloseSoundPair(IWorldAccessor world, BlockPos pos)
+        {
+            if (world == null || pos == null || world.Side != EnumAppSide.Server) return;
+
+            double x = pos.X + 0.5;
+            double y = pos.Y + 0.5;
+            double z = pos.Z + 0.5;
+
+            world.PlaySoundAt(PadlockSound, x, y, z, null, true, 16f, 1f);
+            world.PlaySoundAt(PadlockSound, x, y, z, null, true, 16f, 1f);
+        }
+
+        private static void PlayRandomPlateSetSound(IWorldAccessor world, BlockPos pos, IPlayer? byPlayer)
+        {
+            if (world == null || pos == null || world.Side != EnumAppSide.Server) return;
+
+            int index = 0;
+            float pitch = 1f;
+
+            try
+            {
+                if (world.Rand != null)
+                {
+                    index = world.Rand.Next(PlateSetSounds.Length);
+                    pitch = 0.92f + (float)world.Rand.NextDouble() * 0.16f;
+                }
+            }
+            catch
+            {
+                index = 0;
+                pitch = 1f;
+            }
+
+            AssetLocation sound = PlateSetSounds[index];
+            world.PlaySoundAt(sound, pos.X + 0.5, pos.Y + 0.5, pos.Z + 0.5, null, true, 16f, pitch);
         }
     }
 }

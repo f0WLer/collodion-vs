@@ -23,6 +23,9 @@ namespace Collodion
             new Cuboidf(14.0f / 16f, 0.5f / 16f, 4.5f / 16f, 14.5f / 16f, 8.2f / 16f, 11.5f / 16f)
         };
         private static readonly AssetLocation PadlockSound = new AssetLocation("game", "sounds/tool/padlock");
+        private static readonly AssetLocation HingeSound = new AssetLocation("collodion", "sounds/hinge");
+        private static readonly AssetLocation WoodThudSound = new AssetLocation("collodion", "sounds/wood-thud");
+        private const int OpenCloseSoundDelayMs = 35;
         private static readonly AssetLocation[] PlateSetSounds =
         {
             new AssetLocation("collodion", "sounds/glass-set1"),
@@ -121,6 +124,11 @@ namespace Collodion
             }
 
             be.SetOpen(false);
+
+            if (world?.Side == EnumAppSide.Server)
+            {
+                world.PlaySoundAt(WoodThudSound, blockPos.X + 0.5, blockPos.Y + 0.5, blockPos.Z + 0.5, null, true, 16f, 1f);
+            }
         }
 
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -381,8 +389,31 @@ namespace Collodion
             double y = pos.Y + 0.5;
             double z = pos.Z + 0.5;
 
-            world.PlaySoundAt(PadlockSound, x, y, z, null, true, 16f, 1f);
-            world.PlaySoundAt(PadlockSound, x, y, z, null, true, 16f, 1f);
+            PlaySoundWithDelay(world, x, y, z, PadlockSound, 0);
+            PlaySoundWithDelay(world, x, y, z, PadlockSound, OpenCloseSoundDelayMs);
+            PlaySoundWithDelay(world, x, y, z, HingeSound, OpenCloseSoundDelayMs * 2);
+        }
+
+        private static void PlaySoundWithDelay(IWorldAccessor world, double x, double y, double z, AssetLocation sound, int delayMs)
+        {
+            if (delayMs <= 0)
+            {
+                world.PlaySoundAt(sound, x, y, z, null, true, 16f, 1f);
+                return;
+            }
+
+            try
+            {
+                world.Api?.Event?.RegisterCallback(_ =>
+                {
+                    if (world.Side != EnumAppSide.Server) return;
+                    world.PlaySoundAt(sound, x, y, z, null, true, 16f, 1f);
+                }, delayMs);
+            }
+            catch
+            {
+                world.PlaySoundAt(sound, x, y, z, null, true, 16f, 1f);
+            }
         }
 
         private static void PlayRandomPlateSetSound(IWorldAccessor world, BlockPos pos, IPlayer? byPlayer)

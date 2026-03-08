@@ -29,6 +29,7 @@
 					"name": "Bottom",
 					"from": [ 0.0, -0.75, 0.5 ],
 					"to": [ 9.0, 0.0, 1.0 ],
+					"rotationOrigin": [ -3.0, 0.0, 0.0 ],
 					"faces": {
 						"north": { "texture": "#oak", "uv": [ 0.0, 0.0, 9.0, 0.5 ] },
 						"east": { "texture": "#oak", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
@@ -53,9 +54,9 @@
 				},
 				{
 					"name": "Left",
-					"from": [ -9.75, -0.75, -1.0 ],
-					"to": [ -9.0, 10.75, -0.5 ],
-					"rotationOrigin": [ 0.0, 0.0, 0.0 ],
+					"from": [ 8.25, -0.75, -1.0 ],
+					"to": [ 9.0, 10.75, -0.5 ],
+					"rotationOrigin": [ 9.0, 0.0, 0.0 ],
 					"rotationX": -180.0,
 					"rotationZ": -180.0,
 					"faces": {
@@ -71,7 +72,7 @@
 					"name": "Right",
 					"from": [ 0.0, -0.75, 1.0 ],
 					"to": [ 1.0, 10.75, 1.5 ],
-					"rotationOrigin": [ 0.0, -1.25, 1.0 ],
+					"rotationOrigin": [ 0.0, 0.0, 1.0 ],
 					"rotationX": -180.0,
 					"rotationZ": -180.0,
 					"faces": {

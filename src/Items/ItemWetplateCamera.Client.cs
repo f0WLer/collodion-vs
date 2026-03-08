@@ -311,6 +311,12 @@ namespace Collodion
             base.OnHeldInteractStop(secondsUsed, slot, byEntity, blockSel, entitySel);
             if (api.Side != EnumAppSide.Client) return;
 
+            // Timed exposure may continue after input release; don't clear it here.
+            if (IsTimedExposureActive(byEntity, out _))
+            {
+                return;
+            }
+
             ClearTimedExposure(byEntity);
             SetLmbPrev(byEntity, false);
 

@@ -13,6 +13,8 @@ namespace Collodion
 
         public string? Caption { get; private set; }
 
+        public string? Caption2 { get; private set; }
+
         public string? FramePlankBlockCode { get; private set; }
 
         public string? FramePlankBlockCode2 { get; private set; }
@@ -71,6 +73,26 @@ namespace Collodion
             if (string.Equals(Caption, normalized, StringComparison.Ordinal)) return;
 
             Caption = normalized;
+            MarkDirty(true);
+
+            try
+            {
+                Api?.World?.BlockAccessor?.MarkBlockEntityDirty(Pos);
+            }
+            catch { }
+        }
+
+        public void SetCaption2(string? caption)
+        {
+            string? normalized = string.IsNullOrWhiteSpace(caption) ? null : caption;
+            if (normalized != null && normalized.Length > 200)
+            {
+                normalized = normalized.Substring(0, 200);
+            }
+
+            if (string.Equals(Caption2, normalized, StringComparison.Ordinal)) return;
+
+            Caption2 = normalized;
             MarkDirty(true);
 
             try
@@ -150,6 +172,11 @@ namespace Collodion
                 tree.SetString(PhotographAttrs.Caption, Caption);
             }
 
+            if (!string.IsNullOrEmpty(Caption2))
+            {
+                tree.SetString(PhotographAttrs.Caption2, Caption2);
+            }
+
             if (!string.IsNullOrEmpty(FramePlankBlockCode))
             {
                 tree.SetString(PhotographAttrs.FramePlank, FramePlankBlockCode);
@@ -172,6 +199,7 @@ namespace Collodion
             PhotoId = tree.GetString(PhotographAttrs.PhotoId);
             PhotoId2 = tree.GetString(PhotographAttrs.PhotoId2);
             Caption = tree.GetString(PhotographAttrs.Caption);
+            Caption2 = tree.GetString(PhotographAttrs.Caption2);
             FramePlankBlockCode = tree.GetString(PhotographAttrs.FramePlank);
             FramePlankBlockCode2 = tree.GetString(PhotographAttrs.FramePlank2);
             ExposureMovement = tree.GetFloat(WetPlateAttrs.HoldStillMovement, 0f);

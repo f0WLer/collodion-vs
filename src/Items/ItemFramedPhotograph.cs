@@ -298,6 +298,7 @@ namespace Collodion
                 string secondaryPhotoId = string.Empty;
                 string primaryFramePlank = stack.Attributes.GetString(PhotographAttrs.FramePlank) ?? string.Empty;
                 string secondaryFramePlank = string.Empty;
+                string secondaryCaption = string.Empty;
 
                 if (isMergeUpgrade && !string.IsNullOrWhiteSpace(existingPrimaryPhotoId))
                 {
@@ -305,6 +306,7 @@ namespace Collodion
                     secondaryPhotoId = photoId;
                     primaryFramePlank = existingFramePlank1;
                     secondaryFramePlank = stack.Attributes.GetString(PhotographAttrs.FramePlank) ?? string.Empty;
+                    secondaryCaption = stack.Attributes.GetString(PhotographAttrs.Caption) ?? string.Empty;
 
                     if (string.IsNullOrWhiteSpace(secondaryFramePlank) && !string.IsNullOrWhiteSpace(existingFramePlank2))
                     {
@@ -316,6 +318,7 @@ namespace Collodion
                 be.SetPhoto2(string.IsNullOrWhiteSpace(secondaryPhotoId) ? null : secondaryPhotoId);
                 be.SetFramePlankBlockCode(string.IsNullOrWhiteSpace(primaryFramePlank) ? null : primaryFramePlank);
                 be.SetFramePlankBlockCode2(string.IsNullOrWhiteSpace(secondaryFramePlank) ? null : secondaryFramePlank);
+                be.SetCaption2(string.IsNullOrWhiteSpace(secondaryCaption) ? null : secondaryCaption);
 
                 try
                 {

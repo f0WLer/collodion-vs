@@ -96,38 +96,121 @@ namespace Collodion
 
             if (stack == null) return false;
 
-            // Require a board item (not a block).
-            if (stack.Block != null) return false;
-
-            Item? item = stack.Item;
-            AssetLocation? itemCode = item?.Code;
+            // Accept held collectibles (item or block) for plank-like resources,
+            // but keep board BLOCKS excluded per interaction design.
+            AssetLocation? itemCode = stack.Collectible?.Code;
             if (itemCode == null) return false;
 
             string path = itemCode.Path ?? string.Empty;
-            if (path.IndexOf("board", System.StringComparison.OrdinalIgnoreCase) < 0) return false;
+            string lowerPath = path.ToLowerInvariant();
 
-            int dashIndex = path.LastIndexOf('-');
-            if (dashIndex <= 0 || dashIndex >= path.Length - 1) return false;
+            bool isBoardLike = lowerPath.StartsWith("board-", System.StringComparison.OrdinalIgnoreCase)
+                || lowerPath.StartsWith("boards-", System.StringComparison.OrdinalIgnoreCase);
+            bool isPlankLike = lowerPath.StartsWith("plank-", System.StringComparison.OrdinalIgnoreCase)
+                || lowerPath.StartsWith("planks-", System.StringComparison.OrdinalIgnoreCase);
 
-            string woodCode = path[(dashIndex + 1)..];
-            if (string.IsNullOrWhiteSpace(woodCode)) return false;
-
-            // Try to resolve to a plank block with the same wood code.
-            string domain = string.IsNullOrWhiteSpace(itemCode.Domain) ? "game" : itemCode.Domain;
-            AssetLocation candidate = new AssetLocation(domain, $"planks-{woodCode}");
-            Block? plankBlock = world.GetBlock(candidate);
-
-            if (plankBlock == null || plankBlock.Id == 0)
+            if (!isBoardLike && !isPlankLike)
             {
-                // Fallback to game domain for base planks.
-                candidate = new AssetLocation("game", $"planks-{woodCode}");
-                plankBlock = world.GetBlock(candidate);
+                return false;
             }
 
-            if (plankBlock == null || plankBlock.Id == 0) return false;
+            // Keep board BLOCKS excluded; frame skinning uses held items.
+            if (stack.Block != null && isBoardLike)
+            {
+                return false;
+            }
 
-            plankBlockCode = plankBlock.Code.ToString();
-            return true;
+            string domain = string.IsNullOrWhiteSpace(itemCode.Domain) ? "game" : itemCode.Domain;
+
+            var candidatePaths = new List<string>();
+
+            // Direct plank item path variants.
+            if (lowerPath.StartsWith("planks-", System.StringComparison.OrdinalIgnoreCase))
+            {
+                candidatePaths.Add(path);
+            }
+            else if (lowerPath.StartsWith("plank-", System.StringComparison.OrdinalIgnoreCase))
+            {
+                candidatePaths.Add("planks-" + path.Substring("plank-".Length));
+            }
+
+            // Board item path variants.
+            if (lowerPath.StartsWith("board-", System.StringComparison.OrdinalIgnoreCase))
+            {
+                candidatePaths.Add("planks-" + path.Substring("board-".Length));
+            }
+            else if (lowerPath.StartsWith("boards-", System.StringComparison.OrdinalIgnoreCase))
+            {
+                candidatePaths.Add("planks-" + path.Substring("boards-".Length));
+            }
+
+            // Fallbacks: try suffixes after any board/plank marker and then trailing tokens.
+            string[] markers = { "board-", "boards-", "plank-", "planks-" };
+            foreach (string marker in markers)
+            {
+                int idx = lowerPath.IndexOf(marker, System.StringComparison.OrdinalIgnoreCase);
+                if (idx < 0) continue;
+
+                string suffix = path.Substring(idx + marker.Length);
+                if (!string.IsNullOrWhiteSpace(suffix))
+                {
+                    candidatePaths.Add("planks-" + suffix);
+                }
+
+                string[] parts = suffix.Split('-');
+                for (int i = parts.Length - 1; i >= 0; i--)
+                {
+                    if (string.IsNullOrWhiteSpace(parts[i])) continue;
+                    candidatePaths.Add("planks-" + parts[i]);
+                }
+            }
+
+            var seen = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+            foreach (string candidatePath in candidatePaths)
+            {
+                if (string.IsNullOrWhiteSpace(candidatePath)) continue;
+                if (!seen.Add(candidatePath)) continue;
+
+                var tryPaths = new List<string>();
+
+                // Base-game woodtyped planks use an orientation suffix (e.g. planks-acacia-ud).
+                if (candidatePath.StartsWith("planks-", System.StringComparison.OrdinalIgnoreCase)
+                    && !candidatePath.EndsWith("-ud", System.StringComparison.OrdinalIgnoreCase)
+                    && !candidatePath.EndsWith("-ns", System.StringComparison.OrdinalIgnoreCase)
+                    && !candidatePath.EndsWith("-we", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    tryPaths.Add(candidatePath + "-ud");
+                    tryPaths.Add(candidatePath + "-ns");
+                    tryPaths.Add(candidatePath + "-we");
+                }
+
+                tryPaths.Add(candidatePath);
+
+                Block? plankBlock = null;
+                foreach (string tryPath in tryPaths)
+                {
+                    AssetLocation candidate = new AssetLocation(domain, tryPath);
+                    plankBlock = world.GetBlock(candidate);
+
+                    if (plankBlock == null || plankBlock.Id == 0)
+                    {
+                        // Fallback to game domain for base planks.
+                        candidate = new AssetLocation("game", tryPath);
+                        plankBlock = world.GetBlock(candidate);
+                    }
+
+                    if (plankBlock == null || plankBlock.Id == 0) continue;
+
+                    break;
+                }
+
+                if (plankBlock == null || plankBlock.Id == 0) continue;
+
+                plankBlockCode = plankBlock.Code.ToString();
+                return true;
+            }
+
+            return false;
         }
 
         protected override AssetLocation PhotoItemCode => FramedItemCode;
@@ -137,6 +220,34 @@ namespace Collodion
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             ItemStack? held = byPlayer.InventoryManager?.ActiveHotbarSlot?.Itemstack;
+
+            // Plain RMB with board/plank item re-skins frame.
+            // Shift+RMB remains reserved for pop/remove behavior below.
+            if (!IsShiftDown(byPlayer) && TryGetFramePlankBlockCode(held, world, out string plankBlockCode))
+            {
+                if (world.Side == EnumAppSide.Server)
+                {
+                    if (world.BlockAccessor.GetBlockEntity(blockSel.Position) is BlockEntityPhotograph photoBe)
+                    {
+                        photoBe.SetFramePlankBlockCode(plankBlockCode);
+                        if (!string.IsNullOrWhiteSpace(photoBe.PhotoId2))
+                        {
+                            photoBe.SetFramePlankBlockCode2(plankBlockCode);
+                        }
+
+                        bool isCreative = byPlayer.WorldData?.CurrentGameMode == EnumGameMode.Creative;
+                        if (!isCreative)
+                        {
+                            ItemSlot? slot = byPlayer.InventoryManager?.ActiveHotbarSlot;
+                            slot?.TakeOut(1);
+                            slot?.MarkDirty();
+                        }
+                    }
+                }
+
+                // Prevent pickup while applying.
+                return true;
+            }
 
             // SHIFT + right-click on a 2-photo frame: pop the most recently added photo (Photo2)
             // and downgrade the block back to the 1-photo variant, preserving Photo1 state.
@@ -149,6 +260,7 @@ namespace Collodion
                     string photo1 = be.PhotoId ?? string.Empty;
                     string photo2 = be.PhotoId2 ?? string.Empty;
                     string caption = be.Caption ?? string.Empty;
+                    string caption2 = be.Caption2 ?? string.Empty;
                     string framePlank1 = be.FramePlankBlockCode ?? string.Empty;
                     string framePlank2 = be.FramePlankBlockCode2 ?? string.Empty;
                     float exposureMovement = be.ExposureMovement;
@@ -160,7 +272,7 @@ namespace Collodion
 
                     if (isDouble)
                     {
-                        if (TryCreateFramedPhotoStack(world, photo2, framePlank2, null, exposureMovement, out ItemStack poppedStack))
+                        if (TryCreateFramedPhotoStack(world, photo2, framePlank2, caption2, exposureMovement, out ItemStack poppedStack))
                         {
                             TryGiveOrDrop(world, byPlayer, blockSel.Position, poppedStack);
                         }
@@ -178,6 +290,7 @@ namespace Collodion
                                 {
                                     newBe.SetCaption(caption);
                                 }
+                                newBe.SetCaption2(null);
 
                                 if (!string.IsNullOrWhiteSpace(framePlank1))
                                 {
@@ -211,39 +324,6 @@ namespace Collodion
             if (IsWritingItem(held))
             {
                 return base.OnBlockInteractStart(world, byPlayer, blockSel);
-            }
-
-            // Allow re-skinning the frame using any plank block.
-            // Works for both ground-placed and wall-mounted frames.
-            string path = Code?.Path ?? string.Empty;
-            if (path.StartsWith("framedphotographground", System.StringComparison.OrdinalIgnoreCase)
-                || path.StartsWith("framedphotographwall", System.StringComparison.OrdinalIgnoreCase))
-            {
-                if (TryGetFramePlankBlockCode(held, world, out string plankBlockCode))
-                {
-                    if (world.Side == EnumAppSide.Server)
-                    {
-                        if (world.BlockAccessor.GetBlockEntity(blockSel.Position) is BlockEntityPhotograph photoBe)
-                        {
-                            photoBe.SetFramePlankBlockCode(plankBlockCode);
-                            if (!string.IsNullOrWhiteSpace(photoBe.PhotoId2))
-                            {
-                                photoBe.SetFramePlankBlockCode2(plankBlockCode);
-                            }
-
-                            bool isCreative = byPlayer.WorldData?.CurrentGameMode == EnumGameMode.Creative;
-                            if (!isCreative)
-                            {
-                                ItemSlot? slot = byPlayer.InventoryManager?.ActiveHotbarSlot;
-                                slot?.TakeOut(1);
-                                slot?.MarkDirty();
-                            }
-                        }
-                    }
-
-                    // Prevent pickup while applying.
-                    return true;
-                }
             }
 
             // Non-shift right-click does not remove framed photos; adding is handled by held item interaction.

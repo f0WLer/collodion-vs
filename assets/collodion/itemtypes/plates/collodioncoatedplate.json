@@ -18,7 +18,7 @@
         "scale": 1.8
   },
   "tpHandTransform": {
-        "translation": { "x": 0, "y": 0.2, "z": -0.4 },
+        "translation": { "x": -0.1, "y": 0.3, "z": -0.3 },
         "rotation": { "x": 40, "y": 110, "z": 0 },
         "origin": { "x": 0.0, "y": 0.0, "z": 0.0 },
         "scale": 0.6

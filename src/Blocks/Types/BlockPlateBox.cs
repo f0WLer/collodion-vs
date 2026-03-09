@@ -118,10 +118,10 @@ namespace Collodion
 
             if (world?.BlockAccessor?.GetBlockEntity(blockPos) is not BlockEntityPlateBox be) return;
 
-            if (byItemStack != null)
-            {
-                be.LoadFromItemStack(byItemStack, world);
-            }
+            // SetBlock() is used to swap closed/open variants; those transitions should not trigger placement SFX.
+            if (byItemStack == null) return;
+
+            be.LoadFromItemStack(byItemStack, world);
 
             be.SetOpen(false);
 

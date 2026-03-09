@@ -625,8 +625,31 @@ namespace Collodion
                     MouseButton = EnumMouseButton.Right
                 });
 
-                // Develop.
-                if (IsPlate(plate, ExposedPlateItemCode))
+                bool canDevelop = false;
+                bool canFix = false;
+
+                if (be != null)
+                {
+                    // Drive held-help by actual development progress, not just item code.
+                    if (TryGetDeveloperPourContext(be, out _, out _, out _, out int currentPours))
+                    {
+                        canDevelop = currentPours < DevelopPoursRequired;
+                    }
+
+                    if (TryGetFixerPourContext(be, out _, out int pours))
+                    {
+                        canFix = pours >= DevelopPoursRequired;
+                    }
+                }
+                else
+                {
+                    // Fallback when BE context is unavailable.
+                    canDevelop = IsPlate(plate, ExposedPlateItemCode);
+                    canFix = IsPlate(plate, DevelopedPlateItemCode);
+                }
+
+                // Develop / continue developing.
+                if (canDevelop)
                 {
                     Item? developer = world.GetItem(DeveloperPortionCode);
                     if (developer != null)
@@ -641,7 +664,7 @@ namespace Collodion
                 }
 
                 // Fix.
-                if (IsPlate(plate, DevelopedPlateItemCode))
+                if (canFix)
                 {
                     Item? fixer = world.GetItem(FixerPortionCode);
                     if (fixer != null)

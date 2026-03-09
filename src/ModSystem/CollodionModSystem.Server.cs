@@ -145,6 +145,7 @@ namespace Collodion
         private static readonly AssetLocation LeatherSound = new AssetLocation("game", "sounds/wearable/leather3");
         private static readonly AssetLocation CameraPlateLoadSound = new AssetLocation("collodion", "sounds/glass-slide1");
         private static readonly AssetLocation CameraPlateUnloadSound = new AssetLocation("collodion", "sounds/glass-slide2");
+        private const int SlingPadlockDelayMs = 45;
 
         private static bool InventoryHasLeftShoulderSlot(InventoryBase inventory)
         {
@@ -307,8 +308,20 @@ namespace Collodion
         private void PlaySlingSwapSoundPair(IServerPlayer player)
         {
             Entity? entity = player?.Entity;
-            PlayEntitySound(entity, PadlockSound, 1f);
             PlayEntitySound(entity, LeatherSound, 1f);
+
+            try
+            {
+                Api?.Event?.RegisterCallback(_ =>
+                {
+                    PlayEntitySound(entity, PadlockSound, 1f);
+                }, SlingPadlockDelayMs);
+            }
+            catch
+            {
+                // If callback scheduling fails, still play the padlock sound.
+                PlayEntitySound(entity, PadlockSound, 1f);
+            }
         }
 
         private bool TryStowCameraOnWall(IServerPlayer player, CameraSlingTogglePacket packet, ItemSlot slingSlot, ItemSlot activeSlot, ItemStack slingStack, ItemStack activeStack)

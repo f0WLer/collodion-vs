@@ -7,7 +7,7 @@
         "displaycaseable": true,
         "shelvable": true
     },
-    "creativeinventory": { "general": ["*"], "items": ["*"] },
+    "creativeinventory": { "general": [], "items": [] },
     "textures": {
         "oak": { "base": "game:block/wood/debarked/oak" },
         "photo": { "base": "game:block/wood/debarked/oak" } 

@@ -2,7 +2,7 @@
   "code": "framedphotographground2",
   "class": "BlockFramedPhotograph",
   "entityClass": "BlockEntityPhotograph",
-  "creativeinventory": { "general": [ "*-north" ] },
+  "creativeinventory": { "general": [] },
   "blockmaterial": "Wood",
   "drawtype": "json",
   "shape": {

@@ -29,6 +29,9 @@ namespace Collodion
     }
 
     [ProtoContract]
+    public class CameraAttachSlingPacket { }
+
+    [ProtoContract]
     public class CameraSlingTogglePacket
     {
         [ProtoMember(1)]
@@ -99,6 +102,7 @@ namespace Collodion
                 .RegisterMessageType(typeof(PhotoTakenPacket))
                 .RegisterMessageType(typeof(CameraLoadPlatePacket))
                 .RegisterMessageType(typeof(CameraSlingTogglePacket))
+                .RegisterMessageType(typeof(CameraAttachSlingPacket))
                 .RegisterMessageType(typeof(PhotoBlobRequestPacket))
                 .RegisterMessageType(typeof(PhotoBlobChunkPacket))
                 .RegisterMessageType(typeof(PhotoBlobAckPacket))

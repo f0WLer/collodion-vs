@@ -51,6 +51,7 @@ namespace Collodion
             dsc.AppendLine("Press R to store/unstore camera from active slot.");
             dsc.AppendLine("Right click: wear instantly.");
             dsc.AppendLine("Shift+Ctrl+Right click on wall: mount sling.");
+            dsc.AppendLine("Hold in offhand with camera in hand, Ctrl+Shift+Right click: stow camera without wearing.");
 
             ItemStack? stored = null;
             try

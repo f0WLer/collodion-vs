@@ -40,6 +40,7 @@ namespace Collodion
             if (string.IsNullOrEmpty(loadedPlate))
             {
                 dsc.AppendLine("Shift+Right click with a Silvered Plate in offhand to load.");
+                dsc.AppendLine("Ctrl+Shift+Right click with an empty Camera Sling in offhand to stow.");
             }
             else
             {

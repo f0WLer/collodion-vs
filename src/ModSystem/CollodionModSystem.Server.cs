@@ -28,6 +28,7 @@ namespace Collodion
             ServerChannel.SetMessageHandler<PhotoTakenPacket>(OnPhotoTakenReceived);
             ServerChannel.SetMessageHandler<CameraLoadPlatePacket>(OnCameraLoadPlateReceived);
             ServerChannel.SetMessageHandler<CameraSlingTogglePacket>(OnCameraSlingToggleReceived);
+            ServerChannel.SetMessageHandler<CameraAttachSlingPacket>(OnCameraAttachSlingReceived);
             PhotoSync = new WetplatePhotoSync(this);
 
             serverPhotoLastSeenIndex = LoadOrCreateServerPhotoLastSeenIndex(api);
@@ -444,6 +445,42 @@ namespace Collodion
                 SetSlingCode(slingSlot, CameraSlingEmptyCode);
                 PlaySlingSwapSoundPair(player);
             }
+        }
+
+        private void OnCameraAttachSlingReceived(IServerPlayer player, CameraAttachSlingPacket _)
+        {
+            if (Api == null) return;
+
+            ItemSlot? activeSlot = player.InventoryManager.ActiveHotbarSlot;
+            ItemStack? cameraStack = activeSlot?.Itemstack;
+            if (cameraStack?.Item is not ItemWetplateCamera) return;
+
+            ItemSlot? offhandSlot = player.InventoryManager.OffhandHotbarSlot;
+            ItemStack? slingStack = offhandSlot?.Itemstack;
+            if (slingStack?.Item is not ItemCameraSling) return;
+            if (slingStack.Collectible?.Code != CameraSlingEmptyCode) return;
+
+            Item? fullSlingItem = Api.World.GetItem(CameraSlingFullCode);
+            if (fullSlingItem == null) return;
+
+            // Clone the camera stack to store inside the sling.
+            ItemStack movedCamera = cameraStack.Clone();
+            movedCamera.StackSize = 1;
+
+            // Build the full sling, preserving any attributes the empty sling had.
+            ItemStack fullSling = new ItemStack(fullSlingItem);
+            try { fullSling.Attributes.MergeTree(slingStack.Attributes.Clone()); } catch { }
+            fullSling.Attributes.SetItemstack(ItemCameraSling.AttrStoredCameraStack, movedCamera);
+
+            // Replace the camera in the active slot with the full sling.
+            activeSlot!.Itemstack = fullSling;
+            activeSlot.MarkDirty();
+
+            // Consume the empty sling from the offhand.
+            offhandSlot!.TakeOutWhole();
+            offhandSlot.MarkDirty();
+
+            PlaySlingSwapSoundPair(player);
         }
 
         private void OnCameraLoadPlateReceived(IServerPlayer player, CameraLoadPlatePacket packet)

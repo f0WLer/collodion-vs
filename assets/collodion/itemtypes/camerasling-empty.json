@@ -2,6 +2,7 @@
     "code": "camerasling-empty",
     "class": "CameraSling",
     "maxstacksize": 1,
+    "storageFlags": 257,
     "shape": { "base": "collodion:item/sling-empty" },
     "textures": {
         "leather": { "base": "game:block/leather/plain" },
@@ -16,6 +17,7 @@
         "clothescategories": ["leftshouldergear"],
         "clothescategory": "leftshouldergear",
         "warmthByType": { "*": 0 },
+        "offhandAllowed": true,
         "handbook": {
             "groupBy": ["camerasling-*"]
         }

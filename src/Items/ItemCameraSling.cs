@@ -25,14 +25,17 @@ namespace Collodion
             bool shiftDown = IsShiftDown(entityPlayer);
             bool ctrlDown = IsCtrlDown(entityPlayer);
 
-            // Shift+Ctrl+RMB with a full sling in hand: nail sling to wall.
+            // Shift+Ctrl+RMB with a full sling in hand: nail sling to wall (when looking at a face)
+            // or detach camera back to hand + offhand (when not looking at a face).
             if (shiftDown && ctrlDown && IsFullSling(slot.Itemstack))
             {
                 handling = EnumHandHandling.PreventDefault;
 
                 if (api?.Side != EnumAppSide.Server) return;
 
-                TryPlaceOnWall(slot, blockSel);
+                if (blockSel != null && TryPlaceOnWall(slot, blockSel)) return;
+
+                TryDetachCameraFromSling(player, slot, byEntity);
                 return;
             }
 
@@ -51,6 +54,7 @@ namespace Collodion
             dsc.AppendLine("Press R to store/unstore camera from active slot.");
             dsc.AppendLine("Right click: wear instantly.");
             dsc.AppendLine("Shift+Ctrl+Right click on wall: mount sling.");
+            dsc.AppendLine("Shift+Ctrl+Right click (no target): detach camera back to hand, sling to offhand.");
             dsc.AppendLine("Hold in offhand with camera in hand, Ctrl+Shift+Right click: stow camera without wearing.");
 
             ItemStack? stored = null;
@@ -200,6 +204,60 @@ namespace Collodion
             shoulderSlot.MarkDirty();
             handSlot.MarkDirty();
             return true;
+        }
+
+        private void TryDetachCameraFromSling(IPlayer player, ItemSlot slingSlot, EntityAgent byEntity)
+        {
+            if (api?.World == null) return;
+
+            ItemStack? slingStack = slingSlot.Itemstack;
+            if (slingStack == null) return;
+
+            ItemStack? storedCamera = null;
+            try
+            {
+                storedCamera = slingStack.Attributes.GetItemstack(AttrStoredCameraStack, null);
+                storedCamera?.ResolveBlockOrItem(api.World);
+            }
+            catch { storedCamera = null; }
+
+            if (storedCamera?.Item == null) return;
+
+            ItemSlot? offhandSlot = player.InventoryManager.OffhandHotbarSlot;
+            if (offhandSlot == null || !offhandSlot.Empty) return;
+
+            Item? emptySlingItem = api.World.GetItem(new AssetLocation("collodion", "camerasling-empty"));
+            if (emptySlingItem == null) return;
+
+            storedCamera.StackSize = 1;
+
+            // Build the empty sling, carrying over any non-camera attributes.
+            ItemStack emptySling = new ItemStack(emptySlingItem);
+            try
+            {
+                emptySling.Attributes.MergeTree(slingStack.Attributes.Clone());
+                emptySling.Attributes.RemoveAttribute(AttrStoredCameraStack);
+            }
+            catch { }
+
+            // Camera back into the active slot (replacing the full sling).
+            slingSlot.Itemstack = storedCamera;
+            slingSlot.MarkDirty();
+
+            // Empty sling goes to offhand.
+            offhandSlot.Itemstack = emptySling;
+            offhandSlot.MarkDirty();
+
+            // Same leather + padlock sounds as stowing.
+            try { api.World.PlaySoundAt(new AssetLocation("game", "sounds/wearable/leather3"), byEntity, null, true, 16f, 1f); } catch { }
+            try
+            {
+                api.Event.RegisterCallback(_ =>
+                {
+                    try { api.World.PlaySoundAt(new AssetLocation("game", "sounds/tool/padlock"), byEntity, null, true, 16f, 1f); } catch { }
+                }, 45);
+            }
+            catch { try { api.World.PlaySoundAt(new AssetLocation("game", "sounds/tool/padlock"), byEntity, null, true, 16f, 1f); } catch { } }
         }
 
         private bool TryPlaceOnWall(ItemSlot handSlot, BlockSelection? blockSel)

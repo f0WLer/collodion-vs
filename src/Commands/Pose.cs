@@ -67,7 +67,7 @@ namespace Collodion
         {
             if (ClientApi == null) return;
 
-            // .collodion pose [photo|camera|plate|platebox|sling|slingempty|slingfull] <target> <op> <axis> <amount>
+            // .collodion pose [photo|camera|plate|platebox|sling|slingempty|slingfull|traykiln] <target> <op> <axis> <amount>
             // targets (camera): fp, tp, gui
             // targets (photo): fp, tp, gui, ground
             // targets (plate): fp, tp, gui, ground
@@ -83,6 +83,13 @@ namespace Collodion
             bool isSling = first.Equals("sling", StringComparison.OrdinalIgnoreCase) || first.Equals("camerasling", StringComparison.OrdinalIgnoreCase);
             bool isSlingEmpty = first.Equals("slingempty", StringComparison.OrdinalIgnoreCase) || first.Equals("emptysling", StringComparison.OrdinalIgnoreCase) || first.Equals("cameraslingempty", StringComparison.OrdinalIgnoreCase);
             bool isSlingFull = first.Equals("slingfull", StringComparison.OrdinalIgnoreCase) || first.Equals("fullsling", StringComparison.OrdinalIgnoreCase) || first.Equals("cameraslingfull", StringComparison.OrdinalIgnoreCase);
+            bool isTrayKiln = first.Equals("traykiln", StringComparison.OrdinalIgnoreCase) || first.Equals("tray-kiln", StringComparison.OrdinalIgnoreCase) || first.Equals("devtraykiln", StringComparison.OrdinalIgnoreCase);
+
+            if (isTrayKiln)
+            {
+                HandleDevTrayKilnPoseCommand(args);
+                return;
+            }
 
             string target;
             string op;
@@ -137,6 +144,7 @@ namespace Collodion
                 ClientApi.ShowChatMessage($"Wetplate pose[{poseKey}]: o=({d.Ox:0.###},{d.Oy:0.###},{d.Oz:0.###})");
                 ShowJsonReadyPose(poseKey, d);
                 ClientApi.ShowChatMessage("Usage: .collodion pose [photo|camera|plate|platebox|sling|slingempty|slingfull] <fp|tp|gui|ground> t|r|o <x|y|z> <value> (sets) OR ... add <delta> OR ... s <value> OR ... reset OR ... export");
+                ClientApi.ShowChatMessage("Tray kiln tuning: .collodion pose traykiln show|export|reset|t|r|o <x|y|z> <value> (or add <delta>) | s <value>");
                 return;
             }
 
@@ -233,6 +241,137 @@ namespace Collodion
             }
 
             ClientApi.ShowChatMessage($"Wetplate pose[{poseKey}]: t=({d.Tx:0.###},{d.Ty:0.###},{d.Tz:0.###}) r=({d.Rx:0.###},{d.Ry:0.###},{d.Rz:0.###}) o=({d.Ox:0.###},{d.Oy:0.###},{d.Oz:0.###}) s={d.Scale:0.###}");
+        }
+
+        private void HandleDevTrayKilnPoseCommand(Vintagestory.API.Common.CmdArgs args)
+        {
+            if (ClientApi == null) return;
+
+            const string poseKey = "traykiln";
+            PoseDelta d = GetPoseDelta(poseKey);
+
+            string op = args.PopWord() ?? "show";
+
+            if (op.Equals("show", StringComparison.OrdinalIgnoreCase))
+            {
+                TryApplyDevTrayKilnPose(d, out int updated);
+                ClientApi.ShowChatMessage($"Tray kiln pose: t=({d.Tx:0.###},{d.Ty:0.###},{d.Tz:0.###}) r=({d.Rx:0.###},{d.Ry:0.###},{d.Rz:0.###}) o=({d.Ox:0.###},{d.Oy:0.###},{d.Oz:0.###}) s={d.Scale:0.###} (applied to {updated} raw tray variants)");
+                ClientApi.ShowChatMessage("Usage: .collodion pose traykiln show|export|reset|t|r|o <x|y|z> <value> (or add <delta>) | s <value>");
+                return;
+            }
+
+            if (op.Equals("export", StringComparison.OrdinalIgnoreCase))
+            {
+                string f(float v) => v.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+
+                if (TryGetDevTrayKilnBaseTransform(out ModelTransform baseTransform))
+                {
+                    float tx = baseTransform.Translation.X + d.Tx;
+                    float ty = baseTransform.Translation.Y + d.Ty;
+                    float tz = baseTransform.Translation.Z + d.Tz;
+                    float rx = baseTransform.Rotation.X + d.Rx;
+                    float ry = baseTransform.Rotation.Y + d.Ry;
+                    float rz = baseTransform.Rotation.Z + d.Rz;
+                    float ox = baseTransform.Origin.X + d.Ox;
+                    float oy = baseTransform.Origin.Y + d.Oy;
+                    float oz = baseTransform.Origin.Z + d.Oz;
+                    float sc = baseTransform.ScaleXYZ.X * d.Scale;
+
+                    ClientApi.ShowChatMessage($"Tray kiln export [groundTransform]: {{\"translation\":{{\"x\":{f(tx)},\"y\":{f(ty)},\"z\":{f(tz)}}},\"rotation\":{{\"x\":{f(rx)},\"y\":{f(ry)},\"z\":{f(rz)}}},\"origin\":{{\"x\":{f(ox)},\"y\":{f(oy)},\"z\":{f(oz)}}},\"scale\":{f(sc)}}}");
+                }
+                else
+                {
+                    ClientApi.ShowChatMessage("Tray kiln export unavailable: raw tray items are not loaded yet.");
+                }
+
+                return;
+            }
+
+            if (op.Equals("reset", StringComparison.OrdinalIgnoreCase))
+            {
+                d = new PoseDelta();
+                poseDeltas[poseKey] = d;
+                TryApplyDevTrayKilnPose(d, out int updated);
+                ClientApi.ShowChatMessage($"Tray kiln pose reset (applied to {updated} raw tray variants).");
+                return;
+            }
+
+            if (op.Equals("s", StringComparison.OrdinalIgnoreCase) || op.Equals("scale", StringComparison.OrdinalIgnoreCase))
+            {
+                string amtWord = args.PopWord();
+                if (!float.TryParse(amtWord, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float s))
+                {
+                    ClientApi.ShowChatMessage("Tray kiln pose: scale requires a float amount (e.g. 1.0, 1.2, 0.8)");
+                    return;
+                }
+
+                d.Scale = Math.Max(0.01f, s);
+                TryApplyDevTrayKilnPose(d, out int updated);
+                ClientApi.ShowChatMessage($"Tray kiln pose scale={d.Scale:0.###} (applied to {updated} raw tray variants)");
+                return;
+            }
+
+            string axis = args.PopWord() ?? "x";
+
+            bool addMode = false;
+            string modeOrAmt = args.PopWord() ?? "0";
+            string amtStr;
+
+            if (modeOrAmt.Equals("add", StringComparison.OrdinalIgnoreCase) || modeOrAmt.Equals("delta", StringComparison.OrdinalIgnoreCase))
+            {
+                addMode = true;
+                amtStr = args.PopWord() ?? "0";
+            }
+            else if (modeOrAmt.Equals("set", StringComparison.OrdinalIgnoreCase) || modeOrAmt.Equals("=", StringComparison.OrdinalIgnoreCase))
+            {
+                addMode = false;
+                amtStr = args.PopWord() ?? "0";
+            }
+            else
+            {
+                amtStr = modeOrAmt;
+            }
+
+            if (!float.TryParse(amtStr, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float amt))
+            {
+                ClientApi.ShowChatMessage("Tray kiln pose: value must be a float (use dot decimal, e.g. 0.1)");
+                return;
+            }
+
+            bool isTranslate = op.Equals("t", StringComparison.OrdinalIgnoreCase) || op.Equals("translate", StringComparison.OrdinalIgnoreCase);
+            bool isRotate = op.Equals("r", StringComparison.OrdinalIgnoreCase) || op.Equals("rotate", StringComparison.OrdinalIgnoreCase);
+            bool isOrigin = op.Equals("o", StringComparison.OrdinalIgnoreCase) || op.Equals("origin", StringComparison.OrdinalIgnoreCase);
+
+            if (!isTranslate && !isRotate && !isOrigin)
+            {
+                ClientApi.ShowChatMessage("Tray kiln pose: op must be t, r, o, s, show, reset, or export");
+                return;
+            }
+
+            switch (axis.ToLowerInvariant())
+            {
+                case "x":
+                    if (isTranslate) d.Tx = addMode ? d.Tx + amt : amt;
+                    else if (isRotate) d.Rx = addMode ? d.Rx + amt : amt;
+                    else d.Ox = addMode ? d.Ox + amt : amt;
+                    break;
+                case "y":
+                    if (isTranslate) d.Ty = addMode ? d.Ty + amt : amt;
+                    else if (isRotate) d.Ry = addMode ? d.Ry + amt : amt;
+                    else d.Oy = addMode ? d.Oy + amt : amt;
+                    break;
+                case "z":
+                    if (isTranslate) d.Tz = addMode ? d.Tz + amt : amt;
+                    else if (isRotate) d.Rz = addMode ? d.Rz + amt : amt;
+                    else d.Oz = addMode ? d.Oz + amt : amt;
+                    break;
+                default:
+                    ClientApi.ShowChatMessage("Tray kiln pose: axis must be x, y, or z");
+                    return;
+            }
+
+            TryApplyDevTrayKilnPose(d, out int appliedCount);
+            ClientApi.ShowChatMessage($"Tray kiln pose: t=({d.Tx:0.###},{d.Ty:0.###},{d.Tz:0.###}) r=({d.Rx:0.###},{d.Ry:0.###},{d.Rz:0.###}) o=({d.Ox:0.###},{d.Oy:0.###},{d.Oz:0.###}) s={d.Scale:0.###} (applied to {appliedCount} raw tray variants)");
         }
     }
 }

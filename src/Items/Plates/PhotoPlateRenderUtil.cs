@@ -994,13 +994,13 @@ namespace Collodion
             float dirX = (float)Math.Cos(angle);
             float dirY = (float)Math.Sin(angle);
 
-            float radius = 0.75f + normalized * 4.5f;
-            int samples = 2 + (int)Math.Round(normalized * 4f);
-            float trailAlpha = 0.08f + normalized * 0.22f;
+            float radius = 0.75f + normalized * 9.0f;
+            int samples = 2 + (int)Math.Round(normalized * 8f);
+            float trailAlpha = 0.08f + normalized * 0.44f;
 
-            float ghostOffsetX = -dirY * (0.5f + normalized * 2.2f);
-            float ghostOffsetY = dirX * (0.5f + normalized * 2.2f);
-            float ghostAlpha = 0.05f + normalized * 0.16f;
+            float ghostOffsetX = -dirY * (0.5f + normalized * 4.4f);
+            float ghostOffsetY = dirX * (0.5f + normalized * 4.4f);
+            float ghostAlpha = 0.05f + normalized * 0.32f;
 
             using var source = bmp.Copy();
             if (source == null) return;

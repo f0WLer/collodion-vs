@@ -13,6 +13,8 @@ namespace Collodion
     public partial class ItemPhotograph
     {
         private const float GroundScale = 2.5f;
+        private const float PhotoTargetAspect = 10f / 11f;
+        private const float MaxZFaceEpsilon = 0.0001f;
 
         // Maps the captured photo texture onto faces using texture keys "photo" or "null" in the item shape.
         private sealed class PhotoTextureSource : ITexPositionSource
@@ -156,13 +158,16 @@ namespace Collodion
                 }
             }
             {
-                string path = WetplatePhotoSync.GetPhotoPath(photoFileName);
-                if (File.Exists(path))
+                string sourcePath = WetplatePhotoSync.GetPhotoPath(photoFileName);
+                if (File.Exists(sourcePath))
                 {
+                    string path = sourcePath;
                     try
                     {
                         using (BitmapExternal bitmap = new BitmapExternal(path))
                         {
+                            float photoAspect = GetBitmapAspect(bitmap);
+
                             string photoKey = Path.GetFileNameWithoutExtension(photoFileName);
                             AssetLocation texLoc = new AssetLocation("collodion", $"photo-{photoKey}-v{versionSnapshot}");
 
@@ -174,8 +179,13 @@ namespace Collodion
                             capi.ItemTextureAtlas.InsertTextureCached(texLoc, (IBitmap)bitmap, out texSubId, out texPos, 0.05f);
 #pragma warning restore CS0618
 
+                            // Pre-clip the atlas sub-region so the tessellator assigns the cropped UV directly
+                            // to the photo face element. This matches the wall block entity's StampUvByRotationCropped
+                            // and avoids post-tessellation Z-face detection (which would hit the frame, not the photo).
+                            TextureAtlasPosition tessTexPos = BuildCroppedTexPos(texPos, photoAspect, PhotoTargetAspect);
+
                             // Build the mesh from the item shape, mapping the photo texture onto the "Photo" element.
-                            MeshData modelData = BuildPhotoMeshFromItemShape(capi, texPos);
+                            MeshData modelData = BuildPhotoMeshFromItemShape(capi, tessTexPos);
 
                             // Apply the "back face" UV flip only for hand rendering.
                             // If we flip unconditionally, whichever target builds the cached mesh first will
@@ -292,27 +302,84 @@ namespace Collodion
 
         private static void FlipUvForMaxZFace(MeshData mesh, TextureAtlasPosition texPos)
         {
-            if (mesh.xyz == null || mesh.Uv == null) return;
+            if (!TryGetUvFaceContext(mesh, texPos, out int verts, out float maxZ)) return;
 
-            int verts = mesh.VerticesCount;
-            if (verts <= 0 || mesh.xyz.Length < verts * 3 || mesh.Uv.Length < verts * 2) return;
+            float sumU = texPos.x1 + texPos.x2;
+            for (int i = 0; i < verts; i++)
+            {
+                float z = mesh.xyz[i * 3 + 2];
+                if (Math.Abs(z - maxZ) > MaxZFaceEpsilon) continue;
+                int uvIndex = i * 2;
+                mesh.Uv[uvIndex] = sumU - mesh.Uv[uvIndex];
+            }
+        }
 
-            float maxZ = float.NegativeInfinity;
+        private static TextureAtlasPosition BuildCroppedTexPos(TextureAtlasPosition texPos, float sourceAspect, float targetAspect)
+        {
+            TextureAtlasPosition cropped = texPos.Clone();
+
+            if (sourceAspect <= 0f || targetAspect <= 0f) return cropped;
+
+            if (sourceAspect > targetAspect)
+            {
+                // Landscape source, portrait frame: crop left/right (centre of image).
+                float keep = GameMath.Clamp(targetAspect / sourceAspect, 0f, 1f);
+                float trim = (1f - keep) * 0.5f;
+                float xr = texPos.x2 - texPos.x1;
+                cropped.x1 = texPos.x1 + xr * trim;
+                cropped.x2 = texPos.x2 - xr * trim;
+            }
+            else
+            {
+                // Portrait source (unusual for captures): crop top/bottom.
+                float keep = GameMath.Clamp(sourceAspect / targetAspect, 0f, 1f);
+                float trim = (1f - keep) * 0.5f;
+                float yr = texPos.y2 - texPos.y1;
+                cropped.y1 = texPos.y1 + yr * trim;
+                cropped.y2 = texPos.y2 - yr * trim;
+            }
+
+            return cropped;
+        }
+
+        private static float GetBitmapAspect(BitmapExternal bitmap)
+        {
+            try
+            {
+                if (bitmap != null && bitmap.Height > 0)
+                {
+                    return bitmap.Width / (float)bitmap.Height;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return 1f;
+        }
+
+        private static bool TryGetUvFaceContext(MeshData mesh, TextureAtlasPosition texPos, out int verts, out float maxZ)
+        {
+            verts = 0;
+            maxZ = float.NegativeInfinity;
+
+            if (mesh?.xyz == null || mesh.Uv == null) return false;
+
+            verts = mesh.VerticesCount;
+            if (verts <= 0 || mesh.xyz.Length < verts * 3 || mesh.Uv.Length < verts * 2) return false;
+
             for (int i = 0; i < verts; i++)
             {
                 float z = mesh.xyz[i * 3 + 2];
                 if (z > maxZ) maxZ = z;
             }
 
-            float eps = 0.0001f;
-            float sumU = texPos.x1 + texPos.x2;
-            for (int i = 0; i < verts; i++)
-            {
-                float z = mesh.xyz[i * 3 + 2];
-                if (Math.Abs(z - maxZ) > eps) continue;
-                int uvIndex = i * 2;
-                mesh.Uv[uvIndex] = sumU - mesh.Uv[uvIndex];
-            }
+            float width = texPos.x2 - texPos.x1;
+            float height = texPos.y2 - texPos.y1;
+            if (Math.Abs(width) < 1e-7f || Math.Abs(height) < 1e-7f) return false;
+
+            return true;
         }
     }
 }

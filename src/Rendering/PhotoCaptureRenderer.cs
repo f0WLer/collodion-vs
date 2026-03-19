@@ -112,7 +112,7 @@ namespace Collodion
                     using var srcBitmap = new SKBitmap(srcInfo);
                     Marshal.Copy(pixels, 0, srcBitmap.GetPixels(), pixelByteCount);
 
-                    const int maxDim = 512;
+                    const int maxDim = 640;
                     float scale = Math.Min(1f, maxDim / (float)Math.Max(width, height));
                     int outW = Math.Max(1, (int)(width * scale));
                     int outH = Math.Max(1, (int)(height * scale));

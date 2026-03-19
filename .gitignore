@@ -32,5 +32,6 @@ reference/
 dist/
 artifacts/
 
-# Local environment overrides
+# Development notes
 docs/TODO.md
+docs/FILEMAP.md

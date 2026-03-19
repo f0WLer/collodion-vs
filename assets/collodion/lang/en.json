@@ -95,6 +95,7 @@
     "block-developmenttray-fire-finished": "Development Tray (Fire Clay)",
     "block-cameraslingwall": "Wall-Mounted Camera Sling",
     "block-platebox": "Plate Box",
+    "block-platebox-north": "Plate Box",
     "block-platebox-open": "Plate Box",
     "blockdesc-platebox": "Stores and protects prepared plates. Right-click slots with a plate to store, empty-hand right-click to retrieve.",
 

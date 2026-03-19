@@ -8,7 +8,7 @@
       "L": { "type": "item", "code": "game:leather-*", "quantity": 1 },
       "N": { "type": "item", "code": "game:metalnailsandstrips-bismuthbronze", "quantity": 1 }
     },
-    "output": { "type": "block", "code": "collodion:platebox", "quantity": 1 }
+    "output": { "type": "block", "code": "collodion:platebox-north", "quantity": 1 }
   },
   {
     "ingredientPattern": "NLN,BBB,BBB",
@@ -19,7 +19,7 @@
       "L": { "type": "item", "code": "game:leather-*", "quantity": 1 },
       "N": { "type": "item", "code": "game:metalnailsandstrips-tinbronze", "quantity": 1 }
     },
-    "output": { "type": "block", "code": "collodion:platebox", "quantity": 1 }
+    "output": { "type": "block", "code": "collodion:platebox-north", "quantity": 1 }
   },
   {
     "ingredientPattern": "NLN,BBB,BBB",
@@ -30,6 +30,6 @@
       "L": { "type": "item", "code": "game:leather-*", "quantity": 1 },
       "N": { "type": "item", "code": "game:metalnailsandstrips-blackbronze", "quantity": 1 }
     },
-    "output": { "type": "block", "code": "collodion:platebox", "quantity": 1 }
+    "output": { "type": "block", "code": "collodion:platebox-north", "quantity": 1 }
   }
 ]

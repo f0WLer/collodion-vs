@@ -8,8 +8,7 @@ namespace Collodion
     public sealed class BlockPlateBox : Block
     {
         private static readonly AssetLocation SamplePlateCode = new AssetLocation("collodion", "silveredplate");
-        private static readonly AssetLocation ClosedBoxCode = new AssetLocation("collodion", "platebox");
-        private static readonly AssetLocation OpenBoxCode = new AssetLocation("collodion", "platebox-open");
+        private static readonly AssetLocation ClosedBoxCode = new AssetLocation("collodion", "platebox-north");
         private static readonly Cuboidf[] SlotHitBoxes =
         {
             // Matches platehb1..platehb8 in assets/collodion/shapes/block/platebox-open.json
@@ -131,6 +130,26 @@ namespace Collodion
             }
         }
 
+        public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
+        {
+            // Choose a facing so the box's open side faces toward the player.
+            string? currentFacing = Variant?["facing"];
+            BlockFacing playerFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.SidedPos?.Yaw ?? 0f);
+            string desiredFacing = playerFacing.Opposite.Code;
+
+            // If already the right variant (or no facing variant), place directly.
+            if (string.IsNullOrEmpty(currentFacing) || currentFacing == desiredFacing)
+                return base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);
+
+            Block? facingBlock = world.GetBlock(new AssetLocation("collodion", "platebox-" + desiredFacing));
+            if (facingBlock == null || facingBlock.Id == 0)
+                return base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);
+
+            // Delegate to the correct facing variant's TryPlaceBlock.
+            // That call will hit the "currentFacing == desiredFacing" branch above, so no recursion.
+            return facingBlock.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);
+        }
+
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (world == null || byPlayer == null || blockSel?.Position == null) return false;
@@ -167,7 +186,8 @@ namespace Collodion
                 return TrySetOpenState(world, blockSel.Position, be, open: true);
             }
 
-            int slotIndex = GetSlotIndexFromHit(blockSel);
+            string blockFacing = world.BlockAccessor.GetBlock(blockSel.Position)?.Variant?["facing"] ?? "south";
+            int slotIndex = GetSlotIndexFromHit(blockSel, blockFacing);
             bool clickedSlot = slotIndex >= 0;
 
             // Open box body click toggles closed.
@@ -309,13 +329,17 @@ namespace Collodion
             return stack;
         }
 
-        private static int GetSlotIndexFromHit(BlockSelection blockSel)
+        private static int GetSlotIndexFromHit(BlockSelection blockSel, string facing)
         {
             if (blockSel?.HitPosition == null) return -1;
 
             double hitX = blockSel.HitPosition.X;
             double hitY = blockSel.HitPosition.Y;
             double hitZ = blockSel.HitPosition.Z;
+
+            // Convert the hit point from the rotated block's space back to south-model space
+            // so we can test against the statically-authored hitboxes.
+            (hitX, hitZ) = InverseFacingTransform(hitX, hitZ, facing);
 
             // Slight tolerance so authored boxes remain easy to hit in-world.
             const double pad = 0.01;
@@ -334,6 +358,25 @@ namespace Collodion
             return -1;
         }
 
+        /// <summary>
+        /// Inverse-rotate a hit XZ position from the block's facing space back to south-model space.
+        /// Inverse of the CCW rotateY applied to the shape (south=0°, east=90°, north=180°, west=270°).
+        /// </summary>
+        private static (double, double) InverseFacingTransform(double x, double z, string facing)
+        {
+            // Derived from VS Mat4f.RotateY (positive angle = CW viewed from above).
+            // Forward 90°CW:  (x,z) → (1-z, x).  Inverse: (x,z) → (z, 1-x)
+            // Forward 180°:   (x,z) → (1-x, 1-z). Inverse: same (self-inverse)
+            // Forward 270°CW: (x,z) → (z, 1-x).  Inverse: (x,z) → (1-z, x)
+            return facing switch
+            {
+                "east"  => (z, 1.0 - x),     // inverse of 90°CW
+                "north" => (x, 1.0 - z),      // inverse of (x, 1-z)
+                "west"  => (1.0 - z, x),      // inverse of 270°CW
+                _       => (1.0 - x, z)        // inverse of south (1-x, z)
+            };
+        }
+
         private static bool IsShiftDown(IPlayer player)
         {
             var controls = player?.Entity?.Controls;
@@ -344,7 +387,10 @@ namespace Collodion
         {
             if (world == null || pos == null || be == null) return false;
 
-            AssetLocation targetCode = open ? OpenBoxCode : ClosedBoxCode;
+            string facing = world.BlockAccessor.GetBlock(pos)?.Variant?["facing"] ?? "south";
+            AssetLocation targetCode = open
+                ? new AssetLocation("collodion", "platebox-open-" + facing)
+                : new AssetLocation("collodion", "platebox-" + facing);
             Block? target = world.GetBlock(targetCode);
             if (target == null)
             {

@@ -4,7 +4,18 @@
   "entityClass": "BlockEntityPlateBox",
   "blockmaterial": "Wood",
   "drawtype": "json",
-  "shape": { "base": "collodion:block/platebox-closed" },
+  "variantgroups": [
+    { "code": "facing", "states": ["south", "north", "east", "west"] }
+  ],
+  "shape": {
+    "base": "collodion:block/platebox-closed",
+    "rotateYByType": {
+      "*-south": 0,
+      "*-north": 180,
+      "*-east": 90,
+      "*-west": 270
+    }
+  },
   "tpHandTransform": {
     "translation": { "x": -0.65, "y": -0.6, "z": -0.6 },
     "rotation": { "x": 0, "y": 0, "z": 0 },
@@ -21,6 +32,11 @@
     "plate": { "base": "collodion:item/plate-silvered" }
   },
   "creativeinventory": { "general": ["*"] },
+  "byType": {
+    "*-south": { "creativeinventory": { "general": [] } },
+    "*-east":  { "creativeinventory": { "general": [] } },
+    "*-west":  { "creativeinventory": { "general": [] } }
+  },
   "resistance": 1.2,
   "lightAbsorption": 0,
   "sounds": {
@@ -28,8 +44,14 @@
     "break": "game:block/wood",
     "hit": "game:block/wood"
   },
-  "collisionbox": { "x1": 0.0625, "y1": 0, "z1": 0.2, "x2": 0.9375, "y2": 0.4375, "z2": 0.8 },
-  "selectionbox": { "x1": 0.0625, "y1": 0, "z1": 0.2, "x2": 0.9375, "y2": 0.4375, "z2": 0.8 },
+  "collisionbox": {
+    "x1": 0.0625, "y1": 0, "z1": 0.2, "x2": 0.9375, "y2": 0.4375, "z2": 0.8,
+    "rotateYByType": { "*-south": 0, "*-north": 180, "*-east": 90, "*-west": 270 }
+  },
+  "selectionbox": {
+    "x1": 0.0625, "y1": 0, "z1": 0.2, "x2": 0.9375, "y2": 0.4375, "z2": 0.8,
+    "rotateYByType": { "*-south": 0, "*-north": 180, "*-east": 90, "*-west": 270 }
+  },
   "sidesolid": { "all": "false" },
   "sideopaque": { "all": "false" }
 }

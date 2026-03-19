@@ -41,6 +41,13 @@ namespace Collodion
         {
             if (world?.Calendar == null || stack?.Attributes == null) return;
 
+            double storedRemaining = stack.Attributes.GetDouble(StoredRemainingWetHours, -1);
+            if (storedRemaining >= 0)
+            {
+                ResumeWetTimerFromStorage(world, stack);
+                return;
+            }
+
             if (stack.Attributes.GetDouble(WetCreatedTotalHours, -1) < 0)
             {
                 stack.Attributes.SetDouble(WetCreatedTotalHours, world.Calendar.TotalHours);
@@ -158,6 +165,12 @@ namespace Collodion
 
     public class ItemDevelopedPlate : ItemPlateBase
     {
+        public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
+        {
+            base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
+            PhotoPlateRenderUtil.TryRenderPhotoOverlay(capi, itemstack, target, ref renderinfo);
+        }
+
         public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);

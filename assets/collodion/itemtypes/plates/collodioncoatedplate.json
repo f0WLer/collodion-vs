@@ -8,7 +8,7 @@
   "attributes": {
     "handbook": { "groupBy": ["wetplateplate-*"] }
   },
-  "maxstacksize": 1,
+  "maxstacksize": 8,
   "heldTpIdleAnimation": "holdbothhands",
   "creativeinventory": { "general": ["*"] },
   "guiTransform": {

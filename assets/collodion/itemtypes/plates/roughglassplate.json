@@ -9,7 +9,7 @@
     "handbook": { "groupBy": ["wetplateplate-*"] },
     "plateBlockState": "rough"
   },
-  "maxstacksize": 1,
+  "maxstacksize": 8,
   "heldTpIdleAnimation": "holdbothhands",
   "creativeinventory": { "general": ["*"] },
   "guiTransform": {

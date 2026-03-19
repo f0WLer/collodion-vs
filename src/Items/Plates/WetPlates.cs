@@ -10,7 +10,7 @@ namespace Collodion
         public const string WetCreatedTotalHours = "collodionWetCreatedTotalHours";
         public const string WetDurationHours = "collodionWetDurationHours";
         public const string StoredRemainingWetHours = "collodionStoredRemainingWetHours";
-        public const double DefaultWetDurationHours = 0.2;
+        public const double DefaultWetDurationHours = 0.33;
         public const string PhotoId = "photoId";
         public const string PlateStage = "collodionPlateStage";
         public const string DevelopPours = "collodionDevelopPours";

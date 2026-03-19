@@ -130,6 +130,9 @@ namespace Collodion
             string photoFileName = WetplatePhotoSync.NormalizePhotoId(photoId);
             if (string.IsNullOrEmpty(photoFileName)) return;
 
+            float movementScore = PhotoPlateRenderUtil.ReadMovementScore(itemstack);
+            int movementBucket = PhotoPlateRenderUtil.BucketMovementScore(movementScore);
+
             int versionSnapshot;
             string cacheKey;
             lock (CacheLock)
@@ -149,7 +152,7 @@ namespace Collodion
                 };
 #pragma warning restore CS0618
 
-                cacheKey = $"{photoFileName}|{variant}|v{versionSnapshot}";
+                cacheKey = $"{photoFileName}|{variant}|mv{movementBucket}|v{versionSnapshot}";
                 if (PhotoMeshCache.TryGetValue(cacheKey, out CachedPhotoRender? cached) && cached != null)
                 {
                     renderinfo.ModelRef = cached.MeshRef;
@@ -161,7 +164,9 @@ namespace Collodion
                 string sourcePath = WetplatePhotoSync.GetPhotoPath(photoFileName);
                 if (File.Exists(sourcePath))
                 {
-                    string path = sourcePath;
+                    string path = movementBucket > 0
+                        ? PhotoPlateRenderUtil.ResolveMovementRenderPath(capi, sourcePath, photoFileName, photoId, movementScore)
+                        : sourcePath;
                     try
                     {
                         using (BitmapExternal bitmap = new BitmapExternal(path))
@@ -169,7 +174,7 @@ namespace Collodion
                             float photoAspect = GetBitmapAspect(bitmap);
 
                             string photoKey = Path.GetFileNameWithoutExtension(photoFileName);
-                            AssetLocation texLoc = new AssetLocation("collodion", $"photo-{photoKey}-v{versionSnapshot}");
+                            AssetLocation texLoc = new AssetLocation("collodion", $"photo-{photoKey}-mv{movementBucket}-v{versionSnapshot}");
 
                             TextureAtlasPosition texPos;
                             int texSubId;

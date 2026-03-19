@@ -933,6 +933,28 @@ namespace Collodion
             }
         }
 
+        /// <summary>Returns the raw movement score from an item stack (0 if absent).</summary>
+        public static float ReadMovementScore(ItemStack? itemstack) => GetMovementScore(itemstack);
+
+        /// <summary>Returns an integer bucket for a movement score, suitable for inclusion in cache keys.</summary>
+        public static int BucketMovementScore(float movementScore) => QuantizeMovementScore(movementScore);
+
+        /// <summary>
+        /// Returns the file path to render for the given photo, generating a motion-artifact derived
+        /// file when the movement score is significant.  Returns <paramref name="sourcePath"/> unchanged
+        /// when movement is below the effect threshold.
+        /// </summary>
+        public static string ResolveMovementRenderPath(ICoreClientAPI capi, string sourcePath, string photoFileName, string photoId, float movementScore)
+        {
+            if (movementScore <= MovementEffectMin) return sourcePath;
+            int bucket = QuantizeMovementScore(movementScore);
+            string tag = $"base-mv{bucket}";
+            string derivedPath = GetDerivedPhotoPath(photoFileName, tag);
+            return TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{tag}", false, 0, movementScore)
+                ? derivedPath
+                : sourcePath;
+        }
+
         private static float GetMovementScore(ItemStack? itemstack)
         {
             if (itemstack?.Attributes == null) return 0f;

@@ -9,7 +9,7 @@ namespace Collodion
     public sealed class BlockGlassPlate : Block
     {
         private const float PolishSeconds = 2.0f;
-        private const float CoatSeconds = 5.0f;
+        private const float CoatSeconds = 2.5f;
         // Collodion portion itemsPerLitre is 100 in json, so 1 unit = 10mL.
         private const int CollodionUnitsPerCoat = 5; // 50mL
 

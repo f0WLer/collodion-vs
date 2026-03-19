@@ -20,7 +20,8 @@ namespace Collodion
 
             ClientChannel
                 .SetMessageHandler<PhotoBlobChunkPacket>((p) => PhotoSync?.ClientHandleChunk(p))
-                .SetMessageHandler<PhotoBlobAckPacket>((p) => PhotoSync?.ClientHandleAck(p));
+                .SetMessageHandler<PhotoBlobAckPacket>((p) => PhotoSync?.ClientHandleAck(p))
+                .SetMessageHandler<PhotoCaptureConfigPacket>(OnPhotoCaptureConfigReceived);
 
             api.Input.RegisterHotKey("collodion-toggle-camerasling", "Toggle camera in sling", GlKeys.R, HotkeyType.CharacterControls);
             api.Input.SetHotKeyHandler("collodion-toggle-camerasling", OnCameraSlingHotkey);
@@ -50,7 +51,11 @@ namespace Collodion
             // Capture screenshots after the 3D scene is blitted to the default framebuffer,
             // but before GUI/HUD is rendered (EnumRenderStage.AfterBlit).
             CaptureRenderer = new PhotoCaptureRenderer(api);
+            CaptureRenderer.SetCaptureMaxDimension(Config.Viewfinder.PhotoCaptureMaxDimension);
             api.Event.RegisterRenderer(CaptureRenderer, EnumRenderStage.AfterBlit, "collodion-photocapture");
+
+            // Ask server for authoritative capture sizing in multiplayer.
+            ClientChannel.SendPacket(new PhotoCaptureConfigRequestPacket());
 
 #pragma warning disable CS0618 // Keep legacy command registration for compatibility
             api.RegisterCommand(
@@ -74,6 +79,18 @@ namespace Collodion
             // Note: do NOT also force RenderAPI.Set3DProjection per-frame; that can lead to
             // mismatched projections (e.g., skybox-only zoom). The hook on
             // ClientMain.Set3DProjection affects the actual world projection.
+        }
+
+        private void OnPhotoCaptureConfigReceived(PhotoCaptureConfigPacket packet)
+        {
+            if (packet == null) return;
+
+            Config ??= new CollodionConfig();
+            Config.Viewfinder ??= new ViewfinderConfig();
+            Config.Viewfinder.PhotoCaptureMaxDimension = packet.MaxDimension;
+            Config.Viewfinder.ClampInPlace();
+
+            CaptureRenderer?.SetCaptureMaxDimension(Config.Viewfinder.PhotoCaptureMaxDimension);
         }
 
         private CollodionConfig LoadOrCreateConfig(ICoreClientAPI capi)

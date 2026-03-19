@@ -10,7 +10,7 @@ namespace Collodion
     public sealed partial class WetplatePhotoSync
     {
         private const int ChunkSize = 24 * 1024;
-        private const int MaxBytes = 2 * 1024 * 1024; // plenty for 512x512 png
+        private const int MaxBytes = 2 * 1024 * 1024; // plenty for configured capture sizes
 
         private readonly CollodionModSystem mod;
 

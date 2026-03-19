@@ -50,6 +50,16 @@ namespace Collodion
         public string TargetFaceCode { get; set; } = string.Empty;
     }
 
+    [ProtoContract]
+    public class PhotoCaptureConfigRequestPacket { }
+
+    [ProtoContract]
+    public class PhotoCaptureConfigPacket
+    {
+        [ProtoMember(1)]
+        public int MaxDimension { get; set; }
+    }
+
     public partial class CollodionModSystem : ModSystem
     {
         public static CollodionModSystem? ClientInstance { get; private set; }
@@ -107,7 +117,9 @@ namespace Collodion
                 .RegisterMessageType(typeof(PhotoBlobChunkPacket))
                 .RegisterMessageType(typeof(PhotoBlobAckPacket))
                 .RegisterMessageType(typeof(PhotoCaptionSetPacket))
-                .RegisterMessageType(typeof(PhotoSeenPacket));
+                .RegisterMessageType(typeof(PhotoSeenPacket))
+                .RegisterMessageType(typeof(PhotoCaptureConfigRequestPacket))
+                .RegisterMessageType(typeof(PhotoCaptureConfigPacket));
         }
 
         public override void Dispose()

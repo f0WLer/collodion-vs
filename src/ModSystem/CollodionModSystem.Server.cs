@@ -39,7 +39,33 @@ namespace Collodion
                 .SetMessageHandler<PhotoBlobRequestPacket>((player, p) => PhotoSync?.ServerHandleRequest(player, p))
                 .SetMessageHandler<PhotoBlobChunkPacket>((player, p) => PhotoSync?.ServerHandleChunk(player, p))
                 .SetMessageHandler<PhotoCaptionSetPacket>((player, p) => OnPhotoCaptionSet(player, p))
-                .SetMessageHandler<PhotoSeenPacket>((player, p) => OnPhotoSeen(player, p));
+                .SetMessageHandler<PhotoSeenPacket>((player, p) => OnPhotoSeen(player, p))
+                .SetMessageHandler<PhotoCaptureConfigRequestPacket>((player, p) => OnPhotoCaptureConfigRequested(player));
+
+            // Send once on startup for currently connected players (mainly relevant on hot-reload).
+            foreach (IServerPlayer player in api.World.AllOnlinePlayers)
+            {
+                OnPhotoCaptureConfigRequested(player);
+            }
+        }
+
+        private void OnPhotoCaptureConfigRequested(IServerPlayer? player)
+        {
+            if (player == null || ServerChannel == null) return;
+
+            int maxDimension = GetServerPhotoCaptureMaxDimension();
+            ServerChannel.SendPacket(new PhotoCaptureConfigPacket
+            {
+                MaxDimension = maxDimension
+            }, player);
+        }
+
+        private int GetServerPhotoCaptureMaxDimension()
+        {
+            Config ??= new CollodionConfig();
+            Config.Viewfinder ??= new ViewfinderConfig();
+            Config.Viewfinder.ClampInPlace();
+            return Config.Viewfinder.PhotoCaptureMaxDimension;
         }
 
         private static CollodionConfig LoadOrCreateServerConfig(ICoreServerAPI sapi)

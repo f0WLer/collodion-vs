@@ -12,6 +12,7 @@ namespace Collodion
     public class PhotoCaptureRenderer : IRenderer
     {
         private readonly ICoreClientAPI capi;
+        private int captureMaxDimension = ViewfinderConfig.DefaultPhotoCaptureMaxDimension;
 
         private WetplateEffectsConfig effectsConfig = new WetplateEffectsConfig();
 
@@ -43,6 +44,13 @@ namespace Collodion
         public void ReloadEffectsConfig()
         {
             effectsConfig = WetplateEffects.LoadOrCreate(capi);
+        }
+
+        public void SetCaptureMaxDimension(int maxDimension)
+        {
+            if (maxDimension < ViewfinderConfig.MinPhotoCaptureMaxDimension) maxDimension = ViewfinderConfig.MinPhotoCaptureMaxDimension;
+            if (maxDimension > ViewfinderConfig.MaxPhotoCaptureMaxDimension) maxDimension = ViewfinderConfig.MaxPhotoCaptureMaxDimension;
+            captureMaxDimension = maxDimension;
         }
 
         public double RenderOrder => 0;
@@ -112,8 +120,7 @@ namespace Collodion
                     using var srcBitmap = new SKBitmap(srcInfo);
                     Marshal.Copy(pixels, 0, srcBitmap.GetPixels(), pixelByteCount);
 
-                    const int maxDim = 640;
-                    float scale = Math.Min(1f, maxDim / (float)Math.Max(width, height));
+                    float scale = Math.Min(1f, captureMaxDimension / (float)Math.Max(width, height));
                     int outW = Math.Max(1, (int)(width * scale));
                     int outH = Math.Max(1, (int)(height * scale));
 

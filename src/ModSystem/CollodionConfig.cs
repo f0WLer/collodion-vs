@@ -6,7 +6,7 @@ namespace Collodion
         public WetplateEffectsConfig Effects = new WetplateEffectsConfig();
         public WetplateEffectsConfig EffectsDeveloped = CreateDevelopedEffectsDefaults();
 
-        // Viewfinder capture behavior (client-side capture flow).
+        // Viewfinder capture behavior (capture runs client-side; server provides authoritative limits in multiplayer).
         public ViewfinderConfig Viewfinder = new ViewfinderConfig();
 
         // Timed interaction configuration (shared by client/server).
@@ -83,9 +83,14 @@ namespace Collodion
 
     public sealed class ViewfinderConfig
     {
+        public const int MinPhotoCaptureMaxDimension = 128;
+        public const int MaxPhotoCaptureMaxDimension = 2048;
+        public const int DefaultPhotoCaptureMaxDimension = 640;
+
         public float ZoomMultiplier = 0.65f;
         public float HoldStillDurationSeconds = 4f;
         public float HoldStillLookWeight = 0.35f;
+        public int PhotoCaptureMaxDimension = DefaultPhotoCaptureMaxDimension;
 
         internal void ClampInPlace()
         {
@@ -97,6 +102,9 @@ namespace Collodion
 
             if (HoldStillLookWeight < 0f) HoldStillLookWeight = 0f;
             if (HoldStillLookWeight > 5f) HoldStillLookWeight = 5f;
+
+            if (PhotoCaptureMaxDimension < MinPhotoCaptureMaxDimension) PhotoCaptureMaxDimension = MinPhotoCaptureMaxDimension;
+            if (PhotoCaptureMaxDimension > MaxPhotoCaptureMaxDimension) PhotoCaptureMaxDimension = MaxPhotoCaptureMaxDimension;
         }
     }
 }

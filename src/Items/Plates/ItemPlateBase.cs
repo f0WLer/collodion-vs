@@ -92,7 +92,7 @@ namespace Collodion
         }
     }
 
-    public sealed class ItemGenericPlate : ItemPlateBase
+    public class ItemGenericPlate : ItemPlateBase
     {
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {

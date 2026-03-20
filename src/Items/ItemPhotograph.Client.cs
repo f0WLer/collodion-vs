@@ -14,6 +14,7 @@ namespace Collodion
     {
         private const float GroundScale = 2.5f;
         private const float PhotoTargetAspect = 10f / 11f;
+        private const float PhotoCropKeepBias = 1.015f;
         private const float MaxZFaceEpsilon = 0.0001f;
 
         // Maps the captured photo texture onto faces using texture keys "photo" or "null" in the item shape.
@@ -21,21 +22,30 @@ namespace Collodion
         {
             private readonly ITexPositionSource baseSource;
             private readonly TextureAtlasPosition photoTex;
+            private readonly TextureAtlasPosition? frameTex;
+            private readonly bool mapNullAsPhoto;
 
-            public PhotoTextureSource(ITexPositionSource baseSource, TextureAtlasPosition photoTex)
+            public PhotoTextureSource(ITexPositionSource baseSource, TextureAtlasPosition photoTex, TextureAtlasPosition? frameTex = null, bool mapNullAsPhoto = true)
             {
                 this.baseSource = baseSource;
                 this.photoTex = photoTex;
+                this.frameTex = frameTex;
+                this.mapNullAsPhoto = mapNullAsPhoto;
             }
 
             public TextureAtlasPosition this[string textureCode]
             {
                 get
                 {
-                    if (string.Equals(textureCode, "null", StringComparison.OrdinalIgnoreCase)
-                        || string.Equals(textureCode, "photo", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(textureCode, "photo", StringComparison.OrdinalIgnoreCase)
+                        || (mapNullAsPhoto && string.Equals(textureCode, "null", StringComparison.OrdinalIgnoreCase)))
                     {
                         return photoTex;
+                    }
+
+                    if (frameTex != null && string.Equals(textureCode, "oak", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return frameTex;
                     }
 
                     return baseSource[textureCode];
@@ -44,6 +54,8 @@ namespace Collodion
 
             public Size2i AtlasSize => baseSource.AtlasSize;
         }
+
+        private static readonly string[] PreferredPlankTextureKeys = { "all", "side", "north", "south", "east", "west", "up", "down" };
 
         private static readonly AssetLocation PhotoShapeBase = new AssetLocation("collodion", "item/photo");
         private class CachedPhotoRender
@@ -139,6 +151,11 @@ namespace Collodion
             {
                 versionSnapshot = AtlasVersion;
 
+                string framePlankCode = itemstack.Attributes.GetString(PhotographAttrs.FramePlank) ?? string.Empty;
+                string frameSkinKey = string.IsNullOrWhiteSpace(framePlankCode)
+                    ? "default"
+                    : framePlankCode.Trim().ToLowerInvariant();
+
                 // We need different meshes per render target because the "back" face needs a UV flip in-hand
                 // (to look correct in third person), while GUI should remain unflipped.
                 // NOTE: EnumItemRenderTarget.HandFp is obsolete in newer API, but still correct on 1.21.6.
@@ -152,7 +169,7 @@ namespace Collodion
                 };
 #pragma warning restore CS0618
 
-                cacheKey = $"{photoFileName}|{variant}|mv{movementBucket}|v{versionSnapshot}";
+                cacheKey = $"{photoFileName}|{variant}|mv{movementBucket}|frame:{frameSkinKey}|v{versionSnapshot}";
                 if (PhotoMeshCache.TryGetValue(cacheKey, out CachedPhotoRender? cached) && cached != null)
                 {
                     renderinfo.ModelRef = cached.MeshRef;
@@ -172,6 +189,7 @@ namespace Collodion
                         using (BitmapExternal bitmap = new BitmapExternal(path))
                         {
                             float photoAspect = GetBitmapAspect(bitmap);
+                            bool isFramedPhoto = string.Equals(itemstack.Collectible?.Code?.Path, "framedphotograph", StringComparison.OrdinalIgnoreCase);
 
                             string photoKey = Path.GetFileNameWithoutExtension(photoFileName);
                             AssetLocation texLoc = new AssetLocation("collodion", $"photo-{photoKey}-mv{movementBucket}-v{versionSnapshot}");
@@ -190,17 +208,19 @@ namespace Collodion
                             TextureAtlasPosition tessTexPos = BuildCroppedTexPos(texPos, photoAspect, PhotoTargetAspect);
 
                             // Build the mesh from the item shape, mapping the photo texture onto the "Photo" element.
-                            MeshData modelData = BuildPhotoMeshFromItemShape(capi, tessTexPos);
+                            MeshData modelData = BuildPhotoMeshFromItemShape(capi, itemstack, tessTexPos);
 
                             // Apply the "back face" UV flip only for hand rendering.
                             // If we flip unconditionally, whichever target builds the cached mesh first will
                             // affect all other targets (e.g., TP correct but GUI mirrored).
                             // NOTE: EnumItemRenderTarget.HandFp is obsolete in newer API, but still correct on 1.21.6.
 #pragma warning disable CS0618
-                            if (target == EnumItemRenderTarget.HandTp || target == EnumItemRenderTarget.HandFp)
+                            bool isHandTarget = target == EnumItemRenderTarget.HandTp || target == EnumItemRenderTarget.HandFp;
 #pragma warning restore CS0618
+
+                            if (isHandTarget && !isFramedPhoto)
                             {
-                                FlipUvForMaxZFace(modelData, texPos);
+                                FlipUvForMaxZFace(modelData, tessTexPos);
                             }
 
                             if (target == EnumItemRenderTarget.Ground)
@@ -259,12 +279,17 @@ namespace Collodion
             }
         }
 
-        private MeshData BuildPhotoMeshFromItemShape(ICoreClientAPI capi, TextureAtlasPosition texPos)
+        private MeshData BuildPhotoMeshFromItemShape(ICoreClientAPI capi, ItemStack itemstack, TextureAtlasPosition texPos)
         {
             try
             {
                 ITexPositionSource baseSource = capi.Tesselator.GetTextureSource(this);
-                var photoSource = new PhotoTextureSource(baseSource, texPos);
+                TextureAtlasPosition? frameTex = TryGetFrameTextureOverride(capi, itemstack, out TextureAtlasPosition overrideTex)
+                    ? overrideTex
+                    : null;
+                bool isFramedPhoto = string.Equals(itemstack?.Collectible?.Code?.Path, "framedphotograph", StringComparison.OrdinalIgnoreCase);
+
+                var texSource = new PhotoTextureSource(baseSource, texPos, frameTex, mapNullAsPhoto: !isFramedPhoto);
 
                 // Prefer the item's authored shape, so framed photographs can include their frame
                 // and we don't depend on a separate hardcoded shape asset.
@@ -285,7 +310,7 @@ namespace Collodion
                     new AssetLocation("collodion", "photoitem"),
                     composite,
                     out MeshData mesh,
-                    photoSource
+                    texSource
                 );
 
                 mesh.Rgba?.Fill((byte)255);
@@ -305,16 +330,100 @@ namespace Collodion
             return fallback;
         }
 
+        private static bool TryGetFrameTextureOverride(ICoreClientAPI capi, ItemStack itemstack, out TextureAtlasPosition frameTexPos)
+        {
+            frameTexPos = capi.ItemTextureAtlas.UnknownTexturePosition;
+            if (itemstack?.Attributes == null) return false;
+
+            string plankCode = itemstack.Attributes.GetString(PhotographAttrs.FramePlank) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(plankCode)) return false;
+
+            try
+            {
+                Block? plankBlock = capi.World.GetBlock(new AssetLocation(plankCode));
+                if (plankBlock == null || plankBlock.Id == 0) return false;
+
+                IDictionary<string, CompositeTexture>? texDict = plankBlock.TexturesInventory;
+                if (texDict == null || texDict.Count == 0)
+                {
+                    texDict = plankBlock.Textures;
+                }
+
+                if (texDict == null || texDict.Count == 0) return false;
+
+                CompositeTexture? chosen = null;
+                foreach (string key in PreferredPlankTextureKeys)
+                {
+                    if (texDict.TryGetValue(key, out CompositeTexture? ct) && ct != null)
+                    {
+                        chosen = ct;
+                        break;
+                    }
+                }
+
+                if (chosen == null)
+                {
+                    foreach (var kvp in texDict)
+                    {
+                        if (kvp.Value != null)
+                        {
+                            chosen = kvp.Value;
+                            break;
+                        }
+                    }
+                }
+
+                if (chosen == null) return false;
+
+                AssetLocation? texturePath = chosen.Base?.Clone();
+                if (texturePath == null || string.IsNullOrWhiteSpace(texturePath.Path)) return false;
+                if (string.IsNullOrWhiteSpace(texturePath.Domain))
+                {
+                    texturePath.Domain = plankBlock.Code?.Domain ?? "game";
+                }
+
+                IAsset? texAsset = capi.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
+                if (texAsset == null) return false;
+
+                if (!capi.ItemTextureAtlas.GetOrInsertTexture(
+                        texturePath,
+                        out int _,
+                        out TextureAtlasPosition pos,
+                        () => texAsset.ToBitmap(capi),
+                        0.05f))
+                {
+                    return false;
+                }
+
+                if (pos == null || pos == capi.ItemTextureAtlas.UnknownTexturePosition) return false;
+
+                frameTexPos = pos;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private static void FlipUvForMaxZFace(MeshData mesh, TextureAtlasPosition texPos)
         {
             if (!TryGetUvFaceContext(mesh, texPos, out int verts, out float maxZ)) return;
 
             float sumU = texPos.x1 + texPos.x2;
+            const float uvEpsilon = 0.00001f;
             for (int i = 0; i < verts; i++)
             {
                 float z = mesh.xyz[i * 3 + 2];
                 if (Math.Abs(z - maxZ) > MaxZFaceEpsilon) continue;
+
                 int uvIndex = i * 2;
+                float u = mesh.Uv[uvIndex];
+                float v = mesh.Uv[uvIndex + 1];
+
+                if (u < texPos.x1 - uvEpsilon || u > texPos.x2 + uvEpsilon) continue;
+                if (v < texPos.y1 - uvEpsilon || v > texPos.y2 + uvEpsilon) continue;
+
                 mesh.Uv[uvIndex] = sumU - mesh.Uv[uvIndex];
             }
         }
@@ -328,7 +437,7 @@ namespace Collodion
             if (sourceAspect > targetAspect)
             {
                 // Landscape source, portrait frame: crop left/right (centre of image).
-                float keep = GameMath.Clamp(targetAspect / sourceAspect, 0f, 1f);
+                float keep = GameMath.Clamp((targetAspect / sourceAspect) * PhotoCropKeepBias, 0f, 1f);
                 float trim = (1f - keep) * 0.5f;
                 float xr = texPos.x2 - texPos.x1;
                 cropped.x1 = texPos.x1 + xr * trim;
@@ -337,7 +446,7 @@ namespace Collodion
             else
             {
                 // Portrait source (unusual for captures): crop top/bottom.
-                float keep = GameMath.Clamp(sourceAspect / targetAspect, 0f, 1f);
+                float keep = GameMath.Clamp((sourceAspect / targetAspect) * PhotoCropKeepBias, 0f, 1f);
                 float trim = (1f - keep) * 0.5f;
                 float yr = texPos.y2 - texPos.y1;
                 cropped.y1 = texPos.y1 + yr * trim;

@@ -10,7 +10,7 @@ namespace Collodion
     {
         private static float GetExposureSeconds(CollodionModSystem modSys)
         {
-            float seconds = modSys.Config?.Viewfinder?.HoldStillDurationSeconds ?? 0f;
+            float seconds = modSys.Config?.Viewfinder?.ExposureDurationSeconds ?? 0f;
             if (seconds < 0f) seconds = 0f;
             if (seconds > 30f) seconds = 30f;
             return seconds;

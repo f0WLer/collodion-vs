@@ -14,6 +14,22 @@ namespace Collodion
 
         private string currentText;
 
+        private int CaptionMaxLength
+        {
+            get
+            {
+                try
+                {
+                    var modSys = clientApi?.ModLoader?.GetModSystem<CollodionModSystem>();
+                    return modSys?.Config?.Photograph?.CaptionMaxLength ?? 200;
+                }
+                catch
+                {
+                    return 200;
+                }
+            }
+        }
+
         public GuiDialogPhotographCaption(ICoreClientAPI capi, int x, int y, int z, string initialText) : base("collodion-photograph-caption", capi)
         {
             clientApi = capi;
@@ -80,7 +96,7 @@ namespace Collodion
             {
                 var textArea = SingleComposer.GetTextArea("caption");
                 textArea.Autoheight = false;
-                textArea.SetMaxLength(200);
+                textArea.SetMaxLength(CaptionMaxLength);
                 textArea.SetValue(currentText ?? string.Empty);
             }
             catch
@@ -112,9 +128,10 @@ namespace Collodion
             try
             {
                 // Match the server sanity limit.
-                if (currentText.Length > 200)
+                int maxLength = CaptionMaxLength;
+                if (maxLength >= 0 && currentText.Length > maxLength)
                 {
-                    currentText = currentText.Substring(0, 200);
+                    currentText = currentText.Substring(0, maxLength);
                 }
 
                 var channel = clientApi.Network.GetChannel("collodion");

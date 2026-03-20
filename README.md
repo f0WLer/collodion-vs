@@ -26,5 +26,9 @@ This project references game DLLs directly. Set the install path either by:
 - `.collodion pose ...`
 - `.collodion effects ...`
 
+## Configuration
+- Main config file: `collodion.json`
+- Configuration guide: `docs/CONFIGURATION.md`
+
 ## License
 MIT License. See LICENSE.

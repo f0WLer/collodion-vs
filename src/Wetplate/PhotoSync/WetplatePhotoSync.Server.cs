@@ -14,13 +14,15 @@ namespace Collodion
 
         // Minimal cleanup so abandoned uploads (disconnects mid-transfer) don't accumulate.
         private long serverLastPruneMs;
-        private const int ServerPruneIntervalMs = 30_000;
-        private const int ServerUploadStaleMs = 120_000;
 
         private void ServerMaybePruneIncoming(long nowMs)
         {
             if (serverIncoming.Count == 0) return;
-            if (serverLastPruneMs != 0 && (nowMs - serverLastPruneMs) < ServerPruneIntervalMs) return;
+
+            int pruneIntervalMs = SyncCfg?.ServerPruneIntervalMs ?? 30_000;
+            int uploadStaleMs = SyncCfg?.ServerUploadStaleMs ?? 120_000;
+
+            if (serverLastPruneMs != 0 && (nowMs - serverLastPruneMs) < pruneIntervalMs) return;
             serverLastPruneMs = nowMs;
 
             List<string>? toRemove = null;
@@ -28,7 +30,7 @@ namespace Collodion
             {
                 var asm = kvp.Value;
                 if (asm == null) continue;
-                if ((nowMs - asm.LastTouchedMs) > ServerUploadStaleMs)
+                if ((nowMs - asm.LastTouchedMs) > uploadStaleMs)
                 {
                     toRemove ??= new List<string>();
                     toRemove.Add(kvp.Key);
@@ -70,13 +72,13 @@ namespace Collodion
                 return;
             }
 
-            if (bytes.Length <= 0 || bytes.Length > MaxBytes)
+            if (bytes.Length <= 0 || bytes.Length > GetMaxTransferBytes())
             {
                 mod.ServerChannel.SendPacket(new PhotoBlobAckPacket { PhotoId = photoId, Ok = false, Error = "Photo too large" }, fromPlayer);
                 return;
             }
 
-            SendChunks(mod.ServerChannel, fromPlayer, photoId, bytes, isUpload: false);
+            SendChunksConfigured(mod.ServerChannel, fromPlayer, photoId, bytes, isUpload: false);
         }
 
         public void ServerHandleChunk(IServerPlayer fromPlayer, PhotoBlobChunkPacket packet)
@@ -91,7 +93,7 @@ namespace Collodion
             string photoId = NormalizePhotoId(packet.PhotoId);
             if (string.IsNullOrEmpty(photoId)) return;
 
-            if (packet.TotalSize <= 0 || packet.TotalSize > MaxBytes) return;
+            if (packet.TotalSize <= 0 || packet.TotalSize > GetMaxTransferBytes()) return;
             if (packet.ChunkCount <= 0 || packet.ChunkCount > 4096) return;
             if (packet.ChunkIndex < 0 || packet.ChunkIndex >= packet.ChunkCount) return;
             if (packet.Data == null) return;
@@ -110,7 +112,7 @@ namespace Collodion
 
             if (asm.Received[packet.ChunkIndex]) return;
 
-            int offset = packet.ChunkIndex * ChunkSize;
+            int offset = packet.ChunkIndex * GetChunkSizeBytes();
             int copyLen = Math.Min(packet.Data.Length, asm.TotalSize - offset);
             if (copyLen <= 0) return;
 

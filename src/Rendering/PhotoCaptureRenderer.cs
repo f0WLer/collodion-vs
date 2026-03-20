@@ -56,12 +56,35 @@ namespace Collodion
         public double RenderOrder => 0;
         public int RenderRange => 0;
 
-        private static bool LooksBlank(byte[] pixels)
+        private PhotoCapturePipelineConfig? PipelineCfg => capi?.ModLoader?.GetModSystem<CollodionModSystem>()?.Config?.PhotoCapturePipeline;
+
+        private int BlankDetectSampleDivisor
+        {
+            get
+            {
+                int divisor = PipelineCfg?.BlankDetectSampleDivisor ?? 32;
+                if (divisor < 4) divisor = 4;
+                return divisor;
+            }
+        }
+
+        private int PngCompressionQuality
+        {
+            get
+            {
+                int quality = PipelineCfg?.PngCompressionQuality ?? 90;
+                if (quality < 0) quality = 0;
+                if (quality > 100) quality = 100;
+                return quality;
+            }
+        }
+
+        private bool LooksBlank(byte[] pixels)
         {
             // Heuristic: sample a few points; if all channels are 0, we likely read the wrong buffer.
             if (pixels == null || pixels.Length < 16) return true;
 
-            int step = Math.Max(4, pixels.Length / 32);
+            int step = Math.Max(4, pixels.Length / BlankDetectSampleDivisor);
             for (int i = 0; i < pixels.Length; i += step)
             {
                 // Check BGRA
@@ -147,7 +170,7 @@ namespace Collodion
                     }
 
                     using var finalImage = SKImage.FromBitmap(dstBitmap);
-                    using var pngData = finalImage.Encode(SKEncodedImageFormat.Png, 90);
+                    using var pngData = finalImage.Encode(SKEncodedImageFormat.Png, PngCompressionQuality);
 
                     Directory.CreateDirectory(Path.GetDirectoryName(toProcess.FullPath)!);
                     using (var output = File.Open(toProcess.FullPath, FileMode.Create, FileAccess.Write, FileShare.None))

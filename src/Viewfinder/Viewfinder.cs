@@ -19,7 +19,6 @@ namespace Collodion
     public partial class CollodionModSystem
     {
         private const float RmbReleaseGraceSeconds = 0.04f;
-        private const float HoldStillLookContributionScale = 2f;
 
         private long viewfinderTickListenerId;
         private bool suppressViewfinderUntilRmbReleased;
@@ -100,6 +99,7 @@ namespace Collodion
         private float ViewfinderZoomMultiplierCfg => Config?.Viewfinder?.ZoomMultiplier ?? 0.65f;
         private float HoldStillDurationSecondsCfg => Config?.Viewfinder?.HoldStillDurationSeconds ?? 4f;
         private float HoldStillLookWeightCfg => Config?.Viewfinder?.HoldStillLookWeight ?? 0.35f;
+        private float HoldStillLookContributionScaleCfg => Config?.Viewfinder?.HoldStillLookContributionScale ?? 2f;
 
         public void BeginViewfinderMode()
         {
@@ -445,7 +445,7 @@ namespace Collodion
                 float pitchDelta = pitch - holdStillLastPitch;
                 float lookDelta = Math.Abs(yawDelta) + Math.Abs(pitchDelta);
 
-                holdStillMovementScore += distance + lookDelta * HoldStillLookWeightCfg * HoldStillLookContributionScale;
+                holdStillMovementScore += distance + lookDelta * HoldStillLookWeightCfg * HoldStillLookContributionScaleCfg;
             }
 
             holdStillLastX = x;

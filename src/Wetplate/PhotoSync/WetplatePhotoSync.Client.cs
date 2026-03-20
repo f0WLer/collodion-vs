@@ -20,9 +20,6 @@ namespace Collodion
         private readonly Dictionary<string, HashSet<BlockPos>> clientBlocksWaitingForPhoto = new Dictionary<string, HashSet<BlockPos>>(StringComparer.OrdinalIgnoreCase);
 
         private long clientLastStateCleanupMs;
-        private const long ClientStateCleanupIntervalMs = 15_000;
-        private const double ClientRequestRetainSeconds = 300.0;
-        private const long ClientIncomingStaleMs = 120_000;
 
         public void ClientOnPhotoCreated(string photoId)
         {
@@ -103,13 +100,13 @@ namespace Collodion
                 return;
             }
 
-            if (bytes.Length <= 0 || bytes.Length > MaxBytes)
+            if (bytes.Length <= 0 || bytes.Length > GetMaxTransferBytes())
             {
                 mod.ClientApi.Logger.Warning($"Wetplate: not uploading photo {photoId} (size {bytes.Length} bytes exceeds limit)");
                 return;
             }
 
-            SendChunks(mod.ClientChannel, photoId, bytes, isUpload: true);
+            SendChunksConfigured(mod.ClientChannel, photoId, bytes, isUpload: true);
         }
 
         public void ClientHandleChunk(PhotoBlobChunkPacket packet)
@@ -124,7 +121,7 @@ namespace Collodion
             string photoId = NormalizePhotoId(packet.PhotoId);
             if (string.IsNullOrEmpty(photoId)) return;
 
-            if (packet.TotalSize <= 0 || packet.TotalSize > MaxBytes) return;
+            if (packet.TotalSize <= 0 || packet.TotalSize > GetMaxTransferBytes()) return;
             if (packet.ChunkCount <= 0 || packet.ChunkCount > 4096) return;
             if (packet.ChunkIndex < 0 || packet.ChunkIndex >= packet.ChunkCount) return;
             if (packet.Data == null) return;
@@ -140,7 +137,7 @@ namespace Collodion
 
             if (asm.Received[packet.ChunkIndex]) return;
 
-            int offset = packet.ChunkIndex * ChunkSize;
+            int offset = packet.ChunkIndex * GetChunkSizeBytes();
             int copyLen = Math.Min(packet.Data.Length, asm.TotalSize - offset);
             if (copyLen <= 0) return;
 
@@ -179,7 +176,11 @@ namespace Collodion
 
         private void ClientMaybeCleanupState(long nowMs, double nowSeconds)
         {
-            if (nowMs - clientLastStateCleanupMs < ClientStateCleanupIntervalMs) return;
+            long cleanupIntervalMs = SyncCfg?.ClientStateCleanupIntervalMs ?? 15_000;
+            float requestRetainSeconds = SyncCfg?.ClientRequestRetainSeconds ?? 300f;
+            long incomingStaleMs = SyncCfg?.ClientIncomingStaleMs ?? 120_000;
+
+            if (nowMs - clientLastStateCleanupMs < cleanupIntervalMs) return;
             clientLastStateCleanupMs = nowMs;
 
             if (clientRequestedAt.Count > 0)
@@ -187,7 +188,7 @@ namespace Collodion
                 List<string>? staleRequestKeys = null;
                 foreach (KeyValuePair<string, double> kvp in clientRequestedAt)
                 {
-                    if (nowSeconds - kvp.Value <= ClientRequestRetainSeconds) continue;
+                    if (nowSeconds - kvp.Value <= requestRetainSeconds) continue;
                     staleRequestKeys ??= new List<string>();
                     staleRequestKeys.Add(kvp.Key);
                 }
@@ -208,7 +209,7 @@ namespace Collodion
                 {
                     IncomingAssembly asm = kvp.Value;
                     if (asm == null) continue;
-                    if (nowMs - asm.LastTouchedMs <= ClientIncomingStaleMs) continue;
+                    if (nowMs - asm.LastTouchedMs <= incomingStaleMs) continue;
 
                     staleIncomingKeys ??= new List<string>();
                     staleIncomingKeys.Add(kvp.Key);

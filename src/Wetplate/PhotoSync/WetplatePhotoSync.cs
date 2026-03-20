@@ -9,8 +9,8 @@ namespace Collodion
 {
     public sealed partial class WetplatePhotoSync
     {
-        private const int ChunkSize = 24 * 1024;
-        private const int MaxBytes = 2 * 1024 * 1024; // plenty for configured capture sizes
+        private const int DefaultChunkSize = 24 * 1024;
+        private const int DefaultMaxBytes = 2 * 1024 * 1024; // plenty for configured capture sizes
 
         private readonly CollodionModSystem mod;
 
@@ -39,6 +39,22 @@ namespace Collodion
             this.mod = mod;
         }
 
+        private PhotoSyncConfig? SyncCfg => mod?.Config?.PhotoSync;
+
+        private int GetChunkSizeBytes()
+        {
+            int size = SyncCfg?.ChunkSizeBytes ?? DefaultChunkSize;
+            if (size < 1024) size = 1024;
+            return size;
+        }
+
+        private int GetMaxTransferBytes()
+        {
+            int max = SyncCfg?.MaxTransferBytes ?? DefaultMaxBytes;
+            if (max < 16 * 1024) max = 16 * 1024;
+            return max;
+        }
+
         public static string NormalizePhotoId(string photoId)
         {
             if (string.IsNullOrWhiteSpace(photoId)) return string.Empty;
@@ -55,23 +71,24 @@ namespace Collodion
 
         // -------------------- Chunk helpers --------------------
 
-        private static void SendChunks(IClientNetworkChannel channel, string photoId, byte[] bytes, bool isUpload)
+        private void SendChunksConfigured(IClientNetworkChannel channel, string photoId, byte[] bytes, bool isUpload)
         {
-            SendChunksCommon(photoId, bytes, isUpload, pkt => channel.SendPacket(pkt));
+            SendChunksCommon(photoId, bytes, isUpload, GetChunkSizeBytes(), pkt => channel.SendPacket(pkt));
         }
 
-        private static void SendChunks(IServerNetworkChannel channel, IServerPlayer toPlayer, string photoId, byte[] bytes, bool isUpload)
+        private void SendChunksConfigured(IServerNetworkChannel channel, IServerPlayer toPlayer, string photoId, byte[] bytes, bool isUpload)
         {
-            SendChunksCommon(photoId, bytes, isUpload, pkt => channel.SendPacket(pkt, toPlayer));
+            SendChunksCommon(photoId, bytes, isUpload, GetChunkSizeBytes(), pkt => channel.SendPacket(pkt, toPlayer));
         }
 
-        private static void SendChunksCommon(string photoId, byte[] bytes, bool isUpload, Action<PhotoBlobChunkPacket> send)
+        private static void SendChunksCommon(string photoId, byte[] bytes, bool isUpload, int chunkSizeBytes, Action<PhotoBlobChunkPacket> send)
         {
-            int chunkCount = (bytes.Length + ChunkSize - 1) / ChunkSize;
+            int chunkSize = Math.Max(1024, chunkSizeBytes);
+            int chunkCount = (bytes.Length + chunkSize - 1) / chunkSize;
             for (int i = 0; i < chunkCount; i++)
             {
-                int offset = i * ChunkSize;
-                int len = Math.Min(ChunkSize, bytes.Length - offset);
+                int offset = i * chunkSize;
+                int len = Math.Min(chunkSize, bytes.Length - offset);
                 byte[] chunk = new byte[len];
                 Buffer.BlockCopy(bytes, offset, chunk, 0, len);
 

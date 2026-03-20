@@ -622,7 +622,8 @@ namespace Collodion
 
             // Basic sanity limit to avoid abuse.
             string caption = packet.Caption ?? string.Empty;
-            if (caption.Length > 200) caption = caption.Substring(0, 200);
+            int maxLength = Config?.Photograph?.CaptionMaxLength ?? 200;
+            if (maxLength >= 0 && caption.Length > maxLength) caption = caption.Substring(0, maxLength);
 
             be.SetCaption(caption);
 

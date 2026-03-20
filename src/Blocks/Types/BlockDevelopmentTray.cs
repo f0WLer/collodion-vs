@@ -12,7 +12,7 @@ namespace Collodion
     public sealed class BlockDevelopmentTray : Block
     {
         // Liquid portion itemsPerLitre is 100 in our json.
-        private const int ChemicalUnitsPerUse = 40;
+        private const int DefaultChemicalUnitsPerUse = 40;
         private const int DevelopPoursRequired = 5;
 
         internal const string TimedAttrKey = "collodionDevTrayTimed";
@@ -54,6 +54,13 @@ namespace Collodion
         {
             float seconds = modSys?.Config?.DevelopmentTrayInteractions?.Fixer?.DurationSeconds ?? 1.25f;
             return seconds < 0.05f ? 0.05f : seconds;
+        }
+
+        private int GetChemicalUnitsPerUse()
+        {
+            int amount = modSys?.Config?.PlateProcessing?.DevelopmentTrayChemicalUnitsPerUse ?? DefaultChemicalUnitsPerUse;
+            if (amount < 1) amount = 1;
+            return amount;
         }
 
         private static void BeginTimed(IPlayer byPlayer, BlockPos pos, string action, float durationSeconds)
@@ -193,7 +200,7 @@ namespace Collodion
 
         private bool TryApplyDeveloperPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate, bool isExposed, int currentPours)
         {
-            if (!TryConsumeChemical(activeSlot, DeveloperPortionCode))
+            if (!TryConsumeChemical(activeSlot, DeveloperPortionCode, GetChemicalUnitsPerUse()))
             {
                 Tell(byPlayer, "Wetplate: need developer (at least 1 portion).", pos);
                 return false;
@@ -222,7 +229,7 @@ namespace Collodion
 
         private bool TryApplyFixerPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate)
         {
-            if (!TryConsumeChemical(activeSlot, FixerPortionCode))
+            if (!TryConsumeChemical(activeSlot, FixerPortionCode, GetChemicalUnitsPerUse()))
             {
                 Tell(byPlayer, "Wetplate: need fixer (at least 1 portion).", pos);
                 return false;
@@ -243,6 +250,7 @@ namespace Collodion
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (world == null || byPlayer == null || blockSel == null) return false;
+            int chemicalUnitsPerUse = GetChemicalUnitsPerUse();
 
             // Prevent immediately starting another timed action while RMB is still held.
             // This is enforced client-side only (server cannot observe mouse button state).
@@ -278,7 +286,7 @@ namespace Collodion
                     if (!TryGetDeveloperPourContext(be, out _, out _, out _, out int currentPours)) return false;
 
                     if (currentPours >= DevelopPoursRequired) return false;
-                    if (!HasConsumableChemical(activeSlot, DeveloperPortionCode, ChemicalUnitsPerUse)) return false;
+                    if (!HasConsumableChemical(activeSlot, DeveloperPortionCode, chemicalUnitsPerUse)) return false;
 
                     // Prime local timed state so client-only visuals can react immediately.
                     BeginTimed(byPlayer, blockSel.Position, ActionDeveloper, GetDeveloperPourSeconds());
@@ -289,7 +297,7 @@ namespace Collodion
                 if (IsHoldingChemical(activeSlot, FixerPortionCode))
                 {
                     if (!TryGetFixerPourContext(be, out _, out _)) return false;
-                    if (!HasConsumableChemical(activeSlot, FixerPortionCode, ChemicalUnitsPerUse)) return false;
+                    if (!HasConsumableChemical(activeSlot, FixerPortionCode, chemicalUnitsPerUse)) return false;
 
                     // Prime local timed state so client-only visuals can react immediately.
                     BeginTimed(byPlayer, blockSel.Position, ActionFixer, GetFixerPourSeconds());
@@ -337,7 +345,7 @@ namespace Collodion
                 if (!TryGetDeveloperPourContext(be, out _, out _, out _, out int currentPours)) return false;
 
                 if (currentPours >= DevelopPoursRequired) return false;
-                if (!HasConsumableChemical(activeSlot, DeveloperPortionCode, ChemicalUnitsPerUse))
+                if (!HasConsumableChemical(activeSlot, DeveloperPortionCode, chemicalUnitsPerUse))
                 {
                     Tell(byPlayer, "Wetplate: need developer (at least 1 portion).", blockSel.Position);
                     return false;
@@ -359,7 +367,7 @@ namespace Collodion
                     return false;
                 }
 
-                if (!HasConsumableChemical(activeSlot, FixerPortionCode, ChemicalUnitsPerUse))
+                if (!HasConsumableChemical(activeSlot, FixerPortionCode, chemicalUnitsPerUse))
                 {
                     Tell(byPlayer, "Wetplate: need fixer (at least 1 portion).", blockSel.Position);
                     return false;
@@ -376,6 +384,7 @@ namespace Collodion
         public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (world == null || byPlayer == null || blockSel == null) return false;
+            int chemicalUnitsPerUse = GetChemicalUnitsPerUse();
 
             BlockPos pos = blockSel.Position;
 
@@ -386,7 +395,7 @@ namespace Collodion
 
                 ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
                 if (!IsHoldingChemical(activeSlot, DeveloperPortionCode)) { ClearTimed(byPlayer); return false; }
-                if (!HasConsumableChemical(activeSlot, DeveloperPortionCode, ChemicalUnitsPerUse))
+                if (!HasConsumableChemical(activeSlot, DeveloperPortionCode, chemicalUnitsPerUse))
                 {
                     if (world.Side == EnumAppSide.Server)
                     {
@@ -432,7 +441,7 @@ namespace Collodion
 
                 ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
                 if (!IsHoldingChemical(activeSlot, FixerPortionCode)) { ClearTimed(byPlayer); return false; }
-                if (!HasConsumableChemical(activeSlot, FixerPortionCode, ChemicalUnitsPerUse))
+                if (!HasConsumableChemical(activeSlot, FixerPortionCode, chemicalUnitsPerUse))
                 {
                     if (world.Side == EnumAppSide.Server)
                     {
@@ -658,7 +667,7 @@ namespace Collodion
                         {
                             ActionLangCode = "collodion:heldhelp-developmenttray-develop",
                             MouseButton = EnumMouseButton.Right,
-                            Itemstacks = new[] { new ItemStack(developer, ChemicalUnitsPerUse) }
+                            Itemstacks = new[] { new ItemStack(developer, GetChemicalUnitsPerUse()) }
                         });
                     }
                 }
@@ -673,7 +682,7 @@ namespace Collodion
                         {
                             ActionLangCode = "collodion:heldhelp-developmenttray-fix",
                             MouseButton = EnumMouseButton.Right,
-                            Itemstacks = new[] { new ItemStack(fixer, ChemicalUnitsPerUse) }
+                            Itemstacks = new[] { new ItemStack(fixer, GetChemicalUnitsPerUse()) }
                         });
                     }
                 }
@@ -738,22 +747,22 @@ namespace Collodion
             return false;
         }
 
-        private static bool TryConsumeChemical(ItemSlot? activeSlot, AssetLocation portionCode)
+        private static bool TryConsumeChemical(ItemSlot? activeSlot, AssetLocation portionCode, int amount)
         {
             if (activeSlot?.Itemstack == null) return false;
 
             // Directly holding a portion stack.
             if (IsChemical(activeSlot.Itemstack, portionCode))
             {
-                if (activeSlot.Itemstack.StackSize < ChemicalUnitsPerUse) return false;
-                activeSlot.TakeOut(ChemicalUnitsPerUse);
+                if (activeSlot.Itemstack.StackSize < amount) return false;
+                activeSlot.TakeOut(amount);
                 activeSlot.MarkDirty();
                 return true;
             }
 
             // Holding a container (e.g., bucket/jug) with contents stored in attributes.
             // We support multiple internal layouts by scanning the attribute tree.
-            if (TryConsumeChemicalFromAttributes(activeSlot.Itemstack.Attributes, portionCode, ChemicalUnitsPerUse))
+            if (TryConsumeChemicalFromAttributes(activeSlot.Itemstack.Attributes, portionCode, amount))
             {
                 activeSlot.MarkDirty();
                 return true;

@@ -65,9 +65,10 @@ namespace Collodion
         public void SetCaption(string? caption)
         {
             string? normalized = string.IsNullOrWhiteSpace(caption) ? null : caption;
-            if (normalized != null && normalized.Length > 200)
+            int maxLength = GetCaptionMaxLength();
+            if (maxLength >= 0 && normalized != null && normalized.Length > maxLength)
             {
-                normalized = normalized.Substring(0, 200);
+                normalized = normalized.Substring(0, maxLength);
             }
 
             if (string.Equals(Caption, normalized, StringComparison.Ordinal)) return;
@@ -85,9 +86,10 @@ namespace Collodion
         public void SetCaption2(string? caption)
         {
             string? normalized = string.IsNullOrWhiteSpace(caption) ? null : caption;
-            if (normalized != null && normalized.Length > 200)
+            int maxLength = GetCaptionMaxLength();
+            if (maxLength >= 0 && normalized != null && normalized.Length > maxLength)
             {
-                normalized = normalized.Substring(0, 200);
+                normalized = normalized.Substring(0, maxLength);
             }
 
             if (string.Equals(Caption2, normalized, StringComparison.Ordinal)) return;
@@ -100,6 +102,19 @@ namespace Collodion
                 Api?.World?.BlockAccessor?.MarkBlockEntityDirty(Pos);
             }
             catch { }
+        }
+
+        private int GetCaptionMaxLength()
+        {
+            try
+            {
+                var modSys = Api?.ModLoader?.GetModSystem<CollodionModSystem>();
+                return modSys?.Config?.Photograph?.CaptionMaxLength ?? 200;
+            }
+            catch
+            {
+                return 200;
+            }
         }
 
         public void SetFramePlankBlockCode(string? blockCode)

@@ -8,10 +8,10 @@ namespace Collodion
 {
     public sealed class BlockGlassPlate : Block
     {
-        private const float PolishSeconds = 2.0f;
-        private const float CoatSeconds = 2.5f;
-        // Collodion portion itemsPerLitre is 100 in json, so 1 unit = 10mL.
-        private const int CollodionUnitsPerCoat = 5; // 50mL
+        private const float DefaultPolishSeconds = 2.0f;
+        private const float DefaultCoatSeconds = 2.5f;
+        private const int DefaultCollodionUnitsPerCoat = 5;
+        private const int DefaultPlainClothConsumedPerPolish = 1;
 
         private CollodionModSystem? modSys;
 
@@ -29,6 +29,43 @@ namespace Collodion
             // These blocks use per-texture alpha. If rendered in the opaque pass, they will write depth
             // and can cause "see under terrain" artifacts because terrain behind them never renders.
             RenderPass = EnumChunkRenderPass.Transparent;
+        }
+
+        private PlateProcessingConfig? PlateCfg => modSys?.Config?.PlateProcessing;
+
+        private float GetPolishSeconds()
+        {
+            float seconds = PlateCfg?.PolishSeconds ?? DefaultPolishSeconds;
+            if (seconds < 0f) seconds = 0f;
+            if (seconds > 30f) seconds = 30f;
+            return seconds;
+        }
+
+        private float GetCoatSeconds()
+        {
+            float seconds = PlateCfg?.CoatSeconds ?? DefaultCoatSeconds;
+            if (seconds < 0f) seconds = 0f;
+            if (seconds > 30f) seconds = 30f;
+            return seconds;
+        }
+
+        private int GetCollodionUnitsPerCoat()
+        {
+            int units = PlateCfg?.CollodionUnitsPerCoat ?? DefaultCollodionUnitsPerCoat;
+            if (units < 1) units = 1;
+            return units;
+        }
+
+        private int GetPlainClothConsumeCount()
+        {
+            bool consume = PlateCfg?.ConsumePlainClothOnPolish
+                ?? (modSys?.Config?.Client?.ConsumePlainClothOnPolish ?? false);
+            if (!consume) return 0;
+
+            int amount = PlateCfg?.PlainClothConsumedPerPolish
+                ?? (modSys?.Config?.Client?.PlainClothConsumedPerPolish ?? DefaultPlainClothConsumedPerPolish);
+            if (amount < 0) amount = 0;
+            return amount;
         }
 
         private string GetPlateState()
@@ -139,7 +176,7 @@ namespace Collodion
             {
                 if (!IsPolishModifierDown(byPlayer) || !IsHoldingPlainCloth(byPlayer)) return false;
 
-                if (secondsUsed < PolishSeconds)
+                if (secondsUsed < GetPolishSeconds())
                 {
                     return true;
                 }
@@ -151,15 +188,7 @@ namespace Collodion
                     {
                         bool isCreative = byPlayer.WorldData?.CurrentGameMode == EnumGameMode.Creative;
 
-                        int consumeCount = 1;
-                        if (modSys?.Config?.Client?.ConsumePlainClothOnPolish == false)
-                        {
-                            consumeCount = 0;
-                        }
-                        else if (modSys?.Config != null)
-                        {
-                            consumeCount = modSys.Config.Client.PlainClothConsumedPerPolish;
-                        }
+                        int consumeCount = GetPlainClothConsumeCount();
 
                         ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
                         if (!isCreative && consumeCount > 0)
@@ -191,7 +220,7 @@ namespace Collodion
 
             if (!IsHoldingCollodion(byPlayer)) return false;
 
-            if (secondsUsed < CoatSeconds)
+            if (secondsUsed < GetCoatSeconds())
             {
                 return true;
             }
@@ -201,7 +230,7 @@ namespace Collodion
                 ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
 
                 bool isCreative = byPlayer.WorldData?.CurrentGameMode == EnumGameMode.Creative;
-                if (!isCreative && !TryConsumeCollodion(activeSlot, CollodionUnitsPerCoat))
+                if (!isCreative && !TryConsumeCollodion(activeSlot, GetCollodionUnitsPerCoat()))
                 {
                     return false;
                 }
@@ -246,7 +275,7 @@ namespace Collodion
                 Item? collodionItem = world.GetItem(CollodionPortionCode);
                 if (collodionItem == null) return base.GetPlacedBlockInteractionHelp(world, selection, forPlayer);
 
-                ItemStack collodionStack = new ItemStack(collodionItem, CollodionUnitsPerCoat);
+                ItemStack collodionStack = new ItemStack(collodionItem, GetCollodionUnitsPerCoat());
 
                 return new[]
                 {

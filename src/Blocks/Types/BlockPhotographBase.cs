@@ -105,6 +105,11 @@ namespace Collodion
                 {
                     s.Attributes.SetString(PhotographAttrs.FramePlank, be.FramePlankBlockCode);
                 }
+
+                if (be.ExposureMovement > 0f)
+                {
+                    s.Attributes.SetDouble(WetPlateAttrs.HoldStillMovement, be.ExposureMovement);
+                }
             }
             catch
             {

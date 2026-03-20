@@ -238,7 +238,7 @@ namespace Collodion
                     attrs.SetString(WetPlateAttrs.PhotoId, photoId);
                     if (ExposureMovement > 0f)
                     {
-                        attrs.SetFloat(WetPlateAttrs.HoldStillMovement, ExposureMovement);
+                        attrs.SetDouble(WetPlateAttrs.HoldStillMovement, ExposureMovement);
                     }
                     frameStack.Attributes = attrs;
                 }

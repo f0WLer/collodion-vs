@@ -339,7 +339,7 @@ namespace Collodion
 
                 try
                 {
-                    float movement = stack.Attributes.GetFloat(WetPlateAttrs.HoldStillMovement, 0f);
+                    float movement = (float)stack.Attributes.GetDouble(WetPlateAttrs.HoldStillMovement, 0);
                     if (isMergeUpgrade && existingMovement > movement)
                     {
                         movement = existingMovement;

@@ -83,7 +83,7 @@ namespace Collodion
 
             if (exposureMovement > 0f)
             {
-                photoStack.Attributes.SetFloat(WetPlateAttrs.HoldStillMovement, exposureMovement);
+                photoStack.Attributes.SetDouble(WetPlateAttrs.HoldStillMovement, exposureMovement);
             }
 
             stack = photoStack;

@@ -20,6 +20,7 @@ namespace Collodion
             base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
 
             var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+            if (modSys == null) return;
             string posePrefix = GetSlingPosePrefix(itemstack);
             string poseKey = target switch
             {

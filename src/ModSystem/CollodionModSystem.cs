@@ -154,6 +154,12 @@ namespace Collodion
                         try { ClientApi.Event.UnregisterGameTickListener(clientDevTrayLatchTickListenerId.Value); } catch { }
                         clientDevTrayLatchTickListenerId = null;
                     }
+
+                    if (clientCaptureConfigRetryTickListenerId.HasValue && clientCaptureConfigRetryTickListenerId.Value > 0)
+                    {
+                        try { ClientApi.Event.UnregisterGameTickListener(clientCaptureConfigRetryTickListenerId.Value); } catch { }
+                        clientCaptureConfigRetryTickListenerId = null;
+                    }
                 }
 
                 if (Api is ICoreServerAPI sapi)

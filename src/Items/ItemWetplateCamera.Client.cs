@@ -176,6 +176,7 @@ namespace Collodion
             base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
 
             var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+            if (modSys == null) return;
 
             if (target == EnumItemRenderTarget.Ground)
             {
@@ -230,7 +231,7 @@ namespace Collodion
             if (api.Side != EnumAppSide.Client) return false;
 
             var modSys = api.ModLoader.GetModSystem<CollodionModSystem>();
-            if (!modSys.IsViewfinderActive)
+            if (modSys == null || !modSys.IsViewfinderActive)
             {
                 ClearTimedExposure(byEntity);
                 SetLmbPrev(byEntity, false);

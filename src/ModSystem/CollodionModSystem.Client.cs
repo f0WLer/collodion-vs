@@ -7,6 +7,7 @@ namespace Collodion
     public partial class CollodionModSystem
     {
     private long clientPhotoSeenLastPruneMs;
+    private long? clientCaptureConfigRetryTickListenerId;
 
         public override void StartClientSide(ICoreClientAPI api)
         {
@@ -55,7 +56,9 @@ namespace Collodion
             api.Event.RegisterRenderer(CaptureRenderer, EnumRenderStage.AfterBlit, "collodion-photocapture");
 
             // Ask server for authoritative capture sizing in multiplayer.
-            ClientChannel.SendPacket(new PhotoCaptureConfigRequestPacket());
+            // Some load orders/world joins invoke StartClientSide before the channel reports connected.
+            // Defer send until connected so startup never aborts.
+            TrySendPhotoCaptureConfigRequest(api);
 
 #pragma warning disable CS0618 // Keep legacy command registration for compatibility
             api.RegisterCommand(
@@ -91,6 +94,56 @@ namespace Collodion
             Config.Viewfinder.ClampInPlace();
 
             CaptureRenderer?.SetCaptureMaxDimension(Config.Viewfinder.PhotoCaptureMaxDimension);
+        }
+
+        private void TrySendPhotoCaptureConfigRequest(ICoreClientAPI capi)
+        {
+            if (ClientChannel == null) return;
+
+            if (ClientChannel.Connected)
+            {
+                try
+                {
+                    ClientChannel.SendPacket(new PhotoCaptureConfigRequestPacket());
+                }
+                catch
+                {
+                    // Retry via tick listener below.
+                }
+
+                if (clientCaptureConfigRetryTickListenerId.HasValue && clientCaptureConfigRetryTickListenerId.Value > 0)
+                {
+                    try { capi.Event.UnregisterGameTickListener(clientCaptureConfigRetryTickListenerId.Value); } catch { }
+                    clientCaptureConfigRetryTickListenerId = null;
+                }
+
+                return;
+            }
+
+            if (clientCaptureConfigRetryTickListenerId.HasValue && clientCaptureConfigRetryTickListenerId.Value > 0)
+            {
+                return;
+            }
+
+            clientCaptureConfigRetryTickListenerId = capi.Event.RegisterGameTickListener(_ =>
+            {
+                if (ClientChannel == null || !ClientChannel.Connected) return;
+
+                try
+                {
+                    ClientChannel.SendPacket(new PhotoCaptureConfigRequestPacket());
+                }
+                catch
+                {
+                    return;
+                }
+
+                if (clientCaptureConfigRetryTickListenerId.HasValue && clientCaptureConfigRetryTickListenerId.Value > 0)
+                {
+                    try { capi.Event.UnregisterGameTickListener(clientCaptureConfigRetryTickListenerId.Value); } catch { }
+                    clientCaptureConfigRetryTickListenerId = null;
+                }
+            }, 200, 200);
         }
 
         private CollodionConfig LoadOrCreateConfig(ICoreClientAPI capi)

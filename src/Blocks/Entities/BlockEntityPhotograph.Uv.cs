@@ -77,15 +77,11 @@ namespace Collodion
             float effectiveSourceAspect = rot90 ? (1f / sourceAspect) : sourceAspect;
             if (effectiveSourceAspect <= 0) return;
 
-            float keep = 1f;
+            PhotoCropMath.ComputeCenterCrop(effectiveSourceAspect, targetAspect, out float keepU, out float keepV);
 
-            // If the source is wider than the target, crop left/right in displayed space. Otherwise crop top/bottom.
-            if (effectiveSourceAspect > targetAspect)
+            if (keepU < 1f)
             {
-                keep = targetAspect / effectiveSourceAspect;
-                if (keep < 0f) keep = 0f;
-                if (keep > 1f) keep = 1f;
-                float trim = (1f - keep) * 0.5f;
+                float trim = (1f - keepU) * 0.5f;
 
                 if (!rot90)
                 {
@@ -103,23 +99,22 @@ namespace Collodion
                 return;
             }
 
-            // Source is taller than target: crop top/bottom in displayed space.
-            keep = effectiveSourceAspect / targetAspect;
-            if (keep < 0f) keep = 0f;
-            if (keep > 1f) keep = 1f;
-            float trim2 = (1f - keep) * 0.5f;
+            if (keepV < 1f)
+            {
+                float trim = (1f - keepV) * 0.5f;
 
-            if (!rot90)
-            {
-                float yr = y2 - y1;
-                y1 += yr * trim2;
-                y2 -= yr * trim2;
-            }
-            else
-            {
-                float xr = x2 - x1;
-                x1 += xr * trim2;
-                x2 -= xr * trim2;
+                if (!rot90)
+                {
+                    float yr = y2 - y1;
+                    y1 += yr * trim;
+                    y2 -= yr * trim;
+                }
+                else
+                {
+                    float xr = x2 - x1;
+                    x1 += xr * trim;
+                    x2 -= xr * trim;
+                }
             }
         }
 

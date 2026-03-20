@@ -14,7 +14,7 @@ namespace Collodion
     {
         private const float GroundScale = 2.5f;
         private const float PhotoTargetAspect = 10f / 11f;
-        private const float PhotoCropKeepBias = 1.015f;
+        private const float PhotoCropKeepBias = 1.1f;
         private const float MaxZFaceEpsilon = 0.0001f;
 
         // Maps the captured photo texture onto faces using texture keys "photo" or "null" in the item shape.
@@ -434,20 +434,19 @@ namespace Collodion
 
             if (sourceAspect <= 0f || targetAspect <= 0f) return cropped;
 
-            if (sourceAspect > targetAspect)
+            PhotoCropMath.ComputeCenterCrop(sourceAspect, targetAspect, out float keepU, out float keepV, PhotoCropKeepBias);
+
+            if (keepU < 1f)
             {
-                // Landscape source, portrait frame: crop left/right (centre of image).
-                float keep = GameMath.Clamp((targetAspect / sourceAspect) * PhotoCropKeepBias, 0f, 1f);
-                float trim = (1f - keep) * 0.5f;
+                float trim = (1f - keepU) * 0.5f;
                 float xr = texPos.x2 - texPos.x1;
                 cropped.x1 = texPos.x1 + xr * trim;
                 cropped.x2 = texPos.x2 - xr * trim;
             }
-            else
+
+            if (keepV < 1f)
             {
-                // Portrait source (unusual for captures): crop top/bottom.
-                float keep = GameMath.Clamp((sourceAspect / targetAspect) * PhotoCropKeepBias, 0f, 1f);
-                float trim = (1f - keep) * 0.5f;
+                float trim = (1f - keepV) * 0.5f;
                 float yr = texPos.y2 - texPos.y1;
                 cropped.y1 = texPos.y1 + yr * trim;
                 cropped.y2 = texPos.y2 - yr * trim;

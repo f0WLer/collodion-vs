@@ -26,8 +26,9 @@ namespace Collodion
             return dst;
         }
 
-        internal static void ApplyPoseDelta(CollodionModSystem modSys, string poseKey, ref ItemRenderInfo renderinfo)
+        internal static void ApplyPoseDelta(CollodionModSystem? modSys, string poseKey, ref ItemRenderInfo renderinfo)
         {
+            if (modSys == null) return;
             var d = modSys.GetPoseDelta(poseKey);
 
             renderinfo.Transform = renderinfo.Transform == null

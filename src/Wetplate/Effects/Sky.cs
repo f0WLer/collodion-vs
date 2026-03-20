@@ -12,11 +12,11 @@ namespace Collodion
             if (w <= 1 || h <= 1) return;
 
             float strength = Clamp01(cfg.SkyBlowout);
-            float topFrac = Math.Max(0.10f, Clamp01(cfg.SkyTopFraction));
+            float topFrac = Math.Max(cfg.SkyTopFractionMin, Clamp01(cfg.SkyTopFraction));
             int topH = Math.Max(1, (int)(h * topFrac));
 
             // Blur copy for a soft "bloom" feel.
-            float sigma = 0.6f + 2.2f * strength;
+            float sigma = cfg.SkyBlowoutBlurSigmaBase + cfg.SkyBlowoutBlurSigmaScale * strength;
 
             using var srcCopy = bmp.Copy();
             using var srcImg = SKImage.FromBitmap(srcCopy);
@@ -49,7 +49,7 @@ namespace Collodion
                 // soft mask
                 float mask = fy * fy * (3f - 2f * fy);
                 // faint streakiness
-                float streak = 1f + 0.02f * strength * (float)Math.Sin((y / Math.Max(1f, topH)) * (float)(Math.PI * 2.0 * 2.0) + phase);
+                float streak = 1f + cfg.SkyStreakAmount * strength * (float)Math.Sin((y / Math.Max(1f, topH)) * (float)(Math.PI * 2.0 * cfg.SkyStreakFrequency) + phase);
                 float m = strength * mask;
 
                 for (int x = 0; x < w; x++)
@@ -69,7 +69,7 @@ namespace Collodion
                     og = 1f - (1f - og) * (1f - bg);
                     orr = 1f - (1f - orr) * (1f - br);
 
-                    float lift = 0.06f * m;
+                    float lift = cfg.SkyBlowoutLiftScale * m;
                     bytes[i + 0] = (byte)(Clamp01((bytes[i + 0] / 255f) * (1f - m) + ob * m + lift) * 255f);
                     bytes[i + 1] = (byte)(Clamp01((bytes[i + 1] / 255f) * (1f - m) + og * m + lift) * 255f);
                     bytes[i + 2] = (byte)(Clamp01((bytes[i + 2] / 255f) * (1f - m) + orr * m + lift) * 255f);
@@ -99,19 +99,19 @@ namespace Collodion
             double ang = rng.NextDouble() * Math.PI * 2.0;
             float dx = (float)Math.Cos(ang);
             float dy = (float)Math.Sin(ang);
-            float poolAmp = 0.030f * cfg.Imperfection; // ~3% max
-            float skyAmp = 0.030f * cfg.SkyUnevenness;
-            float mottleAmp = 0.020f * cfg.SkyUnevenness;
-            float bandAmp = 0.010f * cfg.SkyUnevenness;
+            float poolAmp = cfg.PoolingScale * cfg.Imperfection;
+            float skyAmp = cfg.SkyDensityScale * cfg.SkyUnevenness;
+            float mottleAmp = cfg.SkyMottleScale * cfg.SkyUnevenness;
+            float bandAmp = cfg.SkyBandScale * cfg.SkyUnevenness;
 
             // Simple low-frequency noise grid for sky mottling.
-            int grid = 24;
+            int grid = cfg.SkyMottleGrid;
             float[,] noise = new float[grid + 1, grid + 1];
             for (int gy = 0; gy <= grid; gy++)
                 for (int gx = 0; gx <= grid; gx++)
                     noise[gx, gy] = (float)(rng.NextDouble() * 2.0 - 1.0);
 
-            float topFrac = Math.Max(0.10f, cfg.SkyTopFraction);
+            float topFrac = Math.Max(cfg.SkyTopFractionMin, cfg.SkyTopFraction);
             float topH = h * topFrac;
             float phase = (float)(rng.NextDouble() * Math.PI * 2.0);
 
@@ -129,7 +129,7 @@ namespace Collodion
 
                     // Subtle one-sided density pooling: darker on one edge.
                     float t = (nx - 0.5f) * dx + (ny - 0.5f) * dy; // -0.5..0.5-ish
-                    float edgeT = Clamp01((0.55f - t) / 1.10f);    // bias toward one side
+                    float edgeT = Clamp01((cfg.PoolingEdgeBiasCenter - t) / cfg.PoolingEdgeBiasDenominator);
                     // Smoothstep
                     edgeT = edgeT * edgeT * (3f - 2f * edgeT);
                     float density = 1f - poolAmp * edgeT;
@@ -139,7 +139,7 @@ namespace Collodion
                     {
                         float yTop = 1f - (y / Math.Max(1f, topH)); // 1 at top -> 0 at cutoff
                         // Vertical density shift (slightly more dense near top)
-                        density *= 1f - skyAmp * (0.6f * yTop);
+                        density *= 1f - skyAmp * (cfg.SkyDensityTopScale * yTop);
 
                         // Mottle (value noise)
                         float u = nx * grid;
@@ -158,11 +158,11 @@ namespace Collodion
                         float n1 = n01 + (n11 - n01) * fu;
                         float n = n0 + (n1 - n0) * fv;
 
-                        density *= 1f - mottleAmp * n * (0.9f * yTop);
+                        density *= 1f - mottleAmp * n * (cfg.SkyMottleTopScale * yTop);
 
                         // Very faint banding
-                        float band = (float)Math.Sin((ny / topFrac) * (float)(Math.PI * 2.0 * 3.0) + phase);
-                        density *= 1f - bandAmp * band * (0.6f * yTop);
+                        float band = (float)Math.Sin((ny / topFrac) * (float)(Math.PI * 2.0 * cfg.SkyBandFrequency) + phase);
+                        density *= 1f - bandAmp * band * (cfg.SkyBandTopScale * yTop);
                     }
 
                     // Apply density multiplier

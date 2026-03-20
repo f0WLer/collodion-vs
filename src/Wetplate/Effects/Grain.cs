@@ -11,14 +11,14 @@ namespace Collodion
             int h = bmp.Height;
             if (w <= 1 || h <= 1) return;
 
-            int nw = Math.Min(256, w);
-            int nh = Math.Min(256, h);
+            int nw = Math.Min(cfg.GrainNoiseMaxDimension, w);
+            int nh = Math.Min(cfg.GrainNoiseMaxDimension, h);
 
             using var noiseBmp = new SKBitmap(new SKImageInfo(nw, nh, SKColorType.Bgra8888, SKAlphaType.Opaque));
-            FillNoise(noiseBmp, rng, 1f);
+            FillNoise(noiseBmp, rng, 1f, cfg);
 
             // Blur noise to form clumps
-            float sigma = 0.6f + 1.4f * cfg.Grain;
+            float sigma = cfg.GrainBlurSigmaBase + cfg.GrainBlurSigmaScale * cfg.Grain;
             using var noiseImg = SKImage.FromBitmap(noiseBmp);
             using var clumpBmp = new SKBitmap(new SKImageInfo(nw, nh, SKColorType.Bgra8888, SKAlphaType.Opaque));
             using (var canvas = new SKCanvas(clumpBmp))
@@ -52,11 +52,11 @@ namespace Collodion
 
                     float l = Luma(bytes, i) / 255f;
                     // Bias grain into mid/high tones; keep shadows cleaner.
-                    float wgt = SmoothStep(0.20f, 0.90f, l) * gStrength;
+                    float wgt = SmoothStep(cfg.GrainToneStart, cfg.GrainToneEnd, l) * gStrength;
 
                     float n = (cl[j + 2] / 255f) - 0.5f; // use R channel
                     // Clumps as density variations (subtle)
-                    float delta = n * (0.22f * wgt);
+                    float delta = n * (cfg.GrainDeltaScale * wgt);
                     float mul = 1f - delta;
 
                     bytes[i + 0] = (byte)ClampByte(bytes[i + 0] * mul);
@@ -77,7 +77,7 @@ namespace Collodion
             return 0.114f * b + 0.587f * g + 0.299f * r;
         }
 
-        private static void FillNoise(SKBitmap bmp, Random rng, float strength)
+        private static void FillNoise(SKBitmap bmp, Random rng, float strength, WetplateEffectsConfig cfg)
         {
             int w = bmp.Width;
             int h = bmp.Height;
@@ -89,8 +89,8 @@ namespace Collodion
             byte[] bytes = new byte[count * 4];
 
             // Keep it subtle: mid-gray with variation.
-            int range = (int)(40 + 120 * strength);
-            int baseVal = 128;
+            int range = (int)(cfg.GrainNoiseRangeBase + cfg.GrainNoiseRangeScale * strength);
+            int baseVal = cfg.GrainNoiseBaseValue;
 
             for (int i = 0; i < count; i++)
             {

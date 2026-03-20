@@ -84,7 +84,7 @@ namespace Collodion
                 using var paint = new SKPaint { IsAntialias = true };
 
                 var center = new SKPoint(w / 2f, h / 2f);
-                float radius = Math.Max(w, h) * 0.78f;
+                float radius = Math.Max(w, h) * effectiveCfg.VignetteRadius;
 
                 byte a = (byte)(255 * effectiveCfg.Vignette);
                 var colors = new[]
@@ -103,7 +103,7 @@ namespace Collodion
             // Note: micro-blur is a cheap stand-in for long-exposure motion softness.
             if (effectiveCfg.MicroBlur > 0.001f)
             {
-                ApplyEdgePreservingMicroBlur(bmp, effectiveCfg.MicroBlur);
+                ApplyEdgePreservingMicroBlur(bmp, effectiveCfg.MicroBlur, effectiveCfg);
             }
 
             if (effectiveCfg.Imperfection > 0.001f || effectiveCfg.SkyUnevenness > 0.001f)

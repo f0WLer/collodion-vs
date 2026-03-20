@@ -18,14 +18,14 @@ namespace Collodion
 
             // Contrast is applied mostly above a shadow threshold so shadows compress instead of deepen.
             float contrast = cfg.Contrast;
-            float k = 6f * contrast; // sigmoid slope
+            float k = cfg.ToneSigmoidScale * contrast; // sigmoid slope
             float y0 = Sigmoid(-0.5f * k);
             float y1 = Sigmoid(0.5f * k);
             float invSpan = 1f / Math.Max(1e-6f, (y1 - y0));
 
             float t = Clamp01(cfg.HighlightThreshold);
             // Stronger shoulder = bigger 'a'
-            float a = 1f + 12f * Clamp01(cfg.HighlightShoulder);
+            float a = 1f + cfg.HighlightShoulderScale * Clamp01(cfg.HighlightShoulder);
             float denom = 1f - (float)Math.Exp(-a * (1f - t));
             if (denom < 1e-6f) denom = 1e-6f;
 
@@ -34,8 +34,8 @@ namespace Collodion
             float shadowFloor = Clamp01(cfg.ShadowFloor);
             float contrastStart = Clamp01(cfg.ContrastStart);
             // Prevent pathological settings.
-            if (contrastStart < 0.02f) contrastStart = 0.02f;
-            if (contrastStart > 0.75f) contrastStart = 0.75f;
+            if (contrastStart < cfg.ContrastStartMin) contrastStart = cfg.ContrastStartMin;
+            if (contrastStart > cfg.ContrastStartMax) contrastStart = cfg.ContrastStartMax;
 
             for (int i = 0; i < bytes.Length; i += 4)
             {
@@ -45,10 +45,10 @@ namespace Collodion
 
                 // Compute pre-curve luminance to decide how much contrast to apply.
                 float lum = 0.299f * rr + 0.587f * gg + 0.114f * bb;
-                float wContrast = SmoothStep(contrastStart, 0.85f, lum);
+                float wContrast = SmoothStep(contrastStart, cfg.ContrastBlendEnd, lum);
 
                 // Low-luma path: gentler curve (reduced contrast)
-                float kShadow = 6f * (1f + (contrast - 1f) * 0.25f);
+                float kShadow = cfg.ToneSigmoidScale * (1f + (contrast - 1f) * cfg.ShadowContrastReductionScale);
                 float y0s = Sigmoid(-0.5f * kShadow);
                 float y1s = Sigmoid(0.5f * kShadow);
                 float invSpans = 1f / Math.Max(1e-6f, (y1s - y0s));

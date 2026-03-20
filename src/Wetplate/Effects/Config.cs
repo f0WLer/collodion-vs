@@ -56,11 +56,33 @@ namespace Collodion
         // 0..1 vignette intensity.
         public float Vignette = 0.24f;
 
+        // Radius multiplier for radial vignette mask.
+        public float VignetteRadius = 0.78f;
+
         // 0..1 sky blowout/bloom strength (applied mainly to the top of the frame).
         public float SkyBlowout = 0.40f;
 
+        // Sky blowout internals.
+        public float SkyTopFractionMin = 0.10f;
+        public float SkyBlowoutBlurSigmaBase = 0.60f;
+        public float SkyBlowoutBlurSigmaScale = 2.20f;
+        public float SkyBlowoutLiftScale = 0.06f;
+        public float SkyStreakAmount = 0.02f;
+        public float SkyStreakFrequency = 2.0f;
+
         // 0..1 film grain intensity.
         public float Grain = 0.08f;
+
+        // Grain internals.
+        public int GrainNoiseMaxDimension = 256;
+        public float GrainBlurSigmaBase = 0.6f;
+        public float GrainBlurSigmaScale = 1.4f;
+        public float GrainToneStart = 0.20f;
+        public float GrainToneEnd = 0.90f;
+        public float GrainDeltaScale = 0.22f;
+        public int GrainNoiseRangeBase = 40;
+        public int GrainNoiseRangeScale = 120;
+        public int GrainNoiseBaseValue = 128;
 
         // Decorative artifacts.
         public int DustCount = 80;
@@ -69,6 +91,56 @@ namespace Collodion
         // 0..1
         public float DustOpacity = 0.07f;
         public float ScratchOpacity = 0.02f;
+
+        // Dust internals.
+        public float DustRadiusMin = 0.4f;
+        public float DustRadiusRange = 1.8f;
+        public int DustLargeFleckInterval = 37;
+        public float DustLargeFleckScale = 2.2f;
+        public float DustEdgeBiasChanceScale = 0.65f;
+        public float EdgeBiasMaxDistanceFraction = 0.22f;
+        public float EdgeBiasDistanceScaleDivisor = 3.0f;
+
+        // Scratch internals.
+        public float ScratchAngleMin = -0.15f;
+        public float ScratchAngleRange = 0.30f;
+        public float ScratchLengthMin = 0.35f;
+        public float ScratchLengthRange = 0.85f;
+        public float ScratchWidthMin = 0.4f;
+        public float ScratchWidthRange = 1.2f;
+        public int DarkScratchInterval = 5;
+        public float DarkScratchOpacityScale = 0.65f;
+        public float DarkScratchWidthScale = 0.7f;
+        public float DarkScratchOffsetPx = 1.0f;
+
+        // Sepia + micro-blur internals.
+        public float SepiaEdgeWidthMinPx = 4.0f;
+        public float SepiaEdgeWidthFraction = 0.18f;
+        public float EdgeWarmthBlendScale = 0.60f;
+        public float MicroBlurSigmaBase = 0.10f;
+        public float MicroBlurSigmaScale = 0.85f;
+        public float MicroBlurEdgeKeepScale = 2.2f;
+
+        // Uneven density internals.
+        public float PoolingScale = 0.030f;
+        public float SkyDensityScale = 0.030f;
+        public float SkyMottleScale = 0.020f;
+        public float SkyBandScale = 0.010f;
+        public int SkyMottleGrid = 24;
+        public float SkyDensityTopScale = 0.6f;
+        public float SkyMottleTopScale = 0.9f;
+        public float SkyBandTopScale = 0.6f;
+        public float SkyBandFrequency = 3.0f;
+        public float PoolingEdgeBiasCenter = 0.55f;
+        public float PoolingEdgeBiasDenominator = 1.10f;
+
+        // Tone curve internals.
+        public float ToneSigmoidScale = 6.0f;
+        public float HighlightShoulderScale = 12.0f;
+        public float ContrastBlendEnd = 0.85f;
+        public float ShadowContrastReductionScale = 0.25f;
+        public float ContrastStartMin = 0.02f;
+        public float ContrastStartMax = 0.75f;
 
         // Per-photo dynamic variation (deterministic from photo id).
         // DynamicScale is a +/- percentage (0.05 => +/-5%) applied to select parameters.
@@ -95,6 +167,72 @@ namespace Collodion
             SkyUnevenness = Clamp01(SkyUnevenness);
             MicroBlur = Clamp01(MicroBlur);
             SkyTopFraction = Clamp01(SkyTopFraction);
+
+            VignetteRadius = ClampRange(VignetteRadius, 0.2f, 2.0f);
+
+            SkyTopFractionMin = ClampRange(SkyTopFractionMin, 0.01f, 1.0f);
+            SkyBlowoutBlurSigmaBase = ClampRange(SkyBlowoutBlurSigmaBase, 0f, 10f);
+            SkyBlowoutBlurSigmaScale = ClampRange(SkyBlowoutBlurSigmaScale, 0f, 10f);
+            SkyBlowoutLiftScale = ClampRange(SkyBlowoutLiftScale, 0f, 1f);
+            SkyStreakAmount = ClampRange(SkyStreakAmount, 0f, 1f);
+            SkyStreakFrequency = ClampRange(SkyStreakFrequency, 0f, 32f);
+
+            GrainNoiseMaxDimension = Math.Max(8, Math.Min(2048, GrainNoiseMaxDimension));
+            GrainBlurSigmaBase = ClampRange(GrainBlurSigmaBase, 0f, 10f);
+            GrainBlurSigmaScale = ClampRange(GrainBlurSigmaScale, 0f, 10f);
+            GrainToneStart = Clamp01(GrainToneStart);
+            GrainToneEnd = Clamp01(GrainToneEnd);
+            if (GrainToneEnd < GrainToneStart) GrainToneEnd = GrainToneStart;
+            GrainDeltaScale = ClampRange(GrainDeltaScale, 0f, 2f);
+            GrainNoiseRangeBase = Math.Max(0, Math.Min(255, GrainNoiseRangeBase));
+            GrainNoiseRangeScale = Math.Max(0, Math.Min(255, GrainNoiseRangeScale));
+            GrainNoiseBaseValue = Math.Max(0, Math.Min(255, GrainNoiseBaseValue));
+
+            DustRadiusMin = ClampRange(DustRadiusMin, 0f, 16f);
+            DustRadiusRange = ClampRange(DustRadiusRange, 0f, 64f);
+            DustLargeFleckInterval = Math.Max(1, Math.Min(10000, DustLargeFleckInterval));
+            DustLargeFleckScale = ClampRange(DustLargeFleckScale, 0f, 20f);
+            DustEdgeBiasChanceScale = ClampRange(DustEdgeBiasChanceScale, 0f, 1f);
+            EdgeBiasMaxDistanceFraction = ClampRange(EdgeBiasMaxDistanceFraction, 0f, 1f);
+            EdgeBiasDistanceScaleDivisor = ClampRange(EdgeBiasDistanceScaleDivisor, 0.01f, 100f);
+
+            ScratchAngleMin = ClampRange(ScratchAngleMin, -3.14159f, 3.14159f);
+            ScratchAngleRange = ClampRange(ScratchAngleRange, 0f, 6.28318f);
+            ScratchLengthMin = ClampRange(ScratchLengthMin, 0f, 10f);
+            ScratchLengthRange = ClampRange(ScratchLengthRange, 0f, 10f);
+            ScratchWidthMin = ClampRange(ScratchWidthMin, 0f, 20f);
+            ScratchWidthRange = ClampRange(ScratchWidthRange, 0f, 20f);
+            DarkScratchInterval = Math.Max(1, Math.Min(10000, DarkScratchInterval));
+            DarkScratchOpacityScale = ClampRange(DarkScratchOpacityScale, 0f, 4f);
+            DarkScratchWidthScale = ClampRange(DarkScratchWidthScale, 0f, 4f);
+            DarkScratchOffsetPx = ClampRange(DarkScratchOffsetPx, 0f, 64f);
+
+            SepiaEdgeWidthMinPx = ClampRange(SepiaEdgeWidthMinPx, 0f, 256f);
+            SepiaEdgeWidthFraction = ClampRange(SepiaEdgeWidthFraction, 0f, 2f);
+            EdgeWarmthBlendScale = ClampRange(EdgeWarmthBlendScale, 0f, 4f);
+            MicroBlurSigmaBase = ClampRange(MicroBlurSigmaBase, 0f, 10f);
+            MicroBlurSigmaScale = ClampRange(MicroBlurSigmaScale, 0f, 10f);
+            MicroBlurEdgeKeepScale = ClampRange(MicroBlurEdgeKeepScale, 0f, 20f);
+
+            PoolingScale = ClampRange(PoolingScale, 0f, 1f);
+            SkyDensityScale = ClampRange(SkyDensityScale, 0f, 1f);
+            SkyMottleScale = ClampRange(SkyMottleScale, 0f, 1f);
+            SkyBandScale = ClampRange(SkyBandScale, 0f, 1f);
+            SkyMottleGrid = Math.Max(2, Math.Min(256, SkyMottleGrid));
+            SkyDensityTopScale = ClampRange(SkyDensityTopScale, 0f, 4f);
+            SkyMottleTopScale = ClampRange(SkyMottleTopScale, 0f, 4f);
+            SkyBandTopScale = ClampRange(SkyBandTopScale, 0f, 4f);
+            SkyBandFrequency = ClampRange(SkyBandFrequency, 0f, 32f);
+            PoolingEdgeBiasCenter = ClampRange(PoolingEdgeBiasCenter, -2f, 2f);
+            PoolingEdgeBiasDenominator = ClampRange(PoolingEdgeBiasDenominator, 0.01f, 10f);
+
+            ToneSigmoidScale = ClampRange(ToneSigmoidScale, 0f, 32f);
+            HighlightShoulderScale = ClampRange(HighlightShoulderScale, 0f, 64f);
+            ContrastBlendEnd = Clamp01(ContrastBlendEnd);
+            ShadowContrastReductionScale = ClampRange(ShadowContrastReductionScale, 0f, 4f);
+            ContrastStartMin = Clamp01(ContrastStartMin);
+            ContrastStartMax = Clamp01(ContrastStartMax);
+            if (ContrastStartMax < ContrastStartMin) ContrastStartMax = ContrastStartMin;
 
             PreGrayRed = ClampRange(PreGrayRed, 0f, 2f);
             PreGrayGreen = ClampRange(PreGrayGreen, 0f, 2f);

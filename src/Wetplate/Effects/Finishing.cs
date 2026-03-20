@@ -17,7 +17,7 @@ namespace Collodion
             System.Runtime.InteropServices.Marshal.Copy(ptr, bytes, 0, bytes.Length);
 
             float s = Clamp01(cfg.SepiaStrength);
-            float edgeWidthPx = Math.Max(4f, Math.Min(w, h) * 0.18f);
+            float edgeWidthPx = Math.Max(cfg.SepiaEdgeWidthMinPx, Math.Min(w, h) * cfg.SepiaEdgeWidthFraction);
             float edgeWarm = Clamp01(cfg.EdgeWarmth);
 
             for (int y = 0; y < h; y++)
@@ -38,7 +38,7 @@ namespace Collodion
                     float distToEdge = Math.Min(Math.Min(x, w - 1 - x), Math.Min(y, h - 1 - y));
                     float edge = Clamp01(1f - (distToEdge / edgeWidthPx));
                     edge = edge * edge * (3f - 2f * edge);
-                    float blend = Clamp01(s * (1f + 0.60f * edgeWarm * edge));
+                    float blend = Clamp01(s * (1f + cfg.EdgeWarmthBlendScale * edgeWarm * edge));
 
                     r = r * (1f - blend) + sr * blend;
                     g = g * (1f - blend) + sg * blend;
@@ -53,14 +53,14 @@ namespace Collodion
             System.Runtime.InteropServices.Marshal.Copy(bytes, 0, ptr, bytes.Length);
         }
 
-        private static void ApplyEdgePreservingMicroBlur(SKBitmap bmp, float amount)
+        private static void ApplyEdgePreservingMicroBlur(SKBitmap bmp, float amount, WetplateEffectsConfig cfg)
         {
             int w = bmp.Width;
             int h = bmp.Height;
             if (w < 3 || h < 3) return;
 
             // Keep it tiny: enough to soften leaves, not enough to smear the whole image.
-            float sigma = 0.10f + 0.85f * Clamp01(amount);
+            float sigma = cfg.MicroBlurSigmaBase + cfg.MicroBlurSigmaScale * Clamp01(amount);
 
             using var srcCopy = bmp.Copy();
             using var srcImg = SKImage.FromBitmap(srcCopy);
@@ -86,7 +86,7 @@ namespace Collodion
             System.Runtime.InteropServices.Marshal.Copy(blurPtr, blr, 0, blr.Length);
 
             // Edge strength threshold: higher keeps trunks/strong edges sharp.
-            const float edgeK = 2.2f;
+            float edgeK = cfg.MicroBlurEdgeKeepScale;
 
             // Skip border pixels.
             for (int y = 1; y < h - 1; y++)

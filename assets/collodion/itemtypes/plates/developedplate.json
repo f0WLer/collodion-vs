@@ -8,7 +8,9 @@
   "attributes": {
     "handbook": { "groupBy": ["wetplateplate-*"] },
     "renderPhotoOverlay": true,
-    "photoEffectsProfile": "developed"
+    "photoEffectsProfile": "developed",
+    "photoOverlayFace": "up",
+    "photoUvRotation": 180
   },
   "maxstacksize": 1,
   "heldTpIdleAnimation": "holdbothhands",

@@ -289,6 +289,14 @@ namespace Collodion
 
                         StampUvByRotationCropped(photoMesh, photoTex, rotationDeg, photoAspect, PhotoTargetAspect);
 
+                        // Rotate the plate/photo plane in world space for player-facing orientation.
+                        // This preserves portrait crop orientation (no 90° UV remap).
+                        int placementYawDeg = GetPlacementFacingYawDeg();
+                        if (placementYawDeg != 0)
+                        {
+                            photoMesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, placementYawDeg * GameMath.DEG2RAD, 0f);
+                        }
+
                         // Nudge up slightly to avoid z-fighting with the base plate.
                         photoMesh.Translate(0f, 0.0006f, 0f);
                         builtPhotoMesh = true;
@@ -339,6 +347,12 @@ namespace Collodion
 
                             // Scale up around center so it extends past the plate edges.
                             devOverlayMesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), DeveloperOverlayScale, 1f, DeveloperOverlayScale);
+
+                            int placementYawDeg = GetPlacementFacingYawDeg();
+                            if (placementYawDeg != 0)
+                            {
+                                devOverlayMesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, placementYawDeg * GameMath.DEG2RAD, 0f);
+                            }
 
                             // Put it above the photo mesh.
                             devOverlayMesh.Translate(0f, 0.0012f, 0f);
@@ -778,6 +792,20 @@ namespace Collodion
                 x1 += xr * trim2;
                 x2 -= xr * trim2;
             }
+        }
+
+        private int GetPlacementFacingYawDeg()
+        {
+            string facing = PlacementFacingCode;
+            return facing switch
+            {
+                "south" => 90,
+                // East/west are intentionally inverted relative to the previous mapping
+                // so tray "up" matches player expectations in-world.
+                "west" => 0,
+                "north" => 270,
+                _ => 180
+            };
         }
     }
 }

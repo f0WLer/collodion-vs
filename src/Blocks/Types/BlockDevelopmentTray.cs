@@ -44,6 +44,23 @@ namespace Collodion
             modSys = api.ModLoader.GetModSystem<CollodionModSystem>();
         }
 
+        public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
+        {
+            bool placed = base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);
+            if (!placed) return false;
+
+            if (world == null || blockSel?.Position == null) return true;
+
+            BlockPos placedPos = ResolvePlacedPos(world, blockSel);
+            if (world.BlockAccessor.GetBlockEntity(placedPos) is BlockEntityDevelopmentTray be)
+            {
+                BlockFacing playerFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.SidedPos?.Yaw ?? 0f);
+                be.SetPlacementFacing(playerFacing.Code, markBlockDirty: true);
+            }
+
+            return true;
+        }
+
         private float GetDeveloperPourSeconds()
         {
             float seconds = modSys?.Config?.DevelopmentTrayInteractions?.Developer?.DurationSeconds ?? 1.25f;
@@ -326,6 +343,11 @@ namespace Collodion
                 if (be.HasPlate) return false;
                 if (activeSlot == null) return false;
 
+                // Ensure tray photo orientation always tracks the player who is actively using the tray.
+                // This acts as a reliable fallback if placement-time facing capture is unavailable.
+                BlockFacing insertFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.SidedPos?.Yaw ?? 0f);
+                be.SetPlacementFacing(insertFacing.Code, markBlockDirty: false);
+
                 ItemStack toInsert = held.Clone();
                 toInsert.StackSize = 1;
 
@@ -564,6 +586,12 @@ namespace Collodion
         {
             if (world == null || pos == null || Code == null) return;
 
+            string placementFacing = "east";
+            if (world.BlockAccessor.GetBlockEntity(pos) is BlockEntityDevelopmentTray oldBe)
+            {
+                placementFacing = oldBe.PlacementFacingCode;
+            }
+
             string path = Code.Path;
             if (!path.StartsWith("developmenttray-")) return;
 
@@ -584,13 +612,27 @@ namespace Collodion
             world.BlockAccessor.SetBlock(targetId, pos);
 
             // Reapply the plate stack after swapping blocks (BE can be recreated).
-            if (plateToKeep != null)
+            if (world.BlockAccessor.GetBlockEntity(pos) is BlockEntityDevelopmentTray newBe)
             {
-                if (world.BlockAccessor.GetBlockEntity(pos) is BlockEntityDevelopmentTray newBe)
+                newBe.SetPlacementFacing(placementFacing, markBlockDirty: false);
+
+                if (plateToKeep != null)
                 {
                     newBe.TrySetPlate(plateToKeep);
                 }
             }
+        }
+
+        private BlockPos ResolvePlacedPos(IWorldAccessor world, BlockSelection blockSel)
+        {
+            BlockPos selectedPos = blockSel.Position;
+            Block selectedBlock = world.BlockAccessor.GetBlock(selectedPos);
+            if (selectedBlock != null && selectedBlock.IsReplacableBy(this))
+            {
+                return selectedPos;
+            }
+
+            return selectedPos.AddCopy(blockSel.Face);
         }
 
         public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)

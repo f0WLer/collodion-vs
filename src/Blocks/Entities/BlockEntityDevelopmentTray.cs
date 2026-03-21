@@ -6,11 +6,13 @@ namespace Collodion
     public sealed partial class BlockEntityDevelopmentTray : BlockEntity
     {
         private const string AttrPlateStack = "collodionPlateStack";
+        private const string AttrPlacementFacing = "collodionPlacementFacing";
 
         private readonly object plateLock = new object();
         private string? lastPlateSignature;
 
         public ItemStack? PlateStack { get; private set; }
+        public string PlacementFacingCode { get; private set; } = "east";
 
         partial void ClientInitialize(ICoreAPI api);
 
@@ -85,6 +87,17 @@ namespace Collodion
             return true;
         }
 
+        public bool SetPlacementFacing(string? facingCode, bool markBlockDirty = true)
+        {
+            string normalized = NormalizeHorizontalFacingCode(facingCode);
+            if (string.Equals(PlacementFacingCode, normalized, StringComparison.Ordinal)) return false;
+
+            PlacementFacingCode = normalized;
+            ClientPlateChanged(markBlockDirty);
+            MarkDirty(true);
+            return true;
+        }
+
         public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldAccessForResolve)
         {
             base.FromTreeAttributes(tree, worldAccessForResolve);
@@ -96,13 +109,16 @@ namespace Collodion
 
                 bool changed;
                 string? newSig = ComputePlateSignature(loaded);
+                string newFacing = NormalizeHorizontalFacingCode(tree.GetString(AttrPlacementFacing, "east"));
                 lock (plateLock)
                 {
                     changed = (PlateStack == null) != (loaded == null)
                         || (PlateStack?.Collectible?.Code != loaded?.Collectible?.Code)
-                        || !string.Equals(lastPlateSignature, newSig, StringComparison.Ordinal);
+                        || !string.Equals(lastPlateSignature, newSig, StringComparison.Ordinal)
+                        || !string.Equals(PlacementFacingCode, newFacing, StringComparison.Ordinal);
                     PlateStack = loaded;
                     lastPlateSignature = newSig;
+                    PlacementFacingCode = newFacing;
                 }
 
                 if (changed) ClientPlateChanged(markBlockDirty: true);
@@ -113,6 +129,7 @@ namespace Collodion
                 {
                     PlateStack = null;
                     lastPlateSignature = null;
+                    PlacementFacingCode = "east";
                 }
 
                 ClientPlateChanged(markBlockDirty: true);
@@ -131,6 +148,19 @@ namespace Collodion
 
             if (toSave != null) tree.SetItemstack(AttrPlateStack, toSave);
             else tree.RemoveAttribute(AttrPlateStack);
+
+            tree.SetString(AttrPlacementFacing, NormalizeHorizontalFacingCode(PlacementFacingCode));
+        }
+
+        private static string NormalizeHorizontalFacingCode(string? facingCode)
+        {
+            return facingCode?.ToLowerInvariant() switch
+            {
+                "north" => "north",
+                "south" => "south",
+                "west" => "west",
+                _ => "east"
+            };
         }
 
         private static string? ComputePlateSignature(ItemStack? stack)

@@ -33,6 +33,7 @@ namespace Collodion
         private static readonly object CacheLock = new object();
         private static readonly Dictionary<string, CachedRender> MeshCache = new Dictionary<string, CachedRender>(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, float> BlockPhotoAspectCache = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase);
+        private static readonly HashSet<string> DerivedPruneState = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private static int AtlasVersion = 0;
 
         public static int ClearClientRenderCacheAndBumpVersion()
@@ -48,6 +49,7 @@ namespace Collodion
 
                 MeshCache.Clear();
                 BlockPhotoAspectCache.Clear();
+                DerivedPruneState.Clear();
                 AtlasVersion++;
             }
 
@@ -202,6 +204,7 @@ namespace Collodion
             string renderPath = sourcePath;
             string renderFileName = photoFileName;
             bool useDevelopedStage = !string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("developed", StringComparison.OrdinalIgnoreCase);
+            MaybePruneObsoleteDevelopedDerived(capi, photoFileName, itemstack, developPours, useDevelopedStage);
             if (useDevelopedStage || hasMovementEffects)
             {
                 string profileTag = useDevelopedStage
@@ -374,6 +377,7 @@ namespace Collodion
             string renderPath = sourcePath;
             string renderFileName = photoFileName;
             bool useDevelopedStage = !string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("developed", StringComparison.OrdinalIgnoreCase);
+            MaybePruneObsoleteDevelopedDerived(capi, photoFileName, itemstack, developPours, useDevelopedStage);
             if (useDevelopedStage || hasMovementEffects)
             {
                 string profileTag = useDevelopedStage
@@ -715,6 +719,62 @@ namespace Collodion
         {
             string derivedFileName = GetDerivedPhotoFileName(photoFileName, profile);
             return Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos", "derived", derivedFileName);
+        }
+
+        private static void MaybePruneObsoleteDevelopedDerived(ICoreClientAPI capi, string photoFileName, ItemStack? itemstack, int developPours, bool useDevelopedStage)
+        {
+            if (string.IsNullOrWhiteSpace(photoFileName) || itemstack?.Attributes == null) return;
+
+            string stage = itemstack.Attributes.GetString(WetPlateAttrs.PlateStage) ?? string.Empty;
+            bool isFinishedStage = stage.Equals("finished", StringComparison.OrdinalIgnoreCase);
+
+            int keepDevelopedStage = useDevelopedStage ? developPours : 0;
+            if (keepDevelopedStage < 0) keepDevelopedStage = 0;
+            if (keepDevelopedStage > DevelopPoursRequired) keepDevelopedStage = DevelopPoursRequired;
+
+            string pruneKey = $"{photoFileName}|{(isFinishedStage ? "finished" : "active")}|{keepDevelopedStage}";
+            lock (CacheLock)
+            {
+                if (!DerivedPruneState.Add(pruneKey)) return;
+            }
+
+            try
+            {
+                string derivedDir = Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos", "derived");
+                if (!Directory.Exists(derivedDir)) return;
+
+                string baseName = Path.GetFileNameWithoutExtension(photoFileName);
+                if (string.IsNullOrWhiteSpace(baseName)) return;
+
+                if (isFinishedStage)
+                {
+                    for (int stageIndex = 1; stageIndex <= DevelopPoursRequired; stageIndex++)
+                    {
+                        DeleteDerivedDevelopedStageFiles(derivedDir, baseName, stageIndex);
+                    }
+                    return;
+                }
+
+                if (keepDevelopedStage <= 1) return;
+
+                int previousStage = keepDevelopedStage - 1;
+                DeleteDerivedDevelopedStageFiles(derivedDir, baseName, previousStage);
+            }
+            catch (Exception ex)
+            {
+                capi?.Logger?.VerboseDebug($"Collodion: derived prune skipped for '{photoFileName}': {ex.Message}");
+            }
+        }
+
+        private static void DeleteDerivedDevelopedStageFiles(string derivedDir, string baseName, int stageIndex)
+        {
+            if (stageIndex < 1 || stageIndex > DevelopPoursRequired) return;
+
+            string pattern = $"{baseName}__developed{stageIndex}*.png";
+            foreach (string filePath in Directory.EnumerateFiles(derivedDir, pattern, SearchOption.TopDirectoryOnly))
+            {
+                try { File.Delete(filePath); } catch { }
+            }
         }
 
         private static bool TryEnsureDerivedPhoto(ICoreClientAPI capi, string sourcePath, string derivedPath, string seedKey, bool useDevelopedStage, int developPours, float movementScore)

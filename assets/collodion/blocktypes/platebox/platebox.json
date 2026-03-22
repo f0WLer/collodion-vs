@@ -32,11 +32,6 @@
     "plate": { "base": "collodion:item/plate-silvered" }
   },
   "creativeinventory": { "general": ["*"] },
-  "byType": {
-    "*-south": { "creativeinventory": { "general": [] } },
-    "*-east":  { "creativeinventory": { "general": [] } },
-    "*-west":  { "creativeinventory": { "general": [] } }
-  },
   "resistance": 1.2,
   "lightAbsorption": 0,
   "sounds": {

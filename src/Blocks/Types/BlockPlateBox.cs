@@ -1,3 +1,4 @@
+using System;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -36,6 +37,13 @@ namespace Collodion
         {
             base.OnLoaded(api);
             PartialSelection = false;
+
+            string facing = Variant?["facing"] ?? string.Empty;
+            if (!facing.Equals("north", StringComparison.OrdinalIgnoreCase))
+            {
+                CreativeInventoryTabs = Array.Empty<string>();
+                CreativeInventoryStacks = Array.Empty<CreativeTabAndStackList>();
+            }
         }
 
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)

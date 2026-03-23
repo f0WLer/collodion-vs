@@ -218,9 +218,13 @@ namespace Collodion
                             bool isHandTarget = target == EnumItemRenderTarget.HandTp || target == EnumItemRenderTarget.HandFp;
 #pragma warning restore CS0618
 
-                            if (isHandTarget && !isFramedPhoto)
+                            if (!isFramedPhoto && isHandTarget)
                             {
                                 FlipUvForMaxZFace(modelData, tessTexPos);
+                            }
+                            else if (isFramedPhoto && target == EnumItemRenderTarget.Gui)
+                            {
+                                FlipUvForMappedFace(modelData, tessTexPos, flipU: false, flipV: true);
                             }
 
                             if (target == EnumItemRenderTarget.Ground)
@@ -425,6 +429,28 @@ namespace Collodion
                 if (v < texPos.y1 - uvEpsilon || v > texPos.y2 + uvEpsilon) continue;
 
                 mesh.Uv[uvIndex] = sumU - mesh.Uv[uvIndex];
+            }
+        }
+
+        private static void FlipUvForMappedFace(MeshData mesh, TextureAtlasPosition texPos, bool flipU, bool flipV)
+        {
+            if (!TryGetUvFaceContext(mesh, texPos, out int verts, out _)) return;
+
+            float sumU = texPos.x1 + texPos.x2;
+            float sumV = texPos.y1 + texPos.y2;
+            const float uvEpsilon = 0.00001f;
+
+            for (int i = 0; i < verts; i++)
+            {
+                int uvIndex = i * 2;
+                float u = mesh.Uv[uvIndex];
+                float v = mesh.Uv[uvIndex + 1];
+
+                if (u < texPos.x1 - uvEpsilon || u > texPos.x2 + uvEpsilon) continue;
+                if (v < texPos.y1 - uvEpsilon || v > texPos.y2 + uvEpsilon) continue;
+
+                if (flipU) mesh.Uv[uvIndex] = sumU - u;
+                if (flipV) mesh.Uv[uvIndex + 1] = sumV - v;
             }
         }
 

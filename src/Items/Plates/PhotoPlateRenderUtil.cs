@@ -136,12 +136,13 @@ namespace Collodion
             bool mirrorX;
             try
             {
-                // Default behavior: finished plates mirror the photo left-to-right.
-                mirrorX = itemstack.Collectible?.Attributes?["photoMirrorX"]?.AsBool(true) ?? true;
+                // Default behavior: mirror only in GUI, unless explicitly overridden by item attributes.
+                bool defaultMirrorX = target == EnumItemRenderTarget.Gui;
+                mirrorX = itemstack.Collectible?.Attributes?["photoMirrorX"]?.AsBool(defaultMirrorX) ?? defaultMirrorX;
             }
             catch
             {
-                mirrorX = true;
+                mirrorX = target == EnumItemRenderTarget.Gui;
             }
 
             int developPours = DevelopPoursRequired;

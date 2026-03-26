@@ -48,6 +48,8 @@ namespace Collodion
         }
 
         private readonly object clientMeshLock = new object();
+        private MeshData? clientTrayBodyMesh;
+        private MeshData? clientFallbackTrayMesh; // body-only mesh built once at init; never nulled
         private MeshData? clientPhotoMesh;
         private MeshData? clientDeveloperOverlayMesh;
         private bool clientMeshQueued;
@@ -61,6 +63,36 @@ namespace Collodion
         partial void ClientInitialize(ICoreAPI api)
         {
             if (api?.Side != EnumAppSide.Client) return;
+
+            // Pre-build a tray body mesh (no plate element) so it is always available
+            // during the threading race gap between a block-type change triggering chunk
+            // retesselation and FromTreeAttributes finishing the full BuildClientMesh.
+            // Without this the tray walls go blank for 1–2 frames while suppressing the
+            // base block to prevent the sideways-plate flash.
+            if (api is ICoreClientAPI capiInit && BlockTypeHasStaticPlate())
+            {
+                try
+                {
+                    ITexPositionSource bodySource = capiInit.Tesselator.GetTextureSource(Block);
+                    var bodyShape = Block?.Shape?.Clone();
+                    if (bodyShape != null)
+                    {
+                        bodyShape.IgnoreElements = new[] { "plate" };
+                        capiInit.Tesselator.TesselateShape(
+                            "collodion-devtray-body-fallback",
+                            Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                            bodyShape,
+                            out MeshData? fallbackMesh,
+                            bodySource
+                        );
+                        lock (clientMeshLock)
+                        {
+                            clientFallbackTrayMesh = fallbackMesh;
+                        }
+                    }
+                }
+                catch { }
+            }
 
             // Poll local player state on the main thread and request re-tesselation when it changes.
             try
@@ -115,25 +147,23 @@ namespace Collodion
         partial void ClientPlateChanged(bool markBlockDirty)
         {
             if (Api?.Side != EnumAppSide.Client) return;
+            if (Api is not ICoreClientAPI capi) return;
 
-            clientNeedsRebuild = true;
             lock (clientMeshLock)
             {
-                // Keep existing meshes until the rebuild completes to avoid brief transparency.
                 if (!clientDeveloperOverlayActive)
-                {
                     clientDeveloperOverlayMesh = null;
-                }
             }
-            clientRenderSignature = null;
-            RequestClientMeshRebuild();
 
-            if (!markBlockDirty) return;
-            try
-            {
-                ((ICoreClientAPI)Api).World.BlockAccessor.MarkBlockDirty(Pos);
-            }
-            catch { }
+            // Build ALL client meshes (body + plate/photo) fully and synchronously on the
+            // main thread right now, before MarkDirty causes any tesselation. This ensures
+            // the tesselation thread always sees both clientTrayBodyMesh and clientPhotoMesh
+            // populated from the very first frame — no flash of the base block shape or
+            // a missing plate while the async rebuild catches up.
+            clientNeedsRebuild = false;
+            clientRenderSignature = null;
+            BuildClientMesh(capi);
+            // BuildClientMesh calls MarkDirty(true) internally — no need to call it here.
         }
 
         public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
@@ -168,26 +198,68 @@ namespace Collodion
                 RequestClientMeshRebuild();
             }
 
+            MeshData? trayBodyMesh;
             MeshData? photoMesh;
             MeshData? overlayMesh;
             lock (clientMeshLock)
             {
+                trayBodyMesh = clientTrayBodyMesh;
                 photoMesh = clientPhotoMesh;
                 overlayMesh = clientDeveloperOverlayMesh;
             }
 
-            if (photoMesh != null)
+            // When we have a tray body mesh we've taken full ownership of rendering:
+            // add our custom meshes and return true to suppress the base block mesh.
+            // clientTrayBodyMesh is built synchronously in ClientPlateChanged so it is
+            // always ready by the time MarkBlockDirty triggers this method.
+            if (trayBodyMesh != null)
             {
-                mesher.AddMeshData(photoMesh.Clone());
+                mesher.AddMeshData(trayBodyMesh.Clone());
+                if (photoMesh != null)
+                {
+                    mesher.AddMeshData(photoMesh.Clone());
+                }
+                if (overlayMesh != null)
+                {
+                    mesher.AddMeshData(overlayMesh.Clone());
+                }
+                return true;
             }
 
-            if (overlayMesh != null)
+            // clientTrayBodyMesh is null — our sync build hasn't completed yet (a genuine
+            // threading race: VS queues a retesselation the moment the block type changes,
+            // which can fire before FromTreeAttributes finishes on the main thread).
+            //
+            // If the block code tells us a plate *must* be present (any loaded stage),
+            // suppress the base block entirely and request a rebuild immediately.
+            // This gives a blank tray for at most one or two frames — far less noticeable
+            // than the static plate element snapping from sideways to upright.
+            if (BlockTypeHasStaticPlate())
             {
-                mesher.AddMeshData(overlayMesh.Clone());
+                RequestClientMeshRebuild();
+                // Render the pre-built fallback body so the tray walls stay visible
+                // during the brief gap before the full rebuild completes.
+                MeshData? fallback;
+                lock (clientMeshLock) { fallback = clientFallbackTrayMesh; }
+                if (fallback != null) mesher.AddMeshData(fallback.Clone());
+                return true;
             }
 
-            // Return false so the normal tray block mesh still renders.
+            // No plate loaded — fall back to normal (base) block rendering.
             return base.OnTesselation(mesher, tessThreadTesselator);
+        }
+
+        /// <summary>
+        /// Returns true when this block type's JSON shape contains a static plate element
+        /// (i.e. any stage that has a plate in it). Read from Block.Code which is immutable
+        /// and safe to access from the tesselation thread without locks.
+        /// </summary>
+        private bool BlockTypeHasStaticPlate()
+        {
+            string path = Block?.Code?.Path ?? string.Empty;
+            return path.Contains("-exposed", StringComparison.Ordinal)
+                || path.Contains("-developed", StringComparison.Ordinal)
+                || path.Contains("-finished", StringComparison.Ordinal);
         }
 
         private void RequestClientMeshRebuild()
@@ -231,6 +303,7 @@ namespace Collodion
             {
                 lock (clientMeshLock)
                 {
+                    clientTrayBodyMesh = null;
                     clientPhotoMesh = null;
                     clientDeveloperOverlayMesh = null;
                 }
@@ -241,23 +314,43 @@ namespace Collodion
 
             bool showPhoto = ShouldShowTrayPhoto(plate);
 
-            // If we're not showing the photo, we may still want to show the temporary developer overlay
-            // (e.g., the very first developer pour on an exposed plate).
-            if (!showPhoto && !clientDeveloperOverlayActive)
+            // ── 1. Tray body mesh (everything except the plate element) ─────────────
+            // We always build this when a plate is loaded so we can take full ownership
+            // of rendering and suppress the base block mesh (which otherwise shows the
+            // static plate element in the wrong orientation for N/S facings).
+            MeshData? trayBodyMesh = null;
+            bool builtTrayBody = false;
+            try
             {
-                lock (clientMeshLock)
+                ITexPositionSource bodySource = capi.Tesselator.GetTextureSource(Block);
+                var bodyShape = Block?.Shape?.Clone();
+                if (bodyShape != null)
                 {
-                    clientPhotoMesh = null;
-                    clientDeveloperOverlayMesh = null;
+                    bodyShape.IgnoreElements = new[] { "plate" };
+                    capi.Tesselator.TesselateShape(
+                        "collodion-devtray-body",
+                        Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                        bodyShape,
+                        out trayBodyMesh,
+                        bodySource
+                    );
+                    builtTrayBody = trayBodyMesh != null;
                 }
-                clientRenderSignature = sig;
-                MarkDirty(true);
-                return;
+            }
+            catch
+            {
+                trayBodyMesh = null;
             }
 
-            // Re-tesselate the tray shape but replace the "plate" texture with the photo.
+            // ── 2. Plate / photo mesh (plate element only, world-rotated) ───────────
             MeshData? photoMesh = null;
             bool builtPhotoMesh = false;
+
+            // UV rotation is always 0: the world-space Y rotation applied to the mesh
+            // already physically repositions the plate for each facing — the UV just
+            // needs to stay in the base orientation so the image is not double-rotated.
+            int uvRotationDeg = 0;
+
             if (showPhoto && PhotoPlateRenderUtil.TryGetPhotoBlockTexture(capi, plate, out TextureAtlasPosition photoTex, out float photoAspect, Pos))
             {
                 try
@@ -278,28 +371,53 @@ namespace Collodion
                             texSource
                         );
 
-                        int rotationDeg = 270;
-                        if (IsMultiplayerClient(capi))
-                        {
-                            rotationDeg = (rotationDeg + 90) % 360;
-                        }
+                        StampUvByRotationCropped(photoMesh, photoTex, uvRotationDeg, photoAspect, PhotoTargetAspect);
 
-                        // Tray photos need an additional 90° counter-clockwise turn.
-                        rotationDeg = (rotationDeg + 270) % 360;
-
-                        StampUvByRotationCropped(photoMesh, photoTex, rotationDeg, photoAspect, PhotoTargetAspect);
-
-                        // Rotate the plate/photo plane in world space for player-facing orientation.
-                        // This preserves portrait crop orientation (no 90° UV remap).
+                        // Rotate the plate/photo plane in world space for N/S placement.
                         int placementYawDeg = GetPlacementFacingYawDeg();
                         if (placementYawDeg != 0)
                         {
                             photoMesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, placementYawDeg * GameMath.DEG2RAD, 0f);
                         }
 
-                        // Nudge up slightly to avoid z-fighting with the base plate.
+                        // Nudge up slightly to avoid z-fighting with the tray body.
                         photoMesh.Translate(0f, 0.0006f, 0f);
                         builtPhotoMesh = true;
+                    }
+                }
+                catch
+                {
+                    photoMesh = null;
+                }
+            }
+            else if (!showPhoto)
+            {
+                // Exposed stage (not yet developed): build a plain plate mesh so we can
+                // apply the correct world-space rotation for N/S placement.  Without this
+                // the static block shape plate element (always E-W) would show for N/S.
+                try
+                {
+                    ITexPositionSource baseSource = capi.Tesselator.GetTextureSource(Block);
+                    var shape = Block?.Shape?.Clone();
+                    if (shape != null)
+                    {
+                        shape.IgnoreElements = new[] { "base", "wall-n", "wall-s", "wall-e", "wall-w" };
+                        capi.Tesselator.TesselateShape(
+                            "collodion-devtray-plainplate",
+                            Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                            shape,
+                            out photoMesh,
+                            baseSource
+                        );
+
+                        int placementYawDeg = GetPlacementFacingYawDeg();
+                        if (placementYawDeg != 0)
+                        {
+                            photoMesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, placementYawDeg * GameMath.DEG2RAD, 0f);
+                        }
+
+                        photoMesh.Translate(0f, 0.0006f, 0f);
+                        builtPhotoMesh = photoMesh != null;
                     }
                 }
                 catch
@@ -310,11 +428,19 @@ namespace Collodion
 
             lock (clientMeshLock)
             {
+                // Only update clientTrayBodyMesh when we actually built a new one.
+                // If the async build failed we preserve whatever is already there
+                // (e.g. the synchronously-built mesh from ClientPlateChanged) rather
+                // than nulling it and causing a one-frame flash of the base block shape.
+                if (builtTrayBody)
+                {
+                    clientTrayBodyMesh = trayBodyMesh;
+                }
                 if (builtPhotoMesh)
                 {
                     clientPhotoMesh = photoMesh;
                 }
-                else if (!showPhoto)
+                else
                 {
                     clientPhotoMesh = null;
                 }

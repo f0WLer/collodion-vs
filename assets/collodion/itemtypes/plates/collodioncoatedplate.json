@@ -1,12 +1,13 @@
 {
   "code": "collodioncoatedplate",
-  "class": "GenericPlate",
+  "class": "GlassPlate",
   "shape": { "base": "collodion:item/plates/plate" },
   "textures": {
     "plate": { "base": "collodion:item/plate-coated" }
   },
   "attributes": {
-    "handbook": { "groupBy": ["wetplateplate-*"] }
+    "handbook": { "groupBy": ["wetplateplate-*"] },
+    "plateBlockState": "coated"
   },
   "maxstacksize": 8,
   "heldTpIdleAnimation": "holdbothhands",

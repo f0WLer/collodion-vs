@@ -26,7 +26,12 @@ namespace Collodion
             if (stack == null) return;
 
             string state = Attributes?["plateBlockState"].AsString("rough") ?? "rough";
-            state = state == "clean" ? "clean" : "rough";
+            state = state switch
+            {
+                "clean" => "clean",
+                "coated" => "coated",
+                _ => "rough"
+            };
 
             BlockPos placePos = blockSel.Position.UpCopy();
             var world = api.World;

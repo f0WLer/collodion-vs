@@ -135,6 +135,14 @@ namespace Collodion
             WetPlateAttrs.EnsureWetTimer(api.World, outStack, WetPlateAttrs.DefaultWetDurationHours);
         }
 
+        public override void OnModifiedInInventorySlot(IWorldAccessor world, ItemSlot slot, ItemStack? extractedStack = null)
+        {
+            base.OnModifiedInInventorySlot(world, slot, extractedStack);
+            if (world?.Side != EnumAppSide.Server) return;
+            if (slot?.Itemstack == null) return;
+            WetPlateAttrs.EnsureWetTimer(world, slot.Itemstack, WetPlateAttrs.DefaultWetDurationHours);
+        }
+
         public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
@@ -142,15 +150,20 @@ namespace Collodion
             ItemStack? stack = inSlot?.Itemstack;
             if (stack == null) return;
 
-            // Silvered plates are usually created via barrel recipes (not crafting),
-            // so initialize wetness timing lazily the first time we can.
-            WetPlateAttrs.EnsureWetTimer(world, stack, WetPlateAttrs.DefaultWetDurationHours);
             WetPlateAttrs.AppendWetnessInfo(world, stack, dsc);
         }
     }
 
     public class ItemExposedPlate : ItemPlateBase
     {
+        public override void OnModifiedInInventorySlot(IWorldAccessor world, ItemSlot slot, ItemStack? extractedStack = null)
+        {
+            base.OnModifiedInInventorySlot(world, slot, extractedStack);
+            if (world?.Side != EnumAppSide.Server) return;
+            if (slot?.Itemstack == null) return;
+            WetPlateAttrs.EnsureWetTimer(world, slot.Itemstack, WetPlateAttrs.DefaultWetDurationHours);
+        }
+
         public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
@@ -158,7 +171,6 @@ namespace Collodion
             ItemStack? stack = inSlot?.Itemstack;
             if (stack == null) return;
 
-            WetPlateAttrs.EnsureWetTimer(world, stack, WetPlateAttrs.DefaultWetDurationHours);
             WetPlateAttrs.AppendWetnessInfo(world, stack, dsc);
         }
     }
@@ -171,6 +183,14 @@ namespace Collodion
             PhotoPlateRenderUtil.TryRenderPhotoOverlay(capi, itemstack, target, ref renderinfo);
         }
 
+        public override void OnModifiedInInventorySlot(IWorldAccessor world, ItemSlot slot, ItemStack? extractedStack = null)
+        {
+            base.OnModifiedInInventorySlot(world, slot, extractedStack);
+            if (world?.Side != EnumAppSide.Server) return;
+            if (slot?.Itemstack == null) return;
+            WetPlateAttrs.EnsureWetTimer(world, slot.Itemstack, WetPlateAttrs.DefaultWetDurationHours);
+        }
+
         public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
@@ -178,7 +198,6 @@ namespace Collodion
             ItemStack? stack = inSlot?.Itemstack;
             if (stack == null) return;
 
-            WetPlateAttrs.EnsureWetTimer(world, stack, WetPlateAttrs.DefaultWetDurationHours);
             WetPlateAttrs.AppendWetnessInfo(world, stack, dsc);
         }
     }

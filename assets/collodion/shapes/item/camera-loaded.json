@@ -307,7 +307,7 @@
 									"to": [ 0.7, 0.7, 0.825 ],
 									"uv": [ 0.0, 0.0 ],
 									"faces": {
-										"north": { "texture": "#null", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "glow": 40 },
+										"north": { "texture": "#null", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
 										"east": { "texture": "#clearquartz", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "glow": 40 },
 										"south": { "texture": "#clearquartz", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "glow": 40 },
 										"west": { "texture": "#clearquartz", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "glow": 40 },

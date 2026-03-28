@@ -536,21 +536,6 @@ namespace Collodion
             bool shiftDown = ClientApi.World.Player?.Entity?.Controls?.ShiftKey == true || ClientApi.World.Player?.Entity?.Controls?.Sneak == true;
             bool ctrlDown = ClientApi.World.Player?.Entity?.Controls?.CtrlKey == true;
 
-            // Ctrl+Shift+RMB: attach an empty camera sling from offhand to the camera.
-            if (holdingCamera && shiftDown && ctrlDown && rightPressed && !IsViewfinderActive)
-            {
-                ItemSlot? offhand = ClientApi.World.Player?.InventoryManager?.OffhandHotbarSlot;
-                ItemStack? offstack = offhand?.Itemstack;
-                if (ClientChannel != null
-                    && offstack?.Item is ItemCameraSling
-                    && offstack.Collectible?.Code?.Path == "camerasling-empty")
-                {
-                    ClientChannel.SendPacket(new CameraAttachSlingPacket());
-                }
-                suppressViewfinderUntilRmbReleased = true;
-                return;
-            }
-
             if (holdingCamera && shiftDown && !ctrlDown && rightDown && !IsViewfinderActive)
             {
                 // Prevent viewfinder from starting if the player releases shift while still holding RMB.

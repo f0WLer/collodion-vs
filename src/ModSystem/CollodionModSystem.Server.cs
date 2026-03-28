@@ -412,11 +412,78 @@ namespace Collodion
         {
             if (Api == null) return;
 
-            ItemSlot? slingSlot = GetEquippedLeftShoulderSlingSlot(player);
-            if (slingSlot?.Itemstack == null) return;
-
             ItemSlot? activeSlot = player.InventoryManager.ActiveHotbarSlot;
             if (activeSlot == null) return;
+
+            ItemSlot? offhandSlot = player.InventoryManager.OffhandHotbarSlot;
+
+            // R key: camerasling-full in mainhand + empty offhand → unfold to camera in mainhand, sling in offhand.
+            if (activeSlot.Itemstack?.Collectible?.Code == CameraSlingFullCode && (offhandSlot?.Empty ?? true))
+            {
+                ItemStack? storedCamA = null;
+                try
+                {
+                    storedCamA = activeSlot.Itemstack.Attributes.GetItemstack(ItemCameraSling.AttrStoredCameraStack, null);
+                    storedCamA?.ResolveBlockOrItem(Api.World);
+                }
+                catch { storedCamA = null; }
+
+                if (storedCamA?.Item is ItemWetplateCamera && offhandSlot != null)
+                {
+                    Item? emptySlingItem = Api.World.GetItem(CameraSlingEmptyCode);
+                    if (emptySlingItem != null)
+                    {
+                        storedCamA.StackSize = 1;
+
+                        ItemStack emptySling = new ItemStack(emptySlingItem);
+                        try
+                        {
+                            emptySling.Attributes.MergeTree(activeSlot.Itemstack.Attributes.Clone());
+                            emptySling.Attributes.RemoveAttribute(ItemCameraSling.AttrStoredCameraStack);
+                        }
+                        catch { }
+
+                        activeSlot.Itemstack = storedCamA;
+                        activeSlot.MarkDirty();
+
+                        offhandSlot.Itemstack = emptySling;
+                        offhandSlot.MarkDirty();
+
+                        PlaySlingSwapSoundPair(player);
+                        return;
+                    }
+                }
+            }
+
+            // R key: camera in mainhand + empty sling in offhand → fold into camerasling-full in mainhand.
+            if (activeSlot.Itemstack?.Item is ItemWetplateCamera
+                && offhandSlot?.Itemstack?.Item is ItemCameraSling
+                && offhandSlot.Itemstack.Collectible?.Code == CameraSlingEmptyCode)
+            {
+                Item? fullSlingItem = Api.World.GetItem(CameraSlingFullCode);
+                if (fullSlingItem != null)
+                {
+                    ItemStack cameraStack = activeSlot.Itemstack.Clone();
+                    cameraStack.StackSize = 1;
+
+                    ItemStack fullSling = new ItemStack(fullSlingItem);
+                    try { fullSling.Attributes.MergeTree(offhandSlot.Itemstack.Attributes.Clone()); } catch { }
+                    fullSling.Attributes.SetItemstack(ItemCameraSling.AttrStoredCameraStack, cameraStack);
+
+                    activeSlot.Itemstack = fullSling;
+                    activeSlot.MarkDirty();
+
+                    offhandSlot.TakeOutWhole();
+                    offhandSlot.MarkDirty();
+
+                    PlaySlingSwapSoundPair(player);
+                    return;
+                }
+            }
+
+            // Existing: sling in left shoulder slot.
+            ItemSlot? slingSlot = GetEquippedLeftShoulderSlingSlot(player);
+            if (slingSlot?.Itemstack == null) return;
 
             ItemStack slingStack = slingSlot.Itemstack;
             ItemStack? activeStack = activeSlot.Itemstack;

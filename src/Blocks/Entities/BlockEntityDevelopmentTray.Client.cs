@@ -19,6 +19,8 @@ namespace Collodion
         private static readonly AssetLocation DeveloperOverlayAtlasKey = new AssetLocation("collodion", "devtray-developer-overlay");
         private static readonly AssetLocation FixerOverlayTextureAsset = new AssetLocation("collodion", "textures/block/liquid/fixer.png");
         private static readonly AssetLocation FixerOverlayAtlasKey = new AssetLocation("collodion", "devtray-fixer-overlay");
+        private static readonly AssetLocation WaterOverlayTextureAsset = new AssetLocation("survival", "textures/block/liquid/waterportion.png");
+        private static readonly AssetLocation WaterOverlayAtlasKey = new AssetLocation("collodion", "devtray-water-overlay");
 
         private sealed class PlatePhotoTextureSource : ITexPositionSource
         {
@@ -525,7 +527,8 @@ namespace Collodion
                 string timedAction = tree.GetString(BlockDevelopmentTray.TimedActionKey, "");
                 bool isDeveloper = string.Equals(timedAction, BlockDevelopmentTray.ActionDeveloper, StringComparison.Ordinal);
                 bool isFixer = string.Equals(timedAction, BlockDevelopmentTray.ActionFixer, StringComparison.Ordinal);
-                if (!isDeveloper && !isFixer) return false;
+                bool isWater = string.Equals(timedAction, BlockDevelopmentTray.ActionWater, StringComparison.Ordinal);
+                if (!isDeveloper && !isFixer && !isWater) return false;
 
                 if (tree.GetInt(BlockDevelopmentTray.TimedXKey) != Pos.X
                     || tree.GetInt(BlockDevelopmentTray.TimedYKey) != Pos.Y
@@ -549,7 +552,8 @@ namespace Collodion
 
                 if (durationMs <= 0)
                 {
-                    durationMs = (int)Math.Round((isFixer ? GetFixerPourSeconds(capi) : GetDeveloperPourSeconds(capi)) * 1000f);
+                    float fallbackSeconds = isWater ? 1.25f : (isFixer ? GetFixerPourSeconds(capi) : GetDeveloperPourSeconds(capi));
+                    durationMs = (int)Math.Round(fallbackSeconds * 1000f);
                 }
 
                 long nowMs;
@@ -723,12 +727,14 @@ namespace Collodion
             byte effectiveAlpha = (byte)Math.Max(0, Math.Min(255, (int)Math.Round(DeveloperOverlayAlpha * stepScale)));
 
             bool isFixer = string.Equals(action, BlockDevelopmentTray.ActionFixer, StringComparison.Ordinal);
-            AssetLocation baseAtlasKey = isFixer ? FixerOverlayAtlasKey : DeveloperOverlayAtlasKey;
-            AssetLocation baseAsset = isFixer ? FixerOverlayTextureAsset : DeveloperOverlayTextureAsset;
+            bool isWater = string.Equals(action, BlockDevelopmentTray.ActionWater, StringComparison.Ordinal);
+            AssetLocation baseAtlasKey = isWater ? WaterOverlayAtlasKey : (isFixer ? FixerOverlayAtlasKey : DeveloperOverlayAtlasKey);
+            AssetLocation baseAsset = isWater ? WaterOverlayTextureAsset : (isFixer ? FixerOverlayTextureAsset : DeveloperOverlayTextureAsset);
 
+            string atlasPrefix = isWater ? "devtray-water-overlay" : (isFixer ? "devtray-fixer-overlay" : "devtray-developer-overlay");
             AssetLocation atlasKey = alphaStep == AlphaSteps
                 ? baseAtlasKey
-                : new AssetLocation("collodion", (isFixer ? "devtray-fixer-overlay" : "devtray-developer-overlay") + $"-a{alphaStep}");
+                : new AssetLocation("collodion", atlasPrefix + $"-a{alphaStep}");
 
             try
             {

@@ -33,9 +33,7 @@ namespace Collodion
 
                 if (api?.Side != EnumAppSide.Server) return;
 
-                if (blockSel != null && TryPlaceOnWall(slot, blockSel)) return;
-
-                TryDetachCameraFromSling(player, slot, byEntity);
+                if (blockSel != null) TryPlaceOnWall(slot, blockSel);
                 return;
             }
 
@@ -53,9 +51,8 @@ namespace Collodion
             dsc.AppendLine("Wear in left shoulder slot.");
             dsc.AppendLine("Press R to store/unstore camera from active slot.");
             dsc.AppendLine("Right click: wear instantly.");
-            dsc.AppendLine("Shift+Ctrl+Right click on wall: mount sling.");
-            dsc.AppendLine("Shift+Ctrl+Right click (no target): detach camera back to hand, sling to offhand.");
-            dsc.AppendLine("Hold in offhand with camera in hand, Ctrl+Shift+Right click: stow camera without wearing.");
+            dsc.AppendLine("Shift+Ctrl+Right click on wall: mount sling on wall.");
+            dsc.AppendLine("Hold in offhand with camera in hand, press R to fold into a portable unit.");
 
             ItemStack? stored = null;
             try

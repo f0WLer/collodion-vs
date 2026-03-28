@@ -72,6 +72,15 @@ namespace Collodion
             }
         }
 
+        public static void ResetWetTimer(IWorldAccessor world, ItemStack stack, double durationHours)
+        {
+            if (world?.Calendar == null || stack?.Attributes == null) return;
+
+            stack.Attributes.RemoveAttribute(StoredRemainingWetHours);
+            stack.Attributes.SetDouble(WetCreatedTotalHours, world.Calendar.TotalHours);
+            stack.Attributes.SetDouble(WetDurationHours, durationHours);
+        }
+
         public static void AppendWetnessInfo(IWorldAccessor world, ItemStack stack, System.Text.StringBuilder dsc)
         {
             if (stack == null || dsc == null) return;

@@ -37,6 +37,19 @@ namespace Collodion
             return Math.Max(0, duration - elapsed);
         }
 
+        public static bool IsDry(IWorldAccessor world, ItemStack stack)
+        {
+            if (stack?.Attributes == null) return false;
+
+            double stored = stack.Attributes.GetDouble(StoredRemainingWetHours, -1);
+            if (stored >= 0) return stored <= 0;
+
+            double duration = stack.Attributes.GetDouble(WetDurationHours, 0);
+            if (duration <= 0) return false;
+
+            return GetRemainingWetHours(world, stack) <= 0;
+        }
+
         public static void EnsureWetTimer(IWorldAccessor world, ItemStack stack, double durationHours)
         {
             if (world?.Calendar == null || stack?.Attributes == null) return;

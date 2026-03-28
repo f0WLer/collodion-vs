@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Server;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
@@ -535,6 +536,12 @@ namespace Collodion
                 bool isSupportedPlate = code == SilveredPlateItemCode || code == ExposedPlateItemCode;
                 if (!isSupportedPlate) return;
 
+                if (code == SilveredPlateItemCode && WetPlateAttrs.IsDry(Api.World, offhandStack))
+                {
+                    player.SendMessage(GlobalConstants.GeneralChatGroup, "Wetplate: the plate has dried and can no longer be used.", EnumChatType.Notification);
+                    return;
+                }
+
                 // Store the plate stack (including any attributes) inside the camera so we can unload it later.
                 // IMPORTANT: clone so we don't retain a reference that could be mutated elsewhere.
                 try
@@ -672,6 +679,12 @@ namespace Collodion
             if (stored == null || stored.Item is not ItemSilveredPlate)
             {
                 // If we can't prove a silvered plate was loaded, don't create an exposure.
+                return;
+            }
+
+            if (WetPlateAttrs.IsDry(Api.World, stored))
+            {
+                player.SendMessage(GlobalConstants.GeneralChatGroup, "Wetplate: the plate has dried and can no longer be used.", EnumChatType.Notification);
                 return;
             }
 

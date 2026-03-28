@@ -283,6 +283,26 @@ namespace Collodion
                     }
                     return false;
                 }
+
+                // Silvered plate loaded — check if it has dried.
+                ItemStack? loadedPlateStack = null;
+                try
+                {
+                    loadedPlateStack = camStack.Attributes.GetItemstack(ItemWetplateCamera.AttrLoadedPlateStack, null);
+                    loadedPlateStack?.ResolveBlockOrItem(ClientApi.World);
+                }
+                catch { }
+
+                if (loadedPlateStack != null && WetPlateAttrs.IsDry(ClientApi.World, loadedPlateStack))
+                {
+                    long nowMs = Environment.TickCount64;
+                    if (nowMs - lastShutterGateChatMs > 1000)
+                    {
+                        lastShutterGateChatMs = nowMs;
+                        ClientApi.ShowChatMessage("Wetplate: the plate has dried and can no longer be used.");
+                    }
+                    return false;
+                }
             }
             catch
             {

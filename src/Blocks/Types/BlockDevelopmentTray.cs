@@ -294,15 +294,25 @@ namespace Collodion
                 // Holding a plate: insert (only if tray empty).
                 if (IsInsertablePlate(held))
                 {
+                    if (WetPlateAttrs.IsDry(world, held))
+                    {
+                        (world.Api as ICoreClientAPI)?.ShowChatMessage("Wetplate: the plate has dried and can no longer be used.");
+                        return false;
+                    }
                     return !be.HasPlate;
                 }
 
                 // Holding developer: can attempt timed pour when tray has an exposed/developed plate.
                 if (IsHoldingChemical(activeSlot, DeveloperPortionCode))
                 {
-                    if (!TryGetDeveloperPourContext(be, out _, out _, out _, out int currentPours)) return false;
+                    if (!TryGetDeveloperPourContext(be, out ItemStack clientDevPlate, out _, out _, out int currentPours)) return false;
 
                     if (currentPours >= DevelopPoursRequired) return false;
+                    if (WetPlateAttrs.IsDry(world, clientDevPlate))
+                    {
+                        (world.Api as ICoreClientAPI)?.ShowChatMessage("Wetplate: the plate has dried and can no longer be used.");
+                        return false;
+                    }
                     if (!HasConsumableChemical(activeSlot, DeveloperPortionCode, chemicalUnitsPerUse)) return false;
 
                     // Prime local timed state so client-only visuals can react immediately.
@@ -313,7 +323,12 @@ namespace Collodion
                 // Holding fixer: allow attempt when there's a developed plate (server will message if not ready).
                 if (IsHoldingChemical(activeSlot, FixerPortionCode))
                 {
-                    if (!TryGetFixerPourContext(be, out _, out _)) return false;
+                    if (!TryGetFixerPourContext(be, out ItemStack clientFixPlate, out _)) return false;
+                    if (WetPlateAttrs.IsDry(world, clientFixPlate))
+                    {
+                        (world.Api as ICoreClientAPI)?.ShowChatMessage("Wetplate: the plate has dried and can no longer be used.");
+                        return false;
+                    }
                     if (!HasConsumableChemical(activeSlot, FixerPortionCode, chemicalUnitsPerUse)) return false;
 
                     // Prime local timed state so client-only visuals can react immediately.
@@ -343,6 +358,12 @@ namespace Collodion
                 if (be.HasPlate) return false;
                 if (activeSlot == null) return false;
 
+                if (WetPlateAttrs.IsDry(world, held))
+                {
+                    Tell(byPlayer, "Wetplate: the plate has dried and can no longer be used.", blockSel.Position);
+                    return false;
+                }
+
                 // Ensure tray photo orientation always tracks the player who is actively using the tray.
                 // This acts as a reliable fallback if placement-time facing capture is unavailable.
                 BlockFacing insertFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.SidedPos?.Yaw ?? 0f);
@@ -364,9 +385,14 @@ namespace Collodion
             // Holding developer: start timed develop pour.
             if (IsHoldingChemical(activeSlot, DeveloperPortionCode))
             {
-                if (!TryGetDeveloperPourContext(be, out _, out _, out _, out int currentPours)) return false;
+                if (!TryGetDeveloperPourContext(be, out ItemStack devPlate, out _, out _, out int currentPours)) return false;
 
                 if (currentPours >= DevelopPoursRequired) return false;
+                if (WetPlateAttrs.IsDry(world, devPlate))
+                {
+                    Tell(byPlayer, "Wetplate: the plate has dried and can no longer be used.", blockSel.Position);
+                    return false;
+                }
                 if (!HasConsumableChemical(activeSlot, DeveloperPortionCode, chemicalUnitsPerUse))
                 {
                     Tell(byPlayer, "Wetplate: need developer (at least 1 portion).", blockSel.Position);
@@ -381,8 +407,13 @@ namespace Collodion
             // Holding fixer: start timed fix pour.
             if (IsHoldingChemical(activeSlot, FixerPortionCode))
             {
-                if (!TryGetFixerPourContext(be, out _, out int pours)) return false;
+                if (!TryGetFixerPourContext(be, out ItemStack fixPlate, out int pours)) return false;
 
+                if (WetPlateAttrs.IsDry(world, fixPlate))
+                {
+                    Tell(byPlayer, "Wetplate: the plate has dried and can no longer be used.", blockSel.Position);
+                    return false;
+                }
                 if (pours < DevelopPoursRequired)
                 {
                     Tell(byPlayer, $"Wetplate: plate not fully developed ({pours}/{DevelopPoursRequired}).", blockSel.Position);

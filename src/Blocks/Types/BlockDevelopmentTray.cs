@@ -26,15 +26,19 @@ namespace Collodion
 
         internal const string ActionDeveloper = "developer";
         internal const string ActionFixer = "fixer";
+        internal const string ActionWater = "water";
 
         private CollodionModSystem? modSys;
 
+        private static readonly AssetLocation SilveredPlateItemCode = new AssetLocation("collodion", "silveredplate");
         private static readonly AssetLocation ExposedPlateItemCode = new AssetLocation("collodion", "exposedplate");
         private static readonly AssetLocation DevelopedPlateItemCode = new AssetLocation("collodion", "developedplate");
         private static readonly AssetLocation FinishedPlateItemCode = new AssetLocation("collodion", "finishedphotoplate");
 
         private static readonly AssetLocation DeveloperPortionCode = new AssetLocation("collodion", "developerportion");
         private static readonly AssetLocation FixerPortionCode = new AssetLocation("collodion", "fixerportion");
+        private static readonly AssetLocation WaterPortionCode = new AssetLocation("game", "waterportion");
+        private static readonly AssetLocation RoughGlassPlateItemCode = new AssetLocation("collodion", "roughglassplate");
         private static readonly AssetLocation ChemicalPourSound = new AssetLocation("game:sounds/effect/water-fill");
         private static readonly AssetLocation FizzSound = new AssetLocation("collodion", "sounds/fizz");
 
@@ -265,6 +269,44 @@ namespace Collodion
             return true;
         }
 
+        private static bool IsReclaimablePlate(IWorldAccessor world, ItemStack? stack)
+        {
+            if (stack == null) return false;
+            bool isAnyWetPlate = IsPlate(stack, SilveredPlateItemCode) || IsPlate(stack, ExposedPlateItemCode) || IsPlate(stack, DevelopedPlateItemCode);
+            return isAnyWetPlate && WetPlateAttrs.IsDry(world, stack);
+        }
+
+        private static bool TryGetReclaimContext(BlockEntityDevelopmentTray be, IWorldAccessor world, out ItemStack plate)
+        {
+            ItemStack? plateStack = be.PlateStack;
+            if (plateStack == null || !IsReclaimablePlate(world, plateStack))
+            {
+                plate = null!;
+                return false;
+            }
+            plate = plateStack;
+            return true;
+        }
+
+        private static float GetWaterPourSeconds() => 1.25f;
+
+        private bool TryApplyWaterPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate)
+        {
+            if (!TryConsumeChemical(activeSlot, WaterPortionCode, GetChemicalUnitsPerUse()))
+            {
+                Tell(byPlayer, "Wetplate: need water (at least 1 portion).", pos);
+                return false;
+            }
+
+            Item? roughGlassItem = world.GetItem(RoughGlassPlateItemCode);
+            if (roughGlassItem == null) return false;
+
+            ItemStack reclaimedPlate = new ItemStack(roughGlassItem);
+            be.TrySetPlate(reclaimedPlate);
+            SwapTrayBlockForPlateStage(world, pos, "finished", reclaimedPlate);
+            return true;
+        }
+
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (world == null || byPlayer == null || blockSel == null) return false;
@@ -292,14 +334,15 @@ namespace Collodion
                     return be.HasPlate;
                 }
 
-                // Holding a plate: insert (only if tray empty).
+                // Holding a plate: insert (only if tray empty). Dry plates still insertable for water rinse.
                 if (IsInsertablePlate(held))
                 {
-                    if (WetPlateAttrs.IsDry(world, held))
-                    {
-                        (world.Api as ICoreClientAPI)?.ShowChatMessage("Wetplate: the plate has dried and can no longer be used.");
-                        return false;
-                    }
+                    return !be.HasPlate;
+                }
+
+                // Holding a dry silvered plate: insert for water rinse.
+                if (IsPlate(held, SilveredPlateItemCode) && WetPlateAttrs.IsDry(world, held))
+                {
                     return !be.HasPlate;
                 }
 
@@ -337,6 +380,16 @@ namespace Collodion
                     return true;
                 }
 
+                // Holding water: can attempt rinse when tray has a dry plate.
+                if (IsHoldingChemical(activeSlot, WaterPortionCode))
+                {
+                    if (!TryGetReclaimContext(be, world, out _)) return false;
+                    if (!HasConsumableChemical(activeSlot, WaterPortionCode, chemicalUnitsPerUse)) return false;
+
+                    BeginTimed(byPlayer, blockSel.Position, ActionWater, GetWaterPourSeconds());
+                    return true;
+                }
+
                 return false;
             }
 
@@ -353,17 +406,11 @@ namespace Collodion
                 return true;
             }
 
-            // Holding a plate: insert (only if tray empty).
+            // Holding a plate: insert (only if tray empty). Dry plates still insertable for water rinse.
             if (IsInsertablePlate(held))
             {
                 if (be.HasPlate) return false;
                 if (activeSlot == null) return false;
-
-                if (WetPlateAttrs.IsDry(world, held))
-                {
-                    Tell(byPlayer, "Wetplate: the plate has dried and can no longer be used.", blockSel.Position);
-                    return false;
-                }
 
                 // Ensure tray photo orientation always tracks the player who is actively using the tray.
                 // This acts as a reliable fallback if placement-time facing capture is unavailable.
@@ -377,6 +424,27 @@ namespace Collodion
 
                 string stage = IsPlate(toInsert, ExposedPlateItemCode) ? "exposed" : "developed";
                 SwapTrayBlockForPlateStage(world, blockSel.Position, stage, toInsert);
+
+                activeSlot.TakeOut(1);
+                activeSlot.MarkDirty();
+                return true;
+            }
+
+            // Holding a dry silvered plate: insert for water rinse.
+            if (IsPlate(held, SilveredPlateItemCode) && WetPlateAttrs.IsDry(world, held))
+            {
+                if (be.HasPlate) return false;
+                if (activeSlot == null) return false;
+
+                BlockFacing insertFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.SidedPos?.Yaw ?? 0f);
+                be.SetPlacementFacing(insertFacing.Code, markBlockDirty: false);
+
+                ItemStack toInsert = held.Clone();
+                toInsert.StackSize = 1;
+
+                if (!be.TryInsertPlate(toInsert)) return false;
+
+                SwapTrayBlockForPlateStage(world, blockSel.Position, "exposed", toInsert);
 
                 activeSlot.TakeOut(1);
                 activeSlot.MarkDirty();
@@ -429,6 +497,22 @@ namespace Collodion
 
                 world.PlaySoundAt(ChemicalPourSound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
                 BeginTimed(byPlayer, blockSel.Position, ActionFixer, GetFixerPourSeconds());
+                return true;
+            }
+
+            // Holding water: rinse a dry plate to reclaim rough glass.
+            if (IsHoldingChemical(activeSlot, WaterPortionCode))
+            {
+                if (!TryGetReclaimContext(be, world, out _)) return false;
+
+                if (!HasConsumableChemical(activeSlot, WaterPortionCode, chemicalUnitsPerUse))
+                {
+                    Tell(byPlayer, "Wetplate: need water (at least 1 portion).", blockSel.Position);
+                    return false;
+                }
+
+                world.PlaySoundAt(ChemicalPourSound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
+                BeginTimed(byPlayer, blockSel.Position, ActionWater, GetWaterPourSeconds());
                 return true;
             }
 
@@ -542,6 +626,50 @@ namespace Collodion
                 return false;
             }
 
+            // Timed water rinse.
+            if (IsTimed(byPlayer, pos, ActionWater))
+            {
+                if (world.BlockAccessor.GetBlockEntity(pos) is not BlockEntityDevelopmentTray be) { ClearTimed(byPlayer); return false; }
+
+                ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
+                if (!IsHoldingChemical(activeSlot, WaterPortionCode)) { ClearTimed(byPlayer); return false; }
+                if (!HasConsumableChemical(activeSlot, WaterPortionCode, chemicalUnitsPerUse))
+                {
+                    if (world.Side == EnumAppSide.Server)
+                    {
+                        Tell(byPlayer, "Wetplate: need water (at least 1 portion).", pos);
+                    }
+                    ClearTimed(byPlayer);
+                    return false;
+                }
+
+                if (!TryGetReclaimContext(be, world, out ItemStack plate))
+                {
+                    ClearTimed(byPlayer);
+                    return false;
+                }
+
+                float duration = GetWaterPourSeconds();
+                if (secondsUsed < duration) return true;
+
+                // Latch until RMB release to prevent auto-starting the next action.
+                if (world.Side == EnumAppSide.Client) SetNeedsRelease(byPlayer);
+
+                if (world.Side == EnumAppSide.Server)
+                {
+                    if (!TryApplyWaterPourServer(world, byPlayer, pos, be, activeSlot, plate))
+                    {
+                        ClearTimed(byPlayer);
+                        return false;
+                    }
+
+                    world.PlaySoundAt(FizzSound, pos.X + 0.5, pos.Y + 0.5, pos.Z + 0.5, null, true, 16f, 1f);
+                }
+
+                ClearTimed(byPlayer);
+                return false;
+            }
+
             return false;
         }
 
@@ -561,6 +689,10 @@ namespace Collodion
                         SetNeedsRelease(byPlayer);
                     }
                     else if (IsTimed(byPlayer, pos, ActionFixer) && secondsUsed >= GetFixerPourSeconds())
+                    {
+                        SetNeedsRelease(byPlayer);
+                    }
+                    else if (IsTimed(byPlayer, pos, ActionWater) && secondsUsed >= GetWaterPourSeconds())
                     {
                         SetNeedsRelease(byPlayer);
                     }

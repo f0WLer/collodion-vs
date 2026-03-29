@@ -49,6 +49,8 @@ namespace Collodion
             if (world == null || byPlayer == null || blockSel?.Position == null) return false;
             if (world.Side != EnumAppSide.Server) return true;
 
+            if (!world.Claims.TryAccess(byPlayer, blockSel.Position, EnumBlockAccessFlags.BuildOrBreak)) return false;
+
             if (world.BlockAccessor.GetBlockEntity(blockSel.Position) is not BlockEntityWallMountedCameraSling be)
             {
                 return false;

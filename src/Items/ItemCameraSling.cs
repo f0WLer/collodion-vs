@@ -33,7 +33,7 @@ namespace Collodion
 
                 if (api?.Side != EnumAppSide.Server) return;
 
-                if (blockSel != null) TryPlaceOnWall(slot, blockSel);
+                if (blockSel != null) TryPlaceOnWall(slot, blockSel, player);
                 return;
             }
 
@@ -257,7 +257,7 @@ namespace Collodion
             catch { try { api.World.PlaySoundAt(new AssetLocation("game", "sounds/tool/padlock"), byEntity, null, true, 16f, 1f); } catch { } }
         }
 
-        private bool TryPlaceOnWall(ItemSlot handSlot, BlockSelection? blockSel)
+        private bool TryPlaceOnWall(ItemSlot handSlot, BlockSelection? blockSel, IPlayer byPlayer)
         {
             if (api?.World == null || blockSel?.Position == null || blockSel.Face == null) return false;
             if (!IsFullSling(handSlot.Itemstack)) return false;
@@ -268,6 +268,8 @@ namespace Collodion
             BlockPos targetPos = blockSel.Position;
             BlockPos placePos = targetPos.AddCopy(face);
             string orientation = face.Opposite.Code;
+
+            if (!api.World.Claims.TryAccess(byPlayer, placePos, EnumBlockAccessFlags.BuildOrBreak)) return false;
 
             Block? wallBlock = api.World.GetBlock(new AssetLocation(CameraSlingWallCode.Domain, $"{CameraSlingWallCode.Path}-{orientation}"));
             if (wallBlock == null || wallBlock.Id <= 0) return false;

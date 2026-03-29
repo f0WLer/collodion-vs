@@ -1,129 +1,120 @@
 {
-    "item-wetplatecamera": "Wetplate Camera",
-    "itemdesc-wetplatecamera": "A heavy wooden box used to capture moments in time on glass plates.",
-    "item-wetplatecamera-loaded-silvered": "Wetplate Camera",
-    "itemdesc-wetplatecamera-loaded-silvered": "A heavy wooden box used to capture moments in time on glass plates.",
-    "item-wetplatecamera-loaded-exposed": "Wetplate Camera",
-    "itemdesc-wetplatecamera-loaded-exposed": "A heavy wooden box used to capture moments in time on glass plates.",
-    "item-camerasling-empty": "Camera Sling",
-    "itemdesc-camerasling-empty": "Wear on the left shoulder and press <hk>collodion-toggle-camerasling</hk> to stow or draw your camera.\nStowing while looking at a wall will hang the camera up.",
-    "item-camerasling-full": "Camera (Folded)",
-    "itemdesc-camerasling-full": "Press <hk>collodion-toggle-camerasling</hk> to unfold. Can be hung on the wall with <hk>ctrl</hk> + <hk>shift</hk> + <icon>rightmousebutton</icon>.",
+    "item-wetplatecamera":      "Wetplate Camera",
+    "itemdesc-wetplatecamera":  "A heavy wooden box used to capture moments in time on glass plates.",
+    "item-wetplatecamera-loaded-silvered":      "Wetplate Camera (Loaded)",
+    "itemdesc-wetplatecamera-loaded-silvered":  "A wetplate camera loaded with a silvered plate.",
+    "item-wetplatecamera-loaded-exposed":      "Wetplate Camera (Loaded)",
+    "itemdesc-wetplatecamera-loaded-exposed":  "A wetplate camera loaded with an exposed plate.",
     
-    "item-collodionportion": "Collodion",
-    "incontainer-item-collodionportion": "Collodion",
-    "game:incontainer-item-collodionportion": "Collodion",
-    "itemdesc-collodionportion": "A syrupy chemical used to coat plates.",
 
-    "item-drycollodionmix": "Dry Collodion Mix",
+    "item-camerasling-empty":       "Camera Sling",
+    "itemdesc-camerasling-empty":   "Wear on the left shoulder and press <hk>collodion-toggle-camerasling</hk> to stow/draw your camera.\nStowing while looking at a wall will hang the camera up.",
+    "item-camerasling-full":       "Camera (Folded)",
+    "itemdesc-camerasling-full":    "Press <hk>collodion-toggle-camerasling</hk> to unfold. Can be hung on the wall with <hk>ctrl</hk> + <hk>shift</hk> + <icon>rightmousebutton</icon>.",
+    "block-cameraslingwall":        "Wall-Mounted Camera Sling",
+
+
+    "block-platebox":       "Plate Box",
+    "block-platebox-north": "Plate Box",
+    "block-platebox-open":  "Plate Box",
+    "blockdesc-platebox":   "Stores and protects prepared plates. Use <icon>rightmousebutton</icon> on slots with a plate to store. <icon>rightmousebutton</icon> on a stored plate to retrieve it.",
+    "collodion:heldhelp-platebox-insert":   "Store plate in slot",
+    "collodion:heldhelp-platebox-take":     "Take plate from slot",
+
+
+    "item-drycollodionmix":     "Dry Collodion Mix",
     "itemdesc-drycollodionmix": "A dry mix that can be sealed with water in a barrel to make collodion.",
 
-    "item-silversolutionportion": "Silvering Solution",
-    "incontainer-item-silversolutionportion": "Silvering Solution",
-    "game:incontainer-item-silversolutionportion": "Silvering Solution",
-    "itemdesc-silversolutionportion": "A sensitizing solution for collodion-coated plates.",
+    "item-collodionportion":                    "Collodion",
+    "incontainer-item-collodionportion":        "Collodion",
+    "game:incontainer-item-collodionportion":   "Collodion",
+    "itemdesc-collodionportion":                "A syrupy chemical used to coat plates.",
 
-    "item-developerportion": "Developer",
-    "incontainer-item-developerportion": "Developer",
-    "game:incontainer-item-developerportion": "Developer",
-    "itemdesc-developerportion": "Begins to reveal the latent image on an exposed plate.",
+    "item-silversolutionportion":                   "Silvering Solution",
+    "incontainer-item-silversolutionportion":       "Silvering Solution",
+    "game:incontainer-item-silversolutionportion":  "Silvering Solution",
+    "itemdesc-silversolutionportion":               "A sensitizing solution for collodion-coated plates.",
 
-    "item-fixerportion": "Fixer",
-    "incontainer-item-fixerportion": "Fixer",
-    "game:incontainer-item-fixerportion": "Fixer",
-    "itemdesc-fixerportion": "Stabilizes a developed plate so it can be handled in light.",
+    "item-developerportion":                    "Developer",
+    "incontainer-item-developerportion":        "Developer",
+    "game:incontainer-item-developerportion":   "Developer",
+    "itemdesc-developerportion":                "Begins to reveal the latent image on an exposed plate.",
 
-    "item-roughglassplate": "Rough Glass Plate",
-    "itemdesc-roughglassplate": "A rough-cut glass plate.",
-
-    "item-cleanglassplate": "Clean Glass Plate",
-    "itemdesc-cleanglassplate": "A polished, clean glass plate.",
-
-    "item-collodioncoatedplate": "Collodion-Coated Plate",
-    "itemdesc-collodioncoatedplate": "A polished glass plate coated with collodion.",
-
-    "item-silveredplate": "Silvered Plate",
-    "itemdesc-silveredplate": "A sensitized plate that must be exposed while wet.",
-
-    "item-exposedplate": "Exposed Plate",
-    "itemdesc-exposedplate": "An exposed plate awaiting development.",
-
-    "item-developedplate": "Developed Plate",
-    "itemdesc-developedplate": "A developed plate awaiting fixing.",
-
-    "item-finishedphotoplate": "Finished Photo Plate",
-    "itemdesc-finishedphotoplate": "A framable, fixed plate that can be handled in light.",
-
-    "block-plate-rough": "Rough Glass Plate",
-    "block-plate-clean": "Clean Glass Plate",
-    "block-plate-coated": "Collodion-Coated Plate",
+    "item-fixerportion":                    "Fixer",
+    "incontainer-item-fixerportion":        "Fixer",
+    "game:incontainer-item-fixerportion":   "Fixer",
+    "itemdesc-fixerportion":                "Stabilizes a developed plate so it can be handled in light.",
 
 
+    "block-plate-rough":        "Rough Glass Plate",
+    "item-roughglassplate":     "Rough Glass Plate",
+    "itemdesc-roughglassplate": "A rough-cut glass plate. Can be polished to create a clean glass plate.",
+    
+    "item-cleanglassplate":     "Clean Glass Plate",
+    "block-plate-clean":        "Clean Glass Plate",
+    "itemdesc-cleanglassplate": "A polished, clean glass plate. Can be coated with collodion to create a collodion-coated plate.",
+
+    "item-collodioncoatedplate":    "Collodion-Coated Plate",
+    "itemdesc-collodioncoatedplate":"A polished glass plate coated with collodion. Can be sensitized with silvering solution to create a silvered plate.",
+
+    "item-silveredplate":       "Silvered Plate",
+    "itemdesc-silveredplate":   "A sensitized plate that can be exposed while wet to capture an image.",
+
+    "item-exposedplate":    "Exposed Plate",
+    "itemdesc-exposedplate":"An exposed plate awaiting development.",
+
+    "item-developedplate":      "Developed Plate",
+    "itemdesc-developedplate":  "A developed plate awaiting fixing.",
+
+    "item-finishedphotoplate":      "Finished Photo Plate",
+    "itemdesc-finishedphotoplate":  "A chemically stabilized plate that can be framed for display.",
+
+    "collodion:heldhelp-cleanroughglass":   "Polish rough glass plate",
+    "collodion:heldhelp-coatglassplate":    "Coat plate with collodion solution",
 
     "wetplate-wetness": "Still wet: {0} min",
-    "wetplate-dry": "The plate has dried.",
+    "wetplate-dry":     "The plate has dried.",
 
-    "heldhelp-cleanroughglass": "Polish rough glass plate",
-    "collodion:heldhelp-cleanroughglass": "Polish rough glass plate",
 
-    "heldhelp-coatglassplate": "Coat plate with collodion solution (5s, 50mL)",
-    "collodion:heldhelp-coatglassplate": "Coat plate with collodion solution (5s, 50mL)",
-
-    "item-framedphotograph": "Framed Photograph",
-    "itemdesc-framedphotograph": "A photograph mounted in a simple wooden frame.",
-
-    "block-framedphotographwall": "Framed Photograph",
+    "item-framedphotograph":    "Framed Photograph",
+    "itemdesc-framedphotograph":"A photograph mounted in a simple wooden frame.",
+    "block-framedphotographwall":   "Framed Photograph",
     "block-framedphotographground": "Framed Photograph",
+    "collodion:heldhelp-framedphoto-add":   "Add framed photo",
+    "collodion:heldhelp-framedphoto-remove":"Remove framed photo",
 
-    "block-developmenttray-red": "Development Tray (Red Clay)",
+
+    "block-developmenttray-red":    "Development Tray (Red Clay)",
+    "block-developmenttray-blue":   "Development Tray (Blue Clay)",
+    "block-developmenttray-fire":   "Development Tray (Fire Clay)",
+    "blockdesc-developmenttray-blue":"A shallow tray for developing and fixing wet plates.",
     "blockdesc-developmenttray-red": "A shallow tray for developing and fixing wet plates.",
+    "blockdesc-developmenttray-fire":"A shallow tray for developing and fixing wet plates.",
 
-    "block-developmenttray-blue": "Development Tray (Blue Clay)",
-    "blockdesc-developmenttray-blue": "A shallow tray for developing and fixing wet plates.",
+    "block-developmenttray-red-exposed":    "Development Tray (Needs Developing)",
+    "block-developmenttray-blue-exposed":   "Development Tray (Needs Developing)",
+    "block-developmenttray-fire-exposed":   "Development Tray (Needs Developing)",
 
-    "block-developmenttray-fire": "Development Tray (Fire Clay)",
-    "blockdesc-developmenttray-fire": "A shallow tray for developing and fixing wet plates.",
+    "block-developmenttray-red-developed":  "Development Tray (Being Developed)",
+    "block-developmenttray-blue-developed": "Development Tray (Being Developed)",
+    "block-developmenttray-fire-developed": "Development Tray (Being Developed)",
 
-    "block-developmenttray-red-exposed": "Development Tray (Red Clay)",
-    "block-developmenttray-red-developed": "Development Tray (Red Clay)",
-    "block-developmenttray-red-finished": "Development Tray (Red Clay)",
-    "block-developmenttray-blue-exposed": "Development Tray (Blue Clay)",
-    "block-developmenttray-blue-developed": "Development Tray (Blue Clay)",
-    "block-developmenttray-blue-finished": "Development Tray (Blue Clay)",
-    "block-developmenttray-fire-exposed": "Development Tray (Fire Clay)",
-    "block-developmenttray-fire-developed": "Development Tray (Fire Clay)",
-    "block-developmenttray-fire-finished": "Development Tray (Fire Clay)",
-    "block-cameraslingwall": "Wall-Mounted Camera Sling",
-    "block-platebox": "Plate Box",
-    "block-platebox-north": "Plate Box",
-    "block-platebox-open": "Plate Box",
-    "blockdesc-platebox": "Stores and protects prepared plates. Right-click slots with a plate to store, empty-hand right-click to retrieve.",
+    "block-developmenttray-red-finished":   "Development Tray (Finished)",
+    "block-developmenttray-blue-finished":  "Development Tray (Finished)",
+    "block-developmenttray-fire-finished":  "Development Tray (Finished)",
 
-    "item-developmenttray-raw-blue": "Unfired Development Tray (Blue Clay)",
-    "itemdesc-developmenttray-raw-blue": "A clay tray that must be fired before use.",
-    "item-developmenttray-raw-red": "Unfired Development Tray (Red Clay)",
+    "item-developmenttray-raw-red":     "Unfired Development Tray (Red Clay)",
+    "item-developmenttray-raw-blue":    "Unfired Development Tray (Blue Clay)",
+    "item-developmenttray-raw-fire":    "Unfired Development Tray (Fire Clay)",
+    "itemdesc-developmenttray-raw-blue":"A clay tray that must be fired before use.",
     "itemdesc-developmenttray-raw-red": "A clay tray that must be fired before use.",
-    "item-developmenttray-raw-fire": "Unfired Development Tray (Fire Clay)",
-    "itemdesc-developmenttray-raw-fire": "A clay tray that must be fired before use.",
+    "itemdesc-developmenttray-raw-fire":"A clay tray that must be fired before use.",
 
-    "heldhelp-developmenttray-insertplate": "Place plate in tray",
-    "heldhelp-developmenttray-takeplate": "Take plate from tray",
-    "heldhelp-developmenttray-develop": "Develop exposed plate",
-    "heldhelp-developmenttray-fix": "Fix developed plate",
-    "heldhelp-platebox-insert": "Store plate in clicked slot",
-    "heldhelp-platebox-take": "Take plate from clicked slot",
-    "heldhelp-framedphoto-add": "Add framed photo",
-    "heldhelp-framedphoto-remove": "Remove framed photo",
+    "collodion:heldhelp-developmenttray-insertplate":   "Place plate in tray",
+    "collodion:heldhelp-developmenttray-takeplate":     "Take plate from tray",
+    "collodion:heldhelp-developmenttray-develop":       "Develop exposed plate",
+    "collodion:heldhelp-developmenttray-fix":           "Fix developed plate",
 
-    "collodion:heldhelp-developmenttray-insertplate": "Place plate in tray",
-    "collodion:heldhelp-developmenttray-takeplate": "Take plate from tray",
-    "collodion:heldhelp-developmenttray-develop": "Develop exposed plate",
-    "collodion:heldhelp-developmenttray-fix": "Fix developed plate",
-    "collodion:heldhelp-platebox-insert": "Store plate in clicked slot",
-    "collodion:heldhelp-platebox-take": "Take plate from clicked slot",
-    "collodion:heldhelp-framedphoto-add": "Add framed photo",
-    "collodion:heldhelp-framedphoto-remove": "Remove framed photo",
-
-    "collodion:craftinginfo-collodion-title": "Collodion Photography",
-    "collodion:craftinginfo-collodion-text": "Collodion Photography\n\nThis guide walks you through the steps of taking your first wet-plate photograph.\n\n1) Tools & Chemicals\nBefore you can expose any photographs, you'll need some equipment:\n• <a href=\"handbook://item-collodion:wetplatecamera\">Wetplate Camera</a>\n• <a href=\"handbooksearch://development tray\">Development Tray</a>\n• <a href=\"handbook://item-collodion:roughglassplate\">Rough Glass Plates</a>\n• <a href=\"handbook://item-collodion:collodionportion\">Collodion</a>\n• <a href=\"handbook://item-cloth-plain\">A piece of cloth</a>\n• <a href=\"handbook://item-collodion:silversolutionportion\">Silvering Solution</a>\n• <a href=\"handbook://block-collodion:platebox-north\">Plate Box</a>\n• <a href=\"handbook://item-collodion:developerportion\">Developer</a>\n• <a href=\"handbook://item-collodion:fixerportion\">Fixer</a>\n\n2) Prep Work\nYour plates need to be prepared in order to become sensitive to light:\n• Start by using the cloth to polish your plate into a <a href=\"handbook://item-collodion:cleanglassplate\">clean glass plate</a>.\n• Using a bucket, pour the syrupy collodion binder onto the cleaned plate to make it a <a href=\"handbook://item-collodion:collodioncoatedplate\">collodion-coated plate</a>.\n• Seal the plate in a barrel of silvering solution to receive a silvered plate. With collodion covering the plate, the silvering solution can bind to it, sensitizing the plate to light.\n*Note: After silvering, the plate will begin to dry up. Dried plates can't be exposed or developed; store them in a Plate Box to keep them usable.*\n\nThe <a href=\"handbook://item-collodion:camerasling-empty\">camera sling</a> along with the Plate Box will help you keep your inventory light when out taking pictures. With the sling on, pressing <hk>collodion-toggle-camerasling</hk> while holding the camera will fold it up and store it over your shoulder until you're ready to bring it back out. Doing this while looking at a wall will nail the camera up onto it. Combat Overhaul is required to wear the camera, but it can still be folded up with <hk>collodion-toggle-camerasling</hk> by holding the camera with the sling in the offhand. The folded camera can then be hung on the wall with <hk>ctrl</hk> + <hk>shift</hk> + <icon>rightmousebutton</icon>\n\n3) Load & Expose\n• With a silvered plate in your offhand, hold the camera and use <hk>shift</hk> + <icon>rightmousebutton</icon> to load the plate into it.\n• Once you're ready to take a photograph, look through the viewfinder <icon>rightmousebutton</icon> and use <icon>leftmousebutton</icon> to begin exposing the plate to light. Make sure to keep the camera still until the exposure is complete or the photo may turn out blurry!\n• Unload the camera the same way to get your new<a href=\"handbook://item-collodion:exposedplate\">exposed plate</a>. There's still work to do before you can see how it came out.\n\n4) Develop & Fix\n• Place the exposed plate in your development tray.\n• As you repeatedly pour developer onto the plate, you should begin to see the image.\n• Finish the process by pouring on fixer to stabilize the plate as a <a href=\"handbook://item-collodion:finishedphotoplate\">finished photo plate</a>.\nThese finished plates can safely dry and will no longer be affected by light.\n\nIf your plates ever dry out, they can be recycled and prepped again. Place a dried plate in the developer tray and pour water over it to wash most of the dried chemicals off of the surface. The plate will still be covered in residue and will need to be repolished before it can be recoated and sensitized again.\n\n5) Display\n• Mount your finished plate in a <a href=\"handbook://item-collodion:framedphotograph\">frame</a> and hang it on your wall to display your work!\n• Click on the frame with a wooden board to change the frame's material, or with another framed photo to add it to the same block.\n• You can use writing materials like charcoal to add notes/captions to the photograph."
+    "collodion:craftinginfo-collodion-title":   "Collodion Photography",
+    "collodion:craftinginfo-collodion-text":    "Collodion Photography\n\nThis guide walks you through the steps of taking your first wet-plate photograph.\n\n1) Tools & Chemicals\nBefore you can expose any photographs, you'll need some equipment:\n• <a href=\"handbook://item-collodion:wetplatecamera\">Wetplate Camera</a>\n• <a href=\"handbooksearch://development tray\">Development Tray</a>\n• <a href=\"handbook://item-collodion:roughglassplate\">Rough Glass Plates</a>\n• <a href=\"handbook://item-collodion:collodionportion\">Collodion</a>\n• <a href=\"handbook://item-cloth-plain\">A piece of cloth</a>\n• <a href=\"handbook://item-collodion:silversolutionportion\">Silvering Solution</a>\n• <a href=\"handbook://block-collodion:platebox-north\">Plate Box</a>\n• <a href=\"handbook://item-collodion:developerportion\">Developer</a>\n• <a href=\"handbook://item-collodion:fixerportion\">Fixer</a>\n\n2) Prep Work\nYour plates need to be prepared in order to become sensitive to light:\n• Start by using the cloth to polish your plate into a <a href=\"handbook://item-collodion:cleanglassplate\">clean glass plate</a>.\n• Using a bucket, pour the syrupy collodion binder onto the cleaned plate to make it a <a href=\"handbook://item-collodion:collodioncoatedplate\">collodion-coated plate</a>.\n• Seal the plate in a barrel of silvering solution to receive a silvered plate. With collodion covering the plate, the silvering solution can bind to it, sensitizing the plate to light.\n*Note: After silvering, the plate will begin to dry up. Dried plates can't be exposed or developed; store them in a Plate Box to keep them usable.*\n\nThe <a href=\"handbook://item-collodion:camerasling-empty\">camera sling</a> along with the Plate Box will help you keep your inventory light when out taking pictures. With the sling on, pressing <hk>collodion-toggle-camerasling</hk> while holding the camera will fold it up and store it over your shoulder until you're ready to bring it back out. Doing this while looking at a wall will nail the camera up onto it. Combat Overhaul is required to wear the camera, but it can still be folded up with <hk>collodion-toggle-camerasling</hk> by holding the camera with the sling in the offhand. The folded camera can then be hung on the wall with <hk>ctrl</hk> + <hk>shift</hk> + <icon>rightmousebutton</icon>\n\n3) Load & Expose\n• With a silvered plate in your offhand, hold the camera and use <hk>shift</hk> + <icon>rightmousebutton</icon> to load the plate into it.\n• Once you're ready to take a photograph, look through the viewfinder <icon>rightmousebutton</icon> and use <icon>leftmousebutton</icon> to begin exposing the plate to light. Make sure to keep the camera still until the exposure is complete or the photo may turn out blurry!\n• Unload the camera the same way to get your new<a href=\"handbook://item-collodion:exposedplate\">exposed plate</a>. There's still work to do before you can see how it came out.\n\n4) Develop & Fix\n• Place the exposed plate in your development tray.\n• As you repeatedly pour developer onto the plate, you should begin to see the image.\n• Finish the process by pouring on fixer to stabilize the plate as a <a href=\"handbook://item-collodion:finishedphotoplate\">finished photo plate</a>.\nThese finished plates can safely dry and will no longer be affected by light.\n\nIf your plates ever dry out, they can be recycled and prepped again. Place a dried plate in the developer tray and pour water over it to wash most of the dried chemicals off of the surface. The plate will still be covered in residue and will need to be repolished before it can be recoated and sensitized again.\n\n5) Display\n• Mount your finished plate in a <a href=\"handbook://item-collodion:framedphotograph\">frame</a> and hang it on your wall to display your work!\n• Click on the frame with a wooden board to change the frame's material, or with another framed photo to add it to the same block.\n• You can use writing materials like charcoal to add notes/captions to the photograph."
 }

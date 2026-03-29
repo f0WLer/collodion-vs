@@ -202,7 +202,8 @@ namespace Collodion
                 }
 
                 string now = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                fileName = $"wetplate_{now}.png";
+                string rnd = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(4)).ToLowerInvariant();
+                fileName = $"wetplate_{now}_{rnd}.png";
 
                 string modDataPath = Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos");
                 string fullPath = Path.Combine(modDataPath, fileName);

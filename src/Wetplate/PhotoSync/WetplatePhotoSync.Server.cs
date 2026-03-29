@@ -11,36 +11,42 @@ namespace Collodion
     {
         // server-side: in-progress uploads by (playerUid|photoId)
         private readonly Dictionary<string, IncomingAssembly> serverIncoming = new Dictionary<string, IncomingAssembly>(StringComparer.OrdinalIgnoreCase);
+        private readonly object serverIncomingLock = new object();
+        private readonly object writeLock = new object();
 
         // Minimal cleanup so abandoned uploads (disconnects mid-transfer) don't accumulate.
         private long serverLastPruneMs;
 
+        public void ServerPruneTick(long nowMs) => ServerMaybePruneIncoming(nowMs);
+
         private void ServerMaybePruneIncoming(long nowMs)
         {
-            if (serverIncoming.Count == 0) return;
-
             int pruneIntervalMs = SyncCfg?.ServerPruneIntervalMs ?? 30_000;
             int uploadStaleMs = SyncCfg?.ServerUploadStaleMs ?? 120_000;
 
-            if (serverLastPruneMs != 0 && (nowMs - serverLastPruneMs) < pruneIntervalMs) return;
-            serverLastPruneMs = nowMs;
-
-            List<string>? toRemove = null;
-            foreach (var kvp in serverIncoming)
+            lock (serverIncomingLock)
             {
-                var asm = kvp.Value;
-                if (asm == null) continue;
-                if ((nowMs - asm.LastTouchedMs) > uploadStaleMs)
+                if (serverIncoming.Count == 0) return;
+                if (serverLastPruneMs != 0 && (nowMs - serverLastPruneMs) < pruneIntervalMs) return;
+                serverLastPruneMs = nowMs;
+
+                List<string>? toRemove = null;
+                foreach (var kvp in serverIncoming)
                 {
-                    toRemove ??= new List<string>();
-                    toRemove.Add(kvp.Key);
+                    var asm = kvp.Value;
+                    if (asm == null) continue;
+                    if ((nowMs - asm.LastTouchedMs) > uploadStaleMs)
+                    {
+                        toRemove ??= new List<string>();
+                        toRemove.Add(kvp.Key);
+                    }
                 }
-            }
 
-            if (toRemove == null) return;
-            foreach (string key in toRemove)
-            {
-                serverIncoming.Remove(key);
+                if (toRemove == null) return;
+                foreach (string key in toRemove)
+                {
+                    serverIncoming.Remove(key);
+                }
             }
         }
 
@@ -100,32 +106,39 @@ namespace Collodion
 
             string key = fromPlayer.PlayerUID + "|" + photoId;
 
-            if (!serverIncoming.TryGetValue(key, out IncomingAssembly? asm) || asm == null || asm.TotalSize != packet.TotalSize || asm.ChunkCount != packet.ChunkCount)
+            IncomingAssembly? completed = null;
+            lock (serverIncomingLock)
             {
-                asm = new IncomingAssembly(packet.TotalSize, packet.ChunkCount);
-                serverIncoming[key] = asm;
+                if (!serverIncoming.TryGetValue(key, out IncomingAssembly? asm) || asm == null || asm.TotalSize != packet.TotalSize || asm.ChunkCount != packet.ChunkCount)
+                {
+                    asm = new IncomingAssembly(packet.TotalSize, packet.ChunkCount);
+                    serverIncoming[key] = asm;
+                }
+
+                if (asm == null) return;
+
+                asm.LastTouchedMs = nowMs;
+
+                if (asm.Received[packet.ChunkIndex]) return;
+
+                int offset = packet.ChunkIndex * GetChunkSizeBytes();
+                int copyLen = Math.Min(packet.Data.Length, asm.TotalSize - offset);
+                if (copyLen <= 0) return;
+
+                Buffer.BlockCopy(packet.Data, 0, asm.Buffer, offset, copyLen);
+                asm.Received[packet.ChunkIndex] = true;
+                asm.ReceivedChunks++;
+
+                if (asm.ReceivedChunks < asm.ChunkCount) return;
+
+                serverIncoming.Remove(key);
+                completed = asm;
             }
 
-            if (asm == null) return;
-
-            asm.LastTouchedMs = nowMs;
-
-            if (asm.Received[packet.ChunkIndex]) return;
-
-            int offset = packet.ChunkIndex * GetChunkSizeBytes();
-            int copyLen = Math.Min(packet.Data.Length, asm.TotalSize - offset);
-            if (copyLen <= 0) return;
-
-            Buffer.BlockCopy(packet.Data, 0, asm.Buffer, offset, copyLen);
-            asm.Received[packet.ChunkIndex] = true;
-            asm.ReceivedChunks++;
-
-            if (asm.ReceivedChunks < asm.ChunkCount) return;
-
-            serverIncoming.Remove(key);
+            if (completed == null) return;
 
             // Basic PNG signature check
-            if (asm.TotalSize < 8 || asm.Buffer[0] != 0x89 || asm.Buffer[1] != 0x50 || asm.Buffer[2] != 0x4E || asm.Buffer[3] != 0x47)
+            if (completed.TotalSize < 8 || completed.Buffer[0] != 0x89 || completed.Buffer[1] != 0x50 || completed.Buffer[2] != 0x4E || completed.Buffer[3] != 0x47)
             {
                 mod.ServerChannel.SendPacket(new PhotoBlobAckPacket { PhotoId = photoId, Ok = false, Error = "Invalid PNG" }, fromPlayer);
                 return;
@@ -135,7 +148,10 @@ namespace Collodion
             {
                 string outPath = GetPhotoPath(photoId);
                 Directory.CreateDirectory(Path.GetDirectoryName(outPath)!);
-                File.WriteAllBytes(outPath, asm.Buffer);
+                lock (writeLock)
+                {
+                    File.WriteAllBytes(outPath, completed.Buffer);
+                }
 
                 mod.ServerTouchPhotoSeen(photoId);
 

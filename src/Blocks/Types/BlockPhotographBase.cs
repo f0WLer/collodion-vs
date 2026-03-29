@@ -35,6 +35,8 @@ namespace Collodion
 
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
+            if (world == null || byPlayer == null || blockSel?.Position == null) return false;
+
             // Caption editing (sign-like UX): right-click with pigment/charcoal.
             if (IsWritingItem(byPlayer.InventoryManager.ActiveHotbarSlot?.Itemstack))
             {

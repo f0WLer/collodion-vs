@@ -410,7 +410,7 @@ namespace Collodion
 
         private void OnCameraSlingToggleReceived(IServerPlayer player, CameraSlingTogglePacket _packet)
         {
-            if (Api == null) return;
+            if (Api == null || player == null) return;
 
             ItemSlot? activeSlot = player.InventoryManager.ActiveHotbarSlot;
             if (activeSlot == null) return;
@@ -543,7 +543,7 @@ namespace Collodion
 
         private void OnCameraAttachSlingReceived(IServerPlayer player, CameraAttachSlingPacket _)
         {
-            if (Api == null) return;
+            if (Api == null || player == null) return;
 
             ItemSlot? activeSlot = player.InventoryManager.ActiveHotbarSlot;
             ItemStack? cameraStack = activeSlot?.Itemstack;
@@ -566,12 +566,14 @@ namespace Collodion
             try { fullSling.Attributes.MergeTree(slingStack.Attributes.Clone()); } catch { }
             fullSling.Attributes.SetItemstack(ItemCameraSling.AttrStoredCameraStack, movedCamera);
 
+            if (activeSlot == null || offhandSlot == null) return;
+
             // Replace the camera in the active slot with the full sling.
-            activeSlot!.Itemstack = fullSling;
+            activeSlot.Itemstack = fullSling;
             activeSlot.MarkDirty();
 
             // Consume the empty sling from the offhand.
-            offhandSlot!.TakeOutWhole();
+            offhandSlot.TakeOutWhole();
             offhandSlot.MarkDirty();
 
             PlaySlingSwapSoundPair(player);
@@ -579,7 +581,7 @@ namespace Collodion
 
         private void OnCameraLoadPlateReceived(IServerPlayer player, CameraLoadPlatePacket packet)
         {
-            if (Api == null) return;
+            if (Api == null || player == null) return;
 
             ItemSlot? cameraSlot = player.InventoryManager.ActiveHotbarSlot;
             ItemStack? cameraStack = cameraSlot?.Itemstack;
@@ -716,7 +718,7 @@ namespace Collodion
 
         private void OnPhotoTakenReceived(IServerPlayer player, PhotoTakenPacket packet)
         {
-            if (Api == null || packet == null) return;
+            if (Api == null || packet == null || player == null) return;
 
             // Verify player is holding camera to prevent cheating
             ItemSlot? cameraSlot = player.InventoryManager.ActiveHotbarSlot;

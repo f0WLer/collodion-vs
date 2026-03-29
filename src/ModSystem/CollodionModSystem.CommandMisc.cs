@@ -36,7 +36,7 @@ namespace Collodion
         {
             if (ClientApi == null) return;
 
-            int clearedPhotos = ItemPhotograph.ClearClientRenderCacheAndBumpVersion();
+            int clearedPhotos = ItemFramedPhotograph.ClearClientRenderCacheAndBumpVersion();
             int clearedPlates = PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
             ClientApi.ShowChatMessage($"Wetplate: cleared {clearedPhotos} photo renders + {clearedPlates} plate renders (new photos will re-load from disk). ");
         }

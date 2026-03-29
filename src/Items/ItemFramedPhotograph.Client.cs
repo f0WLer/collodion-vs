@@ -10,7 +10,7 @@ using Vintagestory.API.Util;
 
 namespace Collodion
 {
-    public partial class ItemPhotograph
+    public partial class ItemFramedPhotograph
     {
         private const float GroundScale = 2.5f;
         private const float PhotoTargetAspect = 10f / 11f;

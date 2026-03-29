@@ -171,7 +171,7 @@ namespace Collodion
                 File.WriteAllBytes(outPath, completed.Buffer);
 
                 // Kick item render cache so the next render pulls from disk.
-                ItemPhotograph.ClearClientRenderCacheAndBumpVersion();
+                ItemFramedPhotograph.ClearClientRenderCacheAndBumpVersion();
 
                 // Nudge any mounted-photo blocks that were waiting on this file.
                 ClientMarkWaitingBlocksDirty(photoId);

@@ -13,8 +13,8 @@ namespace Collodion
         private const int DefaultCollodionUnitsPerCoat = 5;
         private const int DefaultPlainClothConsumedPerPolish = 1;
 
-        private CollodionModSystem? modSys;
-
+        private CollodionConfig? Cfg => api.ModLoader.GetModSystem<CollodionModSystem>()?.Config;
+        private PlateProcessingConfig? PlateCfg => Cfg?.PlateProcessing;
         private static readonly AssetLocation PlainClothCode = new AssetLocation("game", "cloth-plain");
         private static readonly AssetLocation PolishSound = new AssetLocation("game:sounds/player/chalkdraw");
         private static readonly AssetLocation CollodionPourSound = new AssetLocation("game:sounds/effect/water-fill");
@@ -24,14 +24,10 @@ namespace Collodion
         {
             base.OnLoaded(api);
 
-            modSys = api.ModLoader.GetModSystem<CollodionModSystem>();
-
             // These blocks use per-texture alpha. If rendered in the opaque pass, they will write depth
             // and can cause "see under terrain" artifacts because terrain behind them never renders.
             RenderPass = EnumChunkRenderPass.Transparent;
         }
-
-        private PlateProcessingConfig? PlateCfg => modSys?.Config?.PlateProcessing;
 
         private float GetPolishSeconds()
         {
@@ -59,11 +55,11 @@ namespace Collodion
         private int GetPlainClothConsumeCount()
         {
             bool consume = PlateCfg?.ConsumePlainClothOnPolish
-                ?? (modSys?.Config?.Client?.ConsumePlainClothOnPolish ?? false);
+                ?? (Cfg?.Client?.ConsumePlainClothOnPolish ?? false);
             if (!consume) return 0;
 
             int amount = PlateCfg?.PlainClothConsumedPerPolish
-                ?? (modSys?.Config?.Client?.PlainClothConsumedPerPolish ?? DefaultPlainClothConsumedPerPolish);
+                ?? (Cfg?.Client?.PlainClothConsumedPerPolish ?? DefaultPlainClothConsumedPerPolish);
             if (amount < 0) amount = 0;
             return amount;
         }

@@ -28,7 +28,7 @@ namespace Collodion
         internal const string ActionFixer = "fixer";
         internal const string ActionWater = "water";
 
-        private CollodionModSystem? modSys;
+        private CollodionConfig? Cfg => api.ModLoader.GetModSystem<CollodionModSystem>()?.Config;
 
         private static readonly AssetLocation SilveredPlateItemCode = new AssetLocation("collodion", "silveredplate");
         private static readonly AssetLocation ExposedPlateItemCode = new AssetLocation("collodion", "exposedplate");
@@ -45,7 +45,6 @@ namespace Collodion
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
-            modSys = api.ModLoader.GetModSystem<CollodionModSystem>();
         }
 
         public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
@@ -67,19 +66,19 @@ namespace Collodion
 
         private float GetDeveloperPourSeconds()
         {
-            float seconds = modSys?.Config?.DevelopmentTrayInteractions?.Developer?.DurationSeconds ?? 1.25f;
+            float seconds = Cfg?.DevelopmentTrayInteractions?.Developer?.DurationSeconds ?? 1.25f;
             return seconds < 0.05f ? 0.05f : seconds;
         }
 
         private float GetFixerPourSeconds()
         {
-            float seconds = modSys?.Config?.DevelopmentTrayInteractions?.Fixer?.DurationSeconds ?? 1.25f;
+            float seconds = Cfg?.DevelopmentTrayInteractions?.Fixer?.DurationSeconds ?? 1.25f;
             return seconds < 0.05f ? 0.05f : seconds;
         }
 
         private int GetChemicalUnitsPerUse()
         {
-            int amount = modSys?.Config?.PlateProcessing?.DevelopmentTrayChemicalUnitsPerUse ?? DefaultChemicalUnitsPerUse;
+            int amount = Cfg?.PlateProcessing?.DevelopmentTrayChemicalUnitsPerUse ?? DefaultChemicalUnitsPerUse;
             if (amount < 1) amount = 1;
             return amount;
         }
@@ -242,7 +241,7 @@ namespace Collodion
 
             newPlate.Attributes.SetInt(WetPlateAttrs.DevelopPours, newPours);
             newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, newPours >= DevelopPoursRequired ? "developed" : "developing");
-            WetPlateAttrs.ResetWetTimer(world, newPlate, modSys?.Config?.PlateProcessing?.WetPlateDurationHours ?? WetPlateAttrs.DefaultWetDurationHours);
+            WetPlateAttrs.ResetWetTimer(world, newPlate, Cfg?.PlateProcessing?.WetPlateDurationHours ?? WetPlateAttrs.DefaultWetDurationHours);
 
             be.TrySetPlate(newPlate);
             SwapTrayBlockForPlateStage(world, pos, "developed", newPlate);

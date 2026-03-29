@@ -111,7 +111,6 @@ namespace Collodion
         {
             private readonly ICoreClientAPI capi;
             private readonly BlockEntityPlateBox owner;
-            private readonly CollodionModSystem? modSys;
             private readonly Matrixf modelMat = new Matrixf();
             private MeshRef? slotMeshRef;   // south/north: thin in X, depth in Z  (PW × PH × PD)
             private MeshRef? slotMeshRefEW; // east/west:   thin in Z, depth in X  (PD × PH × PW)
@@ -120,7 +119,6 @@ namespace Collodion
             {
                 this.capi = capi;
                 this.owner = owner;
-                modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
             }
 
             public double RenderOrder => 0.5;
@@ -137,7 +135,7 @@ namespace Collodion
 
                 string facing = owner.Block?.Variant?["facing"] ?? "south";
                 bool isEW = facing == "east" || facing == "west";
-                float ewTweak = modSys?.GetPlateBoxEwRightOffset() ?? 0f;
+                float ewTweak = capi.ModLoader.GetModSystem<CollodionModSystem>()?.GetPlateBoxEwRightOffset() ?? 0f;
 
                 if (isEW) { if (!EnsureSlotMeshEW()) return; }
                 else      { if (!EnsureSlotMesh())   return; }

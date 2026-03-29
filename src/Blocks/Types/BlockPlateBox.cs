@@ -111,7 +111,7 @@ namespace Collodion
                     world.SpawnItemEntity(stack, pos.ToVec3d().Add(0.5, 0.5, 0.5));
                 }
 
-                world.PlaySoundAt(Sounds?.GetBreakSound(byPlayer), pos, 0.0, byPlayer);
+                world.PlaySoundAt(Sounds?.GetBreakSound(byPlayer).Location, pos, 0.0, byPlayer);
             }
 
             SpawnBlockBrokenParticles(pos, byPlayer);
@@ -142,7 +142,7 @@ namespace Collodion
         {
             // Choose a facing so the box's open side faces toward the player.
             string? currentFacing = Variant?["facing"];
-            BlockFacing playerFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.SidedPos?.Yaw ?? 0f);
+            BlockFacing playerFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.Pos?.Yaw ?? 0f);
             string desiredFacing = playerFacing.Opposite.Code;
 
             // If already the right variant (or no facing variant), place directly.

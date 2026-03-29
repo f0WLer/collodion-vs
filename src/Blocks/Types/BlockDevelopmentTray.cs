@@ -58,7 +58,7 @@ namespace Collodion
             BlockPos placedPos = ResolvePlacedPos(world, blockSel);
             if (world.BlockAccessor.GetBlockEntity(placedPos) is BlockEntityDevelopmentTray be)
             {
-                BlockFacing playerFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.SidedPos?.Yaw ?? 0f);
+                BlockFacing playerFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.Pos?.Yaw ?? 0f);
                 be.SetPlacementFacing(playerFacing.Code, markBlockDirty: true);
             }
 
@@ -414,7 +414,7 @@ namespace Collodion
 
                 // Ensure tray photo orientation always tracks the player who is actively using the tray.
                 // This acts as a reliable fallback if placement-time facing capture is unavailable.
-                BlockFacing insertFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.SidedPos?.Yaw ?? 0f);
+                BlockFacing insertFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.Pos?.Yaw ?? 0f);
                 be.SetPlacementFacing(insertFacing.Code, markBlockDirty: false);
 
                 ItemStack toInsert = held.Clone();
@@ -436,7 +436,7 @@ namespace Collodion
                 if (be.HasPlate) return false;
                 if (activeSlot == null) return false;
 
-                BlockFacing insertFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.SidedPos?.Yaw ?? 0f);
+                BlockFacing insertFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.Pos?.Yaw ?? 0f);
                 be.SetPlacementFacing(insertFacing.Code, markBlockDirty: false);
 
                 ItemStack toInsert = held.Clone();

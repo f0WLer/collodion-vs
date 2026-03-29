@@ -46,5 +46,4 @@ namespace Collodion
         [ProtoMember(3)]
         public string Error = string.Empty;
     }
-
 }

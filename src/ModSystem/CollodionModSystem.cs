@@ -4,62 +4,9 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
-using ProtoBuf;
 
 namespace Collodion
 {
-    [ProtoContract]
-    public class PhotoTakenPacket
-    {
-        [ProtoMember(1)]
-        public string PhotoId { get; set; } = string.Empty;
-
-        [ProtoMember(2)]
-        public float HoldStillSeconds { get; set; }
-
-        [ProtoMember(3)]
-        public float HoldStillMovement { get; set; }
-    }
-
-    [ProtoContract]
-    public class CameraLoadPlatePacket
-    {
-        [ProtoMember(1)]
-        public bool Load { get; set; }
-    }
-
-    [ProtoContract]
-    public class CameraAttachSlingPacket { }
-
-    [ProtoContract]
-    public class CameraSlingTogglePacket
-    {
-        [ProtoMember(1)]
-        public bool TryWallMount { get; set; }
-
-        [ProtoMember(2)]
-        public int TargetX { get; set; }
-
-        [ProtoMember(3)]
-        public int TargetY { get; set; }
-
-        [ProtoMember(4)]
-        public int TargetZ { get; set; }
-
-        [ProtoMember(5)]
-        public string TargetFaceCode { get; set; } = string.Empty;
-    }
-
-    [ProtoContract]
-    public class PhotoCaptureConfigRequestPacket { }
-
-    [ProtoContract]
-    public class PhotoCaptureConfigPacket
-    {
-        [ProtoMember(1)]
-        public int MaxDimension { get; set; }
-    }
-
     public partial class CollodionModSystem : ModSystem
     {
         public static CollodionModSystem? ClientInstance { get; private set; }

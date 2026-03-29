@@ -140,6 +140,7 @@ namespace Collodion
                 if (TryEnsureHarmonyProjectionZoomPatch())
                 {
                     runtimeFovMechanism = GetZoomMechanismForTip() ?? "Harmony: Set3DProjection";
+                    RefreshHarmonyProjection();
                     return;
                 }
 
@@ -195,6 +196,11 @@ namespace Collodion
                     viewfinderOldFloatSettings.Clear();
                     viewfinderTargetFloatSettings.Clear();
                     return;
+                }
+
+                if (IsHarmonyProjectionPatchActive)
+                {
+                    RefreshHarmonyProjection();
                 }
 
                 foreach (var kvp in viewfinderOldFloatSettings)
@@ -659,6 +665,15 @@ namespace Collodion
                     if (Math.Abs(current - runtimeTargetFov) > 0.001f)
                     {
                         SafeSetFov(runtimeFovSetter, runtimeTargetFov);
+                    }
+                    return;
+                }
+
+                if (IsHarmonyProjectionPatchActive && viewfinderTargetFloatSettings.Count == 0)
+                {
+                    if (!WasHarmonyProjectionScaledRecently(250))
+                    {
+                        RefreshHarmonyProjection();
                     }
                     return;
                 }

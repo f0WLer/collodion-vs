@@ -173,5 +173,31 @@ namespace Collodion
             return runtimeFovMechanism;
         }
 
+        private bool IsHarmonyProjectionPatchActive => harmonyProjectionPatched;
+
+        private bool WasHarmonyProjectionScaledRecently(long maxAgeMs)
+        {
+            if (!harmonyProjectionPatched || lastSet3DProjectionMs <= 0) return false;
+
+            long ageMs = Environment.TickCount64 - lastSet3DProjectionMs;
+            if (ageMs < 0) ageMs = 0;
+
+            return ageMs <= maxAgeMs && lastSet3DProjectionScaledIndex >= 0;
+        }
+
+        private void RefreshHarmonyProjection()
+        {
+            if (ClientApi?.Render == null || !harmonyProjectionPatched) return;
+
+            try
+            {
+                ClientApi.Render.Reset3DProjection();
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
     }
 }

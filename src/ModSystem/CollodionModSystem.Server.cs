@@ -31,6 +31,7 @@ namespace Collodion
             ServerChannel.SetMessageHandler<CameraSlingTogglePacket>(OnCameraSlingToggleReceived);
             ServerChannel.SetMessageHandler<CameraAttachSlingPacket>(OnCameraAttachSlingReceived);
             PhotoSync = new WetplatePhotoSync(this);
+            serverPhotoSyncPruneListenerId = api.Event.RegisterGameTickListener(_ => PhotoSync?.ServerPruneTick(Environment.TickCount64), 10_000);
 
             serverPhotoLastSeenIndex = LoadOrCreateServerPhotoLastSeenIndex(api);
             serverPhotoLastSeenDirty = false;
@@ -370,6 +371,8 @@ namespace Collodion
 
             Block existing = Api.World.BlockAccessor.GetBlock(placePos);
             if (existing != null && existing.Id != 0 && !existing.IsReplacableBy(wallBlock)) return false;
+
+            if (!Api.World.Claims.TryAccess(player, placePos, EnumBlockAccessFlags.BuildOrBreak)) return false;
 
             Item? fullSlingItem = Api.World.GetItem(CameraSlingFullCode);
             if (fullSlingItem == null) return false;

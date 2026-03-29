@@ -14,6 +14,7 @@ namespace Collodion
 
         // client-side: in-progress download assemblies by photoId
         private readonly Dictionary<string, IncomingAssembly> clientIncoming = new Dictionary<string, IncomingAssembly>(StringComparer.OrdinalIgnoreCase);
+        private readonly object clientIncomingLock = new object();
 
         // client-side: mounted blocks waiting for a specific photoId
         private readonly object clientWaitLock = new object();
@@ -126,31 +127,38 @@ namespace Collodion
             if (packet.ChunkIndex < 0 || packet.ChunkIndex >= packet.ChunkCount) return;
             if (packet.Data == null) return;
 
-            if (!clientIncoming.TryGetValue(photoId, out IncomingAssembly? asm) || asm == null || asm.TotalSize != packet.TotalSize || asm.ChunkCount != packet.ChunkCount)
+            IncomingAssembly? completed = null;
+            lock (clientIncomingLock)
             {
-                asm = new IncomingAssembly(packet.TotalSize, packet.ChunkCount);
-                clientIncoming[photoId] = asm;
+                if (!clientIncoming.TryGetValue(photoId, out IncomingAssembly? asm) || asm == null || asm.TotalSize != packet.TotalSize || asm.ChunkCount != packet.ChunkCount)
+                {
+                    asm = new IncomingAssembly(packet.TotalSize, packet.ChunkCount);
+                    clientIncoming[photoId] = asm;
+                }
+
+                if (asm == null) return;
+                asm.LastTouchedMs = nowMs;
+
+                if (asm.Received[packet.ChunkIndex]) return;
+
+                int offset = packet.ChunkIndex * GetChunkSizeBytes();
+                int copyLen = Math.Min(packet.Data.Length, asm.TotalSize - offset);
+                if (copyLen <= 0) return;
+
+                Buffer.BlockCopy(packet.Data, 0, asm.Buffer, offset, copyLen);
+                asm.Received[packet.ChunkIndex] = true;
+                asm.ReceivedChunks++;
+
+                if (asm.ReceivedChunks < asm.ChunkCount) return;
+
+                clientIncoming.Remove(photoId);
+                completed = asm;
             }
 
-            if (asm == null) return;
-            asm.LastTouchedMs = nowMs;
-
-            if (asm.Received[packet.ChunkIndex]) return;
-
-            int offset = packet.ChunkIndex * GetChunkSizeBytes();
-            int copyLen = Math.Min(packet.Data.Length, asm.TotalSize - offset);
-            if (copyLen <= 0) return;
-
-            Buffer.BlockCopy(packet.Data, 0, asm.Buffer, offset, copyLen);
-            asm.Received[packet.ChunkIndex] = true;
-            asm.ReceivedChunks++;
-
-            if (asm.ReceivedChunks < asm.ChunkCount) return;
-
-            clientIncoming.Remove(photoId);
+            if (completed == null) return;
 
             // Basic PNG signature check
-            if (asm.TotalSize < 8 || asm.Buffer[0] != 0x89 || asm.Buffer[1] != 0x50 || asm.Buffer[2] != 0x4E || asm.Buffer[3] != 0x47)
+            if (completed.TotalSize < 8 || completed.Buffer[0] != 0x89 || completed.Buffer[1] != 0x50 || completed.Buffer[2] != 0x4E || completed.Buffer[3] != 0x47)
             {
                 mod.ClientApi.Logger.Warning($"Wetplate: downloaded bytes for {photoId} do not look like PNG; ignoring");
                 return;
@@ -160,7 +168,7 @@ namespace Collodion
             {
                 string outPath = GetPhotoPath(photoId);
                 Directory.CreateDirectory(Path.GetDirectoryName(outPath)!);
-                File.WriteAllBytes(outPath, asm.Buffer);
+                File.WriteAllBytes(outPath, completed.Buffer);
 
                 // Kick item render cache so the next render pulls from disk.
                 ItemPhotograph.ClearClientRenderCacheAndBumpVersion();
@@ -202,24 +210,27 @@ namespace Collodion
                 }
             }
 
-            if (clientIncoming.Count > 0)
+            lock (clientIncomingLock)
             {
-                List<string>? staleIncomingKeys = null;
-                foreach (KeyValuePair<string, IncomingAssembly> kvp in clientIncoming)
+                if (clientIncoming.Count > 0)
                 {
-                    IncomingAssembly asm = kvp.Value;
-                    if (asm == null) continue;
-                    if (nowMs - asm.LastTouchedMs <= incomingStaleMs) continue;
-
-                    staleIncomingKeys ??= new List<string>();
-                    staleIncomingKeys.Add(kvp.Key);
-                }
-
-                if (staleIncomingKeys != null)
-                {
-                    foreach (string key in staleIncomingKeys)
+                    List<string>? staleIncomingKeys = null;
+                    foreach (KeyValuePair<string, IncomingAssembly> kvp in clientIncoming)
                     {
-                        clientIncoming.Remove(key);
+                        IncomingAssembly asm = kvp.Value;
+                        if (asm == null) continue;
+                        if (nowMs - asm.LastTouchedMs <= incomingStaleMs) continue;
+
+                        staleIncomingKeys ??= new List<string>();
+                        staleIncomingKeys.Add(kvp.Key);
+                    }
+
+                    if (staleIncomingKeys != null)
+                    {
+                        foreach (string key in staleIncomingKeys)
+                        {
+                            clientIncoming.Remove(key);
+                        }
                     }
                 }
             }

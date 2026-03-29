@@ -80,6 +80,7 @@ namespace Collodion
         private PhotoLastSeenIndex? serverPhotoLastSeenIndex;
         private bool serverPhotoLastSeenDirty;
         private long? serverPhotoLastSeenFlushListenerId;
+        private long? serverPhotoSyncPruneListenerId;
         private long? clientDevTrayLatchTickListenerId;
 
         private readonly Dictionary<string, long> clientLastPhotoSeenPingMs = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
@@ -168,6 +169,12 @@ namespace Collodion
                     {
                         try { sapi.Event.UnregisterGameTickListener(serverPhotoLastSeenFlushListenerId.Value); } catch { }
                         serverPhotoLastSeenFlushListenerId = null;
+                    }
+
+                    if (serverPhotoSyncPruneListenerId.HasValue && serverPhotoSyncPruneListenerId.Value > 0)
+                    {
+                        try { sapi.Event.UnregisterGameTickListener(serverPhotoSyncPruneListenerId.Value); } catch { }
+                        serverPhotoSyncPruneListenerId = null;
                     }
 
                     try { ServerMaybeFlushPhotoLastSeenIndex(sapi); } catch { }

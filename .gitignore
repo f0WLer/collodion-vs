@@ -20,6 +20,7 @@ obj/
 Thumbs.db
 
 # Local tooling / notes
+.github/*
 .obsidian/
 notes/
 

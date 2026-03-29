@@ -785,6 +785,10 @@ namespace Collodion
                     newBe.TrySetPlate(plateToKeep);
                 }
             }
+            else if (plateToKeep != null)
+            {
+                world.SpawnItemEntity(plateToKeep, pos.ToVec3d().Add(0.5, 0.5, 0.5));
+            }
         }
 
         private BlockPos ResolvePlacedPos(IWorldAccessor world, BlockSelection blockSel)

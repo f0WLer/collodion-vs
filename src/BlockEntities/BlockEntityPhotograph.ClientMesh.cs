@@ -112,50 +112,15 @@ namespace Collodion
 
             try
             {
-                MeshData? newMesh = null;
-                TextureAtlasPosition? firstTexPos = null;
-                string? firstPhotoPath = null;
-                bool firstPhotoExists = false;
-                string? firstError = null;
+                bool builtMesh = TryBuildCombinedPhotoMesh(
+                    capi, primaryPhotoId, secondaryPhotoId,
+                    out MeshData? newMesh,
+                    out TextureAtlasPosition? firstTexPos,
+                    out string? firstPhotoPath,
+                    out bool firstPhotoExists,
+                    out string? firstError);
 
-                if (!string.IsNullOrWhiteSpace(primaryPhotoId))
-                {
-                    if (TryBuildPhotoMeshForId(capi, primaryPhotoId!, 1, out MeshData? photoMesh1, out TextureAtlasPosition? texPos1, out string? path1, out bool exists1, out string? error1))
-                    {
-                        newMesh = photoMesh1;
-                        firstTexPos = texPos1;
-                        firstPhotoPath = path1;
-                        firstPhotoExists = exists1;
-                    }
-                    else
-                    {
-                        firstError = error1;
-                    }
-                }
-
-                if (!string.IsNullOrWhiteSpace(secondaryPhotoId))
-                {
-                    if (TryBuildPhotoMeshForId(capi, secondaryPhotoId!, 2, out MeshData? photoMesh2, out TextureAtlasPosition? texPos2, out string? path2, out bool exists2, out string? error2))
-                    {
-                        if (newMesh == null)
-                        {
-                            newMesh = photoMesh2;
-                            firstTexPos = texPos2;
-                            firstPhotoPath = path2;
-                            firstPhotoExists = exists2;
-                        }
-                        else
-                        {
-                            newMesh.AddMeshData(photoMesh2);
-                        }
-                    }
-                    else if (firstError == null)
-                    {
-                        firstError = error2;
-                    }
-                }
-
-                if (newMesh == null)
+                if (!builtMesh || newMesh == null)
                 {
                     lock (clientMeshLock)
                     {
@@ -166,7 +131,6 @@ namespace Collodion
                         clientLastError = firstError ?? "Failed to prepare framed photo texture";
                         clientOverlayInfo = null;
                     }
-
                     MarkDirty(true);
                     return;
                 }
@@ -197,6 +161,64 @@ namespace Collodion
                 }
                 MarkDirty(true);
             }
+        }
+
+        // Iterates primary then secondary photo slots, tessellates each, and merges
+        // them into a single combined mesh. Returns false if no mesh could be built.
+        private bool TryBuildCombinedPhotoMesh(
+            ICoreClientAPI capi,
+            string? primaryPhotoId,
+            string? secondaryPhotoId,
+            out MeshData? mesh,
+            out TextureAtlasPosition? texPos,
+            out string? photoPath,
+            out bool photoExists,
+            out string? error)
+        {
+            mesh = null;
+            texPos = null;
+            photoPath = null;
+            photoExists = false;
+            error = null;
+
+            if (!string.IsNullOrWhiteSpace(primaryPhotoId))
+            {
+                if (TryBuildPhotoMeshForId(capi, primaryPhotoId!, 1, out MeshData? photoMesh1, out TextureAtlasPosition? texPos1, out string? path1, out bool exists1, out string? error1))
+                {
+                    mesh = photoMesh1;
+                    texPos = texPos1;
+                    photoPath = path1;
+                    photoExists = exists1;
+                }
+                else
+                {
+                    error = error1;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(secondaryPhotoId))
+            {
+                if (TryBuildPhotoMeshForId(capi, secondaryPhotoId!, 2, out MeshData? photoMesh2, out TextureAtlasPosition? texPos2, out string? path2, out bool exists2, out string? error2))
+                {
+                    if (mesh == null)
+                    {
+                        mesh = photoMesh2;
+                        texPos = texPos2;
+                        photoPath = path2;
+                        photoExists = exists2;
+                    }
+                    else
+                    {
+                        mesh.AddMeshData(photoMesh2);
+                    }
+                }
+                else if (error == null)
+                {
+                    error = error2;
+                }
+            }
+
+            return mesh != null;
         }
 
         private bool TryBuildPhotoMeshForId(ICoreClientAPI capi, string photoId, int photoSlot, out MeshData? mesh, out TextureAtlasPosition? texPos, out string photoPath, out bool photoExists, out string? error)

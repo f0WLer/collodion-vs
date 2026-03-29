@@ -314,44 +314,71 @@ namespace Collodion
                 return;
             }
 
-            bool showPhoto = ShouldShowTrayPhoto(plate);
+            bool builtTrayBody = TryBuildTrayBodyMesh(capi, out MeshData? trayBodyMesh);
+            bool builtPhotoMesh = TryBuildPlateMesh(capi, plate, out MeshData? photoMesh);
 
-            // ── 1. Tray body mesh (everything except the plate element) ─────────────
-            // We always build this when a plate is loaded so we can take full ownership
-            // of rendering and suppress the base block mesh (which otherwise shows the
-            // static plate element in the wrong orientation for N/S facings).
-            MeshData? trayBodyMesh = null;
-            bool builtTrayBody = false;
+            lock (clientMeshLock)
+            {
+                // Only update clientTrayBodyMesh when we actually built a new one.
+                // If the async build failed we preserve whatever is already there
+                // (e.g. the synchronously-built mesh from ClientPlateChanged) rather
+                // than nulling it and causing a one-frame flash of the base block shape.
+                if (builtTrayBody) clientTrayBodyMesh = trayBodyMesh;
+                clientPhotoMesh = builtPhotoMesh ? photoMesh : null;
+            }
+
+            bool builtOverlayMesh = TryBuildPourOverlayMesh(capi, out MeshData? devOverlayMesh);
+
+            lock (clientMeshLock)
+            {
+                if (builtOverlayMesh)
+                    clientDeveloperOverlayMesh = devOverlayMesh;
+                else if (!clientDeveloperOverlayActive)
+                    clientDeveloperOverlayMesh = null;
+            }
+
+            clientRenderSignature = sig;
+            MarkDirty(true);
+        }
+
+        // ── 1. Tray body mesh (everything except the plate element) ─────────────
+        // We always build this when a plate is loaded so we can take full ownership
+        // of rendering and suppress the base block mesh (which otherwise shows the
+        // static plate element in the wrong orientation for N/S facings).
+        private bool TryBuildTrayBodyMesh(ICoreClientAPI capi, out MeshData? mesh)
+        {
+            mesh = null;
             try
             {
                 ITexPositionSource bodySource = capi.Tesselator.GetTextureSource(Block);
                 var bodyShape = Block?.Shape?.Clone();
-                if (bodyShape != null)
-                {
-                    bodyShape.IgnoreElements = new[] { "plate" };
-                    capi.Tesselator.TesselateShape(
-                        "collodion-devtray-body",
-                        Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
-                        bodyShape,
-                        out trayBodyMesh,
-                        bodySource
-                    );
-                    builtTrayBody = trayBodyMesh != null;
-                }
+                if (bodyShape == null) return false;
+
+                bodyShape.IgnoreElements = new[] { "plate" };
+                capi.Tesselator.TesselateShape(
+                    "collodion-devtray-body",
+                    Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                    bodyShape,
+                    out mesh,
+                    bodySource
+                );
+                return mesh != null;
             }
             catch
             {
-                trayBodyMesh = null;
+                mesh = null;
+                return false;
             }
+        }
 
-            // ── 2. Plate / photo mesh (plate element only, world-rotated) ───────────
-            MeshData? photoMesh = null;
-            bool builtPhotoMesh = false;
-
-            // UV rotation is always 0: the world-space Y rotation applied to the mesh
-            // already physically repositions the plate for each facing — the UV just
-            // needs to stay in the base orientation so the image is not double-rotated.
-            int uvRotationDeg = 0;
+        // ── 2. Plate / photo mesh (plate element only, world-rotated) ───────────
+        // UV rotation is always 0: the world-space Y rotation applied to the mesh
+        // already physically repositions the plate for each facing — the UV just
+        // needs to stay in the base orientation so the image is not double-rotated.
+        private bool TryBuildPlateMesh(ICoreClientAPI capi, ItemStack plate, out MeshData? mesh)
+        {
+            mesh = null;
+            bool showPhoto = ShouldShowTrayPhoto(plate);
 
             if (showPhoto && PhotoPlateRenderUtil.TryGetPhotoBlockTexture(capi, plate, out TextureAtlasPosition photoTex, out float photoAspect, Pos))
             {
@@ -361,156 +388,116 @@ namespace Collodion
                     ITexPositionSource texSource = new PlatePhotoTextureSource(baseSource, photoTex);
 
                     var shape = Block?.Shape?.Clone();
-                    if (shape != null)
-                    {
-                        // Only keep the plate element so we don't duplicate the tray walls.
-                        shape.IgnoreElements = new[] { "base", "wall-n", "wall-s", "wall-e", "wall-w" };
-                        capi.Tesselator.TesselateShape(
-                            "collodion-devtray-platephoto",
-                            Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
-                            shape,
-                            out photoMesh,
-                            texSource
-                        );
+                    if (shape == null) return false;
 
-                        StampUvByRotationCropped(photoMesh, photoTex, uvRotationDeg, photoAspect, PhotoTargetAspect);
+                    // Only keep the plate element so we don't duplicate the tray walls.
+                    shape.IgnoreElements = new[] { "base", "wall-n", "wall-s", "wall-e", "wall-w" };
+                    capi.Tesselator.TesselateShape(
+                        "collodion-devtray-platephoto",
+                        Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                        shape,
+                        out mesh,
+                        texSource
+                    );
 
-                        // Rotate the plate/photo plane in world space for N/S placement.
-                        int placementYawDeg = GetPlacementFacingYawDeg();
-                        if (placementYawDeg != 0)
-                        {
-                            photoMesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, placementYawDeg * GameMath.DEG2RAD, 0f);
-                        }
+                    StampUvByRotationCropped(mesh, photoTex, 0, photoAspect, PhotoTargetAspect);
 
-                        // Nudge up slightly to avoid z-fighting with the tray body.
-                        photoMesh.Translate(0f, 0.0006f, 0f);
-                        builtPhotoMesh = true;
-                    }
+                    int placementYawDeg = GetPlacementFacingYawDeg();
+                    if (placementYawDeg != 0)
+                        mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, placementYawDeg * GameMath.DEG2RAD, 0f);
+
+                    // Nudge up slightly to avoid z-fighting with the tray body.
+                    mesh.Translate(0f, 0.0006f, 0f);
+                    return true;
                 }
                 catch
                 {
-                    photoMesh = null;
+                    mesh = null;
+                    return false;
                 }
             }
-            else if (!showPhoto)
+
+            if (!showPhoto)
             {
                 // Exposed stage (not yet developed): build a plain plate mesh so we can
-                // apply the correct world-space rotation for N/S placement.  Without this
+                // apply the correct world-space rotation for N/S placement. Without this
                 // the static block shape plate element (always E-W) would show for N/S.
                 try
                 {
                     ITexPositionSource baseSource = capi.Tesselator.GetTextureSource(Block);
                     var shape = Block?.Shape?.Clone();
-                    if (shape != null)
-                    {
-                        shape.IgnoreElements = new[] { "base", "wall-n", "wall-s", "wall-e", "wall-w" };
-                        capi.Tesselator.TesselateShape(
-                            "collodion-devtray-plainplate",
-                            Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
-                            shape,
-                            out photoMesh,
-                            baseSource
-                        );
+                    if (shape == null) return false;
 
-                        int placementYawDeg = GetPlacementFacingYawDeg();
-                        if (placementYawDeg != 0)
-                        {
-                            photoMesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, placementYawDeg * GameMath.DEG2RAD, 0f);
-                        }
+                    shape.IgnoreElements = new[] { "base", "wall-n", "wall-s", "wall-e", "wall-w" };
+                    capi.Tesselator.TesselateShape(
+                        "collodion-devtray-plainplate",
+                        Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                        shape,
+                        out mesh,
+                        baseSource
+                    );
 
-                        photoMesh.Translate(0f, 0.0006f, 0f);
-                        builtPhotoMesh = photoMesh != null;
-                    }
+                    int placementYawDeg = GetPlacementFacingYawDeg();
+                    if (placementYawDeg != 0)
+                        mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, placementYawDeg * GameMath.DEG2RAD, 0f);
+
+                    mesh.Translate(0f, 0.0006f, 0f);
+                    return mesh != null;
                 }
                 catch
                 {
-                    photoMesh = null;
+                    mesh = null;
+                    return false;
                 }
             }
 
-            lock (clientMeshLock)
+            return false;
+        }
+
+        // ── 3. Pour overlay mesh (developer/fixer/water liquid layer) ───────────
+        private bool TryBuildPourOverlayMesh(ICoreClientAPI capi, out MeshData? mesh)
+        {
+            mesh = null;
+            if (!clientDeveloperOverlayActive) return false;
+            if (!TryGetOverlayTexture(capi, clientDeveloperOverlayAlpha, clientOverlayAction, out TextureAtlasPosition devTex)) return false;
+
+            try
             {
-                // Only update clientTrayBodyMesh when we actually built a new one.
-                // If the async build failed we preserve whatever is already there
-                // (e.g. the synchronously-built mesh from ClientPlateChanged) rather
-                // than nulling it and causing a one-frame flash of the base block shape.
-                if (builtTrayBody)
-                {
-                    clientTrayBodyMesh = trayBodyMesh;
-                }
-                if (builtPhotoMesh)
-                {
-                    clientPhotoMesh = photoMesh;
-                }
-                else
-                {
-                    clientPhotoMesh = null;
-                }
-            }
+                ITexPositionSource baseSource = capi.Tesselator.GetTextureSource(Block);
+                ITexPositionSource texSource = new PlatePhotoTextureSource(baseSource, devTex);
 
-            // Optional: developer liquid overlay (local-only, only while RMB held).
-            MeshData? devOverlayMesh = null;
-            bool builtOverlayMesh = false;
-            if (clientDeveloperOverlayActive)
+                var shape = Block?.Shape?.Clone();
+                if (shape == null) return false;
+
+                // Keep the overlay on the plate element, then scale it up slightly.
+                shape.IgnoreElements = new[] { "base", "wall-n", "wall-s", "wall-e", "wall-w" };
+                capi.Tesselator.TesselateShape(
+                    "collodion-devtray-devoverlay",
+                    Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                    shape,
+                    out mesh,
+                    texSource
+                );
+
+                // Scale up around center so it extends past the plate edges.
+                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), DeveloperOverlayScale, 1f, DeveloperOverlayScale);
+
+                int placementYawDeg = GetPlacementFacingYawDeg();
+                if (placementYawDeg != 0)
+                    mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, placementYawDeg * GameMath.DEG2RAD, 0f);
+
+                // Put it above the photo mesh.
+                mesh.Translate(0f, 0.0012f, 0f);
+
+                ForceTransparentPass(mesh);
+                ApplyOverlayAlpha(mesh, clientDeveloperOverlayAlpha);
+                return true;
+            }
+            catch
             {
-                if (TryGetOverlayTexture(capi, clientDeveloperOverlayAlpha, clientOverlayAction, out TextureAtlasPosition devTex))
-                {
-                    try
-                    {
-                        ITexPositionSource baseSource = capi.Tesselator.GetTextureSource(Block);
-                        ITexPositionSource texSource = new PlatePhotoTextureSource(baseSource, devTex);
-
-                        var shape = Block?.Shape?.Clone();
-                        if (shape != null)
-                        {
-                            // Keep the overlay on the plate element, then scale it up slightly.
-                            shape.IgnoreElements = new[] { "base", "wall-n", "wall-s", "wall-e", "wall-w" };
-                            capi.Tesselator.TesselateShape(
-                                "collodion-devtray-devoverlay",
-                                Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
-                                shape,
-                                out devOverlayMesh,
-                                texSource
-                            );
-
-                            // Scale up around center so it extends past the plate edges.
-                            devOverlayMesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), DeveloperOverlayScale, 1f, DeveloperOverlayScale);
-
-                            int placementYawDeg = GetPlacementFacingYawDeg();
-                            if (placementYawDeg != 0)
-                            {
-                                devOverlayMesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, placementYawDeg * GameMath.DEG2RAD, 0f);
-                            }
-
-                            // Put it above the photo mesh.
-                            devOverlayMesh.Translate(0f, 0.0012f, 0f);
-
-                            ForceTransparentPass(devOverlayMesh);
-                            ApplyOverlayAlpha(devOverlayMesh, clientDeveloperOverlayAlpha);
-                            builtOverlayMesh = true;
-                        }
-                    }
-                    catch
-                    {
-                        devOverlayMesh = null;
-                    }
-                }
+                mesh = null;
+                return false;
             }
-
-            lock (clientMeshLock)
-            {
-                if (builtOverlayMesh)
-                {
-                    clientDeveloperOverlayMesh = devOverlayMesh;
-                }
-                else if (!clientDeveloperOverlayActive)
-                {
-                    clientDeveloperOverlayMesh = null;
-                }
-            }
-            clientRenderSignature = sig;
-
-            MarkDirty(true);
         }
 
         private bool TryGetPourOverlayAlpha(ICoreClientAPI capi, out float alpha, out string action)

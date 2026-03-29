@@ -330,13 +330,13 @@ namespace Collodion
 
         private static bool IsCollodion(ItemStack stack)
         {
-            return stack?.Collectible?.Code != null && MatchesPortionCode(stack.Collectible.Code, CollodionPortionCode);
+            return stack?.Collectible?.Code != null && WetPlateChemicalUtil.MatchesPortionCode(stack.Collectible.Code, CollodionPortionCode);
         }
 
         private static bool IsCollodionOrContainerWith(ItemStack stack)
         {
             if (IsCollodion(stack)) return true;
-            return HasChemicalInAttributes(stack?.Attributes, CollodionPortionCode);
+            return WetPlateChemicalUtil.HasChemicalInAttributes(stack?.Attributes, CollodionPortionCode);
         }
 
         private static bool TryConsumeCollodion(ItemSlot? activeSlot, int amount)
@@ -353,130 +353,11 @@ namespace Collodion
             }
 
             // Holding a container (e.g., bucket/jug) with contents stored in attributes.
-            if (TryConsumeChemicalFromAttributes(activeSlot.Itemstack.Attributes, CollodionPortionCode, amount))
+            if (WetPlateChemicalUtil.TryConsumeChemicalFromAttributes(activeSlot.Itemstack.Attributes, CollodionPortionCode, amount))
             {
                 activeSlot.MarkDirty();
                 return true;
             }
-
-            return false;
-        }
-
-        private static bool HasChemicalInAttributes(Vintagestory.API.Datastructures.ITreeAttribute? attrs, AssetLocation portionCode)
-        {
-            if (attrs == null) return false;
-
-            foreach (var kvp in attrs)
-            {
-                var attr = kvp.Value;
-                if (attr == null) continue;
-
-                if (attr is Vintagestory.API.Datastructures.ItemstackAttribute itemAttr)
-                {
-                    if (MatchesPortionCode(itemAttr.value?.Collectible?.Code, portionCode)) return true;
-                }
-
-                if (attr is Vintagestory.API.Datastructures.TreeArrayAttribute arr && arr.value != null)
-                {
-                    for (int i = 0; i < arr.value.Length; i++)
-                    {
-                        var entry = arr.value[i];
-                        if (entry == null) continue;
-                        if (MatchesPortionCode(entry.GetString("code", null) ?? string.Empty, portionCode)) return true;
-                    }
-                }
-
-                if (attr is Vintagestory.API.Datastructures.ITreeAttribute subtree)
-                {
-                    if (HasChemicalInAttributes(subtree, portionCode)) return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool TryConsumeChemicalFromAttributes(Vintagestory.API.Datastructures.ITreeAttribute? attrs, AssetLocation portionCode, int amount)
-        {
-            if (attrs == null) return false;
-
-            foreach (var kvp in attrs)
-            {
-                var attr = kvp.Value;
-                if (attr == null) continue;
-
-                if (attr is Vintagestory.API.Datastructures.ItemstackAttribute itemAttr)
-                {
-                    ItemStack contained = itemAttr.value;
-                    if (MatchesPortionCode(contained?.Collectible?.Code, portionCode))
-                    {
-                        if (contained == null || contained.StackSize < amount) return false;
-                        contained.StackSize -= amount;
-                        if (contained.StackSize <= 0)
-                        {
-                            itemAttr.SetValue(null);
-                        }
-                        return true;
-                    }
-                }
-
-                if (attr is Vintagestory.API.Datastructures.TreeArrayAttribute arr && arr.value != null)
-                {
-                    for (int i = 0; i < arr.value.Length; i++)
-                    {
-                        var entry = arr.value[i];
-                        if (entry == null) continue;
-
-                        string codeStr = entry.GetString("code", null) ?? string.Empty;
-                        if (!MatchesPortionCode(codeStr, portionCode)) continue;
-
-                        int stackSize = entry.GetInt("stacksize", entry.GetInt("quantity", -1));
-                        if (stackSize < 0)
-                        {
-                            if (entry.GetBool("makefull", false)) stackSize = 1000;
-                        }
-
-                        if (stackSize < amount) return false;
-
-                        stackSize -= amount;
-                        entry.SetInt("stacksize", stackSize);
-                        entry.RemoveAttribute("makefull");
-                        return true;
-                    }
-                }
-
-                if (attr is Vintagestory.API.Datastructures.ITreeAttribute subtree)
-                {
-                    if (TryConsumeChemicalFromAttributes(subtree, portionCode, amount)) return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool MatchesPortionCode(AssetLocation? candidate, AssetLocation portionCode)
-        {
-            if (candidate == null) return false;
-
-            if (candidate == portionCode) return true;
-
-            // Accept in-container variants.
-            if (candidate.Domain == portionCode.Domain && candidate.Path == $"incontainer-item-{portionCode.Path}") return true;
-
-            if (candidate.Domain == portionCode.Domain && candidate.Path == portionCode.Path) return true;
-
-            return false;
-        }
-
-        private static bool MatchesPortionCode(string candidateCodeStr, AssetLocation portionCode)
-        {
-            if (string.IsNullOrEmpty(candidateCodeStr)) return false;
-
-            if (candidateCodeStr.Equals(portionCode.ToString(), System.StringComparison.OrdinalIgnoreCase)) return true;
-            if (candidateCodeStr.Equals(portionCode.Path, System.StringComparison.OrdinalIgnoreCase)) return true;
-
-            string incontainerPath = $"incontainer-item-{portionCode.Path}";
-            if (candidateCodeStr.Equals($"{portionCode.Domain}:{incontainerPath}", System.StringComparison.OrdinalIgnoreCase)) return true;
-            if (candidateCodeStr.Equals(incontainerPath, System.StringComparison.OrdinalIgnoreCase)) return true;
 
             return false;
         }

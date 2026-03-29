@@ -14,27 +14,27 @@ These guidelines describe the **target** state of the codebase. Where the curren
 | `BlockEntities/` | `BlockEntity*` classes directly — no subfolders |
 | `Items/` | `Item*` classes directly |
 | `Items/Plates/` | Plate item subhierarchy (`ItemPlateBase`, subclasses, render util) |
-| `ModSystem/` | `CollodionModSystem` partials and config POCOs |
+| `ModSystem/` | `CollodionModSystem` partials, viewfinder partials, command partials, and config POCOs |
 | `Photograph/` | Photo metadata, caption, seen-index domain — no block/item references |
 | `Network/` | All `[ProtoContract]` packet classes — nothing else |
 | `Rendering/` | Pure rendering utilities — no game-state writes |
-| `Viewfinder/` | Viewfinder FOV, zoom, mouse, zoom renderer |
-| `Chemistry/` | Wet-plate chemical effect logic and photo sync networking |
-| `Commands/` | `/collodion` command handlers |
+| `Effects/` | Wet-plate image processing (grain, tone, artifact, finishing, sky) and effect config |
+| `PhotoSync/` | Photo blob request/chunk/ack networking and on-disk photo sync |
 
 **Rules:**
 - Do not add files to a folder that crosses its stated concern boundary.
 - When a new concern does not fit an existing folder, create a new named folder rather than stretching an existing one.
 - Folder names are PascalCase to match VS API namespace conventions (`Blocks`, `Items`, etc.).
 
-### Current divergences to fix
+### Notes on `ModSystem/`
 
-| Current path | Target path | Reason |
-|---|---|---|
-| `Blocks/Types/*.cs` | `Blocks/*.cs` | "Types" is a meaningless qualifier |
-| `Blocks/Entities/*.cs` | `BlockEntities/*.cs` | `Block` and `BlockEntity` are different hierarchies; co-locating them hides that |
-| `Wetplate/` | `Chemistry/` | "Wetplate" is a material property, not a concern name; "Chemistry" is clearer |
-| Packet `[ProtoContract]` classes in `ModSystem/CollodionModSystem.cs` | `Network/` | Packet definitions have no business in the mod system entry point |
+The viewfinder (FOV, mouse, zoom, Harmony patch) and `/collodion` command implementations live in `ModSystem/` as `CollodionModSystem` partials rather than in their own top-level folders. This is intentional: both concerns are tightly coupled to the mod system lifecycle (`StartClientSide`/`StartServerSide`, tick listener registration, `Dispose`) and access `ClientApi`, `Config`, and `CaptureRenderer` directly. Extracting them to separate classes would require dependency injection wiring with no architectural benefit.
+
+Naming convention for these partials:
+- `CollodionModSystem.Viewfinder.cs`, `CollodionModSystem.ViewfinderFov.cs`, `CollodionModSystem.ViewfinderMouse.cs`, `CollodionModSystem.ZoomHarmony.cs`
+- `CollodionModSystem.Commands.cs`, `CollodionModSystem.CommandEffects.cs`, `CollodionModSystem.CommandPose.cs`, `CollodionModSystem.CommandMisc.cs`
+
+Config POCOs (`*Config.cs`) stay in `ModSystem/` for the same reason — they are instantiated and owned by `CollodionModSystem`.
 
 ---
 
@@ -45,12 +45,12 @@ These guidelines describe the **target** state of the codebase. Where the curren
 
 | Wrong | Right |
 |---|---|
-| `Commands/Handler.cs` | `Commands/CollodionCommandHandler.cs` |
-| `Commands/Effects.cs` | `Commands/EffectsCommand.cs` |
-| `Viewfinder/Mouse.cs` | `Viewfinder/ViewfinderMouse.cs` |
-| `Viewfinder/RuntimeFov.cs` | `Viewfinder/RuntimeFov.cs` ← fine if class is `RuntimeFov` |
+| `BlockEntities/DevTray.cs` | `BlockEntities/BlockEntityDevelopmentTray.cs` |
+| `Network/Packets.cs` (multiple classes) | One file per class: `PhotoTakenPacket.cs`, etc. |
+| `Effects/AllEffects.cs` (multiple classes) | One file per class: `Grain.cs`, `Tone.cs`, etc. |
 
 - Partial file suffix follows the pattern `ClassName.Concern.cs` — see §3.
+- The file naming examples for `Commands/` and `Viewfinder/` in the table above are historical; those concerns now live as `CollodionModSystem` partials in `ModSystem/` — see §1 notes.
 
 ---
 
@@ -70,6 +70,15 @@ ClassName.Hud.cs           ← HUD / GUI logic (if substantial)
 A single file exceeding ~300 lines of logic is a signal to split.
 Client-only code must live in a `.Client.cs` partial and only be invoked on `EnumAppSide.Client`.
 Never use `#if CLIENT` — use the partial split instead.
+
+### File size watchlist
+
+Two files are flagged as oversized and should be audited before growing further:
+
+| File | Lines | Risk |
+|---|---|---|
+| `Blocks/BlockDevelopmentTray.cs` | ~1164 | Likely mixes interaction, placement, and render/network concerns |
+| `Items/Plates/PhotoPlateRenderUtil.cs` | ~1169 | Render *utility* at this size suggests accumulated unrelated helpers |
 
 ---
 

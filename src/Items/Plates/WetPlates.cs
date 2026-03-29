@@ -10,7 +10,7 @@ namespace Collodion
         public const string WetCreatedTotalHours = "collodionWetCreatedTotalHours";
         public const string WetDurationHours = "collodionWetDurationHours";
         public const string StoredRemainingWetHours = "collodionStoredRemainingWetHours";
-        public const double DefaultWetDurationHours = 0.33;
+        public const double DefaultWetDurationHours = 0.66;
         public const string PhotoId = "photoId";
         public const string PlateStage = "collodionPlateStage";
         public const string DevelopPours = "collodionDevelopPours";
@@ -154,7 +154,8 @@ namespace Collodion
             ItemStack? outStack = outputSlot?.Itemstack;
             if (outStack == null) return;
 
-            WetPlateAttrs.EnsureWetTimer(api.World, outStack, WetPlateAttrs.DefaultWetDurationHours);
+            double duration = api.ModLoader?.GetModSystem<CollodionModSystem>()?.Config?.PlateProcessing?.WetPlateDurationHours ?? WetPlateAttrs.DefaultWetDurationHours;
+            WetPlateAttrs.EnsureWetTimer(api.World, outStack, duration);
         }
 
         public override void OnModifiedInInventorySlot(IWorldAccessor world, ItemSlot slot, ItemStack? extractedStack = null)
@@ -162,7 +163,8 @@ namespace Collodion
             base.OnModifiedInInventorySlot(world, slot, extractedStack);
             if (world?.Side != EnumAppSide.Server) return;
             if (slot?.Itemstack == null) return;
-            WetPlateAttrs.EnsureWetTimer(world, slot.Itemstack, WetPlateAttrs.DefaultWetDurationHours);
+            double duration = api?.ModLoader?.GetModSystem<CollodionModSystem>()?.Config?.PlateProcessing?.WetPlateDurationHours ?? WetPlateAttrs.DefaultWetDurationHours;
+            WetPlateAttrs.EnsureWetTimer(world, slot.Itemstack, duration);
         }
 
         public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
@@ -183,7 +185,8 @@ namespace Collodion
             base.OnModifiedInInventorySlot(world, slot, extractedStack);
             if (world?.Side != EnumAppSide.Server) return;
             if (slot?.Itemstack == null) return;
-            WetPlateAttrs.EnsureWetTimer(world, slot.Itemstack, WetPlateAttrs.DefaultWetDurationHours);
+            double duration = api?.ModLoader?.GetModSystem<CollodionModSystem>()?.Config?.PlateProcessing?.WetPlateDurationHours ?? WetPlateAttrs.DefaultWetDurationHours;
+            WetPlateAttrs.EnsureWetTimer(world, slot.Itemstack, duration);
         }
 
         public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
@@ -210,7 +213,8 @@ namespace Collodion
             base.OnModifiedInInventorySlot(world, slot, extractedStack);
             if (world?.Side != EnumAppSide.Server) return;
             if (slot?.Itemstack == null) return;
-            WetPlateAttrs.EnsureWetTimer(world, slot.Itemstack, WetPlateAttrs.DefaultWetDurationHours);
+            double duration = api?.ModLoader?.GetModSystem<CollodionModSystem>()?.Config?.PlateProcessing?.WetPlateDurationHours ?? WetPlateAttrs.DefaultWetDurationHours;
+            WetPlateAttrs.EnsureWetTimer(world, slot.Itemstack, duration);
         }
 
         public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)

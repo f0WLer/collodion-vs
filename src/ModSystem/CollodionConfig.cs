@@ -96,6 +96,9 @@ namespace Collodion
         public string Comment_PlainClothConsumedPerPolish = "Plain cloth consumed per polish when ConsumePlainClothOnPolish is true.";
         public int PlainClothConsumedPerPolish = 1;
 
+        public string Comment_WetPlateDurationHours = "How long a freshly-coated silvered plate stays wet, in in-game hours. This is affected by the world's time speed. Default 0.66 (40 minutes). Server-authoritative.";
+        public double WetPlateDurationHours = 0.66;
+
         internal void ClampInPlace()
         {
             if (DevelopmentTrayChemicalUnitsPerUse < 1) DevelopmentTrayChemicalUnitsPerUse = 1;
@@ -112,6 +115,9 @@ namespace Collodion
 
             if (PlainClothConsumedPerPolish < 0) PlainClothConsumedPerPolish = 0;
             if (PlainClothConsumedPerPolish > 64) PlainClothConsumedPerPolish = 64;
+
+            if (WetPlateDurationHours < 0.01) WetPlateDurationHours = 0.01;
+            if (WetPlateDurationHours > 720.0) WetPlateDurationHours = 720.0;
         }
     }
 

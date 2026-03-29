@@ -242,7 +242,7 @@ namespace Collodion
 
             newPlate.Attributes.SetInt(WetPlateAttrs.DevelopPours, newPours);
             newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, newPours >= DevelopPoursRequired ? "developed" : "developing");
-            WetPlateAttrs.ResetWetTimer(world, newPlate, WetPlateAttrs.DefaultWetDurationHours);
+            WetPlateAttrs.ResetWetTimer(world, newPlate, modSys?.Config?.PlateProcessing?.WetPlateDurationHours ?? WetPlateAttrs.DefaultWetDurationHours);
 
             be.TrySetPlate(newPlate);
             SwapTrayBlockForPlateStage(world, pos, "developed", newPlate);

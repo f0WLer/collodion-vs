@@ -220,28 +220,9 @@ namespace Collodion
                 return true;
             }
 
-            // Empty hand + empty slot: pull first plate from inventory and insert.
+            // Empty hand + empty slot: no-op (do not auto-pull from inventory).
             if (held == null && !be.HasPlateAt(slotIndex))
             {
-                if (world.Side == EnumAppSide.Client)
-                {
-                    return true;
-                }
-
-                if (!be.CanInsertAt(slotIndex)) return false;
-
-                if (TryFindFirstPlateSlot(byPlayer, out ItemSlot? sourceSlot) && sourceSlot?.Itemstack != null)
-                {
-                    ItemStack sourceStack = sourceSlot.Itemstack;
-                    if (be.TryInsertPlateAt(slotIndex, sourceStack, world))
-                    {
-                        sourceSlot.TakeOut(1);
-                        sourceSlot.MarkDirty();
-                        PlayRandomPlateSetSound(world, blockSel.Position, byPlayer);
-                        return true;
-                    }
-                }
-
                 return false;
             }
 
@@ -255,9 +236,9 @@ namespace Collodion
                 ItemStack? taken = be.TakePlateAt(slotIndex, world);
                 if (taken == null) return false;
 
-                if (activeSlot?.Itemstack == null)
+                if (activeSlot != null && activeSlot.Itemstack == null)
                 {
-                    activeSlot!.Itemstack = taken;
+                    activeSlot.Itemstack = taken;
                     activeSlot.MarkDirty();
                     return true;
                 }
@@ -298,31 +279,6 @@ namespace Collodion
                     MouseButton = EnumMouseButton.Right
                 }
             };
-        }
-
-        private static bool TryFindFirstPlateSlot(IPlayer player, out ItemSlot? slot)
-        {
-            slot = null;
-
-            IPlayerInventoryManager? inv = player?.InventoryManager;
-            if (inv == null) return false;
-
-            foreach (InventoryBase inventory in inv.InventoriesOrdered)
-            {
-                if (inventory == null || inventory.Empty) continue;
-
-                for (int index = 0; index < inventory.Count; index++)
-                {
-                    ItemSlot? candidate = inventory[index];
-                    if (candidate?.Itemstack == null) continue;
-                    if (!BlockEntityPlateBox.IsInsertablePlate(candidate.Itemstack)) continue;
-
-                    slot = candidate;
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         private ItemStack? CreateDropStack(IWorldAccessor world, BlockPos pos)
@@ -460,8 +416,12 @@ namespace Collodion
             {
                 world.Api?.Event?.RegisterCallback(_ =>
                 {
-                    if (world.Side != EnumAppSide.Server) return;
-                    world.PlaySoundAt(sound, x, y, z, null, true, 16f, 1f);
+                    try
+                    {
+                        if (world.Side != EnumAppSide.Server) return;
+                        world.PlaySoundAt(sound, x, y, z, null, true, 16f, 1f);
+                    }
+                    catch { }
                 }, delayMs);
             }
             catch

@@ -227,7 +227,7 @@ namespace Collodion
                 for (int index = 0; index < SlotCount; index++)
                 {
                     string key = prefix + index;
-                    ItemStack? loaded = attrs.GetItemstack(key, null);
+                    ItemStack? loaded = attrs.TryGetAttribute(key, out IAttribute raw) && raw is ItemstackAttribute isa ? isa.value : null;
                     loaded?.ResolveBlockOrItem(world);
                     if (loaded != null && !IsInsertablePlate(loaded)) loaded = null;
                     if (loaded != null) loaded.StackSize = 1;

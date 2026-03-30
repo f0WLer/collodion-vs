@@ -9,7 +9,6 @@ namespace Collodion
     public partial class BlockEntityPhotograph
     {
     // Plate/frame visible area is 5w x 5.5h => aspect = 10/11.
-    private const float PhotoTargetAspect = 10f / 11f;
     private static readonly string[] PreferredPlankTextureKeys = { "all", "side", "north", "south", "east", "west", "up", "down" };
     private static readonly string[] IgnorePhotoElements = { "Photo", "Photo1", "Photo2" };
     private static readonly string[] IgnoreDoubleFramePrimaryWall = { "Frame2", "Photo", "Photo1", "Photo2" };
@@ -310,7 +309,7 @@ namespace Collodion
             {
                 uvRotationDeg = 0;
             }
-            StampUvByRotationCropped(mesh, texPos, uvRotationDeg, photoAspect, PhotoTargetAspect);
+            PhotoMeshUtil.StampUvByRotationCropped(mesh, texPos, uvRotationDeg, photoAspect, PhotoMeshUtil.PhotoTargetAspect);
 
             float yawDeg = GetYawDegFromBlockVariant();
             if (Math.Abs(yawDeg) > 0.001f)
@@ -358,7 +357,7 @@ namespace Collodion
             {
                 uvRotationDeg = 0;
             }
-            StampUvByRotationCropped(mesh, texPos, uvRotationDeg, photoAspect, PhotoTargetAspect);
+            PhotoMeshUtil.StampUvByRotationCropped(mesh, texPos, uvRotationDeg, photoAspect, PhotoMeshUtil.PhotoTargetAspect);
 
             float yawDeg = GetYawDegFromBlockVariant();
             if (Math.Abs(yawDeg) > 0.001f)
@@ -418,7 +417,7 @@ namespace Collodion
                 }
 
                 // Ensure we sample the correct atlas region (and optionally rotate the photo).
-                StampUvByRotationCropped(planeMesh, texPos, uvRotationDeg, photoAspect, PhotoTargetAspect);
+                PhotoMeshUtil.StampUvByRotationCropped(planeMesh, texPos, uvRotationDeg, photoAspect, PhotoMeshUtil.PhotoTargetAspect);
 
                 lock (clientMeshLock)
                 {
@@ -499,7 +498,7 @@ namespace Collodion
             mesh = mesh.WithTexPos(texPos);
 
             // Explicitly stamp UVs so we actually sample the photo region.
-            StampUvByRotationCropped(mesh, texPos, 90, photoAspect, PhotoTargetAspect);
+            PhotoMeshUtil.StampUvByRotationCropped(mesh, texPos, 90, photoAspect, PhotoMeshUtil.PhotoTargetAspect);
 
             return mesh;
         }

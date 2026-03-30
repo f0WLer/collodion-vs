@@ -123,10 +123,11 @@ namespace Collodion
 
                 try
                 {
-                    EntityAgent? playerEnt = ClientApi.World?.Player?.Entity;
-                    if (playerEnt != null)
+                    IClientWorldAccessor? world = ClientApi.World;
+                    EntityAgent? playerEnt = world?.Player?.Entity;
+                    if (world != null && playerEnt != null)
                     {
-                        ClientApi.World.PlaySoundAt(ViewfinderEnterSound, playerEnt, null, true, 16f, NextViewfinderRandomPitch());
+                        world.PlaySoundAt(ViewfinderEnterSound, playerEnt, null, true, 16f, NextViewfinderRandomPitch());
                     }
                 }
                 catch

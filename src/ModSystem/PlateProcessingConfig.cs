@@ -2,6 +2,8 @@ namespace Collodion
 {
     public sealed class PlateProcessingConfig
     {
+        public const double DefaultWetPlateDurationHours = 0.66;
+
         public string Comment_DevelopmentTrayChemicalUnitsPerUse = "Developer/fixer units consumed per tray pour. Lower = cheaper processing, higher = costlier.";
         public int DevelopmentTrayChemicalUnitsPerUse = 40;
 
@@ -21,7 +23,7 @@ namespace Collodion
         public int PlainClothConsumedPerPolish = 1;
 
         public string Comment_WetPlateDurationHours = "How long a freshly-coated silvered plate stays wet, in in-game hours. This is affected by the world's time speed. Default 0.66 (40 minutes). Server-authoritative.";
-        public double WetPlateDurationHours = 0.66;
+        public double WetPlateDurationHours = DefaultWetPlateDurationHours;
 
         internal void ClampInPlace()
         {

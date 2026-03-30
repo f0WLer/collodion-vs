@@ -9,7 +9,6 @@ namespace Collodion
 {
     public sealed partial class BlockEntityDevelopmentTray
     {
-        private const float PhotoTargetAspect = 10f / 11f;
         private const byte DeveloperOverlayAlpha = 210;
         private const float DeveloperOverlayScale = 1.32f;
         private const float DeveloperOverlayAlphaStart = 1.0f;
@@ -400,7 +399,7 @@ namespace Collodion
                         texSource
                     );
 
-                    StampUvByRotationCropped(mesh, photoTex, 0, photoAspect, PhotoTargetAspect);
+                    PhotoMeshUtil.StampUvByRotationCropped(mesh, photoTex, 0, photoAspect, PhotoMeshUtil.PhotoTargetAspect);
 
                     int placementYawDeg = GetPlacementFacingYawDeg();
                     if (placementYawDeg != 0)
@@ -806,111 +805,6 @@ namespace Collodion
             if (stage.Equals("finished", StringComparison.OrdinalIgnoreCase)) return true;
 
             return false;
-        }
-
-        private static void StampUvByRotationCropped(MeshData mesh, TextureAtlasPosition texPos, int rotationDeg, float sourceAspect, float targetAspect)
-        {
-            if (mesh?.Uv == null || mesh.VerticesCount < 4) return;
-
-            GetCroppedTexRect(texPos, sourceAspect, targetAspect, rotationDeg, out float x1, out float x2, out float y1, out float y2);
-
-            int rot = ((rotationDeg % 360) + 360) % 360;
-            int quadCount = mesh.VerticesCount / 4;
-            for (int q = 0; q < quadCount; q++)
-            {
-                int v0 = (q * 4 + 0) * 2;
-                int v1 = (q * 4 + 1) * 2;
-                int v2 = (q * 4 + 2) * 2;
-                int v3 = (q * 4 + 3) * 2;
-                if (v3 + 1 >= mesh.Uv.Length) break;
-
-                switch (rot)
-                {
-                    case 90:
-                        mesh.Uv[v0] = x2; mesh.Uv[v0 + 1] = y2;
-                        mesh.Uv[v1] = x2; mesh.Uv[v1 + 1] = y1;
-                        mesh.Uv[v2] = x1; mesh.Uv[v2 + 1] = y1;
-                        mesh.Uv[v3] = x1; mesh.Uv[v3 + 1] = y2;
-                        break;
-                    case 180:
-                        mesh.Uv[v0] = x2; mesh.Uv[v0 + 1] = y1;
-                        mesh.Uv[v1] = x1; mesh.Uv[v1 + 1] = y1;
-                        mesh.Uv[v2] = x1; mesh.Uv[v2 + 1] = y2;
-                        mesh.Uv[v3] = x2; mesh.Uv[v3 + 1] = y2;
-                        break;
-                    case 270:
-                        mesh.Uv[v0] = x1; mesh.Uv[v0 + 1] = y1;
-                        mesh.Uv[v1] = x1; mesh.Uv[v1 + 1] = y2;
-                        mesh.Uv[v2] = x2; mesh.Uv[v2 + 1] = y2;
-                        mesh.Uv[v3] = x2; mesh.Uv[v3 + 1] = y1;
-                        break;
-                    default:
-                        mesh.Uv[v0] = x1; mesh.Uv[v0 + 1] = y2;
-                        mesh.Uv[v1] = x2; mesh.Uv[v1 + 1] = y2;
-                        mesh.Uv[v2] = x2; mesh.Uv[v2 + 1] = y1;
-                        mesh.Uv[v3] = x1; mesh.Uv[v3 + 1] = y1;
-                        break;
-                }
-            }
-
-            for (int i = 0; i < mesh.Rgba.Length; i++) mesh.Rgba[i] = 255;
-        }
-
-        private static void GetCroppedTexRect(TextureAtlasPosition texPos, float sourceAspect, float targetAspect, int rotationDeg, out float x1, out float x2, out float y1, out float y2)
-        {
-            x1 = texPos.x1;
-            x2 = texPos.x2;
-            y1 = texPos.y1;
-            y2 = texPos.y2;
-
-            if (sourceAspect <= 0 || targetAspect <= 0) return;
-
-            int rot = ((rotationDeg % 360) + 360) % 360;
-            bool rot90 = rot == 90 || rot == 270;
-
-            float effectiveSourceAspect = rot90 ? (1f / sourceAspect) : sourceAspect;
-            if (effectiveSourceAspect <= 0) return;
-
-            if (effectiveSourceAspect > targetAspect)
-            {
-                float keep = targetAspect / effectiveSourceAspect;
-                if (keep < 0f) keep = 0f;
-                if (keep > 1f) keep = 1f;
-                float trim = (1f - keep) * 0.5f;
-
-                if (!rot90)
-                {
-                    float xr = x2 - x1;
-                    x1 += xr * trim;
-                    x2 -= xr * trim;
-                }
-                else
-                {
-                    float yr = y2 - y1;
-                    y1 += yr * trim;
-                    y2 -= yr * trim;
-                }
-
-                return;
-            }
-
-            float keep2 = effectiveSourceAspect / targetAspect;
-            if (keep2 < 0f) keep2 = 0f;
-            if (keep2 > 1f) keep2 = 1f;
-            float trim2 = (1f - keep2) * 0.5f;
-
-            if (!rot90)
-            {
-                float yr = y2 - y1;
-                y1 += yr * trim2;
-                y2 -= yr * trim2;
-            }
-            else
-            {
-                float xr = x2 - x1;
-                x1 += xr * trim2;
-                x2 -= xr * trim2;
-            }
         }
 
         private int GetPlacementFacingYawDeg()

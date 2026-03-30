@@ -269,5 +269,120 @@ namespace Collodion
                 uv[i * 2 + 0] = 1f - uv[i * 2 + 0];
             }
         }
+
+        internal static void StampUvByRotationCropped(MeshData mesh, TextureAtlasPosition texPos, int rotationDeg, float sourceAspect, float targetAspect)
+        {
+            if (mesh?.Uv == null || mesh.VerticesCount < 4) return;
+
+            GetCroppedTexRect(texPos, sourceAspect, targetAspect, rotationDeg, out float x1, out float x2, out float y1, out float y2);
+
+            int rot = ((rotationDeg % 360) + 360) % 360;
+            int quadCount = mesh.VerticesCount / 4;
+            for (int q = 0; q < quadCount; q++)
+            {
+                int v0 = (q * 4 + 0) * 2;
+                int v1 = (q * 4 + 1) * 2;
+                int v2 = (q * 4 + 2) * 2;
+                int v3 = (q * 4 + 3) * 2;
+                if (v3 + 1 >= mesh.Uv.Length) break;
+
+                switch (rot)
+                {
+                    case 90:
+                        mesh.Uv[v0] = x2; mesh.Uv[v0 + 1] = y2;
+                        mesh.Uv[v1] = x2; mesh.Uv[v1 + 1] = y1;
+                        mesh.Uv[v2] = x1; mesh.Uv[v2 + 1] = y1;
+                        mesh.Uv[v3] = x1; mesh.Uv[v3 + 1] = y2;
+                        break;
+                    case 180:
+                        mesh.Uv[v0] = x2; mesh.Uv[v0 + 1] = y1;
+                        mesh.Uv[v1] = x1; mesh.Uv[v1 + 1] = y1;
+                        mesh.Uv[v2] = x1; mesh.Uv[v2 + 1] = y2;
+                        mesh.Uv[v3] = x2; mesh.Uv[v3 + 1] = y2;
+                        break;
+                    case 270:
+                        mesh.Uv[v0] = x1; mesh.Uv[v0 + 1] = y1;
+                        mesh.Uv[v1] = x1; mesh.Uv[v1 + 1] = y2;
+                        mesh.Uv[v2] = x2; mesh.Uv[v2 + 1] = y2;
+                        mesh.Uv[v3] = x2; mesh.Uv[v3 + 1] = y1;
+                        break;
+                    case 0:
+                    default:
+                        mesh.Uv[v0] = x1; mesh.Uv[v0 + 1] = y2;
+                        mesh.Uv[v1] = x2; mesh.Uv[v1 + 1] = y2;
+                        mesh.Uv[v2] = x2; mesh.Uv[v2 + 1] = y1;
+                        mesh.Uv[v3] = x1; mesh.Uv[v3 + 1] = y1;
+                        break;
+                }
+            }
+
+            EnsureOpaqueVertexColors(mesh);
+        }
+
+        internal static void GetCroppedTexRect(TextureAtlasPosition texPos, float sourceAspect, float targetAspect, int rotationDeg, out float x1, out float x2, out float y1, out float y2)
+        {
+            x1 = texPos.x1;
+            x2 = texPos.x2;
+            y1 = texPos.y1;
+            y2 = texPos.y2;
+
+            if (sourceAspect <= 0 || targetAspect <= 0) return;
+
+            int rot = ((rotationDeg % 360) + 360) % 360;
+            bool rot90 = rot == 90 || rot == 270;
+
+            float effectiveSourceAspect = rot90 ? (1f / sourceAspect) : sourceAspect;
+            if (effectiveSourceAspect <= 0) return;
+
+            PhotoCropMath.ComputeCenterCrop(effectiveSourceAspect, targetAspect, out float keepU, out float keepV);
+
+            if (keepU < 1f)
+            {
+                float trim = (1f - keepU) * 0.5f;
+
+                if (!rot90)
+                {
+                    float xr = x2 - x1;
+                    x1 += xr * trim;
+                    x2 -= xr * trim;
+                }
+                else
+                {
+                    float yr = y2 - y1;
+                    y1 += yr * trim;
+                    y2 -= yr * trim;
+                }
+
+                return;
+            }
+
+            if (keepV < 1f)
+            {
+                float trim = (1f - keepV) * 0.5f;
+
+                if (!rot90)
+                {
+                    float yr = y2 - y1;
+                    y1 += yr * trim;
+                    y2 -= yr * trim;
+                }
+                else
+                {
+                    float xr = x2 - x1;
+                    x1 += xr * trim;
+                    x2 -= xr * trim;
+                }
+            }
+        }
+
+        internal static void EnsureOpaqueVertexColors(MeshData mesh)
+        {
+            int expectedRgbaLen = mesh.VerticesCount * 4;
+            if (mesh.Rgba == null || mesh.Rgba.Length != expectedRgbaLen)
+            {
+                mesh.Rgba = new byte[expectedRgbaLen];
+            }
+            mesh.Rgba.Fill((byte)255);
+        }
     }
 }

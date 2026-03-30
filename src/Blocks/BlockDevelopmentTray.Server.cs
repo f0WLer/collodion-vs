@@ -369,10 +369,10 @@ namespace Collodion
 
             newPlate.Attributes.SetInt(WetPlateAttrs.DevelopPours, newPours);
             newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, newPours >= WetPlateChemicalUtil.DevelopPoursRequired ? "developed" : "developing");
-            WetPlateAttrs.ResetWetTimer(world, newPlate, WetPlateAttrs.ResolveWetDurationHours(api));
+            WetPlateAttrs.ResetWetTimer(world!, newPlate, WetPlateAttrs.ResolveWetDurationHours(api));
 
             be.TrySetPlate(newPlate);
-            SwapTrayBlockForPlateStage(world, pos, "developed", newPlate);
+            SwapTrayBlockForPlateStage(world!, pos, "developed", newPlate);
             return true;
         }
 
@@ -393,7 +393,7 @@ namespace Collodion
             newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, "finished");
 
             be.TrySetPlate(newPlate);
-            SwapTrayBlockForPlateStage(world, pos, "finished", newPlate);
+            SwapTrayBlockForPlateStage(world!, pos, "finished", newPlate);
             return true;
         }
 

@@ -135,7 +135,7 @@ namespace Collodion
 
                 string facing = owner.Block?.Variant?["facing"] ?? "south";
                 bool isEW = facing == "east" || facing == "west";
-                float ewTweak = capi.ModLoader.GetModSystem<CollodionModSystem>()?.GetPlateBoxEwRightOffset() ?? 0f;
+                float ewTweak = CollodionConfigAccess.ResolveClientModSystem(capi)?.GetPlateBoxEwRightOffset() ?? 0f;
 
                 if (isEW) { if (!EnsureSlotMeshEW()) return; }
                 else      { if (!EnsureSlotMesh())   return; }
@@ -320,3 +320,4 @@ namespace Collodion
         }
     }
 }
+

@@ -444,7 +444,7 @@ namespace Collodion
                             emptySling.Attributes.MergeTree(activeSlot.Itemstack.Attributes.Clone());
                             emptySling.Attributes.RemoveAttribute(ItemCameraSling.AttrStoredCameraStack);
                         }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
 
                         activeSlot.Itemstack = storedCamA;
                         activeSlot.MarkDirty();
@@ -470,7 +470,7 @@ namespace Collodion
                     cameraStack.StackSize = 1;
 
                     ItemStack fullSling = new ItemStack(fullSlingItem);
-                    try { fullSling.Attributes.MergeTree(offhandSlot.Itemstack.Attributes.Clone()); } catch { }
+                    try { fullSling.Attributes.MergeTree(offhandSlot.Itemstack.Attributes.Clone()); } catch { /* intentional: best-effort non-critical path */ }
                     fullSling.Attributes.SetItemstack(ItemCameraSling.AttrStoredCameraStack, cameraStack);
 
                     activeSlot.Itemstack = fullSling;
@@ -566,7 +566,7 @@ namespace Collodion
 
             // Build the full sling, preserving any attributes the empty sling had.
             ItemStack fullSling = new ItemStack(fullSlingItem);
-            try { fullSling.Attributes.MergeTree(slingStack.Attributes.Clone()); } catch { }
+            try { fullSling.Attributes.MergeTree(slingStack.Attributes.Clone()); } catch { /* intentional: best-effort non-critical path */ }
             fullSling.Attributes.SetItemstack(ItemCameraSling.AttrStoredCameraStack, movedCamera);
 
             if (activeSlot == null || offhandSlot == null) return;
@@ -716,7 +716,7 @@ namespace Collodion
             {
                 Api.World.BlockAccessor.MarkBlockEntityDirty(pos);
             }
-            catch { }
+            catch { /* intentional: best-effort non-critical path */ }
         }
 
         private void OnPhotoTakenReceived(IServerPlayer player, PhotoTakenPacket packet)
@@ -792,3 +792,4 @@ namespace Collodion
         }
     }
 }
+

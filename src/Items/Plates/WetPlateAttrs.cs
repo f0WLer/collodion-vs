@@ -9,7 +9,6 @@ namespace Collodion
         public const string WetCreatedTotalHours = "collodionWetCreatedTotalHours";
         public const string WetDurationHours = "collodionWetDurationHours";
         public const string StoredRemainingWetHours = "collodionStoredRemainingWetHours";
-        public const double DefaultWetDurationHours = PlateProcessingConfig.DefaultWetPlateDurationHours;
         public const string PhotoId = "photoId";
         public const string PlateStage = "collodionPlateStage";
         public const string DevelopPours = "collodionDevelopPours";
@@ -18,8 +17,8 @@ namespace Collodion
 
         public static double ResolveWetDurationHours(ICoreAPI? api)
         {
-            return api?.ModLoader?.GetModSystem<CollodionModSystem>()?.Config?.PlateProcessing?.WetPlateDurationHours
-                ?? DefaultWetDurationHours;
+            return CollodionConfigAccess.ResolveConfig(api)?.PlateProcessing?.WetPlateDurationHours
+                ?? 0.66;
         }
 
         public static double GetRemainingWetHours(IWorldAccessor world, ItemStack stack)

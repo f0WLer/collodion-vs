@@ -82,30 +82,30 @@ namespace Collodion
                         {
                             ClientApi.Event.UnregisterRenderer(CaptureRenderer, EnumRenderStage.AfterBlit);
                         }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
 
                         try
                         {
                             CaptureRenderer.Dispose();
                         }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
                     }
 
                     if (viewfinderTickListenerId > 0)
                     {
-                        try { ClientApi.Event.UnregisterGameTickListener(viewfinderTickListenerId); } catch { }
+                        try { ClientApi.Event.UnregisterGameTickListener(viewfinderTickListenerId); } catch { /* intentional: best-effort non-critical path */ }
                         viewfinderTickListenerId = 0;
                     }
 
                     if (clientDevTrayLatchTickListenerId.HasValue && clientDevTrayLatchTickListenerId.Value > 0)
                     {
-                        try { ClientApi.Event.UnregisterGameTickListener(clientDevTrayLatchTickListenerId.Value); } catch { }
+                        try { ClientApi.Event.UnregisterGameTickListener(clientDevTrayLatchTickListenerId.Value); } catch { /* intentional: best-effort non-critical path */ }
                         clientDevTrayLatchTickListenerId = null;
                     }
 
                     if (clientCaptureConfigRetryTickListenerId.HasValue && clientCaptureConfigRetryTickListenerId.Value > 0)
                     {
-                        try { ClientApi.Event.UnregisterGameTickListener(clientCaptureConfigRetryTickListenerId.Value); } catch { }
+                        try { ClientApi.Event.UnregisterGameTickListener(clientCaptureConfigRetryTickListenerId.Value); } catch { /* intentional: best-effort non-critical path */ }
                         clientCaptureConfigRetryTickListenerId = null;
                     }
                 }
@@ -114,17 +114,17 @@ namespace Collodion
                 {
                     if (serverPhotoLastSeenFlushListenerId.HasValue && serverPhotoLastSeenFlushListenerId.Value > 0)
                     {
-                        try { sapi.Event.UnregisterGameTickListener(serverPhotoLastSeenFlushListenerId.Value); } catch { }
+                        try { sapi.Event.UnregisterGameTickListener(serverPhotoLastSeenFlushListenerId.Value); } catch { /* intentional: best-effort non-critical path */ }
                         serverPhotoLastSeenFlushListenerId = null;
                     }
 
                     if (serverPhotoSyncPruneListenerId.HasValue && serverPhotoSyncPruneListenerId.Value > 0)
                     {
-                        try { sapi.Event.UnregisterGameTickListener(serverPhotoSyncPruneListenerId.Value); } catch { }
+                        try { sapi.Event.UnregisterGameTickListener(serverPhotoSyncPruneListenerId.Value); } catch { /* intentional: best-effort non-critical path */ }
                         serverPhotoSyncPruneListenerId = null;
                     }
 
-                    try { ServerMaybeFlushPhotoLastSeenIndex(sapi); } catch { }
+                    try { ServerMaybeFlushPhotoLastSeenIndex(sapi); } catch { /* intentional: best-effort non-critical path */ }
                 }
             }
             finally

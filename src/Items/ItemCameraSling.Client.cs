@@ -19,7 +19,7 @@ namespace Collodion
 #pragma warning disable CS0618 // Preserve FP compatibility where present
             base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
 
-            var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+            var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
             if (modSys == null) return;
             string posePrefix = GetSlingPosePrefix(itemstack);
             string poseKey = target switch
@@ -57,3 +57,4 @@ namespace Collodion
         }
     }
 }
+

@@ -9,7 +9,7 @@ namespace Collodion
     {
         public static WetplateEffectsConfig LoadOrCreate(ICoreClientAPI capi)
         {
-            var modSys = CollodionModSystem.ClientInstance ?? capi.ModLoader.GetModSystem<CollodionModSystem>();
+            var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
             if (modSys == null)
             {
                 var fallback = new WetplateEffectsConfig();
@@ -189,3 +189,4 @@ namespace Collodion
         }
     }
 }
+

@@ -31,7 +31,7 @@ namespace Collodion
         private void SafeSetFov(Action<float> setter, float value)
         {
             try { setter(value); }
-            catch { }
+            catch { /* intentional: best-effort non-critical path */ }
         }
 
         private float ClampFov(float proposed, float oldValue)
@@ -408,3 +408,4 @@ namespace Collodion
         }
     }
 }
+

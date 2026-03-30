@@ -369,7 +369,7 @@ namespace Collodion
 
             newPlate.Attributes.SetInt(WetPlateAttrs.DevelopPours, newPours);
             newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, newPours >= WetPlateChemicalUtil.DevelopPoursRequired ? "developed" : "developing");
-            WetPlateAttrs.ResetWetTimer(world, newPlate, Cfg?.PlateProcessing?.WetPlateDurationHours ?? WetPlateAttrs.DefaultWetDurationHours);
+            WetPlateAttrs.ResetWetTimer(world, newPlate, WetPlateAttrs.ResolveWetDurationHours(api));
 
             be.TrySetPlate(newPlate);
             SwapTrayBlockForPlateStage(world, pos, "developed", newPlate);

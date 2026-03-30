@@ -59,7 +59,7 @@ namespace Collodion
                             object? v = prop.GetValue(mouseState);
                             if (ValueMeansDown(v)) return true;
                         }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
                     }
 
                     var field = t.GetField(name, Flags);
@@ -70,7 +70,7 @@ namespace Collodion
                             object? v = field.GetValue(mouseState);
                             if (ValueMeansDown(v)) return true;
                         }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
                     }
                 }
 
@@ -84,10 +84,10 @@ namespace Collodion
                             object? v = prop.GetValue(mouseState);
                             if (ValueMeansDown(v)) return true;
                         }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
                     }
                 }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
 
                 try
                 {
@@ -99,10 +99,10 @@ namespace Collodion
                             object? v = field.GetValue(mouseState);
                             if (ValueMeansDown(v)) return true;
                         }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
                     }
                 }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
 
                 // Indexer: Item[EnumMouseButton]
                 try
@@ -114,7 +114,7 @@ namespace Collodion
                         if (pars.Length == 1 && pars[0].ParameterType.IsEnum)
                         {
                             object? enumVal = null;
-                            try { enumVal = Enum.Parse(pars[0].ParameterType, "Left", true); } catch { }
+                            try { enumVal = Enum.Parse(pars[0].ParameterType, "Left", true); } catch { /* intentional: best-effort non-critical path */ }
                             if (enumVal != null)
                             {
                                 object? v = idx.GetValue(mouseState, new object[] { enumVal });
@@ -123,7 +123,7 @@ namespace Collodion
                         }
                     }
                 }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
 
                 try
                 {
@@ -140,13 +140,13 @@ namespace Collodion
 
                         object? enumVal = null;
                         try { enumVal = Enum.Parse(parType, "Left", true); }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
                         if (enumVal == null) continue;
 
                         return (bool)(method.Invoke(mouseState, new object[] { enumVal }) ?? false);
                     }
                 }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
 
                 return false;
             }
@@ -155,13 +155,13 @@ namespace Collodion
             {
                 if (TryReadLeft(ClientApi.Input.InWorldMouseButton)) return true;
             }
-            catch { }
+            catch { /* intentional: best-effort non-critical path */ }
 
             try
             {
                 if (TryReadLeft(ClientApi.Input.MouseButton)) return true;
             }
-            catch { }
+            catch { /* intentional: best-effort non-critical path */ }
 
             return false;
         }
@@ -217,7 +217,7 @@ namespace Collodion
                             object? v = prop.GetValue(mouseState);
                             if (ValueMeansDown(v)) return true;
                         }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
                     }
 
                     var field = t.GetField(name, Flags);
@@ -228,7 +228,7 @@ namespace Collodion
                             object? v = field.GetValue(mouseState);
                             if (ValueMeansDown(v)) return true;
                         }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
                     }
                 }
 
@@ -243,10 +243,10 @@ namespace Collodion
                             object? v = prop.GetValue(mouseState);
                             if (ValueMeansDown(v)) return true;
                         }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
                     }
                 }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
 
                 try
                 {
@@ -258,10 +258,10 @@ namespace Collodion
                             object? v = field.GetValue(mouseState);
                             if (ValueMeansDown(v)) return true;
                         }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
                     }
                 }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
 
                 // Indexer: Item[EnumMouseButton]
                 try
@@ -273,7 +273,7 @@ namespace Collodion
                         if (pars.Length == 1 && pars[0].ParameterType.IsEnum)
                         {
                             object? enumVal = null;
-                            try { enumVal = Enum.Parse(pars[0].ParameterType, "Right", true); } catch { }
+                            try { enumVal = Enum.Parse(pars[0].ParameterType, "Right", true); } catch { /* intentional: best-effort non-critical path */ }
                             if (enumVal != null)
                             {
                                 object? v = idx.GetValue(mouseState, new object[] { enumVal });
@@ -282,7 +282,7 @@ namespace Collodion
                         }
                     }
                 }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
 
                 // Heuristic: look for an IsDown(enum Right) style method.
                 try
@@ -300,13 +300,13 @@ namespace Collodion
 
                         object? enumVal = null;
                         try { enumVal = Enum.Parse(parType, "Right", true); }
-                        catch { }
+                        catch { /* intentional: best-effort non-critical path */ }
                         if (enumVal == null) continue;
 
                         return (bool)(method.Invoke(mouseState, new object[] { enumVal }) ?? false);
                     }
                 }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
 
                 return false;
             }
@@ -315,15 +315,16 @@ namespace Collodion
             {
                 if (TryReadRight(ClientApi.Input.InWorldMouseButton)) return true;
             }
-            catch { }
+            catch { /* intentional: best-effort non-critical path */ }
 
             try
             {
                 if (TryReadRight(ClientApi.Input.MouseButton)) return true;
             }
-            catch { }
+            catch { /* intentional: best-effort non-critical path */ }
 
             return false;
         }
     }
 }
+

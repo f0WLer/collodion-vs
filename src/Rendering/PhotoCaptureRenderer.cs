@@ -56,7 +56,7 @@ namespace Collodion
         public double RenderOrder => 0;
         public int RenderRange => 0;
 
-        private PhotoCapturePipelineConfig? PipelineCfg => capi?.ModLoader?.GetModSystem<CollodionModSystem>()?.Config?.PhotoCapturePipeline;
+        private PhotoCapturePipelineConfig? PipelineCfg => CollodionConfigAccess.ResolveClientConfig(capi)?.PhotoCapturePipeline;
 
         private int BlankDetectSampleDivisor
         {
@@ -222,3 +222,4 @@ namespace Collodion
         }
     }
 }
+

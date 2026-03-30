@@ -220,7 +220,7 @@ namespace Collodion
                 {
                     if (api is ICoreClientAPI capi)
                     {
-                        var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+                        var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
                         maxLen = modSys?.ClientConfig?.CaptionTooltipMaxLength ?? 180;
                     }
                 }
@@ -400,3 +400,4 @@ namespace Collodion
         }
     }
 }
+

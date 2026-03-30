@@ -21,7 +21,7 @@ namespace Collodion
                         stamp = System.IO.File.GetLastWriteTime(loc).ToString("yyyy-MM-dd HH:mm:ss");
                     }
                 }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
 
                 ClientApi.ShowChatMessage($"Wetplate: dll ver={ver} build={stamp}");
                 ClientApi.ShowChatMessage($"Wetplate: dll path={loc}");
@@ -65,3 +65,4 @@ namespace Collodion
         }
     }
 }
+

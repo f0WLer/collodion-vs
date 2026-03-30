@@ -260,7 +260,7 @@ namespace Collodion
                     {
                         mod.ClientApi.World.BlockAccessor.MarkBlockDirty(p);
                     }
-                    catch { }
+                    catch { /* intentional: best-effort non-critical path */ }
                 }
             }, "collodion-photo-arrived-markdirty");
         }
@@ -278,3 +278,4 @@ namespace Collodion
         }
     }
 }
+

@@ -40,14 +40,14 @@ namespace Collodion
                         stamp = System.IO.File.GetLastWriteTime(loc).ToString("yyyy-MM-dd HH:mm:ss");
                     }
                 }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
 
                 if (ClientConfig?.ShowDebugLogs == true)
                 {
                     ClientApi.ShowChatMessage($"Collodion: loaded mod dll (ver={ver}, build={stamp})");
                 }
             }
-            catch { }
+            catch { /* intentional: best-effort non-critical path */ }
 
             // Capture screenshots after the 3D scene is blitted to the default framebuffer,
             // but before GUI/HUD is rendered (EnumRenderStage.AfterBlit).
@@ -113,7 +113,7 @@ namespace Collodion
 
                 if (clientCaptureConfigRetryTickListenerId.HasValue && clientCaptureConfigRetryTickListenerId.Value > 0)
                 {
-                    try { capi.Event.UnregisterGameTickListener(clientCaptureConfigRetryTickListenerId.Value); } catch { }
+                    try { capi.Event.UnregisterGameTickListener(clientCaptureConfigRetryTickListenerId.Value); } catch { /* intentional: best-effort non-critical path */ }
                     clientCaptureConfigRetryTickListenerId = null;
                 }
 
@@ -140,7 +140,7 @@ namespace Collodion
 
                 if (clientCaptureConfigRetryTickListenerId.HasValue && clientCaptureConfigRetryTickListenerId.Value > 0)
                 {
-                    try { capi.Event.UnregisterGameTickListener(clientCaptureConfigRetryTickListenerId.Value); } catch { }
+                    try { capi.Event.UnregisterGameTickListener(clientCaptureConfigRetryTickListenerId.Value); } catch { /* intentional: best-effort non-critical path */ }
                     clientCaptureConfigRetryTickListenerId = null;
                 }
             }, 200, 200);
@@ -309,14 +309,14 @@ namespace Collodion
             if (prop != null)
             {
                 try { return prop.GetValue(instance); }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
             }
 
             var field = type.GetField(memberName);
             if (field != null)
             {
                 try { return field.GetValue(instance); }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
             }
 
             return null;
@@ -332,3 +332,4 @@ namespace Collodion
         }
     }
 }
+

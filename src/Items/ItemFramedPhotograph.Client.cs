@@ -104,7 +104,7 @@ namespace Collodion
             try
             {
 #pragma warning disable CS0618 // Keep existing FP pose handling
-                var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+                var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
                 string poseKey = target switch
                 {
                     EnumItemRenderTarget.HandFp => "photo-fp",
@@ -130,7 +130,7 @@ namespace Collodion
 
             try
             {
-                capi.ModLoader.GetModSystem<CollodionModSystem>()?.ClientMaybeSendPhotoSeen(photoId);
+                CollodionConfigAccess.ResolveClientModSystem(capi)?.ClientMaybeSendPhotoSeen(photoId);
             }
             catch
             {
@@ -522,3 +522,5 @@ namespace Collodion
         }
     }
 }
+
+

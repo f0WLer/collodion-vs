@@ -54,7 +54,7 @@ namespace Collodion
 
             try
             {
-                var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+                var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
 
 #pragma warning disable CS0618
                 string poseKey = target switch
@@ -459,3 +459,4 @@ namespace Collodion
         }
     }
 }
+

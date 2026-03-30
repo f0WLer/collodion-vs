@@ -398,7 +398,7 @@ namespace Collodion
         {
             try
             {
-                var modSys = CollodionModSystem.ClientInstance ?? capi.ModLoader.GetModSystem<CollodionModSystem>();
+                var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
                 return modSys?.Config?.DevelopmentTrayInteractions;
             }
             catch (Exception ex)

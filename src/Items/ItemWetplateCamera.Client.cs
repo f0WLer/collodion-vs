@@ -175,7 +175,7 @@ namespace Collodion
 #pragma warning disable CS0618 // Preserve FP pose behavior on older targets
             base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
 
-            var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+            var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
             if (modSys == null) return;
 
             if (target == EnumItemRenderTarget.Ground)
@@ -230,7 +230,7 @@ namespace Collodion
         {
             if (api.Side != EnumAppSide.Client) return false;
 
-            var modSys = api.ModLoader.GetModSystem<CollodionModSystem>();
+            var modSys = CollodionConfigAccess.ResolveModSystem(api);
             if (modSys == null || !modSys.IsViewfinderActive)
             {
                 ClearTimedExposure(byEntity);
@@ -338,3 +338,5 @@ namespace Collodion
         }
     }
 }
+
+

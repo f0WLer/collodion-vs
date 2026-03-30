@@ -206,7 +206,7 @@ namespace Collodion
 
                 try
                 {
-                    var modSys = capi.ModLoader.GetModSystem<CollodionModSystem>();
+                    var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
                     modSys?.PhotoSync?.ClientNoteBlockWaitingForPhoto(photoFileName, Pos);
                     modSys?.PhotoSync?.ClientRequestPhotoIfMissing(photoFileName);
                 }

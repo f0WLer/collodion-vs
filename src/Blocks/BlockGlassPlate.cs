@@ -13,7 +13,7 @@ namespace Collodion
         private const int DefaultCollodionUnitsPerCoat = 5;
         private const int DefaultPlainClothConsumedPerPolish = 1;
 
-        private CollodionConfig? Cfg => api.ModLoader.GetModSystem<CollodionModSystem>()?.Config;
+        private CollodionConfig? Cfg => CollodionConfigAccess.ResolveConfig(api);
         private PlateProcessingConfig? PlateCfg => Cfg?.PlateProcessing;
         private static readonly AssetLocation PlainClothCode = new AssetLocation("game", "cloth-plain");
         private static readonly AssetLocation PolishSound = new AssetLocation("game:sounds/player/chalkdraw");
@@ -363,3 +363,4 @@ namespace Collodion
         }
     }
 }
+

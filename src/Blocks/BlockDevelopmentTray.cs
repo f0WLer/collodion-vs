@@ -27,7 +27,7 @@ namespace Collodion
         internal const string ActionFixer = "fixer";
         internal const string ActionWater = "water";
 
-        private CollodionConfig? Cfg => api.ModLoader.GetModSystem<CollodionModSystem>()?.Config;
+        private CollodionConfig? Cfg => CollodionConfigAccess.ResolveConfig(api);
 
         private static readonly AssetLocation SilveredPlateItemCode = new AssetLocation("collodion", "silveredplate");
         private static readonly AssetLocation ExposedPlateItemCode = new AssetLocation("collodion", "exposedplate");
@@ -472,3 +472,4 @@ namespace Collodion
         }
     }
 }
+

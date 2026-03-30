@@ -100,7 +100,7 @@ namespace Collodion
                 foreach (var toggle in hudGuiToggles)
                 {
                     try { toggle.Setter(false); }
-                    catch { }
+                    catch { /* intentional: best-effort non-critical path */ }
                 }
                 mechanism = $"LoadedGuis toggles={hudGuiToggles.Count} -> false";
                 return true;
@@ -110,7 +110,7 @@ namespace Collodion
             foreach (var toggle in hudGuiToggles)
             {
                 try { toggle.Setter(toggle.OldValue); }
-                catch { }
+                catch { /* intentional: best-effort non-critical path */ }
             }
             hudGuiToggles.Clear();
             mechanism = "LoadedGuis restore";
@@ -185,7 +185,7 @@ namespace Collodion
                 if (prop != null && prop.PropertyType == typeof(bool) && prop.CanWrite)
                 {
                     bool oldVal = false;
-                    try { oldVal = (bool)(prop.GetValue(dialog) ?? false); } catch { }
+                    try { oldVal = (bool)(prop.GetValue(dialog) ?? false); } catch { /* intentional: best-effort non-critical path */ }
                     Action<bool> setter = v => prop.SetValue(dialog, v);
                     toggle = new HudGuiToggle(dialog, $"{t.Name}.{name}", oldVal, setter);
                     return true;
@@ -195,7 +195,7 @@ namespace Collodion
                 if (field != null && field.FieldType == typeof(bool))
                 {
                     bool oldVal = false;
-                    try { oldVal = (bool)(field.GetValue(dialog) ?? false); } catch { }
+                    try { oldVal = (bool)(field.GetValue(dialog) ?? false); } catch { /* intentional: best-effort non-critical path */ }
                     Action<bool> setter = v => field.SetValue(dialog, v);
                     toggle = new HudGuiToggle(dialog, $"{t.Name}.{name}", oldVal, setter);
                     return true;
@@ -210,7 +210,7 @@ namespace Collodion
                 if (!pn.Contains("vis") && !pn.Contains("open") && !pn.Contains("render") && !pn.Contains("draw")) continue;
 
                 bool oldVal = false;
-                try { oldVal = (bool)(prop.GetValue(dialog) ?? false); } catch { }
+                try { oldVal = (bool)(prop.GetValue(dialog) ?? false); } catch { /* intentional: best-effort non-critical path */ }
                 Action<bool> setter = v => prop.SetValue(dialog, v);
                 toggle = new HudGuiToggle(dialog, $"{t.Name}.{prop.Name}", oldVal, setter);
                 return true;
@@ -224,7 +224,7 @@ namespace Collodion
                 if (!fn.Contains("vis") && !fn.Contains("open") && !fn.Contains("render") && !fn.Contains("draw")) continue;
 
                 bool oldVal = false;
-                try { oldVal = (bool)(field.GetValue(dialog) ?? false); } catch { }
+                try { oldVal = (bool)(field.GetValue(dialog) ?? false); } catch { /* intentional: best-effort non-critical path */ }
                 Action<bool> setter = v => field.SetValue(dialog, v);
                 toggle = new HudGuiToggle(dialog, $"{t.Name}.{field.Name}", oldVal, setter);
                 return true;
@@ -365,3 +365,4 @@ namespace Collodion
 
     }
 }
+

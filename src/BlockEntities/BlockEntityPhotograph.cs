@@ -120,7 +120,7 @@ namespace Collodion
         {
             try
             {
-                var modSys = Api?.ModLoader?.GetModSystem<CollodionModSystem>();
+                var modSys = CollodionConfigAccess.ResolveModSystem(Api);
                 return modSys?.Config?.Photograph?.CaptionMaxLength ?? 200;
             }
             catch (Exception ex)
@@ -246,3 +246,4 @@ namespace Collodion
         partial void ClientRequestMeshRebuild();
     }
 }
+

@@ -23,6 +23,7 @@ Thumbs.db
 .github/*
 .obsidian/
 notes/
+docs/AGENT_CONTEXT.md
 
 # Reference projects
 reference/

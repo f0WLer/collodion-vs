@@ -11,6 +11,9 @@ namespace Collodion
         private const float SlotPlateWidth = 0.25f / 16f;
         private const float SlotPlateHeight = 7.7f / 16f;
         private const float SlotPlateDepth = 3.5f / 16f;
+        private const float SlotPlateHeightScale = 0.5f;
+        private const float SlotPlateRenderHeight = SlotPlateHeight * SlotPlateHeightScale;
+        private const float SlotPlateTopAlignYOffset = SlotPlateHeight - SlotPlateRenderHeight;
         private static readonly Vec3f SlotPlateOffset = new Vec3f(0.225f / 16f, 0f, 3.5f / 16f);
 
         private static readonly Vec3f[] SlotOrigins =
@@ -199,7 +202,7 @@ namespace Collodion
                         modelMat.Identity()
                             .Translate(
                                 (float)(owner.Pos.X - player.CameraPos.X) + drawX,
-                                (float)(owner.Pos.Y - player.CameraPos.Y) + origin.Y + SlotPlateOffset.Y,
+                                (float)(owner.Pos.Y - player.CameraPos.Y) + origin.Y + SlotPlateOffset.Y + SlotPlateTopAlignYOffset,
                                 (float)(owner.Pos.Z - player.CameraPos.Z) + drawZ
                             );
 
@@ -236,7 +239,7 @@ namespace Collodion
 
                     MeshData mesh = CubeMeshUtil.GetCube();
                     mesh = mesh.WithTexPos(texPos);
-                    mesh.Scale(new Vec3f(0f, 0f, 0f), SlotPlateWidth, SlotPlateHeight, SlotPlateDepth);
+                    mesh.Scale(new Vec3f(0f, 0f, 0f), SlotPlateWidth, SlotPlateRenderHeight, SlotPlateDepth);
                     mesh.Rgba?.Fill((byte)255);
 
                     slotMeshRef = capi.Render.UploadMesh(mesh);
@@ -267,7 +270,7 @@ namespace Collodion
                     MeshData mesh = CubeMeshUtil.GetCube();
                     mesh = mesh.WithTexPos(texPos);
                     // Swap X and Z so the plate stands thin in Z and has depth in X — correct for E/W boxes.
-                    mesh.Scale(new Vec3f(0f, 0f, 0f), SlotPlateDepth, SlotPlateHeight, SlotPlateWidth);
+                    mesh.Scale(new Vec3f(0f, 0f, 0f), SlotPlateDepth, SlotPlateRenderHeight, SlotPlateWidth);
                     mesh.Rgba?.Fill((byte)255);
 
                     slotMeshRefEW = capi.Render.UploadMesh(mesh);

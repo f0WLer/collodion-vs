@@ -25,37 +25,6 @@ namespace Collodion
         private int clientMeshBuildCount;
         private int clientTesselationCount;
 
-        private static bool TryGetPngDimensions(byte[] pngBytes, out int width, out int height)
-        {
-            width = 0;
-            height = 0;
-
-            // PNG header (8 bytes) + IHDR chunk length/type (8 bytes) + IHDR data begins.
-            // Width/Height are 4 bytes each, big-endian, at offsets 16 and 20.
-            if (pngBytes == null || pngBytes.Length < 24) return false;
-
-            // Validate PNG signature: 89 50 4E 47 0D 0A 1A 0A
-            if (pngBytes[0] != 0x89 || pngBytes[1] != 0x50 || pngBytes[2] != 0x4E || pngBytes[3] != 0x47
-                || pngBytes[4] != 0x0D || pngBytes[5] != 0x0A || pngBytes[6] != 0x1A || pngBytes[7] != 0x0A)
-            {
-                return false;
-            }
-
-            try
-            {
-                width = (pngBytes[16] << 24) | (pngBytes[17] << 16) | (pngBytes[18] << 8) | pngBytes[19];
-                height = (pngBytes[20] << 24) | (pngBytes[21] << 16) | (pngBytes[22] << 8) | pngBytes[23];
-            }
-            catch
-            {
-                width = 0;
-                height = 0;
-                return false;
-            }
-
-            return width > 0 && height > 0;
-        }
-
         private void RequestClientMeshRebuild()
         {
             if (Api?.Side != EnumAppSide.Client) return;

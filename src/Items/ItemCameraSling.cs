@@ -235,7 +235,7 @@ namespace Collodion
                 emptySling.Attributes.MergeTree(slingStack.Attributes.Clone());
                 emptySling.Attributes.RemoveAttribute(AttrStoredCameraStack);
             }
-            catch { }
+            catch (Exception ex) { api.Logger.Warning("[Collodion] unstow camera: attribute merge failed: {0}", ex.Message); }
 
             // Camera back into the active slot (replacing the full sling).
             slingSlot.Itemstack = storedCamera;
@@ -246,15 +246,22 @@ namespace Collodion
             offhandSlot.MarkDirty();
 
             // Same leather + padlock sounds as stowing.
-            try { api.World.PlaySoundAt(new AssetLocation("game", "sounds/wearable/leather3"), byEntity, null, true, 16f, 1f); } catch { }
+            try { api.World.PlaySoundAt(new AssetLocation("game", "sounds/wearable/leather3"), byEntity, null, true, 16f, 1f); }
+            catch (Exception ex) { api.Logger.Warning("[Collodion] unstow camera: leather sound failed: {0}", ex.Message); }
             try
             {
                 api.Event.RegisterCallback(_ =>
                 {
-                    try { api.World.PlaySoundAt(new AssetLocation("game", "sounds/tool/padlock"), byEntity, null, true, 16f, 1f); } catch { }
+                    try { api.World.PlaySoundAt(new AssetLocation("game", "sounds/tool/padlock"), byEntity, null, true, 16f, 1f); }
+                    catch (Exception ex) { api.Logger.Warning("[Collodion] unstow camera: delayed padlock sound failed: {0}", ex.Message); }
                 }, 45);
             }
-            catch { try { api.World.PlaySoundAt(new AssetLocation("game", "sounds/tool/padlock"), byEntity, null, true, 16f, 1f); } catch { } }
+            catch (Exception ex)
+            {
+                api.Logger.Warning("[Collodion] unstow camera: delayed sound schedule failed, using immediate fallback: {0}", ex.Message);
+                try { api.World.PlaySoundAt(new AssetLocation("game", "sounds/tool/padlock"), byEntity, null, true, 16f, 1f); }
+                catch (Exception fallbackEx) { api.Logger.Warning("[Collodion] unstow camera: immediate fallback sound failed: {0}", fallbackEx.Message); }
+            }
         }
 
         private bool TryPlaceOnWall(ItemSlot handSlot, BlockSelection? blockSel, IPlayer byPlayer)

@@ -382,8 +382,10 @@ namespace Collodion
             {
                 newBe.FromTreeAttributes(snapshot, world);
                 newBe.MarkDirty(true);
-                try { world.BlockAccessor.MarkBlockEntityDirty(pos); } catch { }
-                try { world.BlockAccessor.MarkBlockDirty(pos); } catch { }
+                try { world.BlockAccessor.MarkBlockEntityDirty(pos); }
+                catch (Exception ex) { world.Logger.Warning("[Collodion] ToggleOpenClose: MarkBlockEntityDirty failed: {0}", ex.Message); }
+                try { world.BlockAccessor.MarkBlockDirty(pos); }
+                catch (Exception ex) { world.Logger.Warning("[Collodion] ToggleOpenClose: MarkBlockDirty failed: {0}", ex.Message); }
                 PlayOpenCloseSoundPair(world, pos);
                 return true;
             }
@@ -421,11 +423,12 @@ namespace Collodion
                         if (world.Side != EnumAppSide.Server) return;
                         world.PlaySoundAt(sound, x, y, z, null, true, 16f, 1f);
                     }
-                    catch { }
+                    catch (Exception ex) { world.Logger.Warning("[Collodion] PlaySoundWithDelay callback failed: {0}", ex.Message); }
                 }, delayMs);
             }
-            catch
+            catch (Exception ex)
             {
+                world.Logger.Warning("[Collodion] PlaySoundWithDelay scheduling failed, using immediate fallback: {0}", ex.Message);
                 world.PlaySoundAt(sound, x, y, z, null, true, 16f, 1f);
             }
         }

@@ -17,7 +17,7 @@ namespace Collodion
             base.OnModifiedInInventorySlot(world, slot, extractedStack);
             if (world?.Side != EnumAppSide.Server) return;
             if (slot?.Itemstack == null) return;
-            double duration = api?.ModLoader?.GetModSystem<CollodionModSystem>()?.Config?.PlateProcessing?.WetPlateDurationHours ?? WetPlateAttrs.DefaultWetDurationHours;
+            double duration = WetPlateAttrs.ResolveWetDurationHours(api);
             WetPlateAttrs.EnsureWetTimer(world, slot.Itemstack, duration);
         }
 

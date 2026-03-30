@@ -49,7 +49,8 @@ namespace Collodion
                         initial = be.Caption ?? string.Empty;
                     }
 
-                    try { openCaptionDialog?.TryClose(); } catch { }
+                    try { openCaptionDialog?.TryClose(); }
+                    catch (Exception ex) { capi.Logger.Warning("[Collodion] caption dialog close failed: {0}", ex.Message); }
                     openCaptionDialog = new GuiDialogPhotographCaption(capi, blockSel.Position.X, blockSel.Position.Y, blockSel.Position.Z, initial);
                     openCaptionDialog.TryOpen();
                 }

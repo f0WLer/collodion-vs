@@ -298,7 +298,10 @@ namespace Collodion
                     loadedPlateStack = camStack.Attributes.GetItemstack(ItemWetplateCamera.AttrLoadedPlateStack, null);
                     loadedPlateStack?.ResolveBlockOrItem(ClientApi.World);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    ClientApi.Logger.Warning("[Collodion] viewfinder loaded plate resolve failed: {0}", ex.Message);
+                }
 
                 if (loadedPlateStack != null && WetPlateAttrs.IsDry(ClientApi.World, loadedPlateStack))
                 {

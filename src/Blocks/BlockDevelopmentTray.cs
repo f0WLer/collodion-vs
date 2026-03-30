@@ -146,7 +146,10 @@ namespace Collodion
             {
                 byPlayer?.Entity?.Attributes?.SetInt(TimedNeedReleaseKey, 1);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                byPlayer?.Entity?.Api?.Logger?.Warning("[Collodion] SetNeedsRelease: entity attribute write failed: {0}", ex.Message);
+            }
         }
 
         private static bool IsHoldingChemical(ItemSlot? slot, AssetLocation code)

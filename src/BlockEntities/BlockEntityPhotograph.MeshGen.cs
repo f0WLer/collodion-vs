@@ -199,7 +199,7 @@ namespace Collodion
                             break;
                         }
                     }
-                    catch { }
+                    catch { /* intentional: probe multiple texture keys across heterogeneous block texture sources */ }
                 }
 
                 if (chosenTexPos == capi.BlockTextureAtlas.UnknownTexturePosition && plankBlock.Textures != null)
@@ -215,7 +215,7 @@ namespace Collodion
                                 break;
                             }
                         }
-                        catch { }
+                        catch { /* intentional: probe multiple texture keys across heterogeneous block texture sources */ }
                     }
                 }
 
@@ -224,8 +224,9 @@ namespace Collodion
                 texSource = new SingleTextureSource(chosenTexPos, capi.BlockTextureAtlas.Size);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                capi.Logger.Warning("[Collodion] TryGetPlankTextureSource failed: {0}", ex.Message);
                 return false;
             }
         }
@@ -462,15 +463,16 @@ namespace Collodion
                         }
                     }
                 }
-                catch { }
+                catch { /* intentional: variant fallback to north is best-effort */ }
 
                 mesh = capi.TesselatorManager.GetDefaultBlockMesh(meshBlock);
                 // IMPORTANT: GetDefaultBlockMesh can return a cached/shared MeshData instance.
                 // We must clone before mutating (scale/rotate/uv), otherwise transforms accumulate over time.
                 mesh = mesh.Clone();
             }
-            catch
+            catch (Exception ex)
             {
+                capi.Logger.Warning("[Collodion] GenerateMountedPlateMesh fallback to cube mesh: {0}", ex.Message);
                 mesh = CubeMeshUtil.GetCube();
             }
 

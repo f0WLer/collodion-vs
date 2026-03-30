@@ -314,7 +314,10 @@ namespace Collodion
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                world?.Logger?.Warning("[Collodion] OnBlockInteractStop timed-release check failed: {0}", ex.Message);
+            }
 
             // Clear any in-progress timed interaction for this player.
             ClearTimed(byPlayer);
@@ -357,7 +360,8 @@ namespace Collodion
                 if (developedItem == null) return false;
 
                 newPlate = new ItemStack(developedItem);
-                try { newPlate.Attributes.MergeTree(plate.Attributes.Clone()); } catch { }
+                    try { newPlate.Attributes.MergeTree(plate.Attributes.Clone()); }
+                    catch (Exception ex) { world?.Logger?.Warning("[Collodion] TryApplyDeveloperPourServer: attribute merge failed: {0}", ex.Message); }
             }
 
             int newPours = currentPours + 1;
@@ -384,7 +388,8 @@ namespace Collodion
             if (finishedItem == null) return false;
 
             ItemStack newPlate = new ItemStack(finishedItem);
-            try { newPlate.Attributes.MergeTree(plate.Attributes.Clone()); } catch { }
+            try { newPlate.Attributes.MergeTree(plate.Attributes.Clone()); }
+            catch (Exception ex) { world?.Logger?.Warning("[Collodion] TryApplyFixerPourServer: attribute merge failed: {0}", ex.Message); }
             newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, "finished");
 
             be.TrySetPlate(newPlate);

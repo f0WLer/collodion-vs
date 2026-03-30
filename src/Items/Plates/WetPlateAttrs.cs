@@ -16,6 +16,12 @@ namespace Collodion
         public const string HoldStillSeconds = "collodionHoldStillSeconds";
         public const string HoldStillMovement = "collodionHoldStillMovement";
 
+        public static double ResolveWetDurationHours(ICoreAPI? api)
+        {
+            return api?.ModLoader?.GetModSystem<CollodionModSystem>()?.Config?.PlateProcessing?.WetPlateDurationHours
+                ?? DefaultWetDurationHours;
+        }
+
         public static double GetRemainingWetHours(IWorldAccessor world, ItemStack stack)
         {
             if (stack?.Attributes == null) return 0;

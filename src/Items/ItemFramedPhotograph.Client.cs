@@ -262,7 +262,7 @@ namespace Collodion
                     {
                         CollodionModSystem.ClientInstance?.PhotoSync?.ClientRequestPhotoIfMissing(photoFileName);
                     }
-                    catch { }
+                    catch (Exception ex) { capi.Logger.Warning("[Collodion] photo sync request failed: {0}", ex.Message); }
                 }
             }
         }

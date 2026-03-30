@@ -108,11 +108,11 @@ namespace Collodion
 
             try
             {
-                capi.ModLoader.GetModSystem<CollodionModSystem>()?.ClientMaybeSendPhotoSeen(photoId);
+                CollodionModSystem.ClientInstance?.ClientMaybeSendPhotoSeen(photoId);
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore
+                capi.Logger.Warning("[Collodion] TryRenderPhotoOverlay photo-seen notification failed: {0}", ex.Message);
             }
 
             string photoFileName = WetplatePhotoSync.NormalizePhotoId(photoId);
@@ -312,11 +312,11 @@ namespace Collodion
 
             try
             {
-                capi.ModLoader.GetModSystem<CollodionModSystem>()?.ClientMaybeSendPhotoSeen(photoId);
+                CollodionModSystem.ClientInstance?.ClientMaybeSendPhotoSeen(photoId);
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore
+                capi.Logger.Warning("[Collodion] TryGetPhotoBlockTexture photo-seen notification failed: {0}", ex.Message);
             }
 
             string effectsProfile = string.Empty;

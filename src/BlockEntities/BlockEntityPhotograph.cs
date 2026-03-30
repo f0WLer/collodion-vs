@@ -42,7 +42,10 @@ namespace Collodion
             {
                 Api?.World?.BlockAccessor?.MarkBlockEntityDirty(Pos);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Api?.Logger?.Warning("[Collodion] SetPhoto: MarkBlockEntityDirty failed: {0}", ex.Message);
+            }
         }
 
         public void SetPhoto2(string? photoId)
@@ -59,7 +62,10 @@ namespace Collodion
             {
                 Api?.World?.BlockAccessor?.MarkBlockEntityDirty(Pos);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Api?.Logger?.Warning("[Collodion] SetPhoto2: MarkBlockEntityDirty failed: {0}", ex.Message);
+            }
         }
 
         public void SetCaption(string? caption)
@@ -80,7 +86,10 @@ namespace Collodion
             {
                 Api?.World?.BlockAccessor?.MarkBlockEntityDirty(Pos);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Api?.Logger?.Warning("[Collodion] SetCaption: MarkBlockEntityDirty failed: {0}", ex.Message);
+            }
         }
 
         public void SetCaption2(string? caption)
@@ -101,7 +110,10 @@ namespace Collodion
             {
                 Api?.World?.BlockAccessor?.MarkBlockEntityDirty(Pos);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Api?.Logger?.Warning("[Collodion] SetCaption2: MarkBlockEntityDirty failed: {0}", ex.Message);
+            }
         }
 
         private int GetCaptionMaxLength()
@@ -111,8 +123,9 @@ namespace Collodion
                 var modSys = Api?.ModLoader?.GetModSystem<CollodionModSystem>();
                 return modSys?.Config?.Photograph?.CaptionMaxLength ?? 200;
             }
-            catch
+            catch (Exception ex)
             {
+                Api?.Logger?.Warning("[Collodion] GetCaptionMaxLength config lookup failed: {0}", ex.Message);
                 return 200;
             }
         }
@@ -131,7 +144,10 @@ namespace Collodion
             {
                 Api?.World?.BlockAccessor?.MarkBlockEntityDirty(Pos);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Api?.Logger?.Warning("[Collodion] SetFramePlankBlockCode: MarkBlockEntityDirty failed: {0}", ex.Message);
+            }
         }
 
         public void SetFramePlankBlockCode2(string? blockCode)
@@ -148,7 +164,10 @@ namespace Collodion
             {
                 Api?.World?.BlockAccessor?.MarkBlockEntityDirty(Pos);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Api?.Logger?.Warning("[Collodion] SetFramePlankBlockCode2: MarkBlockEntityDirty failed: {0}", ex.Message);
+            }
         }
 
         public void SetExposureMovement(float movement)
@@ -165,7 +184,10 @@ namespace Collodion
             {
                 Api?.World?.BlockAccessor?.MarkBlockEntityDirty(Pos);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Api?.Logger?.Warning("[Collodion] SetExposureMovement: MarkBlockEntityDirty failed: {0}", ex.Message);
+            }
         }
 
 

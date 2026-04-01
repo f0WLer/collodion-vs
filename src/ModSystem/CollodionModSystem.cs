@@ -21,6 +21,7 @@ namespace Collodion
         public IServerNetworkChannel? ServerChannel;
         internal ICoreClientAPI? ClientApi;
         private PhotoCaptureRenderer? CaptureRenderer;
+        private ViewfinderDebugPreviewRenderer? DebugPreviewRenderer;
 
         internal WetplatePhotoSync? PhotoSync;
 
@@ -91,6 +92,21 @@ namespace Collodion
                         catch { /* intentional: best-effort non-critical path */ }
                     }
 
+                    if (DebugPreviewRenderer != null)
+                    {
+                        try
+                        {
+                            ClientApi.Event.UnregisterRenderer(DebugPreviewRenderer, EnumRenderStage.Ortho);
+                        }
+                        catch { /* intentional: best-effort non-critical path */ }
+
+                        try
+                        {
+                            DebugPreviewRenderer.Dispose();
+                        }
+                        catch { /* intentional: best-effort non-critical path */ }
+                    }
+
                     if (viewfinderTickListenerId > 0)
                     {
                         try { ClientApi.Event.UnregisterGameTickListener(viewfinderTickListenerId); } catch { /* intentional: best-effort non-critical path */ }
@@ -130,6 +146,7 @@ namespace Collodion
             finally
             {
                 CaptureRenderer = null;
+                DebugPreviewRenderer = null;
                 PhotoSync = null;
                 ClientChannel = null;
                 ServerChannel = null;

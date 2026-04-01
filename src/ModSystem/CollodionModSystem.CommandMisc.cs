@@ -63,6 +63,56 @@ namespace Collodion
             ApplyHudHidden(hide);
             ClientApi.ShowChatMessage($"Wetplate: HUD {(hide ? "hidden" : "shown")} via {(hudHideMechanism ?? "<unknown>")}");
         }
+
+        private void HandleWetplatePreviewCommand(Vintagestory.API.Common.CmdArgs args)
+        {
+            if (ClientApi == null) return;
+
+            var cfg = GetOrLoadClientConfig(ClientApi);
+            cfg.Viewfinder ??= new ViewfinderConfig();
+
+            string action = args.PopWord()?.ToLowerInvariant() ?? "show";
+            bool changed = false;
+
+            switch (action)
+            {
+                case "show":
+                    break;
+
+                case "on":
+                case "enable":
+                    cfg.Viewfinder.DebugPreviewEnabled = true;
+                    changed = true;
+                    break;
+
+                case "off":
+                case "disable":
+                    cfg.Viewfinder.DebugPreviewEnabled = false;
+                    changed = true;
+                    break;
+
+                case "toggle":
+                    cfg.Viewfinder.DebugPreviewEnabled = !cfg.Viewfinder.DebugPreviewEnabled;
+                    changed = true;
+                    break;
+
+                default:
+                    ClientApi.ShowChatMessage("Wetplate: usage: .collodion preview <show|on|off|toggle>");
+                    return;
+            }
+
+            cfg.Viewfinder.ClampInPlace();
+
+            if (changed)
+            {
+                SaveClientConfig(ClientApi);
+            }
+
+            ClientApi.ShowChatMessage(
+                $"Wetplate: preview {(cfg.Viewfinder.DebugPreviewEnabled ? "on" : "off")}, "
+                + $"{cfg.Viewfinder.DebugPreviewWidth}x{cfg.Viewfinder.DebugPreviewHeight}, "
+                + $"refresh={cfg.Viewfinder.DebugPreviewRefreshMs}ms, anchor={cfg.Viewfinder.DebugPreviewAnchor}");
+        }
     }
 }
 

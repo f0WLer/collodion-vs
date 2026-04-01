@@ -18,6 +18,23 @@ namespace Collodion
 
         private PendingCapture? pending;
         private readonly object pendingLock = new object();
+        private int? pendingPreviewMaxDimension;
+        private readonly object previewLock = new object();
+        private PreviewFrame? latestPreviewFrame;
+
+        private sealed class PreviewFrame
+        {
+            public readonly int[] BgraPixels;
+            public readonly int Width;
+            public readonly int Height;
+
+            public PreviewFrame(int[] bgraPixels, int width, int height)
+            {
+                BgraPixels = bgraPixels;
+                Width = width;
+                Height = height;
+            }
+        }
 
         private class PendingCapture
         {
@@ -79,6 +96,121 @@ namespace Collodion
             }
         }
 
+        public void RequestDebugPreviewFrame(int maxDimension)
+        {
+            if (maxDimension < ViewfinderConfig.MinPhotoCaptureMaxDimension) maxDimension = ViewfinderConfig.MinPhotoCaptureMaxDimension;
+            if (maxDimension > ViewfinderConfig.MaxPhotoCaptureMaxDimension) maxDimension = ViewfinderConfig.MaxPhotoCaptureMaxDimension;
+
+            lock (previewLock)
+            {
+                pendingPreviewMaxDimension = maxDimension;
+            }
+        }
+
+        public bool TryConsumeDebugPreviewFrame(out int[] bgraPixels, out int width, out int height)
+        {
+            lock (previewLock)
+            {
+                if (latestPreviewFrame == null)
+                {
+                    bgraPixels = Array.Empty<int>();
+                    width = 0;
+                    height = 0;
+                    return false;
+                }
+
+                bgraPixels = latestPreviewFrame.BgraPixels;
+                width = latestPreviewFrame.Width;
+                height = latestPreviewFrame.Height;
+                latestPreviewFrame = null;
+                return true;
+            }
+        }
+
+        private void StorePreviewFrame(SKBitmap bitmap)
+        {
+            if (bitmap == null || bitmap.Width <= 0 || bitmap.Height <= 0) return;
+
+            int count = bitmap.Width * bitmap.Height;
+            int[] pixels = new int[count];
+            Marshal.Copy(bitmap.GetPixels(), pixels, 0, count);
+
+            lock (previewLock)
+            {
+                latestPreviewFrame = new PreviewFrame(pixels, bitmap.Width, bitmap.Height);
+            }
+        }
+
+        private SKBitmap BuildProcessedCaptureBitmap(int maxDimension, string seedKey)
+        {
+            int width = capi.Render.FrameWidth;
+            int height = capi.Render.FrameHeight;
+            int pixelByteCount = width * height * 4;
+
+            byte[] pixels = ArrayPool<byte>.Shared.Rent(pixelByteCount);
+            GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
+
+            SKBitmap? dstBitmap = null;
+            try
+            {
+                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
+                GL.ReadBuffer(ReadBufferMode.Back);
+                GL.Finish();
+                GL.ReadPixels(0, 0, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
+
+                if (LooksBlank(pixels))
+                {
+                    GL.ReadBuffer(ReadBufferMode.Front);
+                    GL.Finish();
+                    GL.ReadPixels(0, 0, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
+                }
+
+                for (int i = 3; i < pixelByteCount; i += 4)
+                {
+                    pixels[i] = 255;
+                }
+
+                var srcInfo = new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Opaque);
+                using var srcBitmap = new SKBitmap(srcInfo);
+                Marshal.Copy(pixels, 0, srcBitmap.GetPixels(), pixelByteCount);
+
+                float scale = Math.Min(1f, maxDimension / (float)Math.Max(width, height));
+                int outW = Math.Max(1, (int)(width * scale));
+                int outH = Math.Max(1, (int)(height * scale));
+
+                var dstInfo = new SKImageInfo(outW, outH, SKColorType.Bgra8888, SKAlphaType.Opaque);
+                dstBitmap = new SKBitmap(dstInfo);
+                using (var canvas = new SKCanvas(dstBitmap))
+                {
+                    canvas.Clear(SKColors.Black);
+                    canvas.Scale(1, -1);
+                    canvas.Translate(0, -outH);
+                    using var srcImage = SKImage.FromBitmap(srcBitmap);
+                    canvas.DrawImage(srcImage, new SKRect(0, 0, outW, outH));
+                }
+
+                try
+                {
+                    WetplateEffects.ApplyInPlace(dstBitmap, seedKey, effectsConfig);
+                }
+                catch (Exception effectEx)
+                {
+                    capi.Logger.Error($"PhotoCapture: Effects failed: {effectEx.Message}");
+                }
+
+                return dstBitmap;
+            }
+            catch
+            {
+                dstBitmap?.Dispose();
+                throw;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(pixels);
+            }
+        }
+
         private bool LooksBlank(byte[] pixels)
         {
             // Heuristic: sample a few points; if all channels are 0, we likely read the wrong buffer.
@@ -105,69 +237,18 @@ namespace Collodion
                 if (toProcess != null) pending = null;
             }
 
-            if (toProcess == null) return;
-
-            try
+            int? previewMaxDimension;
+            lock (previewLock)
             {
-                int width = capi.Render.FrameWidth;
-                int height = capi.Render.FrameHeight;
-                int pixelByteCount = width * height * 4;
+                previewMaxDimension = pendingPreviewMaxDimension;
+                pendingPreviewMaxDimension = null;
+            }
 
-                byte[] pixels = ArrayPool<byte>.Shared.Rent(pixelByteCount);
-                GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
-
+            if (toProcess != null)
+            {
                 try
                 {
-                    // Ensure we read from the default framebuffer.
-                    GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
-                    GL.ReadBuffer(ReadBufferMode.Back);
-                    GL.Finish();
-                    GL.ReadPixels(0, 0, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
-
-                    // If we got a blank image, try reading the front buffer as a fallback.
-                    if (LooksBlank(pixels))
-                    {
-                        GL.ReadBuffer(ReadBufferMode.Front);
-                        GL.Finish();
-                        GL.ReadPixels(0, 0, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
-                    }
-
-                    // Some framebuffers provide an undefined/zero alpha channel.
-                    // Ensure we treat captures as fully opaque, otherwise post-processing may turn into a black image.
-                    for (int i = 3; i < pixelByteCount; i += 4)
-                    {
-                        pixels[i] = 255;
-                    }
-
-                    var srcInfo = new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Opaque);
-                    using var srcBitmap = new SKBitmap(srcInfo);
-                    Marshal.Copy(pixels, 0, srcBitmap.GetPixels(), pixelByteCount);
-
-                    float scale = Math.Min(1f, captureMaxDimension / (float)Math.Max(width, height));
-                    int outW = Math.Max(1, (int)(width * scale));
-                    int outH = Math.Max(1, (int)(height * scale));
-
-                    var dstInfo = new SKImageInfo(outW, outH, SKColorType.Bgra8888, SKAlphaType.Opaque);
-                    using var dstBitmap = new SKBitmap(dstInfo);
-                    using (var canvas = new SKCanvas(dstBitmap))
-                    {
-                        canvas.Clear(SKColors.Black);
-                        // Flip only vertically to correct GL framebuffer orientation
-                        canvas.Scale(1, -1);
-                        canvas.Translate(0, -outH);
-                        using var srcImage = SKImage.FromBitmap(srcBitmap);
-                        canvas.DrawImage(srcImage, new SKRect(0, 0, outW, outH));
-                    }
-
-                    // Apply wetplate-style post-processing (optional, configurable).
-                    try
-                    {
-                        WetplateEffects.ApplyInPlace(dstBitmap, toProcess.FileName, effectsConfig);
-                    }
-                    catch (Exception effectEx)
-                    {
-                        capi.Logger.Error($"PhotoCapture: Effects failed: {effectEx.Message}");
-                    }
+                    using SKBitmap dstBitmap = BuildProcessedCaptureBitmap(captureMaxDimension, toProcess.FileName);
 
                     using var finalImage = SKImage.FromBitmap(dstBitmap);
                     using var pngData = finalImage.Encode(SKEncodedImageFormat.Png, PngCompressionQuality);
@@ -180,14 +261,23 @@ namespace Collodion
 
                     toProcess.OnSuccess(toProcess.FileName);
                 }
-                finally
+                catch (Exception ex)
                 {
-                    ArrayPool<byte>.Shared.Return(pixels);
+                    toProcess.OnError(ex);
                 }
             }
-            catch (Exception ex)
+
+            if (previewMaxDimension.HasValue)
             {
-                toProcess.OnError(ex);
+                try
+                {
+                    using SKBitmap previewBitmap = BuildProcessedCaptureBitmap(previewMaxDimension.Value, "collodion-debug-preview");
+                    StorePreviewFrame(previewBitmap);
+                }
+                catch (Exception ex)
+                {
+                    capi.Logger.Warning($"Collodion: debug preview capture failed: {ex.Message}");
+                }
             }
         }
 
@@ -218,6 +308,12 @@ namespace Collodion
             lock (pendingLock)
             {
                 pending = null;
+            }
+
+            lock (previewLock)
+            {
+                pendingPreviewMaxDimension = null;
+                latestPreviewFrame = null;
             }
         }
     }

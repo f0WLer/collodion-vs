@@ -5,8 +5,8 @@ namespace Collodion
 {
     public partial class CollodionModSystem
     {
-        private const string WetplateAvailableCommandsLine = "Collodion: available commands: clearcache | hud (hide|show) | pose | effects";
-        private const string WetplateUnknownCommandTryLine = "Try: .collodion clearcache | .collodion hud (hide|show) | .collodion pose | .collodion effects";
+        private const string WetplateAvailableCommandsLine = "Collodion: available commands: clearcache | hud (hide|show) | preview (show|on|off|toggle) | pose | effects";
+        private const string WetplateUnknownCommandTryLine = "Try: .collodion clearcache | .collodion hud (hide|show) | .collodion preview (show|on|off|toggle) | .collodion pose | .collodion effects";
 
         private void OnWetplateClientCommand(int groupId, Vintagestory.API.Common.CmdArgs args)
         {
@@ -40,6 +40,12 @@ namespace Collodion
             if (sub.Equals("hud", StringComparison.OrdinalIgnoreCase))
             {
                 HandleWetplateHudCommand(args);
+                return;
+            }
+
+            if (sub.Equals("preview", StringComparison.OrdinalIgnoreCase))
+            {
+                HandleWetplatePreviewCommand(args);
                 return;
             }
 

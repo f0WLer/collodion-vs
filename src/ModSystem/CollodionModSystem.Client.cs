@@ -55,6 +55,9 @@ namespace Collodion
             CaptureRenderer.SetCaptureMaxDimension(Config.Viewfinder.PhotoCaptureMaxDimension);
             api.Event.RegisterRenderer(CaptureRenderer, EnumRenderStage.AfterBlit, "collodion-photocapture");
 
+            DebugPreviewRenderer = new ViewfinderDebugPreviewRenderer(api, CaptureRenderer, () => IsViewfinderActive);
+            api.Event.RegisterRenderer(DebugPreviewRenderer, EnumRenderStage.Ortho, "collodion-viewfinder-preview");
+
             // Ask server for authoritative capture sizing in multiplayer.
             // Some load orders/world joins invoke StartClientSide before the channel reports connected.
             // Defer send until connected so startup never aborts.
@@ -64,7 +67,7 @@ namespace Collodion
             api.RegisterCommand(
                 "collodion",
                 "Collodion mod commands",
-                ".collodion clearcache | .collodion hud | .collodion pose | .collodion effects",
+                ".collodion clearcache | .collodion hud | .collodion preview | .collodion pose | .collodion effects",
                 OnWetplateClientCommand
             );
 #pragma warning restore CS0618

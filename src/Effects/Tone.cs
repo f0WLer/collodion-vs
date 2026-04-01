@@ -37,6 +37,12 @@ namespace Collodion
             if (contrastStart < cfg.ContrastStartMin) contrastStart = cfg.ContrastStartMin;
             if (contrastStart > cfg.ContrastStartMax) contrastStart = cfg.ContrastStartMax;
 
+            // Low-luma path constants are frame-invariant; compute once.
+            float kShadow = cfg.ToneSigmoidScale * (1f + (contrast - 1f) * cfg.ShadowContrastReductionScale);
+            float y0s = Sigmoid(-0.5f * kShadow);
+            float y1s = Sigmoid(0.5f * kShadow);
+            float invSpans = 1f / Math.Max(1e-6f, (y1s - y0s));
+
             for (int i = 0; i < bytes.Length; i += 4)
             {
                 float bb = bytes[i + 0] / 255f;
@@ -46,12 +52,6 @@ namespace Collodion
                 // Compute pre-curve luminance to decide how much contrast to apply.
                 float lum = 0.299f * rr + 0.587f * gg + 0.114f * bb;
                 float wContrast = SmoothStep(contrastStart, cfg.ContrastBlendEnd, lum);
-
-                // Low-luma path: gentler curve (reduced contrast)
-                float kShadow = cfg.ToneSigmoidScale * (1f + (contrast - 1f) * cfg.ShadowContrastReductionScale);
-                float y0s = Sigmoid(-0.5f * kShadow);
-                float y1s = Sigmoid(0.5f * kShadow);
-                float invSpans = 1f / Math.Max(1e-6f, (y1s - y0s));
 
                 float rrLo = ApplyCurve(rr + b, kShadow, y0s, invSpans);
                 float ggLo = ApplyCurve(gg + b, kShadow, y0s, invSpans);

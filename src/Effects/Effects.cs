@@ -83,7 +83,9 @@ namespace Collodion
                 using var canvas = new SKCanvas(bmp);
                 using var paint = new SKPaint { IsAntialias = true };
 
-                var center = new SKPoint(w / 2f, h / 2f);
+                float centerOffsetX = ((float)rng.NextDouble() * 2f - 1f) * w * 0.05f;
+                float centerOffsetY = ((float)rng.NextDouble() * 2f - 1f) * h * 0.04f;
+                var center = new SKPoint(w / 2f + centerOffsetX, h / 2f + centerOffsetY);
                 float radius = Math.Max(w, h) * effectiveCfg.VignetteRadius;
 
                 byte a = (byte)(255 * effectiveCfg.Vignette);
@@ -97,6 +99,23 @@ namespace Collodion
                 paint.Shader = SKShader.CreateRadialGradient(center, radius, colors, pos, SKShaderTileMode.Clamp);
                 paint.BlendMode = SKBlendMode.Multiply;
                 canvas.DrawRect(new SKRect(0, 0, w, h), paint);
+
+                // Add very subtle directional falloff so the vignette is not perfectly radial every frame.
+                float ang = (float)(rng.NextDouble() * Math.PI * 2.0);
+                float dx = (float)Math.Cos(ang);
+                float dy = (float)Math.Sin(ang);
+                float far = Math.Max(w, h) * 0.75f;
+                var p0 = new SKPoint(center.X - dx * far, center.Y - dy * far);
+                var p1 = new SKPoint(center.X + dx * far, center.Y + dy * far);
+                byte a2 = (byte)Math.Max(0, Math.Min(255, (int)(a * 0.28f)));
+                using var chemPaint = new SKPaint { IsAntialias = true, BlendMode = SKBlendMode.Multiply };
+                chemPaint.Shader = SKShader.CreateLinearGradient(
+                    p0,
+                    p1,
+                    new[] { new SKColor(0, 0, 0, a2), new SKColor(0, 0, 0, 0), new SKColor(0, 0, 0, a2) },
+                    new[] { 0f, 0.5f, 1f },
+                    SKShaderTileMode.Clamp);
+                canvas.DrawRect(new SKRect(0, 0, w, h), chemPaint);
             }
 
             // 6) Development defects (imperfection / uneven chemistry)

@@ -41,20 +41,29 @@ namespace Collodion
             System.Runtime.InteropServices.Marshal.Copy(ptr, bytes, 0, bytes.Length);
             System.Runtime.InteropServices.Marshal.Copy(blurPtr, blr, 0, blr.Length);
 
-            float phase = (float)(rng.NextDouble() * Math.PI * 2.0);
+            float phaseY = (float)(rng.NextDouble() * Math.PI * 2.0);
+            float phaseX = (float)(rng.NextDouble() * Math.PI * 2.0);
+            float phaseCross = (float)(rng.NextDouble() * Math.PI * 2.0);
+            float freqY = Math.Max(0.1f, cfg.SkyStreakFrequency);
+            float freqX = 0.45f + freqY * 0.35f;
+            float freqCross = 0.2f + freqY * 0.2f;
 
             for (int y = 0; y < topH; y++)
             {
                 float fy = 1f - (y / (float)Math.Max(1, topH - 1)); // 1 at top
                 // soft mask
                 float mask = fy * fy * (3f - 2f * fy);
-                // faint streakiness
-                float streak = 1f + cfg.SkyStreakAmount * strength * (float)Math.Sin((y / Math.Max(1f, topH)) * (float)(Math.PI * 2.0 * cfg.SkyStreakFrequency) + phase);
                 float m = strength * mask;
+                float yn = y / Math.Max(1f, topH);
+                float baseWave = (float)Math.Sin(yn * (float)(Math.PI * 2.0 * freqY) + phaseY);
 
                 for (int x = 0; x < w; x++)
                 {
                     int i = (y * w + x) * 4;
+                    float xn = (w <= 1) ? 0f : (x / (float)(w - 1));
+                    float xWave = (float)Math.Sin(xn * (float)(Math.PI * 2.0 * freqX) + phaseX);
+                    float crossWave = (float)Math.Sin((xn + yn * 0.5f) * (float)(Math.PI * 2.0 * freqCross) + phaseCross);
+                    float streak = 1f + cfg.SkyStreakAmount * strength * baseWave * (0.7f + 0.2f * xWave + 0.1f * crossWave);
 
                     float ob = bytes[i + 0] / 255f;
                     float og = bytes[i + 1] / 255f;

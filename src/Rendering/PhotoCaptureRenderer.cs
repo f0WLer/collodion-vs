@@ -141,6 +141,44 @@ namespace Collodion
             }
         }
 
+        private static SKBitmap CenterCropToPlateAspect(SKBitmap source)
+        {
+            if (source.Width <= 0 || source.Height <= 0) return source;
+
+            const float plateTargetAspect = 10f / 11f;
+            float sourceAspect = source.Width / (float)source.Height;
+
+            PhotoCropMath.ComputeCenterCrop(sourceAspect, plateTargetAspect, out float keepU, out float keepV);
+
+            if (keepU >= 0.9999f && keepV >= 0.9999f)
+            {
+                return source;
+            }
+
+            int cropW = Math.Max(1, (int)Math.Round(source.Width * keepU));
+            int cropH = Math.Max(1, (int)Math.Round(source.Height * keepV));
+
+            int cropX = Math.Max(0, (source.Width - cropW) / 2);
+            int cropY = Math.Max(0, (source.Height - cropH) / 2);
+
+            if (cropX + cropW > source.Width) cropW = source.Width - cropX;
+            if (cropY + cropH > source.Height) cropH = source.Height - cropY;
+
+            var dstInfo = new SKImageInfo(cropW, cropH, SKColorType.Bgra8888, SKAlphaType.Opaque);
+            var cropped = new SKBitmap(dstInfo);
+
+            using (var canvas = new SKCanvas(cropped))
+            {
+                canvas.Clear(SKColors.Black);
+                canvas.DrawBitmap(
+                    source,
+                    new SKRectI(cropX, cropY, cropX + cropW, cropY + cropH),
+                    new SKRect(0, 0, cropW, cropH));
+            }
+
+            return cropped;
+        }
+
         private SKBitmap BuildProcessedCaptureBitmap(int maxDimension, string seedKey)
         {
             int width = capi.Render.FrameWidth;
@@ -187,6 +225,13 @@ namespace Collodion
                     canvas.Translate(0, -outH);
                     using var srcImage = SKImage.FromBitmap(srcBitmap);
                     canvas.DrawImage(srcImage, new SKRect(0, 0, outW, outH));
+                }
+
+                SKBitmap croppedBitmap = CenterCropToPlateAspect(dstBitmap);
+                if (!ReferenceEquals(croppedBitmap, dstBitmap))
+                {
+                    dstBitmap.Dispose();
+                    dstBitmap = croppedBitmap;
                 }
 
                 try

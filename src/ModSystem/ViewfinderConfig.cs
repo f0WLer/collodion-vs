@@ -18,14 +18,16 @@ namespace Collodion
 
         public string Comment_DebugPreviewEnabled = "If true, shows a live viewfinder debug preview window with final wetplate effects applied (client-only).";
         public bool DebugPreviewEnabled = false;
+        public string Comment_DebugPreviewPeak = "If true, keeps the debug preview visible even when the viewfinder is not active (dev-only).";
+        public bool DebugPreviewPeak = false;
         public string Comment_DebugPreviewRefreshMs = "Refresh interval in milliseconds for the live viewfinder debug preview (lower = more CPU/GPU use).";
-        public int DebugPreviewRefreshMs = 250;
+        public int DebugPreviewRefreshMs = 500;
         public string Comment_DebugPreviewMaxDimension = "Max pixel size of the source capture used for the debug preview (higher = sharper but slower).";
-        public int DebugPreviewMaxDimension = 320;
+        public int DebugPreviewMaxDimension = 384;
         public string Comment_DebugPreviewWidth = "Preview window width in screen pixels.";
-        public int DebugPreviewWidth = 320;
+        public int DebugPreviewWidth = 640;
         public string Comment_DebugPreviewHeight = "Preview window height in screen pixels.";
-        public int DebugPreviewHeight = 180;
+        public int DebugPreviewHeight = 360;
         public string Comment_DebugPreviewAnchor = "Preview anchor position: topleft | topright | bottomleft | bottomright.";
         public string DebugPreviewAnchor = "topright";
         public string Comment_DebugPreviewMargin = "Margin in pixels from the selected anchor edge.";

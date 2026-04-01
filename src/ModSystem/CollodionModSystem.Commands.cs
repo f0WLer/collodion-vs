@@ -5,8 +5,8 @@ namespace Collodion
 {
     public partial class CollodionModSystem
     {
-        private const string WetplateAvailableCommandsLine = "Collodion: available commands: clearcache | hud (hide|show) | preview (show|on|off|toggle) | pose | effects";
-        private const string WetplateUnknownCommandTryLine = "Try: .collodion clearcache | .collodion hud (hide|show) | .collodion preview (show|on|off|toggle) | .collodion pose | .collodion effects";
+        private const string WetplateAvailableCommandsLine = "Collodion: available commands: clearcache | hud (hide|show) | preview (show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]) | pose | effects | effect <FieldName> <value> | effect save | effect load";
+        private const string WetplateUnknownCommandTryLine = "Try: .collodion clearcache | .collodion hud (hide|show) | .collodion preview (show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]) | .collodion pose | .collodion effects | .collodion effect <FieldName> <value>";
 
         private void OnWetplateClientCommand(int groupId, Vintagestory.API.Common.CmdArgs args)
         {
@@ -34,6 +34,12 @@ namespace Collodion
             if (sub.Equals("effects", StringComparison.OrdinalIgnoreCase) || sub.Equals("fx", StringComparison.OrdinalIgnoreCase))
             {
                 HandleWetplateEffectsCommand(args);
+                return;
+            }
+
+            if (sub.Equals("effect", StringComparison.OrdinalIgnoreCase))
+            {
+                HandleEffectFieldCommand(args);
                 return;
             }
 

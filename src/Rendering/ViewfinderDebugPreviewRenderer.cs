@@ -32,7 +32,7 @@ namespace Collodion
             ViewfinderConfig? cfg = ViewfinderCfg;
             if (cfg == null) return;
             if (!cfg.DebugPreviewEnabled) return;
-            if (!isViewfinderActive()) return;
+            if (!cfg.DebugPreviewPeak && !isViewfinderActive()) return;
 
             int refreshMs = cfg.DebugPreviewRefreshMs;
             long nowMs = capi.ElapsedMilliseconds;
@@ -59,6 +59,11 @@ namespace Collodion
                     linearMag: true,
                     clampMode: (int)EnumTextureWrap.ClampToEdge,
                     intoTexture: ref previewTexture);
+
+                // LoadOrUpdateTextureFromBgra updates level 0 via TexSubImage on existing textures.
+                // Rebuild mipmaps so lower levels do not keep stale first-frame content.
+                capi.Render.BindTexture2d(previewTexture.TextureId);
+                capi.Render.GlGenerateTex2DMipmaps();
             }
 
             if (previewTexture == null || previewTexture.TextureId == 0) return;
@@ -97,8 +102,39 @@ namespace Collodion
                     break;
             }
 
-            capi.Render.Render2DTexture(previewTexture.TextureId, x, y, previewWidth, previewHeight, 50f, ColorUtil.WhiteArgbVec);
-            capi.Render.RenderRectangle(x - 1, y - 1, 49f, previewWidth + 2, previewHeight + 2, ColorUtil.WhiteArgb);
+            capi.Render.GLDisableDepthTest();
+            try
+            {
+                float boxW = previewWidth;
+                float boxH = previewHeight;
+                float texAspect = previewTexture.Width > 0 && previewTexture.Height > 0
+                    ? previewTexture.Width / (float)previewTexture.Height
+                    : (10f / 11f);
+                float boxAspect = boxW / Math.Max(1f, boxH);
+
+                float drawW = boxW;
+                float drawH = boxH;
+                if (texAspect > boxAspect)
+                {
+                    drawH = boxW / Math.Max(0.0001f, texAspect);
+                }
+                else
+                {
+                    drawW = boxH * texAspect;
+                }
+
+                float drawX = x + (boxW - drawW) * 0.5f;
+                float drawY = y + (boxH - drawH) * 0.5f;
+
+                // Matte fill so letterbox/pillarbox areas are explicit and not stale framebuffer content.
+                capi.Render.RenderRectangle(x, y, 49f, boxW, boxH, unchecked((int)0xFF000000));
+                capi.Render.Render2DTexture(previewTexture.TextureId, drawX, drawY, drawW, drawH, 50f, ColorUtil.WhiteArgbVec);
+                capi.Render.RenderRectangle(x - 1, y - 1, 49f, boxW + 2, boxH + 2, ColorUtil.WhiteArgb);
+            }
+            finally
+            {
+                capi.Render.GLEnableDepthTest();
+            }
         }
 
         public void Dispose()

@@ -1,5 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Reflection;
+using Newtonsoft.Json;
+using Vintagestory.API.Config;
 
 namespace Collodion
 {
@@ -364,6 +369,154 @@ namespace Collodion
             }
 
             ClientApi.ShowChatMessage("Wetplate: usage: .collodion effects <show|enable|disable|reset|preset|set>");
+        }
+
+        private static string EffectsTuningProfilePath =>
+            Path.Combine(GamePaths.DataPath, "ModData", "collodion", "effects-tuning.json");
+
+        private void HandleEffectFieldCommand(Vintagestory.API.Common.CmdArgs args)
+        {
+            if (ClientApi == null) return;
+
+            var rootCfg = GetOrLoadClientConfig(ClientApi);
+            rootCfg.Effects ??= new WetplateEffectsConfig();
+
+            string sub = args.PopWord();
+
+            if (string.IsNullOrEmpty(sub))
+            {
+                ClientApi.ShowChatMessage("Usage: .collodion effect <FieldName> <value>");
+                ClientApi.ShowChatMessage("       .collodion effect save   — export live config to effects-tuning.json");
+                ClientApi.ShowChatMessage("       .collodion effect load   — import from effects-tuning.json");
+                ClientApi.ShowChatMessage("Field names match WetplateEffectsConfig exactly (case-insensitive, exact match preferred).");
+                return;
+            }
+
+            if (sub.Equals("save", StringComparison.OrdinalIgnoreCase))
+            {
+                var cfg = rootCfg.Effects;
+                cfg.ClampInPlace();
+                try
+                {
+                    string dir = Path.GetDirectoryName(EffectsTuningProfilePath)!;
+                    Directory.CreateDirectory(dir);
+                    File.WriteAllText(EffectsTuningProfilePath, JsonConvert.SerializeObject(cfg, Formatting.Indented));
+                    ClientApi.ShowChatMessage($"Effects profile saved to: {EffectsTuningProfilePath}");
+                }
+                catch (Exception ex)
+                {
+                    ClientApi.ShowChatMessage($"Effects save failed: {ex.Message}");
+                }
+                return;
+            }
+
+            if (sub.Equals("load", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!File.Exists(EffectsTuningProfilePath))
+                {
+                    ClientApi.ShowChatMessage($"No saved profile found at: {EffectsTuningProfilePath}");
+                    return;
+                }
+                try
+                {
+                    string text = File.ReadAllText(EffectsTuningProfilePath);
+                    var loaded = JsonConvert.DeserializeObject<WetplateEffectsConfig>(text);
+                    if (loaded == null)
+                    {
+                        ClientApi.ShowChatMessage("Effects load failed: file parsed as null.");
+                        return;
+                    }
+                    loaded.ClampInPlace();
+                    rootCfg.Effects = loaded;
+                    SaveClientConfig(ClientApi);
+                    CaptureRenderer?.ReloadEffectsConfig();
+                    ClientApi.ShowChatMessage($"Effects profile loaded from: {EffectsTuningProfilePath}");
+                }
+                catch (Exception ex)
+                {
+                    ClientApi.ShowChatMessage($"Effects load failed: {ex.Message}");
+                }
+                return;
+            }
+
+            // sub is a field name; next arg is the value
+            string fieldName = sub;
+            string? valStr = args.PopWord();
+
+            if (string.IsNullOrEmpty(valStr))
+            {
+                ClientApi.ShowChatMessage($"Usage: .collodion effect {fieldName} <value>");
+                return;
+            }
+
+            var cfgType = typeof(WetplateEffectsConfig);
+            FieldInfo? field = cfgType.GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
+
+            if (field == null)
+            {
+                // Case-insensitive fallback
+                var allFields = cfgType.GetFields(BindingFlags.Public | BindingFlags.Instance);
+                var matches = new List<FieldInfo>();
+                foreach (var f in allFields)
+                {
+                    if (string.Equals(f.Name, fieldName, StringComparison.OrdinalIgnoreCase))
+                        matches.Add(f);
+                }
+
+                if (matches.Count == 0)
+                {
+                    ClientApi.ShowChatMessage($"Unknown field '{fieldName}'. Names match WetplateEffectsConfig public fields.");
+                    return;
+                }
+                if (matches.Count > 1)
+                {
+                    var names = string.Join(", ", matches.ConvertAll(f => f.Name));
+                    ClientApi.ShowChatMessage($"Ambiguous: multiple matches for '{fieldName}': {names}. Use exact casing.");
+                    return;
+                }
+                field = matches[0];
+            }
+
+            var cfg2 = rootCfg.Effects;
+            Type fieldType = field.FieldType;
+
+            if (fieldType == typeof(float))
+            {
+                if (!float.TryParse(valStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float fval))
+                {
+                    ClientApi.ShowChatMessage($"'{field.Name}' is a float — value must be a number (use . not ,).");
+                    return;
+                }
+                field.SetValue(cfg2, fval);
+            }
+            else if (fieldType == typeof(int))
+            {
+                if (!int.TryParse(valStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int ival))
+                {
+                    ClientApi.ShowChatMessage($"'{field.Name}' is an int — value must be a whole number.");
+                    return;
+                }
+                field.SetValue(cfg2, ival);
+            }
+            else if (fieldType == typeof(bool))
+            {
+                if (!bool.TryParse(valStr, out bool bval))
+                {
+                    ClientApi.ShowChatMessage($"'{field.Name}' is a bool — value must be true or false.");
+                    return;
+                }
+                field.SetValue(cfg2, bval);
+            }
+            else
+            {
+                ClientApi.ShowChatMessage($"Field '{field.Name}' has unsupported type '{fieldType.Name}'.");
+                return;
+            }
+
+            cfg2.ClampInPlace();
+            SaveClientConfig(ClientApi);
+            CaptureRenderer?.ReloadEffectsConfig();
+            ClientApi.ShowChatMessage($"effect {field.Name} → {field.GetValue(cfg2)}");
         }
     }
 }

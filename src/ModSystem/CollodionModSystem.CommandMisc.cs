@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 
 namespace Collodion
 {
@@ -79,6 +80,36 @@ namespace Collodion
                 case "show":
                     break;
 
+                case "peak":
+                    string peakAction = args.PopWord()?.ToLowerInvariant() ?? "on";
+                    switch (peakAction)
+                    {
+                        case "show":
+                            break;
+
+                        case "on":
+                        case "enable":
+                            cfg.Viewfinder.DebugPreviewPeak = true;
+                            changed = true;
+                            break;
+
+                        case "off":
+                        case "disable":
+                            cfg.Viewfinder.DebugPreviewPeak = false;
+                            changed = true;
+                            break;
+
+                        case "toggle":
+                            cfg.Viewfinder.DebugPreviewPeak = !cfg.Viewfinder.DebugPreviewPeak;
+                            changed = true;
+                            break;
+
+                        default:
+                            ClientApi.ShowChatMessage("Wetplate: usage: .collodion preview peak [show|on|off|toggle]");
+                            return;
+                    }
+                    break;
+
                 case "on":
                 case "enable":
                     cfg.Viewfinder.DebugPreviewEnabled = true;
@@ -96,8 +127,53 @@ namespace Collodion
                     changed = true;
                     break;
 
+                case "size":
+                {
+                    string wStr = args.PopWord();
+                    string hStr = args.PopWord();
+                    if (!int.TryParse(wStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int w)
+                        || !int.TryParse(hStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int h))
+                    {
+                        ClientApi.ShowChatMessage("Wetplate: usage: .collodion preview size <width> <height>");
+                        return;
+                    }
+
+                    cfg.Viewfinder.DebugPreviewWidth = w;
+                    cfg.Viewfinder.DebugPreviewHeight = h;
+                    changed = true;
+                    break;
+                }
+
+                case "refresh":
+                {
+                    string msStr = args.PopWord();
+                    if (!int.TryParse(msStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int ms))
+                    {
+                        ClientApi.ShowChatMessage("Wetplate: usage: .collodion preview refresh <milliseconds>");
+                        return;
+                    }
+
+                    cfg.Viewfinder.DebugPreviewRefreshMs = ms;
+                    changed = true;
+                    break;
+                }
+
+                case "anchor":
+                {
+                    string anchor = args.PopWord();
+                    if (string.IsNullOrWhiteSpace(anchor))
+                    {
+                        ClientApi.ShowChatMessage("Wetplate: usage: .collodion preview anchor <topleft|topright|bottomleft|bottomright>");
+                        return;
+                    }
+
+                    cfg.Viewfinder.DebugPreviewAnchor = anchor;
+                    changed = true;
+                    break;
+                }
+
                 default:
-                    ClientApi.ShowChatMessage("Wetplate: usage: .collodion preview <show|on|off|toggle>");
+                    ClientApi.ShowChatMessage("Wetplate: usage: .collodion preview <show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]>");
                     return;
             }
 
@@ -111,7 +187,8 @@ namespace Collodion
             ClientApi.ShowChatMessage(
                 $"Wetplate: preview {(cfg.Viewfinder.DebugPreviewEnabled ? "on" : "off")}, "
                 + $"{cfg.Viewfinder.DebugPreviewWidth}x{cfg.Viewfinder.DebugPreviewHeight}, "
-                + $"refresh={cfg.Viewfinder.DebugPreviewRefreshMs}ms, anchor={cfg.Viewfinder.DebugPreviewAnchor}");
+                + $"refresh={cfg.Viewfinder.DebugPreviewRefreshMs}ms, anchor={cfg.Viewfinder.DebugPreviewAnchor}, "
+                + $"peak={(cfg.Viewfinder.DebugPreviewPeak ? "on" : "off")}");
         }
     }
 }

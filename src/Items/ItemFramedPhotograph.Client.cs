@@ -105,14 +105,7 @@ namespace Collodion
             {
 #pragma warning disable CS0618 // Keep existing FP pose handling
                 var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
-                string poseKey = target switch
-                {
-                    EnumItemRenderTarget.HandFp => "photo-fp",
-                    EnumItemRenderTarget.HandTp => "photo-tp",
-                    EnumItemRenderTarget.Gui => "photo-gui",
-                    EnumItemRenderTarget.Ground => "photo-ground",
-                    _ => string.Empty
-                };
+                string poseKey = RenderPoseUtil.GetPoseKey("photo", target);
 #pragma warning restore CS0618
 
                 if (!string.IsNullOrEmpty(poseKey))

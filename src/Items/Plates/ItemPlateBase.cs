@@ -67,18 +67,7 @@ namespace Collodion
 
                 // Preserve JSON-defined guiTransform/tpHandTransform/fpHandTransform.
                 // We only layer optional development pose deltas on top.
-
-                // NOTE: EnumItemRenderTarget.HandFp is obsolete in newer API, but still correct on 1.21.6.
-#pragma warning disable CS0618
-                string poseKey = target switch
-                {
-                    EnumItemRenderTarget.HandFp => "plate-fp",
-                    EnumItemRenderTarget.HandTp => "plate-tp",
-                    EnumItemRenderTarget.Gui => "plate-gui",
-                    EnumItemRenderTarget.Ground => "plate-ground",
-                    _ => string.Empty
-                };
-#pragma warning restore CS0618
+                string poseKey = RenderPoseUtil.GetPoseKey("plate", target);
 
                 if (!string.IsNullOrEmpty(poseKey))
                 {

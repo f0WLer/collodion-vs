@@ -71,76 +71,82 @@ namespace Collodion
                 .RegisterMessageType(typeof(PhotoCaptureConfigPacket));
         }
 
+        private static void TryRun(Action action)
+        {
+            try { action(); } catch { /* intentional: best-effort non-critical path */ }
+        }
+
+        private void DisposeClientRenderers()
+        {
+            if (ClientApi == null) return;
+
+            if (CaptureRenderer != null)
+            {
+                TryRun(() => ClientApi.Event.UnregisterRenderer(CaptureRenderer, EnumRenderStage.AfterBlit));
+                TryRun(() => CaptureRenderer.Dispose());
+            }
+
+            if (DebugPreviewRenderer != null)
+            {
+                TryRun(() => ClientApi.Event.UnregisterRenderer(DebugPreviewRenderer, EnumRenderStage.Ortho));
+                TryRun(() => DebugPreviewRenderer.Dispose());
+            }
+        }
+
+        private void DisposeClientTickListeners()
+        {
+            if (ClientApi == null) return;
+
+            if (viewfinderTickListenerId > 0)
+            {
+                TryRun(() => ClientApi.Event.UnregisterGameTickListener(viewfinderTickListenerId));
+                viewfinderTickListenerId = 0;
+            }
+
+            if (clientDevTrayLatchTickListenerId.HasValue && clientDevTrayLatchTickListenerId.Value > 0)
+            {
+                long id = clientDevTrayLatchTickListenerId.Value;
+                TryRun(() => ClientApi.Event.UnregisterGameTickListener(id));
+                clientDevTrayLatchTickListenerId = null;
+            }
+
+            if (clientCaptureConfigRetryTickListenerId.HasValue && clientCaptureConfigRetryTickListenerId.Value > 0)
+            {
+                long id = clientCaptureConfigRetryTickListenerId.Value;
+                TryRun(() => ClientApi.Event.UnregisterGameTickListener(id));
+                clientCaptureConfigRetryTickListenerId = null;
+            }
+        }
+
+        private void DisposeServerTickListenersAndFlush(ICoreServerAPI sapi)
+        {
+            if (serverPhotoLastSeenFlushListenerId.HasValue && serverPhotoLastSeenFlushListenerId.Value > 0)
+            {
+                long id = serverPhotoLastSeenFlushListenerId.Value;
+                TryRun(() => sapi.Event.UnregisterGameTickListener(id));
+                serverPhotoLastSeenFlushListenerId = null;
+            }
+
+            if (serverPhotoSyncPruneListenerId.HasValue && serverPhotoSyncPruneListenerId.Value > 0)
+            {
+                long id = serverPhotoSyncPruneListenerId.Value;
+                TryRun(() => sapi.Event.UnregisterGameTickListener(id));
+                serverPhotoSyncPruneListenerId = null;
+            }
+
+            TryRun(() => ServerMaybeFlushPhotoLastSeenIndex(sapi));
+        }
+
         public override void Dispose()
         {
             try
             {
-                if (ClientApi != null)
-                {
-                    if (CaptureRenderer != null)
-                    {
-                        try
-                        {
-                            ClientApi.Event.UnregisterRenderer(CaptureRenderer, EnumRenderStage.AfterBlit);
-                        }
-                        catch { /* intentional: best-effort non-critical path */ }
-
-                        try
-                        {
-                            CaptureRenderer.Dispose();
-                        }
-                        catch { /* intentional: best-effort non-critical path */ }
-                    }
-
-                    if (DebugPreviewRenderer != null)
-                    {
-                        try
-                        {
-                            ClientApi.Event.UnregisterRenderer(DebugPreviewRenderer, EnumRenderStage.Ortho);
-                        }
-                        catch { /* intentional: best-effort non-critical path */ }
-
-                        try
-                        {
-                            DebugPreviewRenderer.Dispose();
-                        }
-                        catch { /* intentional: best-effort non-critical path */ }
-                    }
-
-                    if (viewfinderTickListenerId > 0)
-                    {
-                        try { ClientApi.Event.UnregisterGameTickListener(viewfinderTickListenerId); } catch { /* intentional: best-effort non-critical path */ }
-                        viewfinderTickListenerId = 0;
-                    }
-
-                    if (clientDevTrayLatchTickListenerId.HasValue && clientDevTrayLatchTickListenerId.Value > 0)
-                    {
-                        try { ClientApi.Event.UnregisterGameTickListener(clientDevTrayLatchTickListenerId.Value); } catch { /* intentional: best-effort non-critical path */ }
-                        clientDevTrayLatchTickListenerId = null;
-                    }
-
-                    if (clientCaptureConfigRetryTickListenerId.HasValue && clientCaptureConfigRetryTickListenerId.Value > 0)
-                    {
-                        try { ClientApi.Event.UnregisterGameTickListener(clientCaptureConfigRetryTickListenerId.Value); } catch { /* intentional: best-effort non-critical path */ }
-                        clientCaptureConfigRetryTickListenerId = null;
-                    }
-                }
+                DisposeClientRenderers();
+                DisposeClientTickListeners();
 
                 if (Api is ICoreServerAPI sapi)
                 {
-                    if (serverPhotoLastSeenFlushListenerId.HasValue && serverPhotoLastSeenFlushListenerId.Value > 0)
-                    {
-                        try { sapi.Event.UnregisterGameTickListener(serverPhotoLastSeenFlushListenerId.Value); } catch { /* intentional: best-effort non-critical path */ }
-                        serverPhotoLastSeenFlushListenerId = null;
-                    }
-
-                    if (serverPhotoSyncPruneListenerId.HasValue && serverPhotoSyncPruneListenerId.Value > 0)
-                    {
-                        try { sapi.Event.UnregisterGameTickListener(serverPhotoSyncPruneListenerId.Value); } catch { /* intentional: best-effort non-critical path */ }
-                        serverPhotoSyncPruneListenerId = null;
-                    }
-
-                    try { ServerMaybeFlushPhotoLastSeenIndex(sapi); } catch { /* intentional: best-effort non-critical path */ }
+                    DisposeServerTickListenersAndFlush(sapi);
                 }
             }
             finally

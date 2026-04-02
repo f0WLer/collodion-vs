@@ -22,13 +22,7 @@ namespace Collodion
             var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
             if (modSys == null) return;
             string posePrefix = GetSlingPosePrefix(itemstack);
-            string poseKey = target switch
-            {
-                EnumItemRenderTarget.HandTp => $"{posePrefix}-tp",
-                EnumItemRenderTarget.Gui => $"{posePrefix}-gui",
-                EnumItemRenderTarget.Ground => $"{posePrefix}-ground",
-                _ => string.Empty
-            };
+            string poseKey = RenderPoseUtil.GetPoseKey(posePrefix, target, includeFirstPerson: false);
 #pragma warning restore CS0618
 
             if (string.IsNullOrEmpty(poseKey)) return;

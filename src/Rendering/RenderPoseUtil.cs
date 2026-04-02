@@ -5,6 +5,20 @@ namespace Collodion
 {
     internal static class RenderPoseUtil
     {
+        internal static string GetPoseKey(string prefix, EnumItemRenderTarget target, bool includeFirstPerson = true)
+        {
+#pragma warning disable CS0618 // Keep HandFp support for VS 1.21 compatibility.
+            return target switch
+            {
+                EnumItemRenderTarget.HandFp => includeFirstPerson ? $"{prefix}-fp" : string.Empty,
+                EnumItemRenderTarget.HandTp => $"{prefix}-tp",
+                EnumItemRenderTarget.Gui => $"{prefix}-gui",
+                EnumItemRenderTarget.Ground => $"{prefix}-ground",
+                _ => string.Empty
+            };
+#pragma warning restore CS0618
+        }
+
         internal static ModelTransform CloneTransform(ModelTransform src)
         {
             var dst = new ModelTransform();

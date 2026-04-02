@@ -55,17 +55,7 @@ namespace Collodion
             try
             {
                 var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
-
-#pragma warning disable CS0618
-                string poseKey = target switch
-                {
-                    EnumItemRenderTarget.HandFp => "platebox-fp",
-                    EnumItemRenderTarget.HandTp => "platebox-tp",
-                    EnumItemRenderTarget.Gui => "platebox-gui",
-                    EnumItemRenderTarget.Ground => "platebox-ground",
-                    _ => string.Empty
-                };
-#pragma warning restore CS0618
+                string poseKey = RenderPoseUtil.GetPoseKey("platebox", target);
 
                 if (!string.IsNullOrWhiteSpace(poseKey))
                 {

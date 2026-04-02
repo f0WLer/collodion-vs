@@ -37,7 +37,7 @@ namespace Collodion
             return width > 0 && height > 0;
         }
 
-        internal static bool TryEnsureDerivedPhoto(ICoreClientAPI capi, string sourcePath, string derivedPath, string seedKey, bool useDevelopedStage, int developPours, float movementScore)
+        internal static bool TryEnsureDerivedPhoto(ICoreClientAPI capi, string sourcePath, string derivedPath, string seedKey, bool useDevelopedStage, int developPours, int maxDeveloperPours, float movementScore)
         {
             try
             {
@@ -58,7 +58,7 @@ namespace Collodion
                 using var src = SKBitmap.Decode(sourcePath);
                 if (src == null) return false;
 
-                float t = WetPlateChemicalUtil.DevelopPoursRequired <= 1 ? 1f : (developPours - 1) / (float)(WetPlateChemicalUtil.DevelopPoursRequired - 1);
+                float t = maxDeveloperPours <= 1 ? 1f : (developPours - 1) / (float)(maxDeveloperPours - 1);
                 if (t < 0f) t = 0f;
                 if (t > 1f) t = 1f;
 

@@ -141,20 +141,21 @@ namespace Collodion
                 mirrorX = target == EnumItemRenderTarget.Gui;
             }
 
-            int developPours = WetPlateChemicalUtil.DevelopPoursRequired;
+            int maxDeveloperPours = itemstack.Attributes?.GetInt(WetPlateAttrs.DeveloperPourCountMax, 5) ?? 5;
+            int developPours = maxDeveloperPours;
             if (!string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("developed", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
-                    developPours = itemstack.Attributes?.GetInt(WetPlateAttrs.DevelopPours, WetPlateChemicalUtil.DevelopPoursRequired) ?? WetPlateChemicalUtil.DevelopPoursRequired;
+                    developPours = itemstack.Attributes?.GetInt(WetPlateAttrs.DevelopPours, maxDeveloperPours) ?? maxDeveloperPours;
                 }
                 catch
                 {
-                    developPours = WetPlateChemicalUtil.DevelopPoursRequired;
+                    developPours = maxDeveloperPours;
                 }
 
                 if (developPours < 0) developPours = 0;
-                if (developPours > WetPlateChemicalUtil.DevelopPoursRequired) developPours = WetPlateChemicalUtil.DevelopPoursRequired;
+                if (developPours > maxDeveloperPours) developPours = maxDeveloperPours;
             }
 
             float movementScore = GetMovementScore(itemstack);
@@ -201,7 +202,7 @@ namespace Collodion
             string renderPath = sourcePath;
             string renderFileName = photoFileName;
             bool useDevelopedStage = !string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("developed", StringComparison.OrdinalIgnoreCase);
-            MaybePruneObsoleteDevelopedDerived(capi, photoFileName, itemstack, developPours, useDevelopedStage);
+            MaybePruneObsoleteDevelopedDerived(capi, photoFileName, itemstack, developPours, maxDeveloperPours, useDevelopedStage);
             if (useDevelopedStage || hasMovementEffects)
             {
                 string profileTag = useDevelopedStage
@@ -216,7 +217,7 @@ namespace Collodion
                 string derivedFileName = GetDerivedPhotoFileName(photoFileName, profileTag);
                 string derivedPath = GetDerivedPhotoPath(photoFileName, profileTag);
 
-                if (PhotoImageProcessor.TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{profileTag}", useDevelopedStage, developPours, movementScore))
+                if (PhotoImageProcessor.TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{profileTag}", useDevelopedStage, developPours, maxDeveloperPours, movementScore))
                 {
                     renderPath = derivedPath;
                     renderFileName = derivedFileName;
@@ -333,20 +334,21 @@ namespace Collodion
             string photoFileName = WetplatePhotoSync.NormalizePhotoId(photoId);
             if (string.IsNullOrEmpty(photoFileName)) return false;
 
-            int developPours = WetPlateChemicalUtil.DevelopPoursRequired;
+            int maxDeveloperPours = itemstack.Attributes?.GetInt(WetPlateAttrs.DeveloperPourCountMax, 5) ?? 5;
+            int developPours = maxDeveloperPours;
             if (!string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("developed", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
-                    developPours = itemstack.Attributes?.GetInt(WetPlateAttrs.DevelopPours, WetPlateChemicalUtil.DevelopPoursRequired) ?? WetPlateChemicalUtil.DevelopPoursRequired;
+                    developPours = itemstack.Attributes?.GetInt(WetPlateAttrs.DevelopPours, maxDeveloperPours) ?? maxDeveloperPours;
                 }
                 catch
                 {
-                    developPours = WetPlateChemicalUtil.DevelopPoursRequired;
+                    developPours = maxDeveloperPours;
                 }
 
                 if (developPours < 0) developPours = 0;
-                if (developPours > WetPlateChemicalUtil.DevelopPoursRequired) developPours = WetPlateChemicalUtil.DevelopPoursRequired;
+                if (developPours > maxDeveloperPours) developPours = maxDeveloperPours;
             }
 
             float movementScore = GetMovementScore(itemstack);
@@ -374,7 +376,7 @@ namespace Collodion
             string renderPath = sourcePath;
             string renderFileName = photoFileName;
             bool useDevelopedStage = !string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("developed", StringComparison.OrdinalIgnoreCase);
-            MaybePruneObsoleteDevelopedDerived(capi, photoFileName, itemstack, developPours, useDevelopedStage);
+            MaybePruneObsoleteDevelopedDerived(capi, photoFileName, itemstack, developPours, maxDeveloperPours, useDevelopedStage);
             if (useDevelopedStage || hasMovementEffects)
             {
                 string profileTag = useDevelopedStage
@@ -389,7 +391,7 @@ namespace Collodion
                 string derivedFileName = GetDerivedPhotoFileName(photoFileName, profileTag);
                 string derivedPath = GetDerivedPhotoPath(photoFileName, profileTag);
 
-                if (PhotoImageProcessor.TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{profileTag}", useDevelopedStage, developPours, movementScore))
+                if (PhotoImageProcessor.TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{profileTag}", useDevelopedStage, developPours, maxDeveloperPours, movementScore))
                 {
                     renderPath = derivedPath;
                     renderFileName = derivedFileName;
@@ -458,16 +460,15 @@ namespace Collodion
             return Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos", "derived", derivedFileName);
         }
 
-        private static void MaybePruneObsoleteDevelopedDerived(ICoreClientAPI capi, string photoFileName, ItemStack? itemstack, int developPours, bool useDevelopedStage)
+        private static void MaybePruneObsoleteDevelopedDerived(ICoreClientAPI capi, string photoFileName, ItemStack? itemstack, int developPours, int maxDeveloperPours, bool useDevelopedStage)
         {
             if (string.IsNullOrWhiteSpace(photoFileName) || itemstack?.Attributes == null) return;
 
-            string stage = itemstack.Attributes.GetString(WetPlateAttrs.PlateStage) ?? string.Empty;
-            bool isFinishedStage = stage.Equals("finished", StringComparison.OrdinalIgnoreCase);
+            bool isFinishedStage = PlateStateService.GetStage(itemstack) == PlateStage.Finished;
 
             int keepDevelopedStage = useDevelopedStage ? developPours : 0;
             if (keepDevelopedStage < 0) keepDevelopedStage = 0;
-            if (keepDevelopedStage > WetPlateChemicalUtil.DevelopPoursRequired) keepDevelopedStage = WetPlateChemicalUtil.DevelopPoursRequired;
+            if (keepDevelopedStage > maxDeveloperPours) keepDevelopedStage = maxDeveloperPours;
 
             string pruneKey = $"{photoFileName}|{(isFinishedStage ? "finished" : "active")}|{keepDevelopedStage}";
             lock (CacheLock)
@@ -485,9 +486,9 @@ namespace Collodion
 
                 if (isFinishedStage)
                 {
-                    for (int stageIndex = 1; stageIndex <= WetPlateChemicalUtil.DevelopPoursRequired; stageIndex++)
+                    for (int stageIndex = 1; stageIndex <= maxDeveloperPours; stageIndex++)
                     {
-                        DeleteDerivedDevelopedStageFiles(derivedDir, baseName, stageIndex);
+                        DeleteDerivedDevelopedStageFiles(derivedDir, baseName, stageIndex, maxDeveloperPours);
                     }
                     return;
                 }
@@ -495,7 +496,7 @@ namespace Collodion
                 if (keepDevelopedStage <= 1) return;
 
                 int previousStage = keepDevelopedStage - 1;
-                DeleteDerivedDevelopedStageFiles(derivedDir, baseName, previousStage);
+                DeleteDerivedDevelopedStageFiles(derivedDir, baseName, previousStage, maxDeveloperPours);
             }
             catch (Exception ex)
             {
@@ -503,9 +504,9 @@ namespace Collodion
             }
         }
 
-        private static void DeleteDerivedDevelopedStageFiles(string derivedDir, string baseName, int stageIndex)
+        private static void DeleteDerivedDevelopedStageFiles(string derivedDir, string baseName, int stageIndex, int maxDeveloperPours)
         {
-            if (stageIndex < 1 || stageIndex > WetPlateChemicalUtil.DevelopPoursRequired) return;
+            if (stageIndex < 1 || stageIndex > maxDeveloperPours) return;
 
             string pattern = $"{baseName}__developed{stageIndex}*.png";
             foreach (string filePath in Directory.EnumerateFiles(derivedDir, pattern, SearchOption.TopDirectoryOnly))
@@ -531,7 +532,7 @@ namespace Collodion
             int bucket = QuantizeMovementScore(movementScore);
             string tag = $"base-mv{bucket}";
             string derivedPath = GetDerivedPhotoPath(photoFileName, tag);
-            return PhotoImageProcessor.TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{tag}", false, 0, movementScore)
+            return PhotoImageProcessor.TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{tag}", false, 0, 1, movementScore)
                 ? derivedPath
                 : sourcePath;
         }

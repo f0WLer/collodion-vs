@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using SkiaSharp;
 
 namespace Collodion
@@ -13,8 +14,12 @@ namespace Collodion
             if (ptr == IntPtr.Zero) return;
 
             int count = w * h;
-            byte[] bytes = new byte[count * 4];
-            System.Runtime.InteropServices.Marshal.Copy(ptr, bytes, 0, bytes.Length);
+            int byteCount = count * 4;
+            byte[] bytes = ArrayPool<byte>.Shared.Rent(byteCount);
+
+            try
+            {
+                System.Runtime.InteropServices.Marshal.Copy(ptr, bytes, 0, byteCount);
 
             // Contrast is applied mostly above a shadow threshold so shadows compress instead of deepen.
             float contrast = cfg.Contrast;
@@ -43,8 +48,8 @@ namespace Collodion
             float y1s = Sigmoid(0.5f * kShadow);
             float invSpans = 1f / Math.Max(1e-6f, (y1s - y0s));
 
-            for (int i = 0; i < bytes.Length; i += 4)
-            {
+                for (int i = 0; i < byteCount; i += 4)
+                {
                 float bb = bytes[i + 0] / 255f;
                 float gg = bytes[i + 1] / 255f;
                 float rr = bytes[i + 2] / 255f;
@@ -86,9 +91,14 @@ namespace Collodion
                 bytes[i + 0] = (byte)(Clamp01(bb) * 255f);
                 bytes[i + 1] = (byte)(Clamp01(gg) * 255f);
                 bytes[i + 2] = (byte)(Clamp01(rr) * 255f);
-            }
+                }
 
-            System.Runtime.InteropServices.Marshal.Copy(bytes, 0, ptr, bytes.Length);
+                System.Runtime.InteropServices.Marshal.Copy(bytes, 0, ptr, byteCount);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(bytes);
+            }
         }
 
         private static float ApplyCurve(float x, float k, float y0, float invSpan)

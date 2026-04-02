@@ -142,6 +142,33 @@ namespace Collodion
         public float ContrastStartMin = 0.02f;
         public float ContrastStartMax = 0.75f;
 
+        // Halation: back-scatter glow around bright areas through the glass base.
+        // Default 0 = disabled, no change to existing behaviour.
+        public float Halation = 0.0f;
+        public float HalationThreshold = 0.75f;      // luminance above which glow starts
+        public float HalationRadius = 0.018f;         // fraction of max(w,h) used as blur radius
+        public float HalationBlurSigmaScale = 2.0f;   // sigma multiplier in the downsampled blur space
+        public float HalationTint = 0.0f;             // 0..1: 0 = neutral white glow, 1 = warm reddish glow
+
+        // Radial lens aberration: progressive edge softness from uncorrected historical optics.
+        // Default 0 = disabled, no change to existing behaviour.
+        public float LensAberration = 0.0f;
+        public float LensAberrationStart = 0.55f;     // 0..1 normalised radius where softening begins
+        public float LensAberrationSigma = 2.0f;      // max blur sigma at the image corner
+
+        // Per-channel tone curves applied before greyscale conversion.
+        // Quadratic Bezier through (0,Toe), (0.5,Mid), (1,Shoulder) for each channel.
+        // Defaults (0, 0.5, 1) produce a perfectly linear response — identical to existing behaviour.
+        public float CurveRedToe      = 0.0f;
+        public float CurveRedMid      = 0.5f;
+        public float CurveRedShoulder = 1.0f;
+        public float CurveGreenToe      = 0.0f;
+        public float CurveGreenMid      = 0.5f;
+        public float CurveGreenShoulder = 1.0f;
+        public float CurveBlueToe      = 0.0f;
+        public float CurveBlueMid      = 0.5f;
+        public float CurveBlueShoulder = 1.0f;
+
         // Per-photo dynamic variation (deterministic from photo id).
         // DynamicScale is a +/- percentage (0.05 => +/-5%) applied to select parameters.
         public bool DynamicEnabled = false;
@@ -243,6 +270,26 @@ namespace Collodion
 
             DustCount = Math.Max(0, Math.Min(3000, DustCount));
             ScratchCount = Math.Max(0, Math.Min(400, ScratchCount));
+
+            Halation = Clamp01(Halation);
+            HalationThreshold = Clamp01(HalationThreshold);
+            HalationRadius = ClampRange(HalationRadius, 0f, 0.5f);
+            HalationBlurSigmaScale = ClampRange(HalationBlurSigmaScale, 0f, 10f);
+            HalationTint = Clamp01(HalationTint);
+
+            LensAberration = Clamp01(LensAberration);
+            LensAberrationStart = ClampRange(LensAberrationStart, 0.1f, 1.0f);
+            LensAberrationSigma = ClampRange(LensAberrationSigma, 0f, 20f);
+
+            CurveRedToe      = ClampRange(CurveRedToe,      0f, 0.25f);
+            CurveRedMid      = Clamp01(CurveRedMid);
+            CurveRedShoulder = ClampRange(CurveRedShoulder, 0.75f, 1.0f);
+            CurveGreenToe      = ClampRange(CurveGreenToe,      0f, 0.25f);
+            CurveGreenMid      = Clamp01(CurveGreenMid);
+            CurveGreenShoulder = ClampRange(CurveGreenShoulder, 0.75f, 1.0f);
+            CurveBlueToe      = ClampRange(CurveBlueToe,      0f, 0.25f);
+            CurveBlueMid      = Clamp01(CurveBlueMid);
+            CurveBlueShoulder = ClampRange(CurveBlueShoulder, 0.75f, 1.0f);
 
             DynamicScale = ClampRange(DynamicScale, 0f, 0.5f);
         }

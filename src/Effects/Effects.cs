@@ -56,6 +56,10 @@ namespace Collodion
 
             var rng = new Random(StableHash(seedKey ?? string.Empty));
 
+            // 0) Per-channel tone curves — applied to raw colour pixels before any bias or greyscale.
+            //    No-op when all curves are at linear defaults (fast path).
+            ApplyChannelCurvesInPlace(bmp, effectiveCfg);
+
             // 1) Channel bias (orthochromatic simulation) + 2) Greyscale conversion
             using (var srcCopy = bmp.Copy())
             using (var srcImg = SKImage.FromBitmap(srcCopy))
@@ -71,6 +75,10 @@ namespace Collodion
 
             // 3) Nonlinear contrast curve + 4) Highlight shoulder/clipping
             ApplyToneCurveAndShoulderInPlace(bmp, effectiveCfg);
+
+            // 3b) Halation — glow around bright areas from light scatter through the glass base.
+            //     Must run after tone (operates on toned luminance) and before sky blowout.
+            ApplyHalation(bmp, effectiveCfg);
 
             // 5) Sky blowout/bloom + vignette
             if (effectiveCfg.SkyBlowout > 0.001f)
@@ -129,6 +137,11 @@ namespace Collodion
             {
                 ApplyUnevenDensity(bmp, rng, effectiveCfg);
             }
+
+            // 6b) Radial lens aberration — edge softness from uncorrected historical optics.
+            //     After micro-blur (both are softening passes; aberration must come last to
+            //     preserve the radial mask), before grain (grain lands on soft edges naturally).
+            ApplyLensAberration(bmp, effectiveCfg);
 
             // 7) Grain (silver clumps / density variations)
             if (effectiveCfg.Grain > 0.001f)

@@ -528,10 +528,10 @@ namespace Collodion
 
             if (pours > 0) return true;
 
-            string stage = plate.Attributes.GetString(WetPlateAttrs.PlateStage) ?? string.Empty;
-            if (stage.Equals("developing", StringComparison.OrdinalIgnoreCase)) return true;
-            if (stage.Equals("developed", StringComparison.OrdinalIgnoreCase)) return true;
-            if (stage.Equals("finished", StringComparison.OrdinalIgnoreCase)) return true;
+            PlateStage stage = PlateStateService.GetStage(plate);
+            if (stage == PlateStage.Developing) return true;
+            if (stage == PlateStage.Developed) return true;
+            if (stage == PlateStage.Finished) return true;
 
             return false;
         }

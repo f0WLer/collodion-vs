@@ -169,7 +169,7 @@ namespace Collodion
 
             string code = stack.Collectible.Code.ToString();
             string photoId = stack.Attributes?.GetString(WetPlateAttrs.PhotoId) ?? string.Empty;
-            string stage = stack.Attributes?.GetString(WetPlateAttrs.PlateStage) ?? string.Empty;
+            string stage = PlateStageUtil.ToAttributeString(PlateStateService.GetStage(stack));
             int pours = 0;
             try
             {

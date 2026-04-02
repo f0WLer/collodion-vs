@@ -1,0 +1,11 @@
+[
+  {
+    "code": "collodion-silver-plate-direct",
+    "sealHours": 0.0005555556,
+    "ingredients": [
+      { "type": "item", "code": "collodion:cleanglassplate", "quantity": 1 },
+      { "type": "item", "code": "collodion:silversolutionportion", "litres": 0.15, "consumeLitres": 0.15 }
+    ],
+    "output": { "type": "item", "code": "collodion:silveredplate", "stackSize": 1 }
+  }
+]

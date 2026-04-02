@@ -40,35 +40,15 @@ namespace Collodion
 
         internal static bool HasChemicalInAttributes(ITreeAttribute? attrs, AssetLocation portionCode)
         {
-            if (attrs == null) return false;
-
-            foreach (var kvp in attrs)
-            {
-                IAttribute attr = kvp.Value;
-                if (attr == null) continue;
-
-                if (attr is ItemstackAttribute itemAttr)
-                {
-                    if (MatchesPortionCode(itemAttr.value?.Collectible?.Code, portionCode)) return true;
-                }
-
-                if (attr is TreeArrayAttribute arr && arr.value != null)
-                {
-                    for (int i = 0; i < arr.value.Length; i++)
-                    {
-                        ITreeAttribute entry = arr.value[i];
-                        if (entry == null) continue;
-                        if (MatchesPortionCode(entry.GetString("code", null) ?? string.Empty, portionCode)) return true;
-                    }
-                }
-
-                if (attr is ITreeAttribute subtree)
-                {
-                    if (HasChemicalInAttributes(subtree, portionCode)) return true;
-                }
-            }
-
-            return false;
+            return TraverseChemicalEntries(
+                attrs,
+                (itemAttr, contained) => MatchesPortionCode(contained?.Collectible?.Code, portionCode)
+                    ? TraverseDecision.StopSuccess
+                    : TraverseDecision.Continue,
+                (entry, codeStr, stackSize) => MatchesPortionCode(codeStr, portionCode)
+                    ? TraverseDecision.StopSuccess
+                    : TraverseDecision.Continue
+            ) == TraverseDecision.StopSuccess;
         }
 
         internal static bool TryConsumeChemical(ItemSlot? activeSlot, AssetLocation portionCode, int amount)
@@ -97,72 +77,66 @@ namespace Collodion
 
         internal static bool TryConsumeChemicalFromAttributes(ITreeAttribute? attrs, AssetLocation portionCode, int amount)
         {
-            if (attrs == null) return false;
-
-            foreach (var kvp in attrs)
-            {
-                IAttribute attr = kvp.Value;
-                if (attr == null) continue;
-
-                // Common runtime layout: contents stored as an ItemstackAttribute.
-                if (attr is ItemstackAttribute itemAttr)
+            return TraverseChemicalEntries(
+                attrs,
+                (itemAttr, contained) =>
                 {
-                    ItemStack contained = itemAttr.value;
-                    if (MatchesPortionCode(contained?.Collectible?.Code, portionCode))
+                    if (!MatchesPortionCode(contained?.Collectible?.Code, portionCode)) return TraverseDecision.Continue;
+                    if (contained == null || contained.StackSize < amount) return TraverseDecision.StopFailure;
+
+                    contained.StackSize -= amount;
+                    if (contained.StackSize <= 0)
                     {
-                        if (contained == null || contained.StackSize < amount) return false;
-                        contained.StackSize -= amount;
-
-                        // If depleted, clear the attribute value.
-                        if (contained.StackSize <= 0)
-                        {
-                            itemAttr.SetValue(null);
-                        }
-
-                        return true;
+                        itemAttr.SetValue(null);
                     }
-                }
 
-                // JsonItemStack-style layout: array of TreeAttributes (often called ucontents).
-                if (attr is TreeArrayAttribute arr && arr.value != null)
+                    return TraverseDecision.StopSuccess;
+                },
+                (entry, codeStr, stackSize) =>
                 {
-                    for (int i = 0; i < arr.value.Length; i++)
-                    {
-                        ITreeAttribute entry = arr.value[i];
-                        if (entry == null) continue;
+                    if (!MatchesPortionCode(codeStr, portionCode)) return TraverseDecision.Continue;
+                    if (stackSize < amount) return TraverseDecision.StopFailure;
 
-                        string codeStr = entry.GetString("code", null) ?? string.Empty;
-                        if (!MatchesPortionCode(codeStr, portionCode)) continue;
-
-                        int stackSize = entry.GetInt("stacksize", entry.GetInt("quantity", -1));
-                        if (stackSize < 0)
-                        {
-                            // Some stacks use makefull=true instead of stacksize.
-                            if (entry.GetBool("makefull", false)) stackSize = 1000;
-                        }
-
-                        if (stackSize < amount) return false;
-
-                        stackSize -= amount;
-                        entry.SetInt("stacksize", stackSize);
-                        entry.RemoveAttribute("makefull");
-                        return true;
-                    }
+                    int remaining = stackSize - amount;
+                    entry.SetInt("stacksize", remaining);
+                    entry.RemoveAttribute("makefull");
+                    return TraverseDecision.StopSuccess;
                 }
-
-                // Recurse into subtrees.
-                if (attr is ITreeAttribute subtree)
-                {
-                    if (TryConsumeChemicalFromAttributes(subtree, portionCode, amount)) return true;
-                }
-            }
-
-            return false;
+            ) == TraverseDecision.StopSuccess;
         }
 
         internal static bool HasSufficientChemicalInAttributes(ITreeAttribute? attrs, AssetLocation portionCode, int amount)
         {
-            if (attrs == null) return false;
+            return TraverseChemicalEntries(
+                attrs,
+                (itemAttr, contained) =>
+                {
+                    if (!MatchesPortionCode(contained?.Collectible?.Code, portionCode)) return TraverseDecision.Continue;
+                    return contained != null && contained.StackSize >= amount
+                        ? TraverseDecision.StopSuccess
+                        : TraverseDecision.StopFailure;
+                },
+                (entry, codeStr, stackSize) =>
+                {
+                    if (!MatchesPortionCode(codeStr, portionCode)) return TraverseDecision.Continue;
+                    return stackSize >= amount ? TraverseDecision.StopSuccess : TraverseDecision.StopFailure;
+                }
+            ) == TraverseDecision.StopSuccess;
+        }
+
+        private enum TraverseDecision
+        {
+            Continue,
+            StopSuccess,
+            StopFailure
+        }
+
+        private static TraverseDecision TraverseChemicalEntries(
+            ITreeAttribute? attrs,
+            System.Func<ItemstackAttribute, ItemStack?, TraverseDecision> onItemstack,
+            System.Func<ITreeAttribute, string, int, TraverseDecision> onTreeEntry)
+        {
+            if (attrs == null) return TraverseDecision.Continue;
 
             foreach (var kvp in attrs)
             {
@@ -171,11 +145,8 @@ namespace Collodion
 
                 if (attr is ItemstackAttribute itemAttr)
                 {
-                    ItemStack contained = itemAttr.value;
-                    if (MatchesPortionCode(contained?.Collectible?.Code, portionCode))
-                    {
-                        if (contained != null && contained.StackSize >= amount) return true;
-                    }
+                    TraverseDecision decision = onItemstack(itemAttr, itemAttr.value);
+                    if (decision != TraverseDecision.Continue) return decision;
                 }
 
                 if (attr is TreeArrayAttribute arr && arr.value != null)
@@ -186,25 +157,30 @@ namespace Collodion
                         if (entry == null) continue;
 
                         string codeStr = entry.GetString("code", null) ?? string.Empty;
-                        if (!MatchesPortionCode(codeStr, portionCode)) continue;
+                        int stackSize = ReadEntryStackSize(entry);
 
-                        int stackSize = entry.GetInt("stacksize", entry.GetInt("quantity", -1));
-                        if (stackSize < 0)
-                        {
-                            if (entry.GetBool("makefull", false)) stackSize = 1000;
-                        }
-
-                        if (stackSize >= amount) return true;
+                        TraverseDecision decision = onTreeEntry(entry, codeStr, stackSize);
+                        if (decision != TraverseDecision.Continue) return decision;
                     }
                 }
 
                 if (attr is ITreeAttribute subtree)
                 {
-                    if (HasSufficientChemicalInAttributes(subtree, portionCode, amount)) return true;
+                    TraverseDecision decision = TraverseChemicalEntries(subtree, onItemstack, onTreeEntry);
+                    if (decision != TraverseDecision.Continue) return decision;
                 }
             }
 
-            return false;
+            return TraverseDecision.Continue;
+        }
+
+        private static int ReadEntryStackSize(ITreeAttribute entry)
+        {
+            int stackSize = entry.GetInt("stacksize", entry.GetInt("quantity", -1));
+            if (stackSize >= 0) return stackSize;
+
+            // Some stacks use makefull=true instead of stacksize.
+            return entry.GetBool("makefull", false) ? 1000 : -1;
         }
 
         internal static bool MatchesPortionCode(AssetLocation? candidate, AssetLocation portionCode)

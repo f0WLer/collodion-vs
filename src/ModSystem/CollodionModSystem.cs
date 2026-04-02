@@ -15,6 +15,7 @@ namespace Collodion
         public const string ServerPhotoIndexFileName = "collodion-photoindex.json";
         public CollodionConfig Config { get; private set; } = new CollodionConfig();
         public CollodionClientConfig ClientConfig { get; private set; } = new CollodionClientConfig();
+        public ProcessRegistry Processes { get; private set; } = new ProcessRegistry();
 
         public ICoreAPI? Api;
         public IClientNetworkChannel? ClientChannel;
@@ -36,6 +37,12 @@ namespace Collodion
         public override void Start(ICoreAPI api)
         {
             this.Api = api;
+
+            Processes = new ProcessRegistry();
+            api.Logger.Notification("[collodion] Loaded {0} photography process(es): {1}",
+                Processes.AllProcesses.Count,
+                string.Join(", ", Processes.AllProcesses.Keys));
+
             api.RegisterItemClass("WetplateCamera", typeof(ItemWetplateCamera));
             api.RegisterItemClass("CameraSling", typeof(ItemCameraSling));
             api.RegisterItemClass("FramedPhotograph", typeof(ItemFramedPhotograph));
@@ -68,7 +75,8 @@ namespace Collodion
                 .RegisterMessageType(typeof(PhotoCaptionSetPacket))
                 .RegisterMessageType(typeof(PhotoSeenPacket))
                 .RegisterMessageType(typeof(PhotoCaptureConfigRequestPacket))
-                .RegisterMessageType(typeof(PhotoCaptureConfigPacket));
+                .RegisterMessageType(typeof(PhotoCaptureConfigPacket))
+                .RegisterMessageType(typeof(SetPlateProcessPacket));
         }
 
         private static void TryRun(Action action)

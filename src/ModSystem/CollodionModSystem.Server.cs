@@ -42,7 +42,8 @@ namespace Collodion
                 .SetMessageHandler<PhotoBlobChunkPacket>((player, p) => PhotoSync?.ServerHandleChunk(player, p))
                 .SetMessageHandler<PhotoCaptionSetPacket>((player, p) => OnPhotoCaptionSet(player, p))
                 .SetMessageHandler<PhotoSeenPacket>((player, p) => OnPhotoSeen(player, p))
-                .SetMessageHandler<PhotoCaptureConfigRequestPacket>((player, p) => OnPhotoCaptureConfigRequested(player));
+                .SetMessageHandler<PhotoCaptureConfigRequestPacket>((player, p) => OnPhotoCaptureConfigRequested(player))
+                .SetMessageHandler<SetPlateProcessPacket>((player, p) => OnSetPlateProcessReceived(player, p));
 
             // Send once on startup for currently connected players (mainly relevant on hot-reload).
             foreach (IServerPlayer player in api.World.AllOnlinePlayers)
@@ -691,6 +692,38 @@ namespace Collodion
             PlayEntitySound(player?.Entity, CameraPlateUnloadSound, NextRandomPitch());
         }
 
+        private void OnSetPlateProcessReceived(IServerPlayer player, SetPlateProcessPacket packet)
+        {
+            if (Api == null || packet == null || player == null) return;
+
+            // Validate the processId against the live registry.
+            string processId = packet.ProcessId ?? string.Empty;
+            if (!Processes.AllProcesses.ContainsKey(processId))
+            {
+                player.SendMessage(GlobalConstants.GeneralChatGroup,
+                    $"Collodion: unknown processId '{processId}'.", EnumChatType.Notification);
+                return;
+            }
+
+            ItemSlot? slot = packet.UseOffhand
+                ? player.InventoryManager.OffhandHotbarSlot
+                : player.InventoryManager.ActiveHotbarSlot;
+
+            ItemStack? stack = slot?.Itemstack;
+            if (stack == null)
+            {
+                player.SendMessage(GlobalConstants.GeneralChatGroup,
+                    "Collodion: no item in target slot.", EnumChatType.Notification);
+                return;
+            }
+
+            PlateStateService.SetProcessId(stack, processId);
+            slot!.MarkDirty();
+
+            player.SendMessage(GlobalConstants.GeneralChatGroup,
+                $"Collodion: set processId = '{processId}' on {stack.Collectible?.Code}", EnumChatType.Notification);
+        }
+
         private void OnPhotoCaptionSet(IServerPlayer player, PhotoCaptionSetPacket packet)
         {
             if (Api == null || packet == null) return;
@@ -779,7 +812,8 @@ namespace Collodion
             exposedStack.Attributes.SetString(WetPlateAttrs.PhotoId, photoId);
             exposedStack.Attributes.SetString("timestamp", DateTime.Now.ToString());
             exposedStack.Attributes.SetString("photographer", player.PlayerName);
-            exposedStack.Attributes.SetString(WetPlateAttrs.PlateStage, "exposed");
+            PlateStateService.EnsureProcessId(exposedStack);
+            PlateStateService.SetStage(exposedStack, PlateStage.Exposed);
             exposedStack.Attributes.RemoveAttribute(WetPlateAttrs.HoldStillSeconds);
             exposedStack.Attributes.SetDouble(WetPlateAttrs.HoldStillMovement, packet.HoldStillMovement);
 

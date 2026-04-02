@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using Vintagestory.API.Common;
 
 namespace Collodion
 {
@@ -204,6 +205,47 @@ namespace Collodion
                 + $"refresh={cfg.Viewfinder.DebugPreviewRefreshMs}ms, anchor={cfg.Viewfinder.DebugPreviewAnchor}, "
                 + $"peak={(cfg.Viewfinder.DebugPreviewPeak ? "on" : "off")}, "
                 + $"quality={cfg.Viewfinder.DebugPreviewMaxDimension}px (plate={cfg.Viewfinder.PhotoCaptureMaxDimension}px)");
+        }
+
+        private void HandleSetProcessCommand(Vintagestory.API.Common.CmdArgs args)
+        {
+            if (ClientApi == null) return;
+
+            string processId = args.PopWord()?.Trim().ToLowerInvariant() ?? string.Empty;
+
+            if (string.IsNullOrEmpty(processId))
+            {
+                string known = string.Join("|", Processes.AllProcesses.Keys);
+                ClientApi.ShowChatMessage($"Usage: .collodion setprocess <{known}>");
+                return;
+            }
+
+            var process = Processes.ResolveOrDefault(processId);
+            if (!process.Id.Equals(processId, StringComparison.OrdinalIgnoreCase))
+            {
+                string known = string.Join("|", Processes.AllProcesses.Keys);
+                ClientApi.ShowChatMessage($"Collodion: unknown process '{processId}'. Known: {known}");
+                return;
+            }
+
+            // Determine which slot holds the plate: prefer active hotbar, fall back to offhand.
+            ItemStack? hotbarStack = ClientApi.World.Player?.InventoryManager?.ActiveHotbarSlot?.Itemstack;
+            ItemStack? offhandStack = ClientApi.World.Player?.InventoryManager?.OffhandHotbarSlot?.Itemstack;
+
+            bool useOffhand = hotbarStack == null && offhandStack != null;
+
+            if (hotbarStack == null && offhandStack == null)
+            {
+                ClientApi.ShowChatMessage("Collodion: hold a plate in your active hotbar or offhand slot.");
+                return;
+            }
+
+            // Send server-authoritative packet — the server will validate and stamp the attribute.
+            ClientChannel?.SendPacket(new SetPlateProcessPacket
+            {
+                ProcessId = process.Id,
+                UseOffhand = useOffhand
+            });
         }
     }
 }

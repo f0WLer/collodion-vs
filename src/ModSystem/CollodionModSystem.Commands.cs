@@ -6,8 +6,8 @@ namespace Collodion
     public partial class CollodionModSystem
     {
         private const string WetplatePreviewCommandArgs = "show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]|quality <px>";
-        private const string WetplateAvailableCommandsLine = "Collodion: available commands: clearcache | hud (hide|show) | preview (" + WetplatePreviewCommandArgs + ") | pose | effects | effect <FieldName> <value> | effect save | effect load";
-        private const string WetplateUnknownCommandTryLine = "Try: .collodion clearcache | .collodion hud (hide|show) | .collodion preview (" + WetplatePreviewCommandArgs + ") | .collodion pose | .collodion effects | .collodion effect <FieldName> <value>";
+        private const string WetplateAvailableCommandsLine = "Collodion: available commands: clearcache | hud (hide|show) | preview (" + WetplatePreviewCommandArgs + ") | pose | effects | effect <FieldName> <value> | effect save | effect load | setprocess <iodide|chloride|bromide>";
+        private const string WetplateUnknownCommandTryLine = "Try: .collodion clearcache | .collodion hud (hide|show) | .collodion preview (" + WetplatePreviewCommandArgs + ") | .collodion pose | .collodion effects | .collodion effect <FieldName> <value> | .collodion setprocess <iodide|chloride|bromide>";
 
         private void OnWetplateClientCommand(int groupId, Vintagestory.API.Common.CmdArgs args)
         {
@@ -59,6 +59,12 @@ namespace Collodion
             if (sub.Equals("pose", StringComparison.OrdinalIgnoreCase))
             {
                 HandleWetplatePoseCommand(args);
+                return;
+            }
+
+            if (sub.Equals("setprocess", StringComparison.OrdinalIgnoreCase))
+            {
+                HandleSetProcessCommand(args);
                 return;
             }
 

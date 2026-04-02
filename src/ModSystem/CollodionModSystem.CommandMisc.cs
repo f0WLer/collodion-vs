@@ -172,8 +172,22 @@ namespace Collodion
                     break;
                 }
 
+                case "quality":
+                {
+                    string dimStr = args.PopWord();
+                    if (!int.TryParse(dimStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int dim))
+                    {
+                        ClientApi.ShowChatMessage($"Wetplate: usage: .collodion preview quality <pixels> (current: {cfg.Viewfinder.DebugPreviewMaxDimension}, plate capture: {cfg.Viewfinder.PhotoCaptureMaxDimension})");
+                        return;
+                    }
+
+                    cfg.Viewfinder.DebugPreviewMaxDimension = dim;
+                    changed = true;
+                    break;
+                }
+
                 default:
-                    ClientApi.ShowChatMessage("Wetplate: usage: .collodion preview <show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]>");
+                    ClientApi.ShowChatMessage("Wetplate: usage: .collodion preview <show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]|quality <pixels>>");
                     return;
             }
 
@@ -188,7 +202,8 @@ namespace Collodion
                 $"Wetplate: preview {(cfg.Viewfinder.DebugPreviewEnabled ? "on" : "off")}, "
                 + $"{cfg.Viewfinder.DebugPreviewWidth}x{cfg.Viewfinder.DebugPreviewHeight}, "
                 + $"refresh={cfg.Viewfinder.DebugPreviewRefreshMs}ms, anchor={cfg.Viewfinder.DebugPreviewAnchor}, "
-                + $"peak={(cfg.Viewfinder.DebugPreviewPeak ? "on" : "off")}");
+                + $"peak={(cfg.Viewfinder.DebugPreviewPeak ? "on" : "off")}, "
+                + $"quality={cfg.Viewfinder.DebugPreviewMaxDimension}px (plate={cfg.Viewfinder.PhotoCaptureMaxDimension}px)");
         }
     }
 }

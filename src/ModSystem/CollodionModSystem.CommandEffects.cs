@@ -371,8 +371,14 @@ namespace Collodion
             ClientApi.ShowChatMessage("Wetplate: usage: .collodion effects <show|enable|disable|reset|preset|set>");
         }
 
-        private static string EffectsTuningProfilePath =>
-            Path.Combine(GamePaths.DataPath, "ModData", "collodion", "effects-tuning.json");
+        private static readonly System.Text.RegularExpressions.Regex SafeProfileName =
+            new(@"^[a-zA-Z0-9_\-]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        private static string EffectsTuningProfilePathFor(string? name = null)
+        {
+            string file = string.IsNullOrWhiteSpace(name) ? "effects-tuning" : name;
+            return Path.Combine(GamePaths.DataPath, "ModData", "collodion", $"{file}.json");
+        }
 
         private void HandleEffectFieldCommand(Vintagestory.API.Common.CmdArgs args)
         {
@@ -386,22 +392,28 @@ namespace Collodion
             if (string.IsNullOrEmpty(sub))
             {
                 ClientApi.ShowChatMessage("Usage: .collodion effect <FieldName> <value>");
-                ClientApi.ShowChatMessage("       .collodion effect save   — export live config to effects-tuning.json");
-                ClientApi.ShowChatMessage("       .collodion effect load   — import from effects-tuning.json");
+                ClientApi.ShowChatMessage("       .collodion effect save [name]  — save to <name>.json (default: effects-tuning.json)");
+                ClientApi.ShowChatMessage("       .collodion effect load [name]  — load from <name>.json (default: effects-tuning.json)");
                 ClientApi.ShowChatMessage("Field names match WetplateEffectsConfig exactly (case-insensitive, exact match preferred).");
                 return;
             }
 
             if (sub.Equals("save", StringComparison.OrdinalIgnoreCase))
             {
+                string? profileName = args.PopWord();
+                if (!string.IsNullOrWhiteSpace(profileName) && !SafeProfileName.IsMatch(profileName))
+                {
+                    ClientApi.ShowChatMessage("Effects save failed: profile name may only contain letters, digits, hyphens, and underscores.");
+                    return;
+                }
+                string path = EffectsTuningProfilePathFor(profileName);
                 var cfg = rootCfg.Effects;
                 cfg.ClampInPlace();
                 try
                 {
-                    string dir = Path.GetDirectoryName(EffectsTuningProfilePath)!;
-                    Directory.CreateDirectory(dir);
-                    File.WriteAllText(EffectsTuningProfilePath, JsonConvert.SerializeObject(cfg, Formatting.Indented));
-                    ClientApi.ShowChatMessage($"Effects profile saved to: {EffectsTuningProfilePath}");
+                    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                    File.WriteAllText(path, JsonConvert.SerializeObject(cfg, Formatting.Indented));
+                    ClientApi.ShowChatMessage($"Effects profile saved to: {path}");
                 }
                 catch (Exception ex)
                 {
@@ -412,14 +424,21 @@ namespace Collodion
 
             if (sub.Equals("load", StringComparison.OrdinalIgnoreCase))
             {
-                if (!File.Exists(EffectsTuningProfilePath))
+                string? profileName = args.PopWord();
+                if (!string.IsNullOrWhiteSpace(profileName) && !SafeProfileName.IsMatch(profileName))
                 {
-                    ClientApi.ShowChatMessage($"No saved profile found at: {EffectsTuningProfilePath}");
+                    ClientApi.ShowChatMessage("Effects load failed: profile name may only contain letters, digits, hyphens, and underscores.");
+                    return;
+                }
+                string path = EffectsTuningProfilePathFor(profileName);
+                if (!File.Exists(path))
+                {
+                    ClientApi.ShowChatMessage($"No saved profile found at: {path}");
                     return;
                 }
                 try
                 {
-                    string text = File.ReadAllText(EffectsTuningProfilePath);
+                    string text = File.ReadAllText(path);
                     var loaded = JsonConvert.DeserializeObject<WetplateEffectsConfig>(text);
                     if (loaded == null)
                     {
@@ -430,7 +449,7 @@ namespace Collodion
                     rootCfg.Effects = loaded;
                     SaveClientConfig(ClientApi);
                     CaptureRenderer?.ReloadEffectsConfig();
-                    ClientApi.ShowChatMessage($"Effects profile loaded from: {EffectsTuningProfilePath}");
+                    ClientApi.ShowChatMessage($"Effects profile loaded from: {path}");
                 }
                 catch (Exception ex)
                 {

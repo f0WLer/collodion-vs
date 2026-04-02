@@ -5,8 +5,9 @@ namespace Collodion
 {
     public partial class CollodionModSystem
     {
-        private const string WetplateAvailableCommandsLine = "Collodion: available commands: clearcache | hud (hide|show) | preview (show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]) | pose | effects | effect <FieldName> <value> | effect save | effect load";
-        private const string WetplateUnknownCommandTryLine = "Try: .collodion clearcache | .collodion hud (hide|show) | .collodion preview (show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]) | .collodion pose | .collodion effects | .collodion effect <FieldName> <value>";
+        private const string WetplatePreviewCommandArgs = "show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]|quality <px>";
+        private const string WetplateAvailableCommandsLine = "Collodion: available commands: clearcache | hud (hide|show) | preview (" + WetplatePreviewCommandArgs + ") | pose | effects | effect <FieldName> <value> | effect save | effect load";
+        private const string WetplateUnknownCommandTryLine = "Try: .collodion clearcache | .collodion hud (hide|show) | .collodion preview (" + WetplatePreviewCommandArgs + ") | .collodion pose | .collodion effects | .collodion effect <FieldName> <value>";
 
         private void OnWetplateClientCommand(int groupId, Vintagestory.API.Common.CmdArgs args)
         {

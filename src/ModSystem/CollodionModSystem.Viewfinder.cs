@@ -341,6 +341,29 @@ namespace Collodion
                 return false;
             }
 
+            // Resolve the effects profile for the plate currently loaded in the camera.
+            // Falls back to the global config when no per-process profile file is found.
+            WetplateEffectsConfig? captureEffectsOverride = null;
+            try
+            {
+                ItemStack? camStack2 = ClientApi.World.Player?.InventoryManager?.ActiveHotbarSlot?.Itemstack;
+                if (camStack2 != null)
+                {
+                    ItemStack? plateStack = null;
+                    try
+                    {
+                        plateStack = camStack2.Attributes.GetItemstack(ItemWetplateCamera.AttrLoadedPlateStack, null);
+                        plateStack?.ResolveBlockOrItem(ClientApi.World);
+                    }
+                    catch { }
+
+                    string processId = PlateStateService.GetProcessId(plateStack);
+                    var processDef = Processes.ResolveOrDefault(processId);
+                    captureEffectsOverride = WetplateEffects.TryLoadNamedProfile(processDef.DefaultEffectsProfile);
+                }
+            }
+            catch { }
+
             bool scheduled = CaptureRenderer.TryScheduleCapture(
                 out string fileName,
                 onSuccess: (fn) =>
@@ -379,7 +402,8 @@ namespace Collodion
 
                     // Still exit viewfinder (error means no screenshot was taken).
                     EndViewfinderMode();
-                }
+                },
+                effectsOverride: captureEffectsOverride
             );
 
             if (!scheduled)

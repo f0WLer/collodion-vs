@@ -42,13 +42,16 @@ namespace Collodion
             public readonly string FullPath;
             public readonly Action<string> OnSuccess;
             public readonly Action<Exception> OnError;
+            /// <summary>When set, overrides the renderer's global effectsConfig for this capture only.</summary>
+            public readonly WetplateEffectsConfig? EffectsOverride;
 
-            public PendingCapture(string fileName, string fullPath, Action<string> onSuccess, Action<Exception> onError)
+            public PendingCapture(string fileName, string fullPath, Action<string> onSuccess, Action<Exception> onError, WetplateEffectsConfig? effectsOverride = null)
             {
                 FileName = fileName;
                 FullPath = fullPath;
                 OnSuccess = onSuccess;
                 OnError = onError;
+                EffectsOverride = effectsOverride;
             }
         }
 
@@ -179,7 +182,7 @@ namespace Collodion
             return cropped;
         }
 
-        private SKBitmap BuildProcessedCaptureBitmap(int maxDimension, string seedKey)
+        private SKBitmap BuildProcessedCaptureBitmap(int maxDimension, string seedKey, WetplateEffectsConfig? effectsOverride = null)
         {
             int width = capi.Render.FrameWidth;
             int height = capi.Render.FrameHeight;
@@ -236,7 +239,8 @@ namespace Collodion
 
                 try
                 {
-                    WetplateEffects.ApplyInPlace(dstBitmap, seedKey, effectsConfig);
+                    var activeCfg = effectsOverride ?? effectsConfig;
+                    WetplateEffects.ApplyInPlace(dstBitmap, seedKey, activeCfg);
                 }
                 catch (Exception effectEx)
                 {
@@ -293,7 +297,7 @@ namespace Collodion
             {
                 try
                 {
-                    using SKBitmap dstBitmap = BuildProcessedCaptureBitmap(captureMaxDimension, toProcess.FileName);
+                    using SKBitmap dstBitmap = BuildProcessedCaptureBitmap(captureMaxDimension, toProcess.FileName, toProcess.EffectsOverride);
 
                     using var finalImage = SKImage.FromBitmap(dstBitmap);
                     using var pngData = finalImage.Encode(SKEncodedImageFormat.Png, PngCompressionQuality);
@@ -326,7 +330,7 @@ namespace Collodion
             }
         }
 
-        public bool TryScheduleCapture(out string fileName, Action<string> onSuccess, Action<Exception> onError)
+        public bool TryScheduleCapture(out string fileName, Action<string> onSuccess, Action<Exception> onError, WetplateEffectsConfig? effectsOverride = null)
         {
             lock (pendingLock)
             {
@@ -343,7 +347,7 @@ namespace Collodion
                 string modDataPath = Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos");
                 string fullPath = Path.Combine(modDataPath, fileName);
 
-                pending = new PendingCapture(fileName, fullPath, onSuccess, onError);
+                pending = new PendingCapture(fileName, fullPath, onSuccess, onError, effectsOverride);
                 return true;
             }
         }

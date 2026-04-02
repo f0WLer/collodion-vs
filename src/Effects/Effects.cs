@@ -1,12 +1,37 @@
 using System;
 using System.IO;
+using Newtonsoft.Json;
 using SkiaSharp;
 using Vintagestory.API.Client;
+using Vintagestory.API.Config;
 
 namespace Collodion
 {
     public static partial class WetplateEffects
     {
+        /// <summary>
+        /// Loads a named effects profile from <c>%AppData%/VintagestoryData/ModData/collodion/{profileName}.json</c>.
+        /// Returns null when the file does not exist or cannot be parsed.
+        /// </summary>
+        public static WetplateEffectsConfig? TryLoadNamedProfile(string profileName)
+        {
+            if (string.IsNullOrWhiteSpace(profileName)) return null;
+
+            try
+            {
+                string path = Path.Combine(GamePaths.DataPath, "ModData", "collodion", $"{profileName}.json");
+                if (!File.Exists(path)) return null;
+
+                var cfg = JsonConvert.DeserializeObject<WetplateEffectsConfig>(File.ReadAllText(path));
+                cfg?.ClampInPlace();
+                return cfg;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public static WetplateEffectsConfig LoadOrCreate(ICoreClientAPI capi)
         {
             var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);

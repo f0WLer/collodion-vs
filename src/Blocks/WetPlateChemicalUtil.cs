@@ -12,9 +12,6 @@ namespace Collodion
     /// </summary>
     internal static class WetPlateChemicalUtil
     {
-        /// <summary>Number of developer pours required to fully develop a plate.</summary>
-        internal const int DevelopPoursRequired = 5;
-
         internal static bool IsChemical(ItemStack? stack, AssetLocation code)
         {
             return stack?.Collectible?.Code != null && stack.Collectible.Code == code;

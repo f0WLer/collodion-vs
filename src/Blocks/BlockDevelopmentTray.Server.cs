@@ -38,8 +38,10 @@ namespace Collodion
 
                 if (!be.TryInsertPlate(toInsert)) return false;
 
-                string stage = IsPlate(toInsert, ExposedPlateItemCode) ? "exposed" : "developed";
-                SwapTrayBlockForPlateStage(world, blockSel.Position, stage, toInsert);
+                PlateStateService.EnsureProcessId(toInsert);
+                PlateStage trayStage = IsPlate(toInsert, ExposedPlateItemCode) ? PlateStage.Exposed : PlateStage.Developed;
+                PlateStateService.EnsureStage(toInsert, trayStage);
+                SwapTrayBlockForPlateStage(world, blockSel.Position, PlateStageUtil.ToAttributeString(trayStage), toInsert);
 
                 activeSlot.TakeOut(1);
                 activeSlot.MarkDirty();
@@ -60,63 +62,72 @@ namespace Collodion
 
                 if (!be.TryInsertPlate(toInsert)) return false;
 
-                SwapTrayBlockForPlateStage(world, blockSel.Position, "exposed", toInsert);
+                PlateStateService.EnsureProcessId(toInsert);
+                PlateStateService.EnsureStage(toInsert, PlateStage.Exposed);
+                SwapTrayBlockForPlateStage(world, blockSel.Position, PlateStageUtil.ToAttributeString(PlateStage.Exposed), toInsert);
 
                 activeSlot.TakeOut(1);
                 activeSlot.MarkDirty();
                 return true;
             }
 
-            // Holding developer: start timed develop pour.
-            if (IsHoldingChemical(activeSlot, DeveloperPortionCode))
+            // Chemical interactions: resolve the plate's process to get the expected chemical codes.
+            if (be.HasPlate)
             {
-                if (!TryGetDeveloperPourContext(be, out ItemStack devPlate, out _, out _, out int currentPours)) return false;
+                DevelopmentParameters development = ResolveProcessDevelopment(be.PlateStack);
+                AssetLocation devCode = new AssetLocation(development.DeveloperPortionCode);
+                AssetLocation fixCode = new AssetLocation(development.FixerPortionCode);
 
-                if (currentPours >= WetPlateChemicalUtil.DevelopPoursRequired) return false;
-                if (WetPlateAttrs.IsDry(world, devPlate))
+                // Holding developer: start timed develop pour.
+                if (IsHoldingChemical(activeSlot, devCode))
                 {
-                    Tell(byPlayer, "Wetplate: the plate has dried and can no longer be used.", blockSel.Position);
-                    return false;
-                }
-                if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, DeveloperPortionCode, chemicalUnitsPerUse))
-                {
-                    Tell(byPlayer, "Wetplate: need developer (at least 1 portion).", blockSel.Position);
-                    return false;
+                    if (!TryGetDeveloperPourContext(be, development.DeveloperPourCount, out ItemStack devPlate, out _, out _, out int currentPours)) return false;
+
+                    if (currentPours >= development.DeveloperPourCount) return false;
+                    if (WetPlateAttrs.IsDry(world, devPlate))
+                    {
+                        Tell(byPlayer, "Wetplate: the plate has dried and can no longer be used.", blockSel.Position);
+                        return false;
+                    }
+                    if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, devCode, development.DeveloperAmountPerPour))
+                    {
+                        Tell(byPlayer, "Wetplate: need developer (at least 1 portion).", blockSel.Position);
+                        return false;
+                    }
+
+                    world.PlaySoundAt(ChemicalPourSound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
+                    BeginTimed(byPlayer, blockSel.Position, ActionDeveloper, GetDeveloperPourSeconds());
+                    return true;
                 }
 
-                world.PlaySoundAt(ChemicalPourSound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
-                BeginTimed(byPlayer, blockSel.Position, ActionDeveloper, GetDeveloperPourSeconds());
-                return true;
+                // Holding fixer: start timed fix pour.
+                if (IsHoldingChemical(activeSlot, fixCode))
+                {
+                    if (!TryGetFixerPourContext(be, development.DeveloperPourCount, out ItemStack fixPlate, out int pours)) return false;
+
+                    if (WetPlateAttrs.IsDry(world, fixPlate))
+                    {
+                        Tell(byPlayer, "Wetplate: the plate has dried and can no longer be used.", blockSel.Position);
+                        return false;
+                    }
+                    if (pours < development.DeveloperPourCount)
+                    {
+                        Tell(byPlayer, $"Wetplate: plate not fully developed ({pours}/{development.DeveloperPourCount}).", blockSel.Position);
+                        return false;
+                    }
+                    if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, fixCode, development.FixerAmountPerPour))
+                    {
+                        Tell(byPlayer, "Wetplate: need fixer (at least 1 portion).", blockSel.Position);
+                        return false;
+                    }
+
+                    world.PlaySoundAt(ChemicalPourSound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
+                    BeginTimed(byPlayer, blockSel.Position, ActionFixer, GetFixerPourSeconds());
+                    return true;
+                }
             }
 
-            // Holding fixer: start timed fix pour.
-            if (IsHoldingChemical(activeSlot, FixerPortionCode))
-            {
-                if (!TryGetFixerPourContext(be, out ItemStack fixPlate, out int pours)) return false;
-
-                if (WetPlateAttrs.IsDry(world, fixPlate))
-                {
-                    Tell(byPlayer, "Wetplate: the plate has dried and can no longer be used.", blockSel.Position);
-                    return false;
-                }
-                if (pours < WetPlateChemicalUtil.DevelopPoursRequired)
-                {
-                    Tell(byPlayer, $"Wetplate: plate not fully developed ({pours}/{WetPlateChemicalUtil.DevelopPoursRequired}).", blockSel.Position);
-                    return false;
-                }
-
-                if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, FixerPortionCode, chemicalUnitsPerUse))
-                {
-                    Tell(byPlayer, "Wetplate: need fixer (at least 1 portion).", blockSel.Position);
-                    return false;
-                }
-
-                world.PlaySoundAt(ChemicalPourSound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
-                BeginTimed(byPlayer, blockSel.Position, ActionFixer, GetFixerPourSeconds());
-                return true;
-            }
-
-            // Holding water: rinse a dry plate to reclaim rough glass.
+            // Holding water: rinse a dry plate to reclaim rough glass (process-agnostic).
             if (IsHoldingChemical(activeSlot, WaterPortionCode))
             {
                 if (!TryGetReclaimContext(be, world, out _)) return false;
@@ -147,9 +158,12 @@ namespace Collodion
             {
                 if (world.BlockAccessor.GetBlockEntity(pos) is not BlockEntityDevelopmentTray be) { ClearTimed(byPlayer); return false; }
 
+                DevelopmentParameters development = ResolveProcessDevelopment(be.PlateStack);
+                AssetLocation devCode = new AssetLocation(development.DeveloperPortionCode);
+
                 ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
-                if (!IsHoldingChemical(activeSlot, DeveloperPortionCode)) { ClearTimed(byPlayer); return false; }
-                if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, DeveloperPortionCode, chemicalUnitsPerUse))
+                if (!IsHoldingChemical(activeSlot, devCode)) { ClearTimed(byPlayer); return false; }
+                if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, devCode, development.DeveloperAmountPerPour))
                 {
                     if (world.Side == EnumAppSide.Server)
                     {
@@ -159,13 +173,13 @@ namespace Collodion
                     return false;
                 }
 
-                if (!TryGetDeveloperPourContext(be, out ItemStack plate, out bool isExposed, out bool isDeveloped, out int currentPours))
+                if (!TryGetDeveloperPourContext(be, development.DeveloperPourCount, out ItemStack plate, out bool isExposed, out bool isDeveloped, out int currentPours))
                 {
                     ClearTimed(byPlayer);
                     return false;
                 }
 
-                if (currentPours >= WetPlateChemicalUtil.DevelopPoursRequired) { ClearTimed(byPlayer); return false; }
+                if (currentPours >= development.DeveloperPourCount) { ClearTimed(byPlayer); return false; }
 
                 float duration = GetDeveloperPourSeconds();
                 if (secondsUsed < duration) return true;
@@ -175,7 +189,7 @@ namespace Collodion
 
                 if (world.Side == EnumAppSide.Server)
                 {
-                    if (!TryApplyDeveloperPourServer(world, byPlayer, pos, be, activeSlot, plate, isExposed, currentPours))
+                    if (!TryApplyDeveloperPourServer(world, byPlayer, pos, be, activeSlot, plate, isExposed, currentPours, development))
                     {
                         ClearTimed(byPlayer);
                         return false;
@@ -193,9 +207,12 @@ namespace Collodion
             {
                 if (world.BlockAccessor.GetBlockEntity(pos) is not BlockEntityDevelopmentTray be) { ClearTimed(byPlayer); return false; }
 
+                DevelopmentParameters development = ResolveProcessDevelopment(be.PlateStack);
+                AssetLocation fixCode = new AssetLocation(development.FixerPortionCode);
+
                 ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
-                if (!IsHoldingChemical(activeSlot, FixerPortionCode)) { ClearTimed(byPlayer); return false; }
-                if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, FixerPortionCode, chemicalUnitsPerUse))
+                if (!IsHoldingChemical(activeSlot, fixCode)) { ClearTimed(byPlayer); return false; }
+                if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, fixCode, development.FixerAmountPerPour))
                 {
                     if (world.Side == EnumAppSide.Server)
                     {
@@ -205,17 +222,17 @@ namespace Collodion
                     return false;
                 }
 
-                if (!TryGetFixerPourContext(be, out ItemStack plate, out int pours))
+                if (!TryGetFixerPourContext(be, development.DeveloperPourCount, out ItemStack plate, out int pours))
                 {
                     ClearTimed(byPlayer);
                     return false;
                 }
 
-                if (pours < WetPlateChemicalUtil.DevelopPoursRequired)
+                if (pours < development.DeveloperPourCount)
                 {
                     if (world.Side == EnumAppSide.Server)
                     {
-                        Tell(byPlayer, $"Wetplate: plate not fully developed ({pours}/{WetPlateChemicalUtil.DevelopPoursRequired}).", pos);
+                        Tell(byPlayer, $"Wetplate: plate not fully developed ({pours}/{development.DeveloperPourCount}).", pos);
                     }
                     ClearTimed(byPlayer);
                     return false;
@@ -229,7 +246,7 @@ namespace Collodion
 
                 if (world.Side == EnumAppSide.Server)
                 {
-                    if (!TryApplyFixerPourServer(world, byPlayer, pos, be, activeSlot, plate))
+                    if (!TryApplyFixerPourServer(world, byPlayer, pos, be, activeSlot, plate, development))
                     {
                         ClearTimed(byPlayer);
                         return false;
@@ -345,9 +362,9 @@ namespace Collodion
 
         private static float GetWaterPourSeconds() => 1.25f;
 
-        private bool TryApplyDeveloperPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate, bool isExposed, int currentPours)
+        private bool TryApplyDeveloperPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate, bool isExposed, int currentPours, DevelopmentParameters development)
         {
-            if (!WetPlateChemicalUtil.TryConsumeChemical(activeSlot, DeveloperPortionCode, GetChemicalUnitsPerUse()))
+            if (!WetPlateChemicalUtil.TryConsumeChemical(activeSlot, new AssetLocation(development.DeveloperPortionCode), development.DeveloperAmountPerPour))
             {
                 Tell(byPlayer, "Wetplate: need developer (at least 1 portion).", pos);
                 return false;
@@ -365,20 +382,24 @@ namespace Collodion
             }
 
             int newPours = currentPours + 1;
-            if (newPours > WetPlateChemicalUtil.DevelopPoursRequired) newPours = WetPlateChemicalUtil.DevelopPoursRequired;
+            if (newPours > development.DeveloperPourCount) newPours = development.DeveloperPourCount;
 
             newPlate.Attributes.SetInt(WetPlateAttrs.DevelopPours, newPours);
-            newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, newPours >= WetPlateChemicalUtil.DevelopPoursRequired ? "developed" : "developing");
-            WetPlateAttrs.ResetWetTimer(world!, newPlate, WetPlateAttrs.ResolveWetDurationHours(api));
+            newPlate.Attributes.SetInt(WetPlateAttrs.DeveloperPourCountMax, development.DeveloperPourCount);
+            PlateStateService.EnsureProcessId(newPlate);
+            PlateStateService.SetStage(newPlate, newPours >= development.DeveloperPourCount ? PlateStage.Developed : PlateStage.Developing);
+
+            double baseHours = WetPlateAttrs.ResolveWetDurationHours(api);
+            WetPlateAttrs.ResetWetTimer(world!, newPlate, baseHours * development.WetDurationMultiplier);
 
             be.TrySetPlate(newPlate);
-            SwapTrayBlockForPlateStage(world!, pos, "developed", newPlate);
+            SwapTrayBlockForPlateStage(world!, pos, PlateStageUtil.ToAttributeString(PlateStage.Developed), newPlate);
             return true;
         }
 
-        private bool TryApplyFixerPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate)
+        private bool TryApplyFixerPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate, DevelopmentParameters development)
         {
-            if (!WetPlateChemicalUtil.TryConsumeChemical(activeSlot, FixerPortionCode, GetChemicalUnitsPerUse()))
+            if (!WetPlateChemicalUtil.TryConsumeChemical(activeSlot, new AssetLocation(development.FixerPortionCode), development.FixerAmountPerPour))
             {
                 Tell(byPlayer, "Wetplate: need fixer (at least 1 portion).", pos);
                 return false;
@@ -390,10 +411,11 @@ namespace Collodion
             ItemStack newPlate = new ItemStack(finishedItem);
             try { newPlate.Attributes.MergeTree(plate.Attributes.Clone()); }
             catch (Exception ex) { world?.Logger?.Warning("[Collodion] TryApplyFixerPourServer: attribute merge failed: {0}", ex.Message); }
-            newPlate.Attributes.SetString(WetPlateAttrs.PlateStage, "finished");
+            PlateStateService.EnsureProcessId(newPlate);
+            PlateStateService.SetStage(newPlate, PlateStage.Finished);
 
             be.TrySetPlate(newPlate);
-            SwapTrayBlockForPlateStage(world!, pos, "finished", newPlate);
+            SwapTrayBlockForPlateStage(world!, pos, PlateStageUtil.ToAttributeString(PlateStage.Finished), newPlate);
             return true;
         }
 
@@ -410,7 +432,7 @@ namespace Collodion
 
             ItemStack reclaimedPlate = new ItemStack(roughGlassItem);
             be.TrySetPlate(reclaimedPlate);
-            SwapTrayBlockForPlateStage(world, pos, "finished", reclaimedPlate);
+            SwapTrayBlockForPlateStage(world, pos, PlateStageUtil.ToAttributeString(PlateStage.Finished), reclaimedPlate);
             return true;
         }
     }

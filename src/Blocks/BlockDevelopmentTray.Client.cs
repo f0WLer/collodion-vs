@@ -26,37 +26,44 @@ namespace Collodion
             }
 
             // Holding developer: can attempt timed pour when tray has an exposed/developed plate.
-            if (IsHoldingChemical(activeSlot, DeveloperPortionCode))
+            if (be.HasPlate)
             {
-                if (!TryGetDeveloperPourContext(be, out ItemStack clientDevPlate, out _, out _, out int currentPours)) return false;
+                DevelopmentParameters development = ResolveProcessDevelopment(be.PlateStack);
+                AssetLocation devCode = new AssetLocation(development.DeveloperPortionCode);
+                AssetLocation fixCode = new AssetLocation(development.FixerPortionCode);
 
-                if (currentPours >= WetPlateChemicalUtil.DevelopPoursRequired) return false;
-                if (WetPlateAttrs.IsDry(world, clientDevPlate))
+                if (IsHoldingChemical(activeSlot, devCode))
                 {
-                    (world.Api as ICoreClientAPI)?.ShowChatMessage("Wetplate: the plate has dried and can no longer be used.");
-                    return false;
+                    if (!TryGetDeveloperPourContext(be, development.DeveloperPourCount, out ItemStack clientDevPlate, out _, out _, out int currentPours)) return false;
+
+                    if (currentPours >= development.DeveloperPourCount) return false;
+                    if (WetPlateAttrs.IsDry(world, clientDevPlate))
+                    {
+                        (world.Api as ICoreClientAPI)?.ShowChatMessage("Wetplate: the plate has dried and can no longer be used.");
+                        return false;
+                    }
+                    if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, devCode, development.DeveloperAmountPerPour)) return false;
+
+                    // Prime local timed state so client-only visuals can react immediately.
+                    BeginTimed(byPlayer, blockSel.Position, ActionDeveloper, GetDeveloperPourSeconds());
+                    return true;
                 }
-                if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, DeveloperPortionCode, chemicalUnitsPerUse)) return false;
 
-                // Prime local timed state so client-only visuals can react immediately.
-                BeginTimed(byPlayer, blockSel.Position, ActionDeveloper, GetDeveloperPourSeconds());
-                return true;
-            }
-
-            // Holding fixer: allow attempt when there's a developed plate (server will message if not ready).
-            if (IsHoldingChemical(activeSlot, FixerPortionCode))
-            {
-                if (!TryGetFixerPourContext(be, out ItemStack clientFixPlate, out _)) return false;
-                if (WetPlateAttrs.IsDry(world, clientFixPlate))
+                // Holding fixer: allow attempt when there's a developed plate (server will message if not ready).
+                if (IsHoldingChemical(activeSlot, fixCode))
                 {
-                    (world.Api as ICoreClientAPI)?.ShowChatMessage("Wetplate: the plate has dried and can no longer be used.");
-                    return false;
-                }
-                if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, FixerPortionCode, chemicalUnitsPerUse)) return false;
+                    if (!TryGetFixerPourContext(be, development.DeveloperPourCount, out ItemStack clientFixPlate, out _)) return false;
+                    if (WetPlateAttrs.IsDry(world, clientFixPlate))
+                    {
+                        (world.Api as ICoreClientAPI)?.ShowChatMessage("Wetplate: the plate has dried and can no longer be used.");
+                        return false;
+                    }
+                    if (!WetPlateChemicalUtil.HasConsumableChemical(activeSlot, fixCode, development.FixerAmountPerPour)) return false;
 
-                // Prime local timed state so client-only visuals can react immediately.
-                BeginTimed(byPlayer, blockSel.Position, ActionFixer, GetFixerPourSeconds());
-                return true;
+                    // Prime local timed state so client-only visuals can react immediately.
+                    BeginTimed(byPlayer, blockSel.Position, ActionFixer, GetFixerPourSeconds());
+                    return true;
+                }
             }
 
             // Holding water: can attempt rinse when tray has a dry plate.

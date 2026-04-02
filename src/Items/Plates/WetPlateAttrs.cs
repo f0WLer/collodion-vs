@@ -10,7 +10,10 @@ namespace Collodion
         public const string WetDurationHours = "collodionWetDurationHours";
         public const string StoredRemainingWetHours = "collodionStoredRemainingWetHours";
         public const string PhotoId = "photoId";
+
+        [System.Obsolete("Use PlateStateAttributes.Stage via PlateStateService. This constant will be removed in a future cleanup pass.")]
         public const string PlateStage = "collodionPlateStage";
+        public const string DeveloperPourCountMax = "collodionDeveloperPourCountMax";
         public const string DevelopPours = "collodionDevelopPours";
         public const string HoldStillSeconds = "collodionHoldStillSeconds";
         public const string HoldStillMovement = "collodionHoldStillMovement";

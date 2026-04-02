@@ -82,6 +82,18 @@ namespace Collodion
             return amount;
         }
 
+        /// <summary>
+        /// Resolves the <see cref="DevelopmentParameters"/> for the given plate via the mod-system
+        /// process registry. Resolved lazily at call time via api.ModLoader — never stored as a field.
+        /// Falls back to the iodide default when the registry is unavailable (e.g. during startup).
+        /// </summary>
+        private DevelopmentParameters ResolveProcessDevelopment(ItemStack? plate)
+        {
+            var modSys = api?.ModLoader?.GetModSystem<CollodionModSystem>();
+            if (modSys == null) return ProcessRegistry.DefaultProcess.Development;
+            return modSys.Processes.ResolveOrDefault(PlateStateService.GetProcessId(plate)).Development;
+        }
+
         private static void BeginTimed(IPlayer byPlayer, BlockPos pos, string action, float durationSeconds)
         {
             if (byPlayer?.Entity?.Attributes == null || pos == null) return;
@@ -172,7 +184,7 @@ namespace Collodion
             return pours;
         }
 
-        private static bool TryGetDeveloperPourContext(BlockEntityDevelopmentTray be, out ItemStack plate, out bool isExposed, out bool isDeveloped, out int currentPours)
+        private static bool TryGetDeveloperPourContext(BlockEntityDevelopmentTray be, int developerPourCount, out ItemStack plate, out bool isExposed, out bool isDeveloped, out int currentPours)
         {
             ItemStack? plateStack = be.PlateStack;
             if (plateStack == null)
@@ -194,11 +206,11 @@ namespace Collodion
                 return false;
             }
 
-            currentPours = GetDevelopPours(plate, isDeveloped ? WetPlateChemicalUtil.DevelopPoursRequired : 0);
+            currentPours = GetDevelopPours(plate, isDeveloped ? developerPourCount : 0);
             return true;
         }
 
-        private static bool TryGetFixerPourContext(BlockEntityDevelopmentTray be, out ItemStack plate, out int pours)
+        private static bool TryGetFixerPourContext(BlockEntityDevelopmentTray be, int developerPourCount, out ItemStack plate, out int pours)
         {
             ItemStack? plateStack = be.PlateStack;
             if (plateStack == null)
@@ -216,7 +228,7 @@ namespace Collodion
                 return false;
             }
 
-            pours = GetDevelopPours(plate, WetPlateChemicalUtil.DevelopPoursRequired);
+            pours = GetDevelopPours(plate, developerPourCount);
             return true;
         }
 
@@ -387,15 +399,16 @@ namespace Collodion
 
                 if (be != null)
                 {
+                    var development = ResolveProcessDevelopment(be.PlateStack);
                     // Drive held-help by actual development progress, not just item code.
-                    if (TryGetDeveloperPourContext(be, out _, out _, out _, out int currentPours))
+                    if (TryGetDeveloperPourContext(be, development.DeveloperPourCount, out _, out _, out _, out int currentPours))
                     {
-                        canDevelop = currentPours < WetPlateChemicalUtil.DevelopPoursRequired;
+                        canDevelop = currentPours < development.DeveloperPourCount;
                     }
 
-                    if (TryGetFixerPourContext(be, out _, out int pours))
+                    if (TryGetFixerPourContext(be, development.DeveloperPourCount, out _, out int pours))
                     {
-                        canFix = pours >= WetPlateChemicalUtil.DevelopPoursRequired;
+                        canFix = pours >= development.DeveloperPourCount;
                     }
                 }
                 else

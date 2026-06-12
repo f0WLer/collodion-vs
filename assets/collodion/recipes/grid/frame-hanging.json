@@ -1,0 +1,10 @@
+{
+	"ingredientPattern": "ABA",
+	"ingredients": {
+		"A": { "type": "item", "code": "game:plank-*" },
+		"B": { "type": "item", "code": "game:cloth-black" }
+	},
+	"width": 3,
+	"height": 1,
+	"output": { "type": "block", "code": "collodion:framedphotographwall-north" }
+}

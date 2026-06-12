@@ -2,38 +2,34 @@
 bin/
 obj/
 
-# Local environment overrides
-.env
+# User- and IDE-specific files
+.vs/
+.vscode/
 .idea/
 *.user
+*.rsuser
 *.suo
 *.userosscache
 *.sln.docstates
-*.DotSettings.user
-
-# VS Code 
-.vscode/
 *.code-workspace
 
-# OS junk
+# Package/restore and tooling artifacts
+packages/
+TestResults/
+*.nupkg
+*.snupkg
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# OS-generated files
 .DS_Store
 Thumbs.db
+Desktop.ini
 
-# Local tooling / notes
-.github/*
-.obsidian/
-notes/
-docs/AGENT_CONTEXT.md
-
-# Reference projects
-reference/
-
-# Mod packaging / temp
-*.zip
-*.7z
-dist/
-artifacts/
-
-# Development notes
-docs/TODO.md
-docs/FILEMAP.md
+# Local environment overrides
+.env
+.env.*
+!.env.example

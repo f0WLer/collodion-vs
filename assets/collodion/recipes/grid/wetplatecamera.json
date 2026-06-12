@@ -9,7 +9,7 @@
       "L": { "type": "item", "code": "game:leather-*", "quantity": 4 },
       "N": { "type": "item", "code": "game:metalnailsandstrips-bismuthbronze", "quantity": 4 }
     },
-    "output": { "type": "item", "code": "collodion:wetplatecamera", "quantity": 1 }
+    "output": { "type": "item", "code": "collodion:fieldcamera", "quantity": 1 }
   },
   {
     "ingredientPattern": "BBB,QLQ,BNB",
@@ -21,7 +21,7 @@
       "L": { "type": "item", "code": "game:leather-*", "quantity": 4 },
       "N": { "type": "item", "code": "game:metalnailsandstrips-tinbronze", "quantity": 4 }
     },
-    "output": { "type": "item", "code": "collodion:wetplatecamera", "quantity": 1 }
+    "output": { "type": "item", "code": "collodion:fieldcamera", "quantity": 1 }
   },
   {
     "ingredientPattern": "BBB,QLQ,BNB",
@@ -33,6 +33,6 @@
       "L": { "type": "item", "code": "game:leather-*", "quantity": 4 },
       "N": { "type": "item", "code": "game:metalnailsandstrips-blackbronze", "quantity": 4 }
     },
-    "output": { "type": "item", "code": "collodion:wetplatecamera", "quantity": 1 }
+    "output": { "type": "item", "code": "collodion:fieldcamera", "quantity": 1 }
   }
 ]

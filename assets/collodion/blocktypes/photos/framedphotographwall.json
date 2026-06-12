@@ -1,8 +1,8 @@
 {
   "code": "framedphotographwall",
-  "class": "BlockFramedPhotograph",
-  "entityClass": "BlockEntityPhotograph",
-  "creativeinventory": { "general": [] },
+  "class": "BlockFrame",
+  "entityClass": "BlockEntityFrame",
+  "creativeinventory": { "general": [ "*-north" ], "photography": ["*-north"] },
   "blockmaterial": "Wood",
   "drawtype": "json",
   "shape": {
@@ -20,12 +20,23 @@
     { "name": "HorizontalAttachable" }
   ],
   "textures": {
-    "oak": { "base": "game:block/wood/debarked/oak" }
+    "oak": { "base": "game:block/wood/debarked/oak" },
+    "backing": { "base": "collodion:block/photos/ambrotype-backing" }
   },
   "attributes": {
     "photoshape": "collodion:photooverlaywall",
     "photoUvRotation": 90
   },
+  "tpOffHandTransform": {
+		"translation": { "x": -0.31, "y": -0.40, "z": -0.54 },
+		"rotation": { "x": -80, "y": 10, "z": -100 },
+		"scale": 1
+	},
+  "guiTransform": {
+		"translation": { "x": 13.63, "y": 4.13, "z": 0 },
+		"rotation": { "x": -20, "y": 135, "z": 0 },
+		"scale": 1.67
+	},
   "variantgroups": [
     {
       "code": "side",
@@ -40,12 +51,8 @@
   },
   "collisionbox": null,
   "selectionbox": {
-    "x1": 0,
-    "y1": 0,
-    "z1": 0,
-    "x2": 1,
-    "y2": 1,
-    "z2": 0.125,
+    "x1": 0, "y1": 0, "z1": 0,
+    "x2": 1, "y2": 1, "z2": 0.125,
     "rotateYByType": {
       "*-east": 270,
       "*-south": 180,

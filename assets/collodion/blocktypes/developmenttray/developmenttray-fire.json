@@ -18,7 +18,7 @@
     "origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
     "scale": 2.5
   },
-  "creativeinventory": { "general": ["*"] },
+  "creativeinventory": { "general": ["*"], "photography": ["*"] },
   "resistance": 1.0,
   "lightAbsorption": 0,
   "sounds": {

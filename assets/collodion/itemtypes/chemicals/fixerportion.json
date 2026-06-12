@@ -30,7 +30,7 @@
   },
   "creativeinventoryStacks": [
     {
-      "tabs": [ "general", "liquids", "chemistry" ],
+      "tabs": [ "general", "liquids", "photography" ],
       "stacks": [
         {
           "type": "block",

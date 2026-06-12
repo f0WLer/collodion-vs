@@ -1,0 +1,17 @@
+{
+  "code": "fieldcamera-tripod-upper",
+  "class": "BlockMountedCameraUpper",
+  "entityClass": "BlockEntityMountedCameraUpper",
+  "drawtype": "empty",
+  "blockmaterial": "Wood",
+  "collisionbox": null,
+  "selectionbox": null,
+  "sidesolid": { "all": "false" },
+  "sideopaque": { "all": "false" },
+  "resistance": 0.5,
+  "sounds": {
+    "place": "game:block/planks",
+    "break": "game:block/planks",
+    "hit": "game:block/planks"
+  }
+}

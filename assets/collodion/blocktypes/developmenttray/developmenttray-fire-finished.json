@@ -13,7 +13,7 @@
     "int-shadow": { "base": "collodion:block/dt-f4" },
     "ext-hi": { "base": "collodion:block/dt-f1" },
     "ext-shadow": { "base": "collodion:block/dt-f2" },
-    "plate": { "base": "collodion:item/plate-finished" }
+    "plate": { "base": "collodion:item/plate-fixed" }
   },
   "groundTransform": {
     "translation": { "x": 0, "y": 0, "z": 0 },

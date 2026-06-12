@@ -1,0 +1,460 @@
+using SkiaSharp;
+using Vintagestory.API.Client;
+
+namespace Collodion.Plates.Rendering
+{
+    internal static class PhotoImageProcessor
+    {
+        // Warm silvery-gray silver deposit color, shared by the in-game density map and the baked
+        // composite export so both read as the exact same silver. Sourced from the single presentation
+        // descriptor (PlatePresentation.Collodion) so a future process changes the silver in one place.
+        internal static readonly byte SilverR = PlatePresentation.Collodion.DepositR;
+        internal static readonly byte SilverG = PlatePresentation.Collodion.DepositG;
+        internal static readonly byte SilverB = PlatePresentation.Collodion.DepositB;
+
+        // Tonal-response exponent for the silver density (alpha = luminance^DensityGamma). <1 lifts
+        // shadow/midtone silver so the framed over-black positive keeps detail. Sourced from the
+        // presentation descriptor so it is one tunable knob (and per-process later).
+        internal static readonly float DensityGamma = PlatePresentation.Collodion.DensityGamma;
+
+        // 256-entry lookup: raw density (luminance, 0..255) -> lifted silver alpha (0..255). Built
+        // once so the per-pixel loops index it instead of calling Pow. Identity when gamma ~= 1.
+        private static readonly byte[] _densityLut = BuildDensityLut(DensityGamma);
+
+        private static byte[] BuildDensityLut(float gamma)
+        {
+            var lut = new byte[256];
+            bool identity = MathF.Abs(gamma - 1f) < 1e-4f;
+            for (int i = 0; i < 256; i++)
+            {
+                if (identity) { lut[i] = (byte)i; continue; }
+                float lifted = MathF.Pow(i / 255f, gamma) * 255f;
+                if (lifted < 0f) lifted = 0f;
+                if (lifted > 255f) lifted = 255f;
+                lut[i] = (byte)(lifted + 0.5f);
+            }
+            return lut;
+        }
+
+        // Reads PNG width/height directly from IHDR bytes without full image decode.
+        internal static bool TryGetPngDimensions(byte[] pngBytes, out int width, out int height)
+        {
+            width = 0;
+            height = 0;
+
+            if (pngBytes == null || pngBytes.Length < 24) return false;
+
+            if (pngBytes[0] != 0x89 || pngBytes[1] != 0x50 || pngBytes[2] != 0x4E || pngBytes[3] != 0x47
+                || pngBytes[4] != 0x0D || pngBytes[5] != 0x0A || pngBytes[6] != 0x1A || pngBytes[7] != 0x0A)
+            {
+                return false;
+            }
+
+            try
+            {
+                width = (pngBytes[16] << 24) | (pngBytes[17] << 16) | (pngBytes[18] << 8) | pngBytes[19];
+                height = (pngBytes[20] << 24) | (pngBytes[21] << 16) | (pngBytes[22] << 8) | pngBytes[23];
+            }
+            catch
+            {
+                width = 0;
+                height = 0;
+                return false;
+            }
+
+            return width > 0 && height > 0;
+        }
+
+        // Ensures a derived photo variant exists and is up-to-date with source/effect inputs.
+        internal static bool TryEnsureDerivedPhoto(ICoreClientAPI capi, string sourcePath, string derivedPath, string seedKey, bool useDevelopedStage, int developPours, int maxDeveloperPours)
+        {
+            try
+            {
+                // Reuse existing derived image when source has not changed.
+                if (File.Exists(derivedPath))
+                {
+                    try
+                    {
+                        DateTime srcTime = File.GetLastWriteTimeUtc(sourcePath);
+                        DateTime dstTime = File.GetLastWriteTimeUtc(derivedPath);
+                        if (dstTime >= srcTime) return true;
+                    }
+                    catch
+                    {
+                        // If time checks fail, fall through and re-generate.
+                    }
+                }
+
+                using var decoded = SKBitmap.Decode(sourcePath);
+                if (decoded == null) return false;
+
+                // Build an explicit Rgba8888/Unpremul working bitmap so the density value we
+                // write into the alpha channel survives encoding as a real RGBA PNG.
+                //
+                // Two SkiaSharp pitfalls this avoids (both verified to drop alpha -> IHDR
+                // colortype 2 / channel-less RGB, rendering every pixel solid dark silver):
+                //   1. SKBitmap.Decode of an opaque photo returns Bgra8888/Opaque. CopyTo into
+                //      a pre-allocated Unpremul bitmap RECONFIGURES the destination back to the
+                //      source's Bgra8888/Opaque metadata, so our Unpremul allocation is lost.
+                //   2. SKImage.FromBitmap re-reads the bitmap's (Opaque) alpha type and encodes
+                //      RGB-only. We instead convert via SKImage.ReadPixels into a buffer we own
+                //      as Unpremul, and encode via SKImage.FromPixelCopy with explicit info.
+                var targetInfo = new SKImageInfo(decoded.Width, decoded.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+                using var src = new SKBitmap();
+                if (!src.TryAllocPixels(targetInfo)) return false;
+                using (var decodedImage = SKImage.FromBitmap(decoded))
+                {
+                    if (decodedImage == null || !decodedImage.ReadPixels(targetInfo, src.GetPixels(), src.RowBytes))
+                        return false;
+                }
+
+                float t = maxDeveloperPours <= 1 ? 1f : (developPours - 1) / (float)(maxDeveloperPours - 1);
+                if (t < 0f) t = 0f;
+                if (t > 1f) t = 1f;
+
+                if (useDevelopedStage)
+                {
+                    // Convert the positive source into a silver density map:
+                    // alpha = density (bright source = dense silver = opaque), RGB = dark silver color.
+                    InvertToNegativeDensityMap(src);
+
+                    // During development (pours 1-4), scale back silver visibility progressively.
+                    // At t=1.0 (pour 5 / Developed / Finished) the full density map is kept as-is.
+                    if (t < 0.999f)
+                        ApplyNegativeSilverVisuals(src, t);
+                }
+
+                // Encode with explicit Unpremul info so the alpha channel survives as a true
+                // RGBA PNG (IHDR colortype 6). SKImage.FromBitmap would re-read src's metadata
+                // and can drop alpha; FromPixelCopy with our info guarantees the density map.
+                using var image = SKImage.FromPixelCopy(targetInfo, src.GetPixels(), src.RowBytes);
+                using var data = image.Encode(SKEncodedImageFormat.Png, 90);
+
+                Directory.CreateDirectory(Path.GetDirectoryName(derivedPath)!);
+                File.WriteAllBytes(derivedPath, data.ToArray());
+                return true;
+            }
+            catch (Exception ex)
+            {
+                capi.Logger.Warning($"Collodion: failed to build derived photo '{derivedPath}': {ex.Message}");
+                return false;
+            }
+        }
+
+        // Bakes a flat, viewable "ambrotype positive" PNG from the raw positive source: the
+        // silver density map flattened over an opaque black backing. Each pixel becomes
+        // silverColor * density (density = luminance), fully opaque — identical to what the
+        // framed silver-over-black composite shows, but as a standalone file for viewing
+        // outside the game. Returns false on any failure (no partial file is left behind).
+        internal static bool TryWriteCompositePng(string sourcePath, string outPath)
+        {
+            try
+            {
+                using var decoded = SKBitmap.Decode(sourcePath);
+                if (decoded == null) return false;
+
+                var info = new SKImageInfo(decoded.Width, decoded.Height, SKColorType.Rgba8888, SKAlphaType.Opaque);
+                using var dst = new SKBitmap();
+                if (!dst.TryAllocPixels(info)) return false;
+                using (var decodedImage = SKImage.FromBitmap(decoded))
+                {
+                    if (decodedImage == null || !decodedImage.ReadPixels(info, dst.GetPixels(), dst.RowBytes))
+                        return false;
+                }
+
+                int w = dst.Width;
+                int h = dst.Height;
+                SKPixmap pixmap = dst.PeekPixels();
+                if (pixmap != null && pixmap.BytesPerPixel == 4 && pixmap.ColorType == SKColorType.Rgba8888)
+                {
+                    unsafe
+                    {
+                        byte* basePtr = (byte*)pixmap.GetPixels().ToPointer();
+                        int rowBytes = pixmap.RowBytes;
+                        for (int y = 0; y < h; y++)
+                        {
+                            byte* row = basePtr + y * rowBytes;
+                            for (int x = 0; x < w; x++)
+                            {
+                                int i = x * 4;
+                                float density = (0.299f * row[i + 0] + 0.587f * row[i + 1] + 0.114f * row[i + 2]) / 255f;
+                                float a = _densityLut[(int)(density * 255f)] / 255f;
+                                row[i + 0] = (byte)(SilverR * a);
+                                row[i + 1] = (byte)(SilverG * a);
+                                row[i + 2] = (byte)(SilverB * a);
+                                row[i + 3] = 255;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int y = 0; y < h; y++)
+                    {
+                        for (int x = 0; x < w; x++)
+                        {
+                            var c = dst.GetPixel(x, y);
+                            float density = (0.299f * c.Red + 0.587f * c.Green + 0.114f * c.Blue) / 255f;
+                            float a = _densityLut[(int)(density * 255f)] / 255f;
+                            dst.SetPixel(x, y, new SKColor((byte)(SilverR * a), (byte)(SilverG * a), (byte)(SilverB * a), 255));
+                        }
+                    }
+                }
+
+                using var image = SKImage.FromPixelCopy(info, dst.GetPixels(), dst.RowBytes);
+                using var data = image.Encode(SKEncodedImageFormat.Png, 90);
+
+                Directory.CreateDirectory(Path.GetDirectoryName(outPath)!);
+                File.WriteAllBytes(outPath, data.ToArray());
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Converts a positive source bitmap in-place to a silver density map.
+        // For each pixel: alpha = luminance (exposure density), RGB = warm silvery-gray.
+        // High luminance (bright scene, sky) → high alpha (dense opaque silver deposit).
+        // Low luminance (dark scene, shadows) → low alpha (transparent glass).
+        //
+        // The silver color is a single fixed silvery-gray used in every viewing context:
+        // the plate is one physical silver-on-glass image. Against the world the clear glass
+        // shows through; placed over a black backing panel the same image reads as a positive
+        // (ambrotype) — light silver highlights, black shadows. There is no separate negative
+        // vs ambrotype color; "how it's viewed" (the backing) is what changes, not the silver.
+        private static void InvertToNegativeDensityMap(SKBitmap bmp)
+        {
+            if (bmp == null) return;
+
+            int w = bmp.Width;
+            int h = bmp.Height;
+            if (w <= 0 || h <= 0) return;
+
+            // Local aliases of the shared silver color (kept constant regardless of density).
+            byte silverR = SilverR;
+            byte silverG = SilverG;
+            byte silverB = SilverB;
+
+            SKPixmap pixmap = bmp.PeekPixels();
+            if (pixmap == null)
+            {
+                InvertToNegativeDensityMapSlow(bmp, w, h, silverR, silverG, silverB);
+                return;
+            }
+
+            SKColorType ct = pixmap.ColorType;
+            int bpp = pixmap.BytesPerPixel;
+            if (bpp != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
+            {
+                InvertToNegativeDensityMapSlow(bmp, w, h, silverR, silverG, silverB);
+                return;
+            }
+
+            bool bgra = ct == SKColorType.Bgra8888;
+
+            unsafe
+            {
+                byte* basePtr = (byte*)pixmap.GetPixels().ToPointer();
+                int rowBytes = pixmap.RowBytes;
+
+                for (int y = 0; y < h; y++)
+                {
+                    byte* row = basePtr + y * rowBytes;
+
+                    for (int x = 0; x < w; x++)
+                    {
+                        int i = x * 4;
+                        float r, g, b;
+
+                        if (bgra)
+                        {
+                            b = row[i + 0] / 255f;
+                            g = row[i + 1] / 255f;
+                            r = row[i + 2] / 255f;
+                        }
+                        else
+                        {
+                            r = row[i + 0] / 255f;
+                            g = row[i + 1] / 255f;
+                            b = row[i + 2] / 255f;
+                        }
+
+                        float density = 0.299f * r + 0.587f * g + 0.114f * b;
+                        byte alpha = _densityLut[(int)(density * 255f)];
+
+                        if (bgra)
+                        {
+                            row[i + 0] = silverB;
+                            row[i + 1] = silverG;
+                            row[i + 2] = silverR;
+                            row[i + 3] = alpha;
+                        }
+                        else
+                        {
+                            row[i + 0] = silverR;
+                            row[i + 1] = silverG;
+                            row[i + 2] = silverB;
+                            row[i + 3] = alpha;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void InvertToNegativeDensityMapSlow(SKBitmap bmp, int w, int h, byte silverR, byte silverG, byte silverB)
+        {
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    var c = bmp.GetPixel(x, y);
+                    float r = c.Red / 255f;
+                    float g = c.Green / 255f;
+                    float b = c.Blue / 255f;
+                    float density = 0.299f * r + 0.587f * g + 0.114f * b;
+                    byte alpha = _densityLut[(int)(density * 255f)];
+                    bmp.SetPixel(x, y, new SKColor(silverR, silverG, silverB, alpha));
+                }
+            }
+        }
+
+        // Scales back silver density visibility during progressive development (pours 1–4).
+        // Operates on the RGBA density map produced by InvertToNegativeDensityMap.
+        // At t=0 (pour 1): only the highest-density (most-exposed) pixels show any silver, at low opacity.
+        // At t→1 (pour 5): all density passes the gate, full alpha restored — full negative visible.
+        private static void ApplyNegativeSilverVisuals(SKBitmap bmp, float t)
+        {
+            if (bmp == null) return;
+            if (t < 0f) t = 0f;
+            if (t > 1f) t = 1f;
+
+            // Smoothstep the progress so the reveal is middle-heavy: a faint first pour,
+            // the bulk of the image emerging across pours 2-4, and only the deepest shadows
+            // left to fill on the final pour (avoids the abrupt jump at the last step).
+            float te = t * t * (3f - 2f * t);
+
+            // Density gate: at te=0 only top 15% density passes; at te=1 everything passes.
+            float gate = Lerp(0.85f, 0f, te);
+            // Max alpha for pixels that pass the gate: faint at first, full at te=1.
+            float maxAlpha = Lerp(0.4f, 1f, te);
+            // Edge fade: early pours develop center first; corners fill in last.
+            float edgeFade = Lerp(0.55f, 0f, te);
+
+            int w = bmp.Width;
+            int h = bmp.Height;
+            if (w <= 0 || h <= 0) return;
+
+            float invW = 1f / w;
+            float invH = 1f / h;
+            const float invCorner = 1f / 0.7071f;
+
+            float[] nx2 = new float[w];
+            for (int x = 0; x < w; x++)
+            {
+                float nx = (x + 0.5f) * invW - 0.5f;
+                nx2[x] = nx * nx;
+            }
+
+            float[] ny2 = new float[h];
+            for (int y = 0; y < h; y++)
+            {
+                float ny = (y + 0.5f) * invH - 0.5f;
+                ny2[y] = ny * ny;
+            }
+
+            float gateRange = 1f - gate;
+            if (gateRange < 0.001f) gateRange = 0.001f;
+
+            SKPixmap pixmap = bmp.PeekPixels();
+            if (pixmap == null)
+            {
+                ApplyNegativeSilverVisualsSlow(bmp, w, h, gate, gateRange, maxAlpha, edgeFade, nx2, ny2, invCorner);
+                return;
+            }
+
+            SKColorType ct = pixmap.ColorType;
+            int bpp = pixmap.BytesPerPixel;
+            if (bpp != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
+            {
+                ApplyNegativeSilverVisualsSlow(bmp, w, h, gate, gateRange, maxAlpha, edgeFade, nx2, ny2, invCorner);
+                return;
+            }
+
+            bool bgra = ct == SKColorType.Bgra8888;
+            bool doEdge = edgeFade > 0f;
+
+            unsafe
+            {
+                byte* basePtr = (byte*)pixmap.GetPixels().ToPointer();
+                int rowBytes = pixmap.RowBytes;
+
+                for (int y = 0; y < h; y++)
+                {
+                    byte* row = basePtr + y * rowBytes;
+                    float yTerm = ny2[y];
+
+                    for (int x = 0; x < w; x++)
+                    {
+                        int i = x * 4;
+                        float density = row[i + 3] / 255f;
+
+                        float visible = density > gate ? (density - gate) / gateRange : 0f;
+                        float effectiveAlpha = visible * maxAlpha;
+
+                        if (doEdge)
+                        {
+                            float edge = (float)Math.Sqrt(nx2[x] + yTerm) * invCorner;
+                            if (edge > 1f) edge = 1f;
+                            effectiveAlpha *= (1f - edge * edgeFade);
+                        }
+
+                        if (effectiveAlpha < 0f) effectiveAlpha = 0f;
+                        if (effectiveAlpha > 1f) effectiveAlpha = 1f;
+
+                        row[i + 3] = (byte)(effectiveAlpha * 255f);
+                        // RGB (silver color) is unchanged.
+                    }
+                }
+            }
+        }
+
+        private static void ApplyNegativeSilverVisualsSlow(SKBitmap bmp, int w, int h, float gate, float gateRange, float maxAlpha, float edgeFade, float[] nx2, float[] ny2, float invCorner)
+        {
+            bool doEdge = edgeFade > 0f;
+
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    var c = bmp.GetPixel(x, y);
+                    float density = c.Alpha / 255f;
+
+                    float visible = density > gate ? (density - gate) / gateRange : 0f;
+                    float effectiveAlpha = visible * maxAlpha;
+
+                    if (doEdge)
+                    {
+                        float edge = (float)Math.Sqrt(nx2[x] + ny2[y]) * invCorner;
+                        if (edge > 1f) edge = 1f;
+                        effectiveAlpha *= 1f - edge * edgeFade;
+                    }
+
+                    if (effectiveAlpha < 0f) effectiveAlpha = 0f;
+                    if (effectiveAlpha > 1f) effectiveAlpha = 1f;
+
+                    bmp.SetPixel(x, y, new SKColor(c.Red, c.Green, c.Blue, (byte)(effectiveAlpha * 255f)));
+                }
+            }
+        }
+
+        // Clamped linear interpolation helper.
+        private static float Lerp(float a, float b, float t)
+        {
+            if (t < 0f) t = 0f;
+            if (t > 1f) t = 1f;
+            return a + (b - a) * t;
+        }
+    }
+}

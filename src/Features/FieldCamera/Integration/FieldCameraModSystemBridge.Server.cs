@@ -1,0 +1,20 @@
+using Collodion.CameraCapture.Contracts;
+using Vintagestory.API.Server;
+
+namespace Collodion.FieldCamera
+{
+    internal sealed partial class FieldCameraModSystemBridge
+    {
+        internal void ConfigureServerFieldCameraStartup(ICoreServerAPI api)
+        {
+            ServerChannel = api.Network.GetChannel("collodion");
+            ServerChannel.SetMessageHandler<PhotoTakenPacket>(OnPhotoTakenReceived);
+            ServerChannel.SetMessageHandler<CameraLoadPlatePacket>(OnCameraLoadPlateReceived);
+            ServerChannel.SetMessageHandler<CameraTripodPacket>(OnCameraTripodReceived);
+            ServerChannel.SetMessageHandler<ExposureStatePacket>(OnExposureStateReceived);
+            ServerChannel.SetMessageHandler<CameraMountRequestPacket>(OnCameraMountRequestReceived);
+            ServerChannel.SetMessageHandler<SealAndInsertIntoTrayPacket>(OnSealAndInsertTrayReceived);
+            ServerChannel.SetMessageHandler<CameraRestPacket>(OnCameraRestReceived);
+        }
+    }
+}

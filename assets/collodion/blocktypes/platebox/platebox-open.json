@@ -8,7 +8,7 @@
     { "code": "facing", "states": ["south", "north", "east", "west"] }
   ],
   "shape": {
-    "base": "collodion:block/platebox-open",
+    "base": "collodion:block/platebox/platebox-open",
     "rotateYByType": {
       "*-south": 0,
       "*-north": 180,
@@ -34,7 +34,6 @@
     "tinbronze": { "base": "game:block/metal/sheet/tinbronze1" },
     "plate": { "base": "collodion:item/plate-silvered" }
   },
-  "creativeinventory": { "general": [] },
   "resistance": 1.2,
   "lightAbsorption": 0,
   "sounds": {

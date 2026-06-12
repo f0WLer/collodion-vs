@@ -218,6 +218,7 @@ namespace Collodion.Tray
             try { finishedPlate.Attributes.MergeTree(plate.Attributes.Clone()); }
             catch (Exception ex) { Log.Warn(world?.Logger, "TryApplyFixerPourServer: attribute merge failed: {0}", ex.Message); }
 
+            finishedPlate.Attributes.RemoveAttribute(PlateAttributes.PhotographerUid);
             PlateAttributes.SetStage(finishedPlate, PlateStage.Finished);
             PlateAttributes.ResetDevelopmentApplications(finishedPlate);
 

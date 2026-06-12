@@ -103,7 +103,7 @@ namespace Collodion.FieldCamera
                 return true;
             }
 
-            if (ResumeMountedCameraStorage(cameraStack))
+            if (ResumeMountedCameraStorage(cameraStack, serverPlayer.PlayerUID))
             {
                 mountedBe.MarkCameraDirty();
                 SendMountedCameraControl(serverPlayer, true, true, cameraStack);

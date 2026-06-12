@@ -40,6 +40,7 @@ namespace Collodion.FieldCamera
             loadedPlate.Attributes.RemoveAttribute(PlateAttributes.ExposureId);
             loadedPlate.Attributes.RemoveAttribute(PlateAttributes.ExposedFrames);
             loadedPlate.Attributes.RemoveAttribute(PlateAttributes.ExposureTargetFrames);
+            loadedPlate.Attributes.RemoveAttribute(PlateAttributes.PhotographerUid);
             CameraItemHelper.ClearMountedCaptureState(cameraStack);
 
             SetLoadedPlateAttributes(cameraStack, loadedPlate);

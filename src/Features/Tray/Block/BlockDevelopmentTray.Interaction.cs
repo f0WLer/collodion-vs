@@ -235,6 +235,13 @@ namespace Collodion.Tray
                         Tell(byPlayer, $"Collodion: plate not fully developed ({pours}/{RequiredDeveloperPours}).", pos);
                         return false;
                     }
+
+                    string? fixPhotographer = fixPlate.Attributes?.GetString(PlateAttributes.PhotographerUid);
+                    if (!string.IsNullOrEmpty(fixPhotographer) && !string.Equals(fixPhotographer, byPlayer.PlayerUID, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Tell(byPlayer, "Collodion: only the original photographer can develop this plate.", pos);
+                        return false;
+                    }
                     break;
                 default:
                     if (!TryGetReclaimContext(be, world, out _)) return false;

@@ -127,7 +127,7 @@ namespace Collodion.FieldCamera
             return true;
         }
 
-        private bool ResumeMountedCameraStorage(ItemStack cameraStack)
+        private bool ResumeMountedCameraStorage(ItemStack cameraStack, string playerUid)
         {
             if (Api?.World == null) return false;
             if (!CameraItemHelper.TryGetLoadedPlateStack(cameraStack, Api.World, out ItemStack? loadedPlate) || loadedPlate == null) return false;
@@ -135,13 +135,13 @@ namespace Collodion.FieldCamera
             PlateStage stage = PlateAttributes.GetStage(loadedPlate);
             if (stage != PlateStage.ExposurePaused && stage != PlateStage.Sensitized) return false;
 
-            // Assign a unique exposure ID the first time a fresh Sensitized plate begins exposing.
-            // This guarantees the client always receives a non-empty ExposureId in the control packet,
-            // preventing stale IDs from a previous camera session from contaminating a new one.
-            if (stage == PlateStage.Sensitized &&
-                string.IsNullOrEmpty(loadedPlate.Attributes.GetString(PlateAttributes.ExposureId, string.Empty)))
+            // On first exposure (Sensitized → Exposing): assign exposure ID and stamp photographer.
+            // This mirrors OnExposureStateReceived so the mounted-block path is equally guarded.
+            if (stage == PlateStage.Sensitized)
             {
-                loadedPlate.Attributes.SetString(PlateAttributes.ExposureId, Guid.NewGuid().ToString("N"));
+                if (string.IsNullOrEmpty(loadedPlate.Attributes.GetString(PlateAttributes.ExposureId, string.Empty)))
+                    loadedPlate.Attributes.SetString(PlateAttributes.ExposureId, Guid.NewGuid().ToString("N"));
+                loadedPlate.Attributes.SetString(PlateAttributes.PhotographerUid, playerUid);
             }
 
             PlateDryingTransition.TickNow(Api.World, loadedPlate);

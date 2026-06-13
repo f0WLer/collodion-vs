@@ -68,11 +68,8 @@ namespace Collodion.CameraCapture
             _virtualCameraPreviewRenderer.ExposureRenderer = _virtualExposureRenderer;
             api.Event.RegisterRenderer(_virtualExposureRenderer, EnumRenderStage.Before, "collodion-virtualexposure");
 
-            if (ClientConfig?.ShowDebugLogs == true)
-            {
-                _handheldPreviewRenderer = new HandheldPreviewRenderer(api, _virtualCameraPreviewRenderer);
-                api.Event.RegisterRenderer(_handheldPreviewRenderer, EnumRenderStage.Ortho, "collodion-viewfinder-preview");
-            }
+            _handheldPreviewRenderer = new HandheldPreviewRenderer(api, _virtualCameraPreviewRenderer);
+            api.Event.RegisterRenderer(_handheldPreviewRenderer, EnumRenderStage.Ortho, "collodion-viewfinder-preview");
 
             // Some load orders/world joins invoke StartClientSide before the channel reports connected.
             // Defer send until connected so startup never aborts.

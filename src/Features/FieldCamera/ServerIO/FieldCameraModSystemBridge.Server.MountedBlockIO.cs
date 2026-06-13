@@ -16,26 +16,37 @@ namespace Collodion.FieldCamera
             ItemStack? cameraStack = mountedBe.GetStoredCameraStack(Api.World);
             if (cameraStack == null || !IsFieldcameraStack(cameraStack)) return false;
 
-            // Allow interaction only if no active exposure is locked to another photographer.
+            // Determine whether a foreign photographer's exposure is loaded, and whether it is
+            // actively running. PhotographerUid is only stamped while exposing, so a non-empty,
+            // non-matching UID means the loaded plate belongs to a different photographer.
             string? photographerUid = null;
+            PlateStage lockedStage = default;
             if (CameraItemHelper.TryGetLoadedPlateStack(cameraStack, Api.World, out ItemStack? checkPlate) && checkPlate != null)
             {
                 PlateStage checkStage = PlateAttributes.GetStage(checkPlate);
                 if (checkStage is PlateStage.Exposing or PlateStage.ExposurePaused)
                 {
                     photographerUid = checkPlate.Attributes.GetString(PlateAttributes.PhotographerUid);
+                    lockedStage = checkStage;
                 }
             }
 
-            if (!string.IsNullOrEmpty(photographerUid)
-                && !string.Equals(photographerUid, serverPlayer.PlayerUID, StringComparison.Ordinal))
+            bool isOtherPhotographer = !string.IsNullOrEmpty(photographerUid)
+                && !string.Equals(photographerUid, serverPlayer.PlayerUID, StringComparison.Ordinal);
+
+            // Exposure actively running by another photographer: block everything.
+            // (A non-owner can still recover the camera by breaking the block — see
+            // HandleMountedCameraBlockBroken — which pauses the plate and drops the camera.)
+            if (isOtherPhotographer && lockedStage == PlateStage.Exposing)
             {
                 serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: someone else's exposure is in progress.", EnumChatType.Notification);
                 return true;
             }
 
-            // No active exposure — if a different player is taking over, transfer block ownership.
-            if (!string.Equals(mountedBe.OwnerPlayerUid, serverPlayer.PlayerUID, StringComparison.Ordinal))
+            // No foreign lock — if a different player is taking over an idle/own camera, transfer ownership.
+            // Skip while a foreign photographer's paused plate is loaded so the original owner keeps the block.
+            if (!isOtherPhotographer
+                && !string.Equals(mountedBe.OwnerPlayerUid, serverPlayer.PlayerUID, StringComparison.Ordinal))
             {
                 ForgetMountedCameraPos(mountedBe.OwnerPlayerUid);
                 mountedBe.TransferOwnership(serverPlayer.PlayerUID);
@@ -77,9 +88,21 @@ namespace Collodion.FieldCamera
 
                 if (TryHandleMountedBlockPlateUnload(serverPlayer, mountedBe, cameraStack))
                 {
-                    RememberMountedCameraPos(serverPlayer.PlayerUID, pos);
+                    // Only remember this block as the player's camera when it's actually theirs;
+                    // a non-owner unloading a foreign paused plate must not adopt the block.
+                    if (!isOtherPhotographer)
+                    {
+                        RememberMountedCameraPos(serverPlayer.PlayerUID, pos);
+                    }
                     SendMountedCameraControl(serverPlayer, false, true, cameraStack);
                 }
+                return true;
+            }
+
+            // Plain RMB drives load / pause / resume — require ownership of any loaded exposure.
+            if (isOtherPhotographer)
+            {
+                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: someone else's exposure — you cannot start or resume it.", EnumChatType.Notification);
                 return true;
             }
 

@@ -79,6 +79,21 @@ namespace Collodion.FieldCamera
                 // Plate must be exposable to transition to Exposing.
                 if (stage != PlateStage.Sensitized && stage != PlateStage.ExposurePaused && stage != PlateStage.Exposing) return;
 
+                // A paused exposure can only be resumed by its original photographer — the GPU
+                // accumulation buffer lives on that client. Rejecting a foreign resume here also
+                // blocks a hijack where a non-owner sends a fresh-start packet (new exposure ID)
+                // for someone else's paused plate. Mirrors the mounted-block lock and the client
+                // guards in RequestMountedPhotoCapture / CaptureGateService.
+                if (stage == PlateStage.ExposurePaused)
+                {
+                    string? owner = loadedPlate.Attributes.GetString(PlateAttributes.PhotographerUid);
+                    if (!string.IsNullOrEmpty(owner)
+                        && !string.Equals(owner, player.PlayerUID, StringComparison.Ordinal))
+                    {
+                        return;
+                    }
+                }
+
                 PlateDryingTransition.TickNow(Api.World, loadedPlate);
                 PlateAttributes.SetStage(loadedPlate, PlateStage.Exposing);
                 // Stamp photographer on first exposure start (Sensitized → Exposing only; not a resume from ExposurePaused).

@@ -52,6 +52,25 @@ namespace Collodion.FieldCamera
                         owner.CaptureClientRuntime.ShowShutterGateMessageThrottled("Collodion: the plate has dried and can no longer be used.");
                         return false;
                     }
+
+                    // A paused/in-progress exposure belongs to its original photographer — the GPU
+                    // accumulation lives on their client. A different holder must not start, resume,
+                    // or hijack it (the handheld start path would otherwise begin a fresh exposure
+                    // and overwrite the foreign plate's exposure ID server-side).
+                    if (loadedPlateStack != null)
+                    {
+                        PlateStage exposureStage = PlateAttributes.GetStage(loadedPlateStack);
+                        if (exposureStage is PlateStage.Exposing or PlateStage.ExposurePaused)
+                        {
+                            string? uid = loadedPlateStack.Attributes.GetString(PlateAttributes.PhotographerUid);
+                            if (!string.IsNullOrEmpty(uid)
+                                && !string.Equals(uid, owner.ClientApi.World.Player.PlayerUID, StringComparison.Ordinal))
+                            {
+                                owner.CaptureClientRuntime.ShowShutterGateMessageThrottled("Collodion: this plate belongs to another photographer.");
+                                return false;
+                            }
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {

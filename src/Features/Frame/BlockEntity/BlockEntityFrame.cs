@@ -114,6 +114,16 @@ namespace Collodion.Frame
             // #backing face in framedwall.json) so it reads as a positive ambrotype rather than
             // an alpha-tested hard cutout in the opaque pass.
             PhotoMeshUtil.SetTransparentRenderPass(cloned);
+
+            // StampUvByRotationCropped wrote absolute atlas UVs for texPos's page, but left
+            // TextureIds/TextureIndices pointing at the plane block's baked (linen) page. When
+            // the photo lands on a different atlas page, the GPU binds the wrong page and samples
+            // garbage. Pin the mesh to texPos's page so the routing matches the stamped UVs.
+            cloned.TextureIds = new[] { texPos.atlasTextureId };
+            if (cloned.TextureIndices != null)
+            {
+                for (int i = 0; i < cloned.TextureIndices.Length; i++) cloned.TextureIndices[i] = 0;
+            }
             return cloned;
         }
 

@@ -87,6 +87,9 @@ namespace Collodion.AdminTooling
             // Reciprocity: float 0.5..1.0 → int 50..100 (÷100 = float)
             var (lRec, sRec) = SliderRow(y, labelW, sliderW); y += rowH;
 
+            // Exposure Gain: float 0.25..5.0 → int 25..500 (÷100 = float)
+            var (lExp, sExp) = SliderRow(y, labelW, sliderW); y += rowH;
+
             // Reset chemistry button (right-aligned, same row after the last slider)
             var resetChemBtn = B(dialogW - 130, y, 130, 22);
             y += rowH + 4;
@@ -209,6 +212,11 @@ namespace Collodion.AdminTooling
                 .AddAutoSizeHoverText("Schwarzschild reciprocity failure factor. Multiplies exposure before the density calculation: `E *= reciprocity`. Values below 1.0 mean long exposures underperform relative to what the frame count predicts — mimicking the real-world failure of collodion to obey the exposure law at low intensities.", CairoFont.WhiteSmallText(), 400, lRec)
 
 
+                .AddStaticText("Exposure Gain",       CairoFont.WhiteDetailText(), lExp)
+                .AddSlider(v => { _renderer.SetChemistry("exposuregain", v / 100f); _renderer.RequestPreviewRefresh(); return true; }, sExp, "sl-exposuregain")
+                .AddAutoSizeHoverText("Final brightness multiplier applied during develop: `E = sum · gain / frames`. Calibrates mid-tone brightness independently of the full-white white point — game scenes rarely hit s=1.0, so 1.0 leaves them dark. Higher = brighter overall exposure. Affects both the preview and the final image.", CairoFont.WhiteSmallText(), 400, lExp)
+
+
                 .AddSmallButton("Reset to Config Defaults", OnResetChemistry, resetChemBtn)
 
                 .AddStaticText("* These options don't affect the exposure preview, only the final image.", CairoFont.WhiteDetailText(), astLabel)
@@ -286,6 +294,8 @@ namespace Collodion.AdminTooling
             // Inertia: 0..1 ×100 → 0..100  |  Reciprocity: 0.5..1.0 ×100 → 50..100
             c.GetSlider("sl-inertia")     .SetValues((int)(_renderer.Physics.EffectiveInertia(proc)      * 100), 0,   100, 1);
             c.GetSlider("sl-reciprocity") .SetValues((int)(_renderer.Physics.EffectiveReciprocity(proc)  * 100), 50,  100, 1);
+            // Exposure Gain: 0.25..5.0 ×100 → 25..500
+            c.GetSlider("sl-exposuregain").SetValues((int)(_renderer.Physics.EffectiveExposureGain(proc) * 100), 25,  500, 1);
         }
 
         // Returns a (labelBounds, sliderBounds) pair for a standard side-by-side row.

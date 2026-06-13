@@ -39,9 +39,6 @@ namespace Collodion.FieldCamera
                 effectsOverride);
             if (string.IsNullOrEmpty(photoId)) return false;
 
-            ExposureAccumulationStore.Delete(exposureId);
-            ClientPhotoSyncIntegration.NotifyPhotoCreated(capi, photoId);
-
             ClientChannel.SendPacket(new SealAndInsertIntoTrayPacket
             {
                 ExposureId = exposureId,
@@ -51,6 +48,8 @@ namespace Collodion.FieldCamera
                 TrayPosZ   = trayPos.Z,
                 TrayPosDim = trayPos.dimension,
             });
+            ExposureAccumulationStore.Delete(exposureId);
+            ClientPhotoSyncIntegration.NotifyPhotoCreated(capi, photoId);
             return true;
         }
     }

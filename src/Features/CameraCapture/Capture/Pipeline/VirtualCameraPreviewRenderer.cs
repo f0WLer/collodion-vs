@@ -155,6 +155,7 @@ namespace Collodion.CameraCapture
                 accum.DevelopmentStrength        = er.Physics.EffectiveDevStrength(p);
                 accum.HDGamma                    = er.Physics.EffectiveHDGamma(p);
                 accum.InertiaPoint               = er.Physics.EffectiveInertia(p);
+                accum.ExposureGain               = er.Physics.EffectiveExposureGain(p);
                 accum.ReciprocityExponent        = 1f;
 
                 accum.Accumulate(camera.fbo);

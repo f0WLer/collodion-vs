@@ -64,7 +64,7 @@ namespace Collodion.Exposure
             "Iodide", durationSeconds: 8f, sampleCount: 40,
             redSensitivity: 0.12f, greenSensitivity: 0.45f, blueSensitivity: 1.00f,
             developmentStrength: 8.0f, hdGamma: 1.10f, inertiaPoint: 0.10f,
-            reciprocityExponent: 0.90f);
+            reciprocityExponent: 0.90f, exposureGain: 1.15f);
 
         /// <summary>
         /// Silver bromide dry plate: near-panchromatic, fast (~3 s), gradual H&amp;D shoulder.

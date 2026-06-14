@@ -118,14 +118,14 @@ namespace Collodion.Tray
             };
         }
 
-        private static bool TryValidateTimedStepForAction(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, TrayActionKind actionKind, out ItemStack plate, out bool isExposed, out int currentApplications)
+        private bool TryValidateTimedStepForAction(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, TrayActionKind actionKind, out ItemStack plate, out bool isExposed, out int currentApplications)
         {
             plate = null!;
             isExposed = false;
             currentApplications = 0;
 
             AssetLocation portionCode = GetPortionCode(actionKind);
-            int amountPerUse = GetAmountPerUse(actionKind);
+            int amountPerUse = GetChemicalUnitsPerUse();
             if (!IsHoldingChemical(activeSlot, portionCode)) return false;
             if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, portionCode, amountPerUse))
             {
@@ -172,7 +172,7 @@ namespace Collodion.Tray
 
         private bool TryApplyDeveloperPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate, bool isExposed, int currentPours)
         {
-            if (!PlateChemicalUtil.TryConsumeChemical(activeSlot, _developerPortionCode, DeveloperPourAmount))
+            if (!PlateChemicalUtil.TryConsumeChemical(activeSlot, _developerPortionCode, GetChemicalUnitsPerUse()))
             {
                 Tell(byPlayer, GetMissingChemicalMessage(TrayActionKind.Developer), pos);
                 return false;
@@ -205,7 +205,7 @@ namespace Collodion.Tray
 
         private bool TryApplyFixerPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate)
         {
-            if (!PlateChemicalUtil.TryConsumeChemical(activeSlot, _fixerPortionCode, FixerPourAmount))
+            if (!PlateChemicalUtil.TryConsumeChemical(activeSlot, _fixerPortionCode, GetChemicalUnitsPerUse()))
             {
                 Tell(byPlayer, GetMissingChemicalMessage(TrayActionKind.Fixer), pos);
                 return false;
@@ -230,7 +230,7 @@ namespace Collodion.Tray
         // The tray empties immediately — rough plates cannot re-enter the development workflow.
         private bool TryApplyWaterPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, ItemSlot? activeSlot)
         {
-            if (!PlateChemicalUtil.TryConsumeChemical(activeSlot, _waterPortionCode, WaterPourAmount))
+            if (!PlateChemicalUtil.TryConsumeChemical(activeSlot, _waterPortionCode, GetChemicalUnitsPerUse()))
             {
                 Tell(byPlayer, GetMissingChemicalMessage(TrayActionKind.Water), pos);
                 return false;
@@ -256,16 +256,6 @@ namespace Collodion.Tray
                 TrayActionKind.Developer => _developerPortionCode,
                 TrayActionKind.Fixer => _fixerPortionCode,
                 _ => _waterPortionCode
-            };
-        }
-
-        private static int GetAmountPerUse(TrayActionKind actionKind)
-        {
-            return actionKind switch
-            {
-                TrayActionKind.Developer => DeveloperPourAmount,
-                TrayActionKind.Fixer => FixerPourAmount,
-                _ => WaterPourAmount
             };
         }
 

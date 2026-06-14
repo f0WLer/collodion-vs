@@ -8,10 +8,8 @@ namespace Collodion.AdminTooling
     {
         public CollodionClientConfig Client = new();
         public ImageEffectsConfig Effects = new();
-        public PhotographConfig Photograph = new();
         public PlateProcessingConfig PlateProcessing = new();
         public PhotoSyncConfig PhotoSync = new();
-        public PhotoCapturePipelineConfig PhotoCapturePipeline = new();
 
         // Viewfinder capture behavior (capture runs client-side; server provides authoritative limits in multiplayer).
         internal ViewfinderConfig Viewfinder = new();
@@ -32,17 +30,11 @@ namespace Collodion.AdminTooling
             Effects ??= new ImageEffectsConfig();
             Effects.ClampInPlace();
 
-            Photograph ??= new PhotographConfig();
-            Photograph.ClampInPlace();
-
             PlateProcessing ??= new PlateProcessingConfig();
             PlateProcessing.ClampInPlace();
 
             PhotoSync ??= new PhotoSyncConfig();
             PhotoSync.ClampInPlace();
-
-            PhotoCapturePipeline ??= new PhotoCapturePipelineConfig();
-            PhotoCapturePipeline.ClampInPlace();
 
             EffectsPresetIndoor ??= new ImageEffectsConfig();
             EffectsPresetIndoor.ClampInPlace();

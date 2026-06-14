@@ -16,12 +16,6 @@ namespace Collodion.AdminTooling
         public const int MaxMaxAccumulatedFrames = 800;
 
         public float ZoomMultiplier = 0.65f;
-        public float HoldStillLookWeight = 0.35f;
-        /// <summary>Multiplier for look-movement contribution in hold-still scoring.</summary>
-        public float HoldStillLookContributionScale = 2f;
-
-        /// <summary>Timed exposure duration in seconds. 0 = instant exposure completion.</summary>
-        public float ExposureDurationSeconds = 4f;
         public int PhotoCaptureMaxDimension = DefaultPhotoCaptureMaxDimension;
 
         /// <summary>Max pixel size (longest side) of the downsampled readback buffer used during virtual exposure accumulation.
@@ -59,15 +53,6 @@ namespace Collodion.AdminTooling
         {
             if (ZoomMultiplier < 0.2f) ZoomMultiplier = 0.2f;
             if (ZoomMultiplier > 1f) ZoomMultiplier = 1f;
-
-            if (HoldStillLookWeight < 0f) HoldStillLookWeight = 0f;
-            if (HoldStillLookWeight > 5f) HoldStillLookWeight = 5f;
-
-            if (HoldStillLookContributionScale < 0f) HoldStillLookContributionScale = 0f;
-            if (HoldStillLookContributionScale > 20f) HoldStillLookContributionScale = 20f;
-
-            if (ExposureDurationSeconds < 0f) ExposureDurationSeconds = 0f;
-            if (ExposureDurationSeconds > 30f) ExposureDurationSeconds = 30f;
 
             if (PhotoCaptureMaxDimension < MinPhotoCaptureMaxDimension) PhotoCaptureMaxDimension = MinPhotoCaptureMaxDimension;
             if (PhotoCaptureMaxDimension > MaxPhotoCaptureMaxDimension) PhotoCaptureMaxDimension = MaxPhotoCaptureMaxDimension;

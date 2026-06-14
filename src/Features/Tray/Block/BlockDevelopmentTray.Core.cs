@@ -17,12 +17,10 @@ namespace Collodion.Tray
         internal const string ActionFixer = "fixer";
         internal const string ActionWater = "water";
         internal const int RequiredDeveloperPours = 5;
-        internal const int DeveloperPourAmount = 40;
-        internal const int FixerPourAmount = 40;
-        internal const int WaterPourAmount = 40;
         private const float DefaultPourSeconds = 1.25f;
 
         private CollodionConfig? Cfg => CollodionConfigAccess.ResolveConfig(api);
+        private int GetChemicalUnitsPerUse() => Cfg?.PlateProcessing?.DevelopmentTrayChemicalUnitsPerUse ?? 40;
 
         private static readonly AssetLocation _photoPlateItemCode = new("collodion", "photoplate");
 
@@ -130,7 +128,7 @@ namespace Collodion.Tray
 
         private float GetWaterPourSeconds()
         {
-            float seconds = DefaultPourSeconds;
+            float seconds = Cfg?.DevelopmentTrayInteractions?.Water?.DurationSeconds ?? DefaultPourSeconds;
             if (seconds < 0.05f) seconds = 0.05f;
             if (seconds > 30f) seconds = 30f;
             return seconds;

@@ -94,12 +94,12 @@ namespace Collodion.Tray
 
             if (canDevelop)
             {
-                AddChemicalInteraction(world, interactions, "collodion:heldhelp-developmenttray-develop", _developerPortionCode, DeveloperPourAmount);
+                AddChemicalInteraction(world, interactions, "collodion:heldhelp-developmenttray-develop", _developerPortionCode, GetChemicalUnitsPerUse());
             }
 
             if (canFix)
             {
-                AddChemicalInteraction(world, interactions, "collodion:heldhelp-developmenttray-fix", _fixerPortionCode, FixerPourAmount);
+                AddChemicalInteraction(world, interactions, "collodion:heldhelp-developmenttray-fix", _fixerPortionCode, GetChemicalUnitsPerUse());
             }
         }
 

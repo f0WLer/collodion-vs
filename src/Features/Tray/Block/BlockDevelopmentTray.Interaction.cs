@@ -109,7 +109,7 @@ namespace Collodion.Tray
                         (world.Api as ICoreClientAPI)?.ShowChatMessage("Collodion: the plate has dried and can no longer be used.");
                         return false;
                     }
-                    if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _developerPortionCode, DeveloperPourAmount)) return false;
+                    if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _developerPortionCode, GetChemicalUnitsPerUse())) return false;
 
                     // Seal the partial exposure before the first developer pour transitions it away from ExposurePaused.
                     // Must happen client-side at RMB-press time: tick ordering means the server transitions the stage
@@ -132,7 +132,7 @@ namespace Collodion.Tray
                         (world.Api as ICoreClientAPI)?.ShowChatMessage("Collodion: the plate has dried and can no longer be used.");
                         return false;
                     }
-                    if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _fixerPortionCode, FixerPourAmount)) return false;
+                    if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _fixerPortionCode, GetChemicalUnitsPerUse())) return false;
 
                     TrayTimedInteractionState.Begin(byPlayer, blockSel.Position, ActionFixer, GetFixerPourSeconds());
                     return true;
@@ -141,7 +141,7 @@ namespace Collodion.Tray
                 case TrayActionKind.Water:
                 {
                     if (!TryGetReclaimContext(be, world, out _)) return false;
-                    if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _waterPortionCode, WaterPourAmount)) return false;
+                    if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _waterPortionCode, GetChemicalUnitsPerUse())) return false;
 
                     TrayTimedInteractionState.Begin(byPlayer, blockSel.Position, ActionWater, GetWaterPourSeconds());
                     return true;
@@ -203,7 +203,7 @@ namespace Collodion.Tray
             return true;
         }
 
-        private static bool TryValidateStartForAction(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, TrayActionKind actionKind)
+        private bool TryValidateStartForAction(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, TrayActionKind actionKind)
         {
             switch (actionKind)
             {
@@ -249,7 +249,7 @@ namespace Collodion.Tray
             }
 
             AssetLocation portionCode = GetPortionCode(actionKind);
-            int amountPerUse = GetAmountPerUse(actionKind);
+            int amountPerUse = GetChemicalUnitsPerUse();
             if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, portionCode, amountPerUse))
             {
                 Tell(byPlayer, GetMissingChemicalMessage(actionKind), pos);

@@ -25,10 +25,15 @@ namespace Collodion.AdminTooling
             _owner    = owner;
         }
 
-        public override void OnGuiOpened() => ComposeDialog();
+        private ImageEffectsConfig? _effects;
+        private ImageEffectsConfig Effects => _effects ??= new ImageEffectsConfig();
 
-        // Always returns the live effects config, initialising it if somehow null.
-        private ImageEffectsConfig Effects => _owner.Config.Effects ??= new ImageEffectsConfig();
+        public override void OnGuiOpened()
+        {
+            _effects = ImageEffectsProfileService.TryLoadProfile("wetplate", capi) ?? new ImageEffectsConfig();
+            ComposeDialog();
+        }
+
 
         private void ComposeDialog()
         {

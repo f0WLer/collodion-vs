@@ -44,10 +44,7 @@ namespace Collodion.AdminTooling
 
             if (sub.Equals("effects", StringComparison.OrdinalIgnoreCase) || sub.Equals("fx", StringComparison.OrdinalIgnoreCase))
             {
-                CollodionConfig rootCfg = _owner.GetOrLoadClientConfig(_owner.ClientApi);
-                rootCfg.Effects ??= new ImageEffectsConfig();
-                ImageEffectsCommandHandler.HandleEffectsCommand(_owner.ClientApi, rootCfg, args,
-                cfg => CommandConfigPersistence.PersistEffectsConfig(_owner, cfg));
+                ImageEffectsCommandHandler.HandleEffectsCommand(_owner.ClientApi, args);
                 return;
             }
 

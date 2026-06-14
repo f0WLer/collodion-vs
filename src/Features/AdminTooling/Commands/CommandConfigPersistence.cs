@@ -1,20 +1,8 @@
-using Collodion.ImageEffects;
-
 namespace Collodion.AdminTooling
 {
     // Feature-owned command persistence helpers for operator-tooling config writes.
     internal static class CommandConfigPersistence
     {
-        // Persists effects command edits through the shared client save path.
-        internal static void PersistEffectsConfig(CollodionModSystem mod, CollodionConfig rootCfg)
-        {
-            if (mod.ClientApi == null) return;
-
-            rootCfg.Effects ??= new ImageEffectsConfig();
-            rootCfg.Effects.ClampInPlace();
-            mod.SaveClientConfig(mod.ClientApi);
-        }
-
         // Persists preview command edits when a branch actually changed state.
         internal static void PersistPreviewConfig(CollodionModSystem mod, CollodionConfig rootCfg, bool changed)
         {

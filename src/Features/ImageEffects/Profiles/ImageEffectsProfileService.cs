@@ -2,7 +2,6 @@ using Newtonsoft.Json;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
-using Collodion.AdminTooling;
 
 namespace Collodion.ImageEffects
 {
@@ -119,34 +118,6 @@ namespace Collodion.ImageEffects
             return bundledCfg;
         }
 
-        // Loads active config from mod system, ensuring an effects profile exists and is clamped.
-        internal static ImageEffectsConfig LoadOrCreate(ICoreClientAPI capi)
-        {
-            CollodionModSystem? modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
-            if (modSys == null)
-            {
-                return CreateRuntimeSnapshot(null);
-            }
-
-            CollodionConfig cfg = modSys.GetOrLoadClientConfig(capi);
-            bool dirty = false;
-
-            if (cfg.Effects == null)
-            {
-                cfg.Effects = new ImageEffectsConfig();
-                dirty = true;
-            }
-
-            cfg.Effects.ClampInPlace();
-
-            if (dirty)
-            {
-                modSys.SaveClientConfig(capi);
-            }
-
-            return CreateRuntimeSnapshot(cfg.Effects);
-        }
-
         // Clones and clamps an effects profile for runtime use so hot paths can treat it as immutable.
         internal static ImageEffectsConfig CreateRuntimeSnapshot(ImageEffectsConfig? cfg)
         {
@@ -161,7 +132,7 @@ namespace Collodion.ImageEffects
             return Path.Combine(GamePaths.DataPath, "ModData", "collodion", $"{file}.json");
         }
 
-        private static void SaveProfile(string? name, ImageEffectsConfig cfg)
+        internal static void SaveProfile(string? name, ImageEffectsConfig cfg)
         {
             string path = GetProfilePath(name);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);

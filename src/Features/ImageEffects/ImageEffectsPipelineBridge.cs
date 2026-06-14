@@ -6,10 +6,10 @@ namespace Collodion.ImageEffects
     // Thin seam for capture/render callers so effects runtime internals can move without touching callsites.
     internal static class ImageEffectsPipelineBridge
     {
-        // Loads the active baseline profile from client config storage.
+        // Loads the active baseline profile from the wetplate ModData profile file.
         internal static ImageEffectsConfig LoadCaptureBaseline(ICoreClientAPI capi)
         {
-            return ImageEffectsProfileService.LoadOrCreate(capi);
+            return ImageEffectsProfileService.TryLoadProfile("wetplate", capi) ?? new ImageEffectsConfig();
         }
 
         // Chooses per-capture override profile when provided, otherwise uses the baseline snapshot.

@@ -54,6 +54,12 @@ namespace Collodion.CameraCapture.Contracts
         [ProtoMember(10)] public float CameraFov { get; set; }
         [ProtoMember(11)] public int CameraDimension { get; set; }
         [ProtoMember(15)] public bool PrepareIdlePreview { get; set; }
+        // Block position of the mounted camera the recipient is shooting through, so the client
+        // can hide exactly that camera (and no others) from its virtual capture.
+        [ProtoMember(12)] public bool HasMountBlock { get; set; }
+        [ProtoMember(13)] public int MountBlockX { get; set; }
+        [ProtoMember(14)] public int MountBlockY { get; set; }
+        [ProtoMember(16)] public int MountBlockZ { get; set; }
     }
 
     [ProtoContract]

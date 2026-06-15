@@ -182,6 +182,15 @@ namespace Collodion.FieldCamera
                 }
             }
 
+            // Tell the client which camera block it is shooting through so it hides exactly that one.
+            if (_mountedCameraPositionsByPlayerUid.TryGetValue(player.PlayerUID, out BlockPos? mountPos) && mountPos != null)
+            {
+                packet.HasMountBlock = true;
+                packet.MountBlockX = mountPos.X;
+                packet.MountBlockY = mountPos.Y;
+                packet.MountBlockZ = mountPos.Z;
+            }
+
             ServerChannel?.SendPacket(packet, player);
         }
 

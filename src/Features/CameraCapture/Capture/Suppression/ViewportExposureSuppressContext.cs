@@ -1,3 +1,5 @@
+using Vintagestory.API.MathTools;
+
 namespace Collodion.CameraCapture
 {
     /// <summary>
@@ -13,6 +15,13 @@ namespace Collodion.CameraCapture
         /// (e.g., the mounted camera block entity renderer).
         /// </summary>
         internal static bool IsVirtualRender;
+        /// <summary>
+        /// Block position of the mounted camera the local player is currently shooting through, or
+        /// <see langword="null"/> when not mounted. Only that one camera is hidden from the virtual
+        /// capture; every other mounted camera (the player's own idle ones and other players') stays
+        /// visible so they appear in the exposure.
+        /// </summary>
+        internal static BlockPos? ActiveMountedCameraPos;
         /// <summary>True while the player is in viewfinder mode (RMB held or exposure keeping it alive).</summary>
         internal static bool ViewfinderActive;
         /// <summary>True while the viewport exposure accumulator is actively gathering frames.</summary>

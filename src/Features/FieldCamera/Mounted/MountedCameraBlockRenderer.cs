@@ -7,8 +7,9 @@ namespace Collodion.FieldCamera
 {
     // Renders the mounted camera block entity mesh during EnumRenderStage.Opaque using the
     // standard block shader.  Unlike chunk-tessellated geometry this renderer can check
-    // VirtualCameraRenderContext.IsVirtualRender at frame time and skip, ensuring the
-    // camera block never appears in the virtual capture output.
+    // ViewportExposureSuppressContext at frame time and skip, ensuring the camera the local
+    // player is shooting through never appears in their own virtual capture output (other
+    // mounted cameras still render so they show up in the exposure).
     internal sealed class MountedCameraBlockRenderer : IRenderer
     {
         private const float MaxBaseTranslate  = 5f/ 16f; // outer pole travels 4 model units
@@ -106,7 +107,14 @@ namespace Collodion.FieldCamera
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (_disposed || ViewportExposureSuppressContext.IsVirtualRender) return;
+            if (_disposed) return;
+
+            // Hide only the camera the local player is shooting through, not every mounted camera.
+            // Compare coordinates rather than BlockPos.Equals so a dimension-0 reconstructed pos from
+            // the network still matches this block entity's position.
+            if (ViewportExposureSuppressContext.IsVirtualRender
+                && ViewportExposureSuppressContext.ActiveMountedCameraPos is BlockPos activePos
+                && activePos.X == _pos.X && activePos.Y == _pos.Y && activePos.Z == _pos.Z) return;
 
             if (_meshDirty) RebuildMesh();
             if (_meshRef == null) return;

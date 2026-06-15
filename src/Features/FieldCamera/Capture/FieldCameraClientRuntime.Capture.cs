@@ -232,6 +232,13 @@ namespace Collodion.FieldCamera
             var renderer = _owner.Capture._virtualExposureRenderer;
             if (renderer == null || packet == null) return;
 
+            // Track which camera block this player is shooting through so its renderer hides only
+            // that camera from the virtual capture. Cleared when the server reports no mount block
+            // (i.e. the player has dismounted).
+            ViewportExposureSuppressContext.ActiveMountedCameraPos = packet.HasMountBlock
+                ? new BlockPos(packet.MountBlockX, packet.MountBlockY, packet.MountBlockZ)
+                : null;
+
             if (!string.IsNullOrEmpty(packet.ExposureId))
                 _mountedExposureId = packet.ExposureId;
             else if (string.IsNullOrEmpty(_mountedExposureId) || packet.IsExposing)

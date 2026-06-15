@@ -78,6 +78,19 @@ namespace Collodion.Frame
             return true;
         }
 
+        // Resolves the canonical north-facing frame so every orientation drops/picks as the same
+        // stackable block. Without this, a frame placed facing east/south/west would drop its oriented
+        // variant — a distinct block id that shares the "Framed Photograph" name but won't stack with
+        // crafted (north) frames.
+        private Block CanonicalFrame(IWorldAccessor world)
+            => world.GetBlock(CodeWithVariant("side", "north")) ?? this;
+
+        public override ItemStack OnPickBlock(IWorldAccessor world, BlockPos pos)
+            => new ItemStack(CanonicalFrame(world));
+
+        public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
+            => new[] { new ItemStack(CanonicalFrame(world)) };
+
         // When the frame block is broken, drop the stored photo item separately.
         public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer? byPlayer, float dropQuantityMultiplier = 1f)
         {

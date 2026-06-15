@@ -28,6 +28,7 @@ namespace Collodion.Frame
 
         public BlockEntityFrame()
         {
+            // ID is finalized in Initialize once Pos is known; see LateInitialize below.
             _inventory = new InventoryGeneric(1, "photographframe-0", null, null);
             _inventory.SlotModified += OnSlotModified;
         }
@@ -42,7 +43,9 @@ namespace Collodion.Frame
         public override void Initialize(ICoreAPI api)
         {
             base.Initialize(api);
-            _inventory.LateInitialize(_inventory.InventoryID, api);
+            // Bake the block position into the inventory ID so every frame is unique. A shared
+            // constant ID would collide once the inventory is networked or opened as a dialog.
+            _inventory.LateInitialize("photographframe-" + Pos, api);
 
             string photoshape = Block?.Attributes?["photoshape"]?.AsString("collodion:photooverlaywall")
                                 ?? "collodion:photooverlaywall";

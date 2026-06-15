@@ -2,6 +2,8 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 
+using Collodion.PhotoMetadata.Model;
+using Collodion.PhotoSync.Integration;
 using Collodion.Plates.Rendering;
 
 namespace Collodion.Frame
@@ -55,8 +57,23 @@ namespace Collodion.Frame
 
             if (api.Side == EnumAppSide.Client && !_inventory[0].Empty)
             {
+                TryPrefetchPhoto();
                 ScheduleMainThreadRebuild();
             }
+        }
+
+        // Requests the displayed photo as soon as the frame loads so the image is ready by first
+        // render, instead of waiting for the first (blank) tesselation to lazily request it. No-op
+        // in single-player (the file is already on disk) and whenever the slot is empty.
+        private void TryPrefetchPhoto()
+        {
+            if (Api is not ICoreClientAPI capi || _inventory[0].Empty) return;
+
+            string photoId = _inventory[0].Itemstack?.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
+            if (string.IsNullOrEmpty(photoId)) return;
+
+            ClientPhotoSyncIntegration.RequestPhotoIfMissing(capi, photoId);
+            ClientPhotoSyncIntegration.NoteBlockWaitingForPhoto(capi, photoId, Pos);
         }
 
         public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
@@ -140,7 +157,10 @@ namespace Collodion.Frame
             lock (_meshLock) { _photoMesh = null; }
 
             if (Api?.Side == EnumAppSide.Client && !_inventory[0].Empty)
+            {
+                TryPrefetchPhoto();
                 ScheduleMainThreadRebuild();
+            }
         }
 
         public override void ToTreeAttributes(ITreeAttribute tree)

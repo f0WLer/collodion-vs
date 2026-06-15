@@ -99,6 +99,14 @@ namespace Collodion
                 FieldCameraBridge.DisposeClientFieldCameraTickListeners();
                 TrayClientEvents.DisposeClientDevelopmentTrayTickListeners();
 
+                // The plate photo mesh cache is static and outlives a single-player world reload.
+                // Its cached mesh refs / atlas texture ids belong to the GL context being torn down
+                // here; without this, a relog reuses them and held photo plates render invisible.
+                if (ModApi is ICoreClientAPI)
+                {
+                    Plates.Rendering.PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
+                }
+
                 if (ModApi is ICoreServerAPI sapi)
                 {
                     PhotoSyncModSystemBridge.DisposeServerPhotoSyncAndMetadataRuntime(sapi);

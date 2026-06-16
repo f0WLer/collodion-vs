@@ -35,8 +35,8 @@ namespace Collodion.FieldCamera
                 && !string.Equals(photographerUid, serverPlayer.PlayerUID, StringComparison.Ordinal);
 
             // Exposure actively running by another photographer: block everything.
-            // (A non-owner can still recover the camera by breaking the block — see
-            // HandleMountedCameraBlockBroken — which pauses the plate and drops the camera.)
+            // Once the exposure is paused, non-owners can unload the plate (Shift+RMB) or
+            // recover the camera (Shift+Ctrl+RMB) — see the gates below.
             if (isOtherPhotographer && lockedStage == PlateStage.Exposing)
             {
                 serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: someone else's exposure is in progress.", EnumChatType.Notification);
@@ -102,7 +102,7 @@ namespace Collodion.FieldCamera
             // Plain RMB drives load / pause / resume — require ownership of any loaded exposure.
             if (isOtherPhotographer)
             {
-                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: someone else's exposure — you cannot start or resume it.", EnumChatType.Notification);
+                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: someone else's paused exposure — Shift+RMB to unload the plate, or Shift+Ctrl+RMB to recover the camera.", EnumChatType.Notification);
                 return true;
             }
 

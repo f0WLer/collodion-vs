@@ -72,6 +72,17 @@ namespace Collodion
             return true;
         }
 
+        // Persists a single-item copy of the loaded plate onto the camera stack so later server
+        // actions (and the mounted-camera block entity) can resolve and rewrite it consistently.
+        public static void SetLoadedPlateStack(ItemStack? cameraStack, ItemStack loadedPlate)
+        {
+            if (cameraStack?.Item is not ItemFieldcamera) return;
+            ItemStack clone = loadedPlate.Clone();
+            clone.StackSize = 1;
+            cameraStack.Attributes.SetString(ItemFieldcamera.AttrLoadedPlate, clone.Collectible?.Code?.ToString() ?? string.Empty);
+            cameraStack.Attributes.SetItemstack(ItemFieldcamera.AttrLoadedPlateStack, clone);
+        }
+
         internal static void SetMountedCaptureState(ItemStack? cameraStack, in VirtualCameraState state)
         {
             if (cameraStack?.Item is not ItemFieldcamera) return;

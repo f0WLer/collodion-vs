@@ -25,13 +25,7 @@ namespace Collodion.FieldCamera
 
         // Persists a single-item copy of the loaded plate onto the camera so later server actions can resolve it reliably.
         private static void SetLoadedPlateAttributes(ItemStack cameraStack, ItemStack loadedPlate)
-        {
-            ItemStack clone = loadedPlate.Clone();
-            clone.StackSize = 1;
-
-            cameraStack.Attributes.SetString(ItemFieldcamera.AttrLoadedPlate, clone.Collectible?.Code?.ToString() ?? string.Empty);
-            cameraStack.Attributes.SetItemstack(ItemFieldcamera.AttrLoadedPlateStack, clone);
-        }
+            => CameraItemHelper.SetLoadedPlateStack(cameraStack, loadedPlate);
 
         private static void ClearLoadedPlateAttributes(ItemStack cameraStack)
         {
@@ -68,6 +62,22 @@ namespace Collodion.FieldCamera
         {
             if (string.IsNullOrWhiteSpace(playerUid)) return;
             _mountedCameraPositionsByPlayerUid.Remove(playerUid);
+        }
+
+        // When the owner disconnects ungracefully their client exposure accumulator dies, so a plate
+        // left mid-exposure would stay stuck. Pause it (if the camera is still loaded) and drop the
+        // stale mount entry. The load-time guard in BlockEntityMountedCamera covers the case where the
+        // camera's chunk was already unloaded at disconnect time.
+        private void OnPlayerDisconnect(IServerPlayer player)
+        {
+            if (!TryGetMountedCameraEntity(player.PlayerUID, out BlockEntityMountedCamera? mountedBe) || mountedBe == null)
+                return; // dict entry already cleaned up by TryGetMountedCameraEntity on any failure path
+
+            ItemStack? cameraStack = mountedBe.GetStoredCameraStack(Api?.World);
+            if (cameraStack != null && PauseMountedCameraStorage(cameraStack))
+                mountedBe.MarkCameraDirty(); // MarkDirty(true) -> client FromTreeAttributes -> RefreshExposingState -> idle model
+
+            ForgetMountedCameraPos(player.PlayerUID);
         }
 
         private bool TryGetMountedCameraEntity(string playerUid, out BlockEntityMountedCamera? mountedBe)

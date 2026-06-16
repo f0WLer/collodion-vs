@@ -15,6 +15,8 @@ namespace Collodion.FieldCamera
             ServerChannel.SetMessageHandler<CameraMountRequestPacket>(OnCameraMountRequestReceived);
             ServerChannel.SetMessageHandler<SealAndInsertIntoTrayPacket>(OnSealAndInsertTrayReceived);
             ServerChannel.SetMessageHandler<CameraRestPacket>(OnCameraRestReceived);
+
+            api.Event.PlayerDisconnect += OnPlayerDisconnect;
         }
     }
 }

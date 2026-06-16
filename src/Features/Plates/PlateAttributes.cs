@@ -140,7 +140,7 @@ namespace Collodion.Plates
 
         public static void ResetDevelopmentApplications(ItemStack stack)
         {
-            SetDevelopmentApplications(stack, 0);
+            stack.Attributes.RemoveAttribute(AttrDevelopmentStepApplications);
         }
     }
 }

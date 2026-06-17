@@ -229,9 +229,9 @@ namespace Collodion.CameraCapture
             SKBitmap cropped = PhotoCropMath.ScaleDownAndCenterCropToPlateAspect(developed, maxDimension);
             try
             {
-                ImageEffectsConfig? effectsOverride = ImageEffectsProfileService.TryLoadProfile("wetplate", _capi);
-                ImageEffectsConfig profile = ImageEffectsPipelineBridge.ResolveCaptureProfile(_baselineEffects, effectsOverride);
-                ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", profile);
+                // Use the baseline effects captured at construction rather than re-reading wetplate.json
+                // from disk on every preview frame.
+                ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", _baselineEffects);
                 ExposurePreviewSink.StoreExposureFrame(cropped);
             }
             finally

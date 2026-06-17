@@ -22,6 +22,7 @@ namespace Collodion.Exposure
             string exposureId,
             ICoreClientAPI capi,
             PlateProcessProfile profile,
+            ExposurePhysicsConfig physics,
             int targetFrameCount,
             int maxDimension,
             ImageEffectsConfig baselineEffects,
@@ -29,7 +30,7 @@ namespace Collodion.Exposure
         {
             if (!ExposureAccumulationStore.TryLoad(exposureId, out byte[]? data)) return null;
 
-            string? fileName = RenderBlobToPng(data, capi, profile, targetFrameCount, maxDimension, baselineEffects, effectsOverride);
+            string? fileName = RenderBlobToPng(data, capi, profile, physics, targetFrameCount, maxDimension, baselineEffects, effectsOverride);
             if (!string.IsNullOrEmpty(fileName))
             {
                 ExposureAccumulationStore.Delete(exposureId);
@@ -42,6 +43,7 @@ namespace Collodion.Exposure
             byte[] data,
             ICoreClientAPI capi,
             PlateProcessProfile profile,
+            ExposurePhysicsConfig physics,
             int targetFrameCount,
             int maxDimension,
             ImageEffectsConfig baselineEffects,
@@ -52,14 +54,10 @@ namespace Collodion.Exposure
             if (header.BackendTag != ExposureAccumulationBlobFormat.GpuBackend) return null;
 
             using var buffer = new GpuExposureAccumulator(capi, header.Width, header.Height, Math.Max(1, targetFrameCount));
-            buffer.RedSensitivity      = profile.RedSensitivity;
-            buffer.GreenSensitivity    = profile.GreenSensitivity;
-            buffer.BlueSensitivity     = profile.BlueSensitivity;
-            buffer.DevelopmentStrength = profile.DevelopmentStrength;
-            buffer.HDGamma             = profile.HDGamma;
-            buffer.InertiaPoint        = profile.InertiaPoint;
-            buffer.ReciprocityExponent = profile.ReciprocityExponent;
-            buffer.ExposureGain        = profile.ExposureGain;
+            // Develop with the same physics flags + chemistry overrides the live exposure used, so the
+            // sealed photo matches the prediction preview. A default config resolves to the process
+            // profile defaults, i.e. unchanged behavior when nothing was tuned.
+            physics.Apply(buffer, profile);
 
             if (!buffer.DeserializeAccumulation(data, out _)) return null;
 

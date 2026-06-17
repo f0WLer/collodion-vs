@@ -6,7 +6,8 @@ namespace Collodion.AdminTooling
 {
     // Dev-time dialog for live-tuning exposure physics toggles and key effects sliders.
     // Opened via the hotkey binding "collodion-exposuregui" (default: unbound, assignable in game settings).
-    // Changes take effect immediately; use .collodion effects save to persist effects.
+    // Changes take effect immediately in the live preview. Effects edits are session-only (they tune the
+    // renderer's live effects, not disk); use .collodion effects set to persist effects to wetplate.json.
     internal sealed class GuiDialogExposurePhysics : GuiDialog
     {
         // Opened manually via the hotkey handler — no auto-toggle key needed.
@@ -30,7 +31,8 @@ namespace Collodion.AdminTooling
 
         public override void OnGuiOpened()
         {
-            _effects = ImageEffectsProfileService.TryLoadProfile("wetplate", capi) ?? new ImageEffectsConfig();
+            // Tune the renderer's live, session-only effects directly so slider edits drive the preview.
+            _effects = _renderer.Effects;
             ComposeDialog();
         }
 
@@ -230,31 +232,31 @@ namespace Collodion.AdminTooling
                 .AddStaticText("─── Effects ───", CairoFont.WhiteSmallText(), fxHeader)
 
                 .AddStaticText("Contrast",           CairoFont.WhiteDetailText(), lCon)
-                .AddSlider(v => { Effects.Contrast          = v / 100f; return true; }, sCon, "sl-contrast")
+                .AddSlider(v => { Effects.Contrast          = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sCon, "sl-contrast")
 
                 .AddStaticText("Brightness",          CairoFont.WhiteDetailText(), lBri)
-                .AddSlider(v => { Effects.Brightness         = v / 100f; return true; }, sBri, "sl-brightness")
+                .AddSlider(v => { Effects.Brightness         = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sBri, "sl-brightness")
 
                 .AddStaticText("Shadow Floor",        CairoFont.WhiteDetailText(), lSfl)
-                .AddSlider(v => { Effects.ShadowFloor        = v / 100f; return true; }, sSfl, "sl-shadowfloor")
+                .AddSlider(v => { Effects.ShadowFloor        = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sSfl, "sl-shadowfloor")
 
                 .AddStaticText("Contrast Start",      CairoFont.WhiteDetailText(), lCst)
-                .AddSlider(v => { Effects.ContrastStart      = v / 100f; return true; }, sCst, "sl-contraststart")
+                .AddSlider(v => { Effects.ContrastStart      = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sCst, "sl-contraststart")
 
                 .AddStaticText("Highlight Shoulder",  CairoFont.WhiteDetailText(), lSho)
-                .AddSlider(v => { Effects.HighlightShoulder  = v / 100f; return true; }, sSho, "sl-shoulder")
+                .AddSlider(v => { Effects.HighlightShoulder  = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sSho, "sl-shoulder")
 
                 .AddStaticText("Sky Blowout",         CairoFont.WhiteDetailText(), lSky)
-                .AddSlider(v => { Effects.SkyBlowout         = v / 100f; return true; }, sSky, "sl-skyblowout")
+                .AddSlider(v => { Effects.SkyBlowout         = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sSky, "sl-skyblowout")
 
                 .AddStaticText("Grain",               CairoFont.WhiteDetailText(), lGrn)
-                .AddSlider(v => { Effects.Grain               = v / 100f; return true; }, sGrn, "sl-grain")
+                .AddSlider(v => { Effects.Grain               = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sGrn, "sl-grain")
 
                 .AddStaticText("Vignette",            CairoFont.WhiteDetailText(), lVig)
-                .AddSlider(v => { Effects.Vignette            = v / 100f; return true; }, sVig, "sl-vignette")
+                .AddSlider(v => { Effects.Vignette            = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sVig, "sl-vignette")
 
                 .AddStaticText("Imperfection",        CairoFont.WhiteDetailText(), lImp)
-                .AddSlider(v => { Effects.Imperfection        = v / 100f; return true; }, sImp, "sl-imperfection")
+                .AddSlider(v => { Effects.Imperfection        = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sImp, "sl-imperfection")
 
                 .AddStaticText("─── Dev Tools ───", CairoFont.WhiteSmallText(), devHeader)
                 .AddSwitch(v => _owner.Config.Viewfinder.DebugPreviewPeak = v, swPreview, "sw-preview-peak", swSize)

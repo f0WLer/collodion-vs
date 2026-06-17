@@ -22,6 +22,11 @@ namespace Collodion.FieldCamera
 
             PlateProcessProfile profile = PlateProcessProfile.Iodide;
 
+            // Develop with the live session's tuned physics/chemistry (from the exposure-physics dialog)
+            // so the finished photo matches what the prediction preview showed. Falls back to defaults
+            // (= raw process profile) when the renderer is unavailable, e.g. after a relog.
+            ExposurePhysicsConfig physics = Capture._virtualExposureRenderer?.Physics ?? new ExposurePhysicsConfig();
+
             // Tray development must match normal export policy: same target exposure, output size, and effects resolution.
             int targetFrames = Math.Max(1, trayPlate.Attributes?.GetInt(PlateAttributes.ExposureTargetFrames) ?? profile.SampleCount);
             int maxDimension = CollodionConfigAccess.ResolveClientConfig(capi)?.Viewfinder?.PhotoCaptureMaxDimension
@@ -33,6 +38,7 @@ namespace Collodion.FieldCamera
                 exposureId,
                 capi,
                 profile,
+                physics,
                 targetFrames,
                 maxDimension,
                 baselineEffects,

@@ -68,6 +68,10 @@ namespace Collodion.CameraCapture
         // The admin physics dialog and the live preview read/tune this directly.
         internal ExposurePhysicsConfig Physics { get; } = new();
 
+        // Live, session-only effects (seeded from wetplate.json at construction). The exposure-physics
+        // dialog mutates this directly so the preview reflects edits immediately; it is never persisted.
+        internal ImageEffectsConfig Effects => _baselineEffects;
+
         // Sets a named physics flag and reapplies it to the live buffer (if any).
         internal bool SetPhysics(string flag, bool value)
         {
@@ -333,9 +337,9 @@ namespace Collodion.CameraCapture
                 {
                     if (ApplyFinishing)
                     {
-                        ImageEffectsConfig? effectsOverride = ImageEffectsProfileService.TryLoadProfile("wetplate", _clientApi);
-                        ImageEffectsConfig profile = ImageEffectsPipelineBridge.ResolveCaptureProfile(_baselineEffects, effectsOverride);
-                        ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", profile);
+                        // Apply the live session effects (tuned by the exposure-physics dialog) directly,
+                        // rather than re-reading wetplate.json every preview frame.
+                        ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", _baselineEffects);
                     }
                     ExposurePreviewSink.StoreExposureFrame(cropped);
                 }

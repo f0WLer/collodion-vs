@@ -105,11 +105,17 @@ namespace Collodion
                 if (ModApi is ICoreClientAPI)
                 {
                     Plates.Rendering.PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
+
+                    // These suppression flags are static and would otherwise survive a single-player
+                    // world reload, leaving a stale mounted-camera position hidden from future captures.
+                    CameraCapture.ViewportExposureSuppressContext.ActiveMountedCameraPos = null;
+                    CameraCapture.ViewportExposureSuppressContext.IsVirtualRender = false;
                 }
 
                 if (ModApi is ICoreServerAPI sapi)
                 {
                     PhotoSyncModSystemBridge.DisposeServerPhotoSyncAndMetadataRuntime(sapi);
+                    FieldCameraBridge.DisposeServerFieldCamera(sapi);
                 }
             }
             finally

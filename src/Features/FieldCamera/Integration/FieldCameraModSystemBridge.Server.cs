@@ -18,5 +18,10 @@ namespace Collodion.FieldCamera
 
             api.Event.PlayerDisconnect += OnPlayerDisconnect;
         }
+
+        internal void DisposeServerFieldCamera(ICoreServerAPI api)
+        {
+            api.Event.PlayerDisconnect -= OnPlayerDisconnect;
+        }
     }
 }

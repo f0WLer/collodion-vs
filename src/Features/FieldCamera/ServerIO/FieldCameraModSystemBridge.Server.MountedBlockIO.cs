@@ -57,13 +57,18 @@ namespace Collodion.FieldCamera
             {
                 _ = PauseMountedCameraStorage(cameraStack);
                 mountedBe.MarkCameraDirty();
-                SendMountedCameraControl(serverPlayer, false, false);
+
+                // Forget the mount entries BEFORE sending the control packet so it carries
+                // HasMountBlock=false and clears the client's ActiveMountedCameraPos. If we sent first,
+                // the still-present entry would re-arm the static to a block we're about to delete.
                 string oldOwnerUid = mountedBe.OwnerPlayerUid;
+                ForgetMountedCameraPos(oldOwnerUid);
+                ForgetMountedCameraPos(serverPlayer.PlayerUID);
+                SendMountedCameraControl(serverPlayer, false, false, cameraStack);
+
                 ItemStack? recovered = mountedBe.TakeStoredCameraStack(Api.World);
                 if (recovered == null) { return false; }
                 ClearMountedCameraPos(recovered);
-                ForgetMountedCameraPos(oldOwnerUid);
-                ForgetMountedCameraPos(serverPlayer.PlayerUID);
                 TryGiveOrSpawnMountedCamera(world, serverPlayer, pos, recovered);
                 world.BlockAccessor.SetBlock(0, pos);
                 world.BlockAccessor.RemoveBlockEntity(pos);

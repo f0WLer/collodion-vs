@@ -110,29 +110,12 @@ namespace Collodion.Tray
             return world.GetBlock(baseLoc);
         }
 
-        private float GetDeveloperPourSeconds()
-        {
-            float seconds = Cfg?.DevelopmentTrayInteractions?.Developer?.DurationSeconds ?? DefaultPourSeconds;
-            if (seconds < 0.05f) seconds = 0.05f;
-            if (seconds > 30f) seconds = 30f;
-            return seconds;
-        }
+        // Per-action pour duration. Values are already clamped by TimedInteractionConfig.ClampInPlace() on load.
+        private static float PourSeconds(TimedInteractionConfig? c) => c?.DurationSeconds ?? DefaultPourSeconds;
 
-        private float GetFixerPourSeconds()
-        {
-            float seconds = Cfg?.DevelopmentTrayInteractions?.Fixer?.DurationSeconds ?? DefaultPourSeconds;
-            if (seconds < 0.05f) seconds = 0.05f;
-            if (seconds > 30f) seconds = 30f;
-            return seconds;
-        }
-
-        private float GetWaterPourSeconds()
-        {
-            float seconds = Cfg?.DevelopmentTrayInteractions?.Water?.DurationSeconds ?? DefaultPourSeconds;
-            if (seconds < 0.05f) seconds = 0.05f;
-            if (seconds > 30f) seconds = 30f;
-            return seconds;
-        }
+        private float GetDeveloperPourSeconds() => PourSeconds(Cfg?.DevelopmentTrayInteractions?.Developer);
+        private float GetFixerPourSeconds()     => PourSeconds(Cfg?.DevelopmentTrayInteractions?.Fixer);
+        private float GetWaterPourSeconds()     => PourSeconds(Cfg?.DevelopmentTrayInteractions?.Water);
 
     }
 }

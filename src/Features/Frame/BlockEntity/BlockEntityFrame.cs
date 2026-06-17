@@ -24,6 +24,7 @@ namespace Collodion.Frame
         private readonly object _meshLock = new object();
         private MeshData? _photoMesh;
         private bool _rebuildScheduled;
+        private bool _photoPrefetchRequested;
 
         private AssetLocation _photoPlaneCode = new AssetLocation("collodion", "photooverlaywall-north");
         private int _photoUvRotation = 90;
@@ -38,6 +39,7 @@ namespace Collodion.Frame
         private void OnSlotModified(int _)
         {
             lock (_meshLock) { _photoMesh = null; }
+            _photoPrefetchRequested = false; // slot changed — a different photo may need fetching
             ScheduleMainThreadRebuild();
             MarkDirty(true);
         }
@@ -67,11 +69,13 @@ namespace Collodion.Frame
         // in single-player (the file is already on disk) and whenever the slot is empty.
         private void TryPrefetchPhoto()
         {
+            if (_photoPrefetchRequested) return; // already requested this photo; FromTreeAttributes fires on every sync
             if (Api is not ICoreClientAPI capi || _inventory[0].Empty) return;
 
             string photoId = _inventory[0].Itemstack?.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
             if (string.IsNullOrEmpty(photoId)) return;
 
+            _photoPrefetchRequested = true;
             ClientPhotoSyncIntegration.RequestPhotoIfMissing(capi, photoId);
             ClientPhotoSyncIntegration.NoteBlockWaitingForPhoto(capi, photoId, Pos);
         }

@@ -7,13 +7,17 @@ namespace Collodion.ImageEffects
     internal static class ImageEffectsCommandHandler
     {
         // Handles .collodion effects subcommands and persists any config mutations to the wetplate profile.
+        private const string Profile = "wetplate";
+
         internal static void HandleEffectsCommand(ICoreClientAPI capi, CmdArgs args)
         {
+            ImageEffectsConfig Load() => ImageEffectsProfileService.TryLoadProfile(Profile, capi) ?? new ImageEffectsConfig();
+
             string param = args.PopWord();
 
             if (string.IsNullOrEmpty(param) || param.Equals("show", StringComparison.OrdinalIgnoreCase))
             {
-                ImageEffectsConfig cfg = ImageEffectsProfileService.TryLoadProfile("wetplate", capi) ?? new ImageEffectsConfig();
+                ImageEffectsConfig cfg = Load();
                 capi.ShowChatMessage($"Collodion photo effects: enabled={cfg.Enabled}");
                 capi.ShowChatMessage($"  greyscale={cfg.Greyscale} preGray RGB=({cfg.PreGrayRed:0.00}, {cfg.PreGrayGreen:0.00}, {cfg.PreGrayBlue:0.00})");
                 capi.ShowChatMessage($"  sepia={cfg.SepiaStrength:0.00} contrast={cfg.Contrast:0.00} brightness={cfg.Brightness:0.00}");
@@ -29,26 +33,18 @@ namespace Collodion.ImageEffects
 
             if (param.Equals("reset", StringComparison.OrdinalIgnoreCase))
             {
-                ImageEffectsProfileService.SaveProfile("wetplate", new ImageEffectsConfig());
+                ImageEffectsProfileService.SaveProfile(Profile, new ImageEffectsConfig());
                 capi.ShowChatMessage("Collodion: effects reset to defaults");
                 return;
             }
 
-            if (param.Equals("enable", StringComparison.OrdinalIgnoreCase))
+            if (param.Equals("enable", StringComparison.OrdinalIgnoreCase) || param.Equals("disable", StringComparison.OrdinalIgnoreCase))
             {
-                ImageEffectsConfig cfg = ImageEffectsProfileService.TryLoadProfile("wetplate", capi) ?? new ImageEffectsConfig();
-                cfg.Enabled = true;
-                ImageEffectsProfileService.SaveProfile("wetplate", cfg);
-                capi.ShowChatMessage("Collodion: effects enabled");
-                return;
-            }
-
-            if (param.Equals("disable", StringComparison.OrdinalIgnoreCase))
-            {
-                ImageEffectsConfig cfg = ImageEffectsProfileService.TryLoadProfile("wetplate", capi) ?? new ImageEffectsConfig();
-                cfg.Enabled = false;
-                ImageEffectsProfileService.SaveProfile("wetplate", cfg);
-                capi.ShowChatMessage("Collodion: effects disabled");
+                bool enable = param.Equals("enable", StringComparison.OrdinalIgnoreCase);
+                ImageEffectsConfig cfg = Load();
+                cfg.Enabled = enable;
+                ImageEffectsProfileService.SaveProfile(Profile, cfg);
+                capi.ShowChatMessage(enable ? "Collodion: effects enabled" : "Collodion: effects disabled");
                 return;
             }
 
@@ -64,7 +60,7 @@ namespace Collodion.ImageEffects
                     return;
                 }
 
-                ImageEffectsConfig cfg = ImageEffectsProfileService.TryLoadProfile("wetplate", capi) ?? new ImageEffectsConfig();
+                ImageEffectsConfig cfg = Load();
 
                 if (!ImageEffectsCommandPropertyMap.TryApply(prop, valStr, cfg, out string? setError))
                 {
@@ -73,7 +69,7 @@ namespace Collodion.ImageEffects
                 }
 
                 cfg.ClampInPlace();
-                ImageEffectsProfileService.SaveProfile("wetplate", cfg);
+                ImageEffectsProfileService.SaveProfile(Profile, cfg);
                 capi.ShowChatMessage($"Collodion: set {prop} = {valStr}");
                 capi.ShowChatMessage("Note: effects apply to newly taken photos. Use .collodion clearcache to reload existing photos.");
                 return;

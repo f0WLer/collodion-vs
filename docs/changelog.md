@@ -4,7 +4,7 @@
 
 - **Other mounted cameras now appear in photographs.** Taking a mounted exposure of another player who is using a deployed camera previously left that camera invisible in the final photo. Now every mounted camera in view is captured including the player's own idle ones.
 - **Exposures auto-pause when the photographer disconnects.** A mounted camera left mid-exposure can no longer become permanently stuck in an exposing state. This is reconciled both at the moment of disconnect and when the camera is next loaded, so it also covers crashes and server restarts.
-- **Paused cameras are no longer locked to other players.** Once an exposure is paused, any player can unload the plate (Shift+Right-click) or recover the camera (Shift+Ctrl+Right-click). Previously a camera carrying someone else's exposure could be left effectively dead for everyone. An *actively running* exposure is still protected.
+- **Paused cameras are no longer locked for other players.** Once an exposure is paused, any player can unload the plate (Shift+Right-click) or recover the camera (Shift+Ctrl+Right-click). Previously a camera carrying someone else's exposure could be left effectively dead for everyone. An *actively running* exposure is still protected.
 
 ## Frames & Photographs
 

@@ -49,7 +49,7 @@ namespace Collodion.FieldCamera
 
                     if (loadedPlateStack != null && PlateDryingTransition.IsDry(owner.ClientApi.World, loadedPlateStack))
                     {
-                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled("Collodion: the plate has dried and can no longer be used.");
+                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled("Collodion: this plate has dried out and can no longer be exposed.");
                         return false;
                     }
 

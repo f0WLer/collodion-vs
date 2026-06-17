@@ -131,6 +131,15 @@ namespace Collodion.FieldCamera
                 return true;
             }
 
+            // A dried plate can never start or resume an exposure. Reject before ResumeMountedCameraStorage
+            // sets the Exposing stage, so the camera never flickers into the active state and back.
+            if (CameraItemHelper.TryGetLoadedPlateStack(cameraStack, Api.World, out ItemStack? exposePlate) && exposePlate != null
+                && PlateDryingTransition.IsDry(Api.World, exposePlate))
+            {
+                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: this plate has dried out and can no longer be exposed.", EnumChatType.Notification);
+                return true;
+            }
+
             if (ResumeMountedCameraStorage(cameraStack, serverPlayer.PlayerUID))
             {
                 mountedBe.MarkCameraDirty();
@@ -157,6 +166,10 @@ namespace Collodion.FieldCamera
 
             _ = activeSlot.TakeOut(1);
             activeSlot.MarkDirty();
+
+            // Loading a dried plate is allowed, but it can no longer be exposed — let the player know.
+            if (PlateDryingTransition.IsDry(Api.World, loadedPlate))
+                player.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: this plate has dried out — wash it in a development tray to reclaim the glass.", EnumChatType.Notification);
 
             AudioUtils.FireAndForgetEntitySound(Api?.World, _cameraPlateLoadSound, player.Entity, AudioUtils.NextRandomPitch(Api?.World));
             return true;

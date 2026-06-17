@@ -137,6 +137,8 @@ namespace Collodion.Tray
             {
                 PlateStage stage = PlateAttributes.GetStage(plateStack);
                 bool isWetStage = stage == PlateStage.Sensitized
+                    || stage == PlateStage.Exposing
+                    || stage == PlateStage.ExposurePaused
                     || stage == PlateStage.Exposed
                     || stage == PlateStage.Developing
                     || stage == PlateStage.Developed;

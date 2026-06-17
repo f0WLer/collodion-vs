@@ -2,6 +2,7 @@ using Collodion.CameraCapture;
 using Collodion.CameraCapture.Contracts;
 using Collodion.Plates;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
@@ -33,6 +34,10 @@ namespace Collodion.FieldCamera
             offhandSlot.TakeOut(1);
             offhandSlot.MarkDirty();
             cameraSlot.MarkDirty();
+
+            // Loading a dried plate is allowed, but it can no longer be exposed — let the player know.
+            if (PlateDryingTransition.IsDry(Api.World, loadedPlate))
+                player.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: this plate has dried out — wash it in a development tray to reclaim the glass.", EnumChatType.Notification);
 
             AudioUtils.FireAndForgetEntitySound(Api?.World, _cameraPlateLoadSound, player.Entity, AudioUtils.NextRandomPitch(Api?.World));
             return true;

@@ -124,18 +124,7 @@ namespace Collodion.FieldCamera
         }
 
         private bool PauseMountedCameraStorage(ItemStack cameraStack)
-        {
-            if (Api?.World == null) return false;
-            if (!CameraItemHelper.TryGetLoadedPlateStack(cameraStack, Api.World, out ItemStack? loadedPlate) || loadedPlate == null) return false;
-
-            PlateStage stage = PlateAttributes.GetStage(loadedPlate);
-            if (stage != PlateStage.Exposing) return false;
-
-            PlateDryingTransition.TickNow(Api.World, loadedPlate);
-            PlateAttributes.SetStage(loadedPlate, PlateStage.ExposurePaused);
-            SetLoadedPlateAttributes(cameraStack, loadedPlate);
-            return true;
-        }
+            => CameraItemHelper.TryPauseExposingPlate(Api?.World, cameraStack);
 
         private bool ResumeMountedCameraStorage(ItemStack cameraStack, string playerUid)
         {

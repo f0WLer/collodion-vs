@@ -4,6 +4,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Collodion.CameraCapture;
 using Collodion.FieldCamera;
+using Collodion.Plates;
 
 namespace Collodion
 {
@@ -81,6 +82,21 @@ namespace Collodion
             clone.StackSize = 1;
             cameraStack.Attributes.SetString(ItemFieldcamera.AttrLoadedPlate, clone.Collectible?.Code?.ToString() ?? string.Empty);
             cameraStack.Attributes.SetItemstack(ItemFieldcamera.AttrLoadedPlateStack, clone);
+        }
+
+        // Pauses an actively-exposing plate loaded in the camera: drying tick → ExposurePaused → write-back.
+        // Returns false (no-op) when no plate is loaded or it is not currently in the Exposing stage.
+        // Shared by the disconnect/dismount pause path and the block-entity load-time stale-exposure guard.
+        public static bool TryPauseExposingPlate(IWorldAccessor? world, ItemStack? cameraStack)
+        {
+            if (world == null || cameraStack == null) return false;
+            if (!TryGetLoadedPlateStack(cameraStack, world, out ItemStack? loadedPlate) || loadedPlate == null) return false;
+            if (PlateAttributes.GetStage(loadedPlate) != PlateStage.Exposing) return false;
+
+            PlateDryingTransition.TickNow(world, loadedPlate);
+            PlateAttributes.SetStage(loadedPlate, PlateStage.ExposurePaused);
+            SetLoadedPlateStack(cameraStack, loadedPlate);
+            return true;
         }
 
         internal static void SetMountedCaptureState(ItemStack? cameraStack, in VirtualCameraState state)

@@ -135,18 +135,16 @@ namespace Collodion.FieldCamera
         private void PauseStaleExposureIfOwnerOffline(ICoreAPI api)
         {
             if (_cameraStack == null || string.IsNullOrEmpty(_ownerPlayerUid)) return;
-            if (!CameraItemHelper.TryGetLoadedPlateStack(_cameraStack, api.World, out ItemStack? plate) || plate == null) return;
-            if (PlateAttributes.GetStage(plate) != PlateStage.Exposing) return;
 
             // Owner online => their client accumulator may still be running; leave the exposure alone.
             foreach (IPlayer p in api.World.AllOnlinePlayers)
                 if (string.Equals(p.PlayerUID, _ownerPlayerUid, StringComparison.Ordinal)) return;
 
-            PlateDryingTransition.TickNow(api.World, plate);
-            PlateAttributes.SetStage(plate, PlateStage.ExposurePaused);
-            CameraItemHelper.SetLoadedPlateStack(_cameraStack, plate);
-            RefreshExposingState(api.World); // recomputes _isExposing from the now-paused plate
-            MarkDirty(true);
+            if (CameraItemHelper.TryPauseExposingPlate(api.World, _cameraStack))
+            {
+                RefreshExposingState(api.World); // recomputes _isExposing from the now-paused plate
+                MarkDirty(true);
+            }
         }
 
         private const float HeightVisualBias = 0.25f;

@@ -1,4 +1,5 @@
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
 using Collodion.Plates;
@@ -148,7 +149,7 @@ namespace Collodion.Tray
                     {
                         if (world.Side == EnumAppSide.Server)
                         {
-                            Tell(byPlayer, $"Collodion: plate not fully developed ({currentApplications}/{RequiredDeveloperPours}).", pos);
+                            Tell(byPlayer, Lang.Get("collodion:msg-tray-underdeveloped", currentApplications, RequiredDeveloperPours), pos);
                         }
 
                         return false;
@@ -263,9 +264,9 @@ namespace Collodion.Tray
         {
             return actionKind switch
             {
-                TrayActionKind.Developer => "Collodion: need developer (at least 1 portion).",
-                TrayActionKind.Fixer => "Collodion: need fixer (at least 1 portion).",
-                _ => "Collodion: need water (at least 1 portion)."
+                TrayActionKind.Developer => Lang.Get("collodion:msg-tray-need-developer"),
+                TrayActionKind.Fixer => Lang.Get("collodion:msg-tray-need-fixer"),
+                _ => Lang.Get("collodion:msg-tray-need-water")
             };
         }
     }

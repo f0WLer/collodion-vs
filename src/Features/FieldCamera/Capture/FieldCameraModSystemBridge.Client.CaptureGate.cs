@@ -2,6 +2,7 @@ using Collodion.AdminTooling;
 using Collodion.CameraCapture;
 using Collodion.Plates;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 
 namespace Collodion.FieldCamera
 {
@@ -30,7 +31,7 @@ namespace Collodion.FieldCamera
 
                     if (!CameraEligibility.IsLoadedCodeSensitized(camStack.Attributes.GetString(ItemFieldcamera.AttrLoadedPlate, string.Empty)))
                     {
-                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled("Collodion: load a sensitized plate to take a photo.");
+                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("collodion:msg-load-sensitized-plate"));
                         return false;
                     }
 
@@ -43,13 +44,13 @@ namespace Collodion.FieldCamera
                     // Keep capture gate permissive when only the lightweight loaded-code attribute exists.
                     if (loadedPlateStack != null && !CameraEligibility.IsPlateExposable(loadedPlateStack))
                     {
-                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled("Collodion: only fresh or paused exposure plates can be exposed.");
+                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("collodion:msg-plate-not-exposable"));
                         return false;
                     }
 
                     if (loadedPlateStack != null && PlateDryingTransition.IsDry(owner.ClientApi.World, loadedPlateStack))
                     {
-                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled("Collodion: this plate has dried out and can no longer be exposed.");
+                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("collodion:msg-plate-dried-no-expose"));
                         return false;
                     }
 
@@ -66,7 +67,7 @@ namespace Collodion.FieldCamera
                             if (!string.IsNullOrEmpty(uid)
                                 && !string.Equals(uid, owner.ClientApi.World.Player.PlayerUID, StringComparison.Ordinal))
                             {
-                                owner.CaptureClientRuntime.ShowShutterGateMessageThrottled("Collodion: this plate belongs to another photographer.");
+                                owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("collodion:msg-plate-other-photographer"));
                                 return false;
                             }
                         }

@@ -146,6 +146,29 @@
     "collodion:platebox-info-slots":     "Plate slots: {0}/{1}",
 
     "collodion:frame-info-photograph":   "Photograph",
-    "collodion:frame-info-displaying":   "Displaying: {0}"
+    "collodion:frame-info-displaying":   "Displaying: {0}",
+
+
+    "collodion:shuttergate-maxframes-message":  "Collodion: this plate cannot be exposed any further (maximum {0} frames reached).",
+    "collodion:msg-exposure-save-failed":       "Collodion: could not save exposure data to disk — partial exposures may not persist across sessions.",
+    "collodion:msg-exposure-already-active":    "Collodion: another exposure is already in progress.",
+    "collodion:msg-plate-max-frames":           "Collodion: this plate cannot be exposed any further.",
+    "collodion:msg-load-sensitized-plate":      "Collodion: load a sensitized plate to take a photo.",
+    "collodion:msg-plate-not-exposable":        "Collodion: only fresh or paused exposure plates can be exposed.",
+    "collodion:msg-plate-dried-no-expose":      "Collodion: this plate has dried out and can no longer be exposed.",
+    "collodion:msg-plate-other-photographer":   "Collodion: this plate belongs to another photographer.",
+    "collodion:msg-tip-f4-guiless":             "Collodion: Tip - press F4 to toggle gui-less mode (hide HUD) while using the viewfinder.",
+    "collodion:msg-mounted-other-active":       "Collodion: someone else's exposure is in progress.",
+    "collodion:msg-mounted-no-plate":           "Collodion: no plate is loaded.",
+    "collodion:msg-mounted-pause-first":        "Collodion: pause the exposure first (RMB) before unloading.",
+    "collodion:msg-mounted-other-paused":       "Collodion: someone else's paused exposure — Shift+RMB to unload the plate, or Shift+Ctrl+RMB to recover the camera.",
+    "collodion:msg-mounted-load-hint":          "Collodion: hold a sensitized plate and right-click to load.",
+    "collodion:msg-plate-dried-reclaim":        "Collodion: this plate has dried out — wash it in a development tray to reclaim the glass.",
+    "collodion:msg-tray-plate-dried":           "Collodion: the plate has dried and can no longer be used.",
+    "collodion:msg-tray-other-photographer":    "Collodion: only the original photographer can develop this plate.",
+    "collodion:msg-tray-underdeveloped":        "Collodion: plate not fully developed ({0}/{1}).",
+    "collodion:msg-tray-need-developer":        "Collodion: need developer (at least 1 portion).",
+    "collodion:msg-tray-need-fixer":            "Collodion: need fixer (at least 1 portion).",
+    "collodion:msg-tray-need-water":            "Collodion: need water (at least 1 portion)."
 }
 

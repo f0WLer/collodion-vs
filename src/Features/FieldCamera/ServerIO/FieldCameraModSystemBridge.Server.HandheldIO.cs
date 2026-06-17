@@ -37,7 +37,7 @@ namespace Collodion.FieldCamera
 
             // Loading a dried plate is allowed, but it can no longer be exposed — let the player know.
             if (PlateDryingTransition.IsDry(Api.World, loadedPlate))
-                player.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: this plate has dried out — wash it in a development tray to reclaim the glass.", EnumChatType.Notification);
+                player.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("collodion:msg-plate-dried-reclaim"), EnumChatType.Notification);
 
             AudioUtils.FireAndForgetEntitySound(Api?.World, _cameraPlateLoadSound, player.Entity, AudioUtils.NextRandomPitch(Api?.World));
             return true;

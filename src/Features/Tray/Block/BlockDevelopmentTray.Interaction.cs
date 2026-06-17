@@ -2,6 +2,7 @@ using Collodion.AdminTooling;
 using Collodion.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
 namespace Collodion.Tray
@@ -106,7 +107,7 @@ namespace Collodion.Tray
                     if (currentPours >= RequiredDeveloperPours) return false;
                     if (PlateDryingTransition.IsDry(world, clientDevPlate))
                     {
-                        (world.Api as ICoreClientAPI)?.ShowChatMessage("Collodion: the plate has dried and can no longer be used.");
+                        (world.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("collodion:msg-tray-plate-dried"));
                         return false;
                     }
                     if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _developerPortionCode, GetChemicalUnitsPerUse())) return false;
@@ -129,7 +130,7 @@ namespace Collodion.Tray
                     if (!TryGetFixerPourContext(be, out ItemStack clientFixPlate, out _)) return false;
                     if (PlateDryingTransition.IsDry(world, clientFixPlate))
                     {
-                        (world.Api as ICoreClientAPI)?.ShowChatMessage("Collodion: the plate has dried and can no longer be used.");
+                        (world.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("collodion:msg-tray-plate-dried"));
                         return false;
                     }
                     if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _fixerPortionCode, GetChemicalUnitsPerUse())) return false;
@@ -212,13 +213,13 @@ namespace Collodion.Tray
                     if (currentPours >= RequiredDeveloperPours) return false;
                     if (PlateDryingTransition.IsDry(world, devPlate))
                     {
-                        Tell(byPlayer, "Collodion: the plate has dried and can no longer be used.", pos);
+                        Tell(byPlayer, Lang.Get("collodion:msg-tray-plate-dried"), pos);
                         return false;
                     }
                     string? devPhotographer = devPlate.Attributes?.GetString(PlateAttributes.PhotographerUid);
                     if (!string.IsNullOrEmpty(devPhotographer) && !string.Equals(devPhotographer, byPlayer.PlayerUID, StringComparison.OrdinalIgnoreCase))
                     {
-                        Tell(byPlayer, "Collodion: only the original photographer can develop this plate.", pos);
+                        Tell(byPlayer, Lang.Get("collodion:msg-tray-other-photographer"), pos);
                         return false;
                     }
                     break;
@@ -226,20 +227,20 @@ namespace Collodion.Tray
                     if (!TryGetFixerPourContext(be, out ItemStack fixPlate, out int pours)) return false;
                     if (PlateDryingTransition.IsDry(world, fixPlate))
                     {
-                        Tell(byPlayer, "Collodion: the plate has dried and can no longer be used.", pos);
+                        Tell(byPlayer, Lang.Get("collodion:msg-tray-plate-dried"), pos);
                         return false;
                     }
 
                     if (pours < RequiredDeveloperPours)
                     {
-                        Tell(byPlayer, $"Collodion: plate not fully developed ({pours}/{RequiredDeveloperPours}).", pos);
+                        Tell(byPlayer, Lang.Get("collodion:msg-tray-underdeveloped", pours, RequiredDeveloperPours), pos);
                         return false;
                     }
 
                     string? fixPhotographer = fixPlate.Attributes?.GetString(PlateAttributes.PhotographerUid);
                     if (!string.IsNullOrEmpty(fixPhotographer) && !string.Equals(fixPhotographer, byPlayer.PlayerUID, StringComparison.OrdinalIgnoreCase))
                     {
-                        Tell(byPlayer, "Collodion: only the original photographer can develop this plate.", pos);
+                        Tell(byPlayer, Lang.Get("collodion:msg-tray-other-photographer"), pos);
                         return false;
                     }
                     break;

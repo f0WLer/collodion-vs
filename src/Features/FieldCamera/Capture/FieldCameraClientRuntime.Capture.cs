@@ -39,7 +39,7 @@ namespace Collodion.FieldCamera
                     {
                         byte[]? blob = viewportAcc.ExportPartial();
                         if (blob != null && !ExposureAccumulationStore.Save(_owner.Capture.ActiveExposureId, blob))
-                            _owner.ClientApi?.ShowChatMessage("Collodion: could not save exposure data to disk — partial exposures may not persist across sessions.");
+                            _owner.ClientApi?.ShowChatMessage(Lang.Get("collodion:msg-exposure-save-failed"));
                     }
 
                     SendExposureStatePacket(isExposing: false, acc.FramesAccumulated, _owner.Capture.ActiveExposureId, acc.TargetFrames);
@@ -283,7 +283,7 @@ namespace Collodion.FieldCamera
             {
                 if (renderer.State == ExposureState.Capturing)
                 {
-                    ShowShutterGateMessageThrottled("Collodion: another exposure is already in progress.");
+                    ShowShutterGateMessageThrottled(Lang.Get("collodion:msg-exposure-already-active"));
                     return;
                 }
 
@@ -313,7 +313,7 @@ namespace Collodion.FieldCamera
                         // would otherwise accumulate one extra frame before stopping again).
                         if (renderer.FramesAccumulated >= _maxFrames)
                         {
-                            ShowShutterGateMessageThrottled("Collodion: this plate cannot be exposed any further.");
+                            ShowShutterGateMessageThrottled(Lang.Get("collodion:msg-plate-max-frames"));
                             renderer.Discard();
                             return;
                         }
@@ -333,7 +333,7 @@ namespace Collodion.FieldCamera
             {
                 byte[]? blob = renderer.ExportPartial();
                 if (blob != null && !ExposureAccumulationStore.Save(_mountedExposureId, blob))
-                    _owner.ClientApi?.ShowChatMessage("Collodion: could not save exposure data to disk — partial exposures may not persist across sessions.");
+                    _owner.ClientApi?.ShowChatMessage(Lang.Get("collodion:msg-exposure-save-failed"));
             }
 
             renderer.Discard();
@@ -350,7 +350,7 @@ namespace Collodion.FieldCamera
             {
                 byte[]? blob = renderer.ExportPartial();
                 if (blob != null && !ExposureAccumulationStore.Save(_mountedExposureId, blob))
-                    _owner.ClientApi?.ShowChatMessage("Collodion: could not save exposure data to disk — partial exposures may not persist across sessions.");
+                    _owner.ClientApi?.ShowChatMessage(Lang.Get("collodion:msg-exposure-save-failed"));
             }
 
             // Tell the server to set the plate to ExposurePaused with the current frame count.

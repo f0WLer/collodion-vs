@@ -39,7 +39,7 @@ namespace Collodion.FieldCamera
             // recover the camera (Shift+Ctrl+RMB) — see the gates below.
             if (isOtherPhotographer && lockedStage == PlateStage.Exposing)
             {
-                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: someone else's exposure is in progress.", EnumChatType.Notification);
+                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("collodion:msg-mounted-other-active"), EnumChatType.Notification);
                 return true;
             }
 
@@ -80,14 +80,14 @@ namespace Collodion.FieldCamera
             {
                 if (!CameraHasLoadedPlate(cameraStack))
                 {
-                    serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: no plate is loaded.", EnumChatType.Notification);
+                    serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("collodion:msg-mounted-no-plate"), EnumChatType.Notification);
                     return true;
                 }
 
                 if (CameraItemHelper.TryGetLoadedPlateStack(cameraStack, Api.World, out ItemStack? stagePlate) && stagePlate != null
                     && PlateAttributes.GetStage(stagePlate) == PlateStage.Exposing)
                 {
-                    serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: pause the exposure first (RMB) before unloading.", EnumChatType.Notification);
+                    serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("collodion:msg-mounted-pause-first"), EnumChatType.Notification);
                     return true;
                 }
 
@@ -107,7 +107,7 @@ namespace Collodion.FieldCamera
             // Plain RMB drives load / pause / resume — require ownership of any loaded exposure.
             if (isOtherPhotographer)
             {
-                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: someone else's paused exposure — Shift+RMB to unload the plate, or Shift+Ctrl+RMB to recover the camera.", EnumChatType.Notification);
+                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("collodion:msg-mounted-other-paused"), EnumChatType.Notification);
                 return true;
             }
 
@@ -120,7 +120,7 @@ namespace Collodion.FieldCamera
                     SendMountedCameraControl(serverPlayer, false, true, cameraStack);
                     return true;
                 }
-                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: hold a sensitized plate and right-click to load.", EnumChatType.Notification);
+                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("collodion:msg-mounted-load-hint"), EnumChatType.Notification);
                 return true;
             }
 
@@ -136,7 +136,7 @@ namespace Collodion.FieldCamera
             if (CameraItemHelper.TryGetLoadedPlateStack(cameraStack, Api.World, out ItemStack? exposePlate) && exposePlate != null
                 && PlateDryingTransition.IsDry(Api.World, exposePlate))
             {
-                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: this plate has dried out and can no longer be exposed.", EnumChatType.Notification);
+                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("collodion:msg-plate-dried-no-expose"), EnumChatType.Notification);
                 return true;
             }
 
@@ -169,7 +169,7 @@ namespace Collodion.FieldCamera
 
             // Loading a dried plate is allowed, but it can no longer be exposed — let the player know.
             if (PlateDryingTransition.IsDry(Api.World, loadedPlate))
-                player.SendMessage(GlobalConstants.InfoLogChatGroup, "Collodion: this plate has dried out — wash it in a development tray to reclaim the glass.", EnumChatType.Notification);
+                player.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("collodion:msg-plate-dried-reclaim"), EnumChatType.Notification);
 
             AudioUtils.FireAndForgetEntitySound(Api?.World, _cameraPlateLoadSound, player.Entity, AudioUtils.NextRandomPitch(Api?.World));
             return true;

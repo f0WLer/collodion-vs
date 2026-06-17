@@ -1,5 +1,6 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.Client.NoObf;
 
 namespace Collodion.CameraCapture
@@ -159,7 +160,7 @@ namespace Collodion.CameraCapture
 
             _f4TipShownThisViewfinder = true;
             _f4TipShownEver = true;
-            ClientApi.ShowChatMessage("Collodion: Tip - press F4 to toggle gui-less mode (hide HUD) while using the viewfinder.");
+            ClientApi.ShowChatMessage(Lang.Get("collodion:msg-tip-f4-guiless"));
         }
 
         private bool IsGuiLessModeActive() => ClientApi?.HideGuis ?? false;

@@ -2,6 +2,7 @@ using Collodion.CameraCapture.Contracts;
 using Collodion.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 
 namespace Collodion.FieldCamera
 {
@@ -45,7 +46,7 @@ namespace Collodion.FieldCamera
                         if (!string.IsNullOrEmpty(uid)
                             && !string.Equals(uid, capi.World.Player.PlayerUID, StringComparison.Ordinal))
                         {
-                            capi.ShowChatMessage("Collodion: this plate belongs to another photographer.");
+                            capi.ShowChatMessage(Lang.Get("collodion:msg-plate-other-photographer"));
                             return false;
                         }
                     }

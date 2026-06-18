@@ -105,6 +105,17 @@ namespace Collodion.FieldCamera
                 return;
             }
 
+            // Ctrl+RMB (no shift): open the camera's shutter-config UI, if a head installed one
+            // (e.g. kosphotograph's timed-shutter duration dialog). Baseline installs none ⇒ no-op.
+            if (holdingCamera && ctrlDown && !shiftDown && rightPressed
+                && !_owner.Capture.IsViewfinderActive
+                && ShutterSeam.ConfigUi != null && activeCameraSlot != null
+                && ShutterSeam.ConfigUi.TryOpenFor(activeCameraSlot))
+            {
+                _suppressViewfinderUntilRmbReleased = true;
+                return;
+            }
+
             if (holdingCamera && shiftDown && !ctrlDown && rightDown && !_owner.Capture.IsViewfinderActive)
             {
                 // Prevent viewfinder from starting if the player releases shift while still holding RMB.

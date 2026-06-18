@@ -1,0 +1,14 @@
+{
+    "item-fieldcamera-timed": "Timed Field Camera",
+    "item-fieldcamera-timed-loaded-silvered": "Timed Field Camera (loaded)",
+    "item-fieldcamera-timed-loaded-exposed": "Timed Field Camera (exposing)",
+    "item-fieldcamera-automatic": "Automatic Field Camera",
+    "item-fieldcamera-automatic-loaded-silvered": "Automatic Field Camera (loaded)",
+    "item-fieldcamera-automatic-loaded-exposed": "Automatic Field Camera (exposing)",
+
+    "kosphotography:camera-info-timed": "Timed shutter: auto-pauses after {0}s of exposure. Ctrl + Right-click to set the duration.",
+    "kosphotography:camera-info-automatic": "Automatic shutter: seals the photo automatically once the target exposure is reached.",
+
+    "kosphotography:shutter-timer-title": "Timed Shutter",
+    "kosphotography:shutter-timer-apply": "Apply"
+}

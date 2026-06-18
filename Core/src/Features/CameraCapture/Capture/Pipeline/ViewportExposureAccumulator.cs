@@ -24,11 +24,18 @@ namespace Collodion.CameraCapture
         private float _elapsedSinceLastSample;
         private float _elapsedSinceLastPreview;
         private float _elapsedCaptureSeconds;
+        private float _elapsedSinceResume;
         private bool _rendererRegistered;
         private bool _disposed;
 
         /// <summary>Fired when an auto-halt policy transitions the accumulator from <see cref="ExposureState.Capturing"/> to <see cref="ExposureState.Done"/>.</summary>
         internal Action? OnAutoHalt { get; set; }
+
+        /// <summary>Fired when the stop policy auto-pauses the accumulator (resumable), instead of sealing.</summary>
+        internal Action? OnAutoPause { get; set; }
+
+        /// <summary>Optional head-supplied shutter stop policy. Null ⇒ default hard-cap auto-seal (manual shutter).</summary>
+        internal IExposureStopCondition? StopCondition { get; set; }
 
         internal IExposurePreviewSink? ExposurePreviewSink { get; set; }
 
@@ -75,6 +82,7 @@ namespace Collodion.CameraCapture
             _elapsedSinceLastSample = 0f;
             _elapsedSinceLastPreview = 0f;
             _elapsedCaptureSeconds = 0f;
+            _elapsedSinceResume = 0f;
 
             int w = Math.Max(1, _capi.Render.FrameWidth);
             int h = Math.Max(1, _capi.Render.FrameHeight);
@@ -108,6 +116,8 @@ namespace Collodion.CameraCapture
             if (State == ExposureState.Paused)
             {
                 State = ExposureState.Capturing;
+                _elapsedSinceResume = 0f;
+                StopCondition?.OnResumed();
                 ViewportExposureSuppressContext.ExposureCapturing = true;
                 ExposurePreviewSink?.BeginExposurePassthrough();
             }
@@ -175,6 +185,7 @@ namespace Collodion.CameraCapture
             if (State != ExposureState.Capturing || _buffer == null) return;
 
             _elapsedCaptureSeconds += deltaTime;
+            _elapsedSinceResume += deltaTime;
             _elapsedSinceLastSample += deltaTime;
             _elapsedSinceLastPreview += deltaTime;
 
@@ -187,10 +198,19 @@ namespace Collodion.CameraCapture
             // GPU blit scales into the fixed-size staging FBO, so viewport resize needs no special handling.
             _buffer.Accumulate(0, w, h);
 
-            // Hard cap: stop regardless of stop mode once MaxAccumulatedFrames is reached.
-            if (_buffer.FramesAccumulated >= _maxFrames)
+            // Consult the shutter stop policy. With no head-supplied condition this falls back to the
+            // hard-cap auto-seal (today's manual-shutter behavior).
+            ExposureStopAction action = StopCondition?.Evaluate(_buffer.FramesAccumulated, _elapsedSinceResume, _maxFrames, TargetFrames)
+                ?? (_buffer.FramesAccumulated >= _maxFrames ? ExposureStopAction.AutoSeal : ExposureStopAction.Continue);
+
+            if (action == ExposureStopAction.AutoSeal)
             {
                 CompleteAutoStop();
+                return;
+            }
+            if (action == ExposureStopAction.AutoPause)
+            {
+                CompleteAutoPause();
                 return;
             }
 
@@ -215,6 +235,17 @@ namespace Collodion.CameraCapture
                 () => _capi.Event.UnregisterRenderer(this, EnumRenderStage.AfterBlit),
                 "photochemistry-unregister-exposure");
             OnAutoHalt?.Invoke();
+        }
+
+        // Auto-pause path (e.g. timed-shutter burst elapsed): suspend accumulation but keep the buffer
+        // and renderer alive so the exposure can resume. Mirrors Pause(); the OnAutoPause callback runs
+        // the same bookkeeping (persist partial, notify server, exit viewfinder) as a manual pause.
+        private void CompleteAutoPause()
+        {
+            State = ExposureState.Paused;
+            ViewportExposureSuppressContext.ExposureCapturing = false;
+            ExposurePreviewSink?.EndExposurePassthrough();
+            OnAutoPause?.Invoke();
         }
 
         private void PushPreviewFrame()

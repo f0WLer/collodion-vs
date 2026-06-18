@@ -1,0 +1,11 @@
+{
+  "type": "code",
+  "modid": "kosphotography",
+  "name": "Kosphotography -- Advanced Photography",
+  "authors": ["Fowl"],
+  "description": "Superset of Collodion adding timed and automatic camera shutters. Install instead of Collodion, not alongside it.",
+  "version": "0.1.0",
+  "dependencies": {
+    "game": "1.22.0"
+  }
+}

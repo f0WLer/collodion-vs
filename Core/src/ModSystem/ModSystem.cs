@@ -1,4 +1,5 @@
-﻿using Vintagestory.API.Client;
+﻿using System;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Collodion.AdminTooling;
@@ -69,6 +70,36 @@ namespace Collodion
 
             CameraCaptureChannelRegistration.RegisterCameraCaptureConfigMessageTypes(PhotoSyncModSystemBridge.RegisterPhotoSyncMessageTypes(channel));
             AdminToolingChannelRegistration.RegisterAdminToolingMessageTypes(channel);
+        }
+
+        // Two heads share this codebase: baseline `collodion` and the superset `kosphotography`. Each head's
+        // zip bundles Photochemistry.Core.dll, which contains this concrete CollodionModSystem. A head that
+        // supplies its own subclass (e.g. KosPhotographyMod : CollodionModSystem) would otherwise load BOTH
+        // systems and double-register. When a derived head is present, the base stands down so exactly one
+        // head registers; the derived head IS-A CollodionModSystem and runs all base logic via base.Start(...).
+        public override bool ShouldLoad(EnumAppSide forSide) => ShouldActivateThisHead();
+        public override bool ShouldLoad(ICoreAPI api) => ShouldActivateThisHead();
+
+        private bool ShouldActivateThisHead()
+        {
+            if (GetType() != typeof(CollodionModSystem)) return true; // a head subclass — always the active head
+            return !DerivedHeadPresent();
+        }
+
+        private static bool DerivedHeadPresent()
+        {
+            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type?[] types;
+                try { types = asm.GetTypes(); }
+                catch (System.Reflection.ReflectionTypeLoadException ex) { types = ex.Types; }
+                catch { continue; }
+
+                foreach (Type? t in types)
+                    if (t != null && t != typeof(CollodionModSystem) && typeof(CollodionModSystem).IsAssignableFrom(t))
+                        return true;
+            }
+            return false;
         }
 
         // Asset-backed process profile defaults are available from this lifecycle stage.

@@ -28,22 +28,9 @@ namespace Collodion.FieldCamera
                 acc.Pause();
 
                 if (acc.FramesAccumulated >= acc.TargetFrames)
-                {
                     ExportAndSealExposure(byEntity);
-                }
                 else
-                {
-                    if (acc is ViewportExposureAccumulator viewportAcc
-                        && acc.FramesAccumulated > 0
-                        && !string.IsNullOrEmpty(_owner.Capture.ActiveExposureId))
-                    {
-                        byte[]? blob = viewportAcc.ExportPartial();
-                        if (blob != null && !ExposureAccumulationStore.Save(_owner.Capture.ActiveExposureId, blob))
-                            _owner.ClientApi?.ShowChatMessage(Lang.Get("photochemistry:msg-exposure-save-failed"));
-                    }
-
-                    SendExposureStatePacket(isExposing: false, acc.FramesAccumulated, _owner.Capture.ActiveExposureId, acc.TargetFrames);
-                }
+                    HandleExposurePaused(acc, _owner.Capture.ActiveExposureId);
 
                 // Exit viewfinder immediately when pausing if RMB is not held.
                 if (!GetRightMouseDown() && _owner.Capture.IsViewfinderActive)
@@ -62,12 +49,33 @@ namespace Collodion.FieldCamera
             if (!string.IsNullOrEmpty(exposureId) && ViewfinderExposureRegistry.TryGet(exposureId, out var existingAcc) && existingAcc != null
                 && existingAcc.State == ExposureState.Paused)
             {
+                // Re-resolve the shutter policy for the camera being resumed so an automatic shutter can
+                // refuse to resume an exposure that has already reached its target sample count.
+                ItemStack? resumeCameraStack = CameraItemHelper.GetActiveCameraStack(clientApi);
+                IExposureStopCondition? resumeCondition = resumeCameraStack != null
+                    ? ShutterSeam.PolicyProvider?.Resolve(resumeCameraStack, existingAcc.TargetFrames)
+                    : null;
+
+                if (!(resumeCondition?.CanResume(existingAcc.FramesAccumulated, existingAcc.TargetFrames) ?? true))
+                {
+                    if (!silentIfBusy)
+                        ShowShutterGateMessageThrottled(Lang.Get("photochemistry:shuttergate-target-message"));
+                    return false;
+                }
+
                 if (existingAcc.FramesAccumulated >= _maxFrames)
                 {
                     if (!silentIfBusy)
                         ShowShutterGateMessageThrottled(Lang.Get("photochemistry:shuttergate-maxframes-message", _maxFrames));
                     return false;
                 }
+
+                if (existingAcc is ViewportExposureAccumulator viewportExisting)
+                {
+                    viewportExisting.StopCondition = resumeCondition;
+                    viewportExisting.OnAutoPause = () => OnAccumulatorAutoPause(viewportExisting, exposureId);
+                }
+
                 _owner.Capture.ActiveAccumulator = existingAcc;
                 _owner.Capture.ActiveExposureId = exposureId;
                 existingAcc.Resume();
@@ -100,6 +108,14 @@ namespace Collodion.FieldCamera
             _owner.Capture._primedViewportAccumulator = null;
             newAcc.ExposurePreviewSink = _owner.Capture._virtualCameraPreviewRenderer;
             newAcc.OnAutoHalt = () => OnAccumulatorAutoHalt(byEntity, newAcc, exposureId);
+            newAcc.OnAutoPause = () => OnAccumulatorAutoPause(newAcc, exposureId);
+
+            // Install the camera's shutter stop policy (timed / automatic). Null on baseline ⇒ manual shutter.
+            ItemStack? cameraStack = CameraItemHelper.GetActiveCameraStack(clientApi);
+            newAcc.StopCondition = cameraStack != null
+                ? ShutterSeam.PolicyProvider?.Resolve(cameraStack, newAcc.TargetFrames)
+                : null;
+
             newAcc.Start(profile);
 
             if (crossCameraBlob != null)
@@ -122,6 +138,32 @@ namespace Collodion.FieldCamera
             _suppressViewfinderUntilRmbReleased = true;
             ExportAndSealExposure(byEntity, exposureId);
             if (_owner.Capture.IsViewfinderActive) _owner.Capture.EndViewfinderMode();
+        }
+
+        // Called by the accumulator's auto-pause callback (e.g. a timed-shutter burst elapsed). The
+        // accumulator has already transitioned to Paused; this persists the partial and notifies the
+        // server, mirroring the tail of a manual pause. The exposure stays resumable.
+        private void OnAccumulatorAutoPause(ViewportExposureAccumulator acc, string exposureId)
+        {
+            HandleExposurePaused(acc, exposureId);
+            if (!GetRightMouseDown() && _owner.Capture.IsViewfinderActive)
+                _owner.Capture.EndViewfinderMode();
+        }
+
+        // Persists a paused accumulator's partial blob and notifies the server it is no longer exposing.
+        // Shared by the manual LMB-pause path and the auto-pause (timed shutter) callback.
+        private void HandleExposurePaused(IGameplayExposureAccumulator acc, string exposureId)
+        {
+            if (acc is ViewportExposureAccumulator viewportAcc
+                && acc.FramesAccumulated > 0
+                && !string.IsNullOrEmpty(exposureId))
+            {
+                byte[]? blob = viewportAcc.ExportPartial();
+                if (blob != null && !ExposureAccumulationStore.Save(exposureId, blob))
+                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photochemistry:msg-exposure-save-failed"));
+            }
+
+            SendExposureStatePacket(isExposing: false, acc.FramesAccumulated, exposureId, acc.TargetFrames);
         }
 
         private void ExportAndSealExposure(EntityAgent? byEntity, string? knownExposureId = null)

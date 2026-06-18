@@ -1,10 +1,65 @@
 using SkiaSharp;
 using Collodion.ImageEffects;
+using Vintagestory.API.Common;
 
 namespace Collodion.CameraCapture
 {
     /// <summary>Lifecycle state of an exposure session on either the viewport or virtual-camera renderer path.</summary>
     internal enum ExposureState { Idle, Capturing, Paused, Faulted, Done }
+
+    /// <summary>What an <see cref="IExposureStopCondition"/> wants to happen after the latest accumulated sample.</summary>
+    internal enum ExposureStopAction
+    {
+        /// <summary>Keep accumulating.</summary>
+        Continue,
+        /// <summary>Auto-pause the exposure (resumable), without sealing — e.g. a timed-shutter burst elapsed.</summary>
+        AutoPause,
+        /// <summary>Auto-seal the exposure to a finished photo — e.g. the hard cap or target sample count was reached.</summary>
+        AutoSeal
+    }
+
+    /// <summary>
+    /// Pluggable shutter stop policy consulted once per accumulated sample. Baseline collodion installs no
+    /// condition; the accumulator then falls back to its hard-cap auto-seal (today's manual-shutter behavior).
+    /// Heads (e.g. kosphotograph) supply concrete conditions for timed / automatic shutters via
+    /// <see cref="ShutterSeam.PolicyProvider"/>.
+    /// </summary>
+    internal interface IExposureStopCondition
+    {
+        /// <summary>Decides what to do after the latest sample. Consulted once per accumulated frame.</summary>
+        ExposureStopAction Evaluate(int framesAccumulated, float elapsedCaptureSecondsSinceResume,
+                                    int maxFrames, int targetFrames);
+
+        /// <summary>Resets any per-burst state when a paused exposure resumes.</summary>
+        void OnResumed();
+
+        /// <summary>Gates the resume path (e.g. an automatic shutter refuses to resume at/above the target).</summary>
+        bool CanResume(int framesAccumulated, int targetFrames);
+    }
+
+    /// <summary>Head-supplied factory that maps a camera item stack to its shutter stop policy.</summary>
+    internal interface IShutterPolicyProvider
+    {
+        /// <summary>Returns the stop condition for the given camera, or <see langword="null"/> for the default manual shutter.</summary>
+        IExposureStopCondition? Resolve(ItemStack cameraStack, int targetFrames);
+    }
+
+    /// <summary>Head-supplied opener for a camera's shutter-configuration UI (e.g. the timed-shutter duration dialog).</summary>
+    internal interface IShutterConfigUi
+    {
+        /// <summary>Opens the config UI for the camera in <paramref name="cameraSlot"/>; returns <see langword="true"/> if it handled the request.</summary>
+        bool TryOpenFor(ItemSlot cameraSlot);
+    }
+
+    /// <summary>
+    /// Neutral install points a head uses to plug in alternate shutter behavior. Both fields are
+    /// <see langword="null"/> on baseline collodion, so every consult site falls back to today's manual path.
+    /// </summary>
+    internal static class ShutterSeam
+    {
+        internal static IShutterPolicyProvider? PolicyProvider;
+        internal static IShutterConfigUi? ConfigUi;
+    }
 
     /// <summary>
     /// Shared interface for the two gameplay-level accumulation-based exposure paths:

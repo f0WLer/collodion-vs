@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <AssemblyName>kosphotography</AssemblyName>
+    <VINTAGE_STORY_PATH Condition=" '$(VINTAGE_STORY_PATH)' == '' "></VINTAGE_STORY_PATH>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+  </PropertyGroup>
+
+  <!-- Core class library (Photochemistry.Core.dll is copied into this project's output). -->
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
+  </ItemGroup>
+
+  <!-- Package this head's modinfo.json into output. -->
+  <ItemGroup>
+    <None Include="modinfo.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Link shared assets from Core (photochemistry domain) into this project's output under assets\. -->
+  <ItemGroup>
+    <None Include="..\Core\assets\**\*">
+      <Link>assets\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- This head's own asset overlay (kosphotography domain: timed/automatic cameras, recipes, lang). -->
+  <ItemGroup>
+    <None Include="assets\**\*">
+      <Link>assets\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="obj\**\*.cs" />
+    <Compile Remove="bin\**\*.cs" />
+  </ItemGroup>
+
+  <!-- Mutually exclusive with collodion: only copy to SECONDARY_MODS_PATH so the two heads never
+       land in the same mods folder during dev. (Build-config note from the plan.) -->
+  <Target Name="ZipOutputToMods" AfterTargets="Build" Condition=" '$(Configuration)' == 'Debug' And '$(SECONDARY_MODS_PATH)' != '' ">
+    <Exec Command="powershell -NoProfile -Command &quot;&amp; { Add-Type -AssemblyName System.IO.Compression; Add-Type -AssemblyName System.IO.Compression.FileSystem; $out = [System.IO.Path]::GetFullPath('$(TargetDir)'); if (-not $out) { exit 1 }; if (-not $out.EndsWith([System.IO.Path]::DirectorySeparatorChar)) { $out += [System.IO.Path]::DirectorySeparatorChar }; $info = Get-Content '$(MSBuildProjectDirectory)\modinfo.json' | ConvertFrom-Json; $modId = $info.modid; $ver = $info.version; if (-not $modId) { $modId = 'kosphotography' }; if (-not $ver) { $ver = 'dev' }; $zipName = ($modId + '-' + $ver + '-' + '$(Configuration)' + '.zip'); $localZip = Join-Path $out $zipName; if (Test-Path $localZip) { Remove-Item $localZip -Force }; Remove-Item -Path (Join-Path $out '*.pdb'), (Join-Path $out '*.deps.json') -Force -ErrorAction SilentlyContinue; $stream = [System.IO.File]::Open($localZip, [System.IO.FileMode]::Create); $archive = New-Object System.IO.Compression.ZipArchive($stream, ([System.IO.Compression.ZipArchiveMode]::Create), $false); try { Get-ChildItem -Path $out -Recurse -File | Where-Object { $_.FullName -ne $localZip } | ForEach-Object { $entryName = $_.FullName.Substring($out.Length).Replace([char][System.IO.Path]::DirectorySeparatorChar, [char]'/'); [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $_.FullName, $entryName, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null } } finally { $archive.Dispose(); $stream.Dispose() }; foreach ($dest in @('$(SECONDARY_MODS_PATH)') | Where-Object { $_ -ne '' }) { if (-not (Test-Path $dest)) { New-Item -ItemType Directory -Path $dest | Out-Null }; Copy-Item $localZip (Join-Path $dest $zipName) -Force } }&quot;" />
+  </Target>
+
+</Project>

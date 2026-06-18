@@ -150,6 +150,7 @@
 
 
     "photochemistry:shuttergate-maxframes-message":  "photochemistry: this plate cannot be exposed any further (maximum {0} frames reached).",
+    "photochemistry:shuttergate-target-message":     "photochemistry: this exposure has reached its target and can't be resumed.",
     "photochemistry:msg-exposure-save-failed":       "photochemistry: could not save exposure data to disk — partial exposures may not persist across sessions.",
     "photochemistry:msg-exposure-already-active":    "photochemistry: another exposure is already in progress.",
     "photochemistry:msg-plate-max-frames":           "photochemistry: this plate cannot be exposed any further.",

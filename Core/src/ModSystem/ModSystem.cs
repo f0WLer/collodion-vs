@@ -64,12 +64,45 @@ namespace Photochemistry
             api.RegisterBlockEntityClass("BlockEntityMountedCamera", typeof(BlockEntityMountedCamera));
             api.RegisterBlockEntityClass("BlockEntityMountedCameraUpper", typeof(BlockEntityMountedCameraUpper));
             api.RegisterBlockEntityClass("BlockEntityRestingCamera", typeof(BlockEntityRestingCamera));
+            api.RegisterBlockEntityClass("BlockEntityGlassPlate", typeof(BlockEntityGlassPlate));
+
+            RegisterBuiltInSensitizationRecipes();
 
             // Register Network Channel
             var channel = CameraCaptureChannelRegistration.RegisterCameraCaptureMessageTypes(api.Network.RegisterChannel("photochemistry"));
 
             CameraCaptureChannelRegistration.RegisterCameraCaptureConfigMessageTypes(PhotoSyncModSystemBridge.RegisterPhotoSyncMessageTypes(channel));
             AdminToolingChannelRegistration.RegisterAdminToolingMessageTypes(channel);
+        }
+
+        // Baseline collodion → iodide: pour collodion, then silver solution. Reproduces the original
+        // hardcoded chain. Superset heads register their own recipes in their Start (after base.Start).
+        private static void RegisterBuiltInSensitizationRecipes()
+        {
+            AssetLocation pourSound = new("game", "sounds/effect/water-fill");
+            SensitizationRegistry.Register(new SensitizationRecipe
+            {
+                ChemistryId = PlateAttributes.ChemistryCollodion, // "iodide"
+                Steps = new[]
+                {
+                    new SensitizationStep
+                    {
+                        Type = SensitizationInteractionType.PourLiquid,
+                        Ingredient = new AssetLocation("photochemistry", "collodionportion"),
+                        Amount = 40,
+                        Sound = pourSound,
+                        ActionLangCode = "photochemistry:heldhelp-coatglassplate"
+                    },
+                    new SensitizationStep
+                    {
+                        Type = SensitizationInteractionType.PourLiquid,
+                        Ingredient = new AssetLocation("photochemistry", "silversolutionportion"),
+                        Amount = 40,
+                        Sound = pourSound,
+                        ActionLangCode = "photochemistry:heldhelp-plate-sensitize-next"
+                    }
+                }
+            });
         }
 
         // Two heads share this codebase: baseline `collodion` and the superset `kosphotography`. Each head's

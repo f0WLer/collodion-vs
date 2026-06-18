@@ -41,7 +41,7 @@ namespace Photochemistry.Plates.Blocks
 
             bool isGroundSensitize = state == "clean" || state == "coated";
             if (!isGroundSensitize) return false;
-            return HandlePourInteractionStep(secondsUsed, world, byPlayer, blockSel.Position, state);
+            return HandleSensitizeStep(secondsUsed, world, byPlayer, blockSel.Position);
         }
 
         public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
@@ -52,7 +52,7 @@ namespace Photochemistry.Plates.Blocks
                 return BuildPolishInteractionHelp(world, selection, forPlayer);
             }
 
-            if ((state == "clean" || state == "coated") && TryBuildHeldChemicalHint(world, selection?.Position, state, forPlayer, out WorldInteraction interaction))
+            if ((state == "clean" || state == "coated") && TryBuildSensitizationHint(world, selection?.Position, forPlayer, out WorldInteraction interaction))
             {
                 return [interaction];
             }

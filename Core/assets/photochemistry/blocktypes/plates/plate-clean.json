@@ -1,6 +1,7 @@
 ﻿{
   "code": "plate-clean",
   "class": "GlassPlate",
+  "entityClass": "BlockEntityGlassPlate",
   "blockmaterial": "Glass",
   "drawtype": "json",
   "shape": { "base": "photochemistry:block/plates/plate" },

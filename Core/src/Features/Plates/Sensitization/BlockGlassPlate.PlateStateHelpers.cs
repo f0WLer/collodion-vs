@@ -73,6 +73,13 @@ namespace Photochemistry.Plates.Blocks
             PlateAttributes.SetStage(stack, stage);
             stack.Attributes.SetString("plateBlockState", state);
 
+            // Carry the fine sensitization progress so a picked-up coated plate resumes correctly when re-placed.
+            if (state == "coated" && world?.BlockAccessor?.GetBlockEntity(pos) is BlockEntityGlassPlate be && be.ChemistryId != null)
+            {
+                stack.Attributes.SetString("plateChemistry", be.ChemistryId);
+                stack.Attributes.SetInt("plateStep", be.StepIndex);
+            }
+
             if (stage == PlateStage.Rough)
             {
                 PlateAttributes.SetNameLangCode(stack, "photochemistry:plate-name-glass");

@@ -1,4 +1,3 @@
-﻿using Photochemistry.AdminTooling;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -9,158 +8,145 @@ namespace Photochemistry.Plates.Blocks
     public sealed partial class BlockGlassPlate
     {
         private static readonly AssetLocation _plainClothCode = new("game", "cloth-plain");
-        private static readonly AssetLocation _collodionPortionCode      = new("photochemistry", "collodionportion");
-        private static readonly AssetLocation _silverSolutionPortionCode = new("photochemistry", "silversolutionportion");
-
         private static readonly AssetLocation _polishSound = new("game:sounds/player/chalkdraw");
-        private static readonly AssetLocation _collodionPourSound = new("game:sounds/effect/water-fill");
-        private const int SensitizationChemicalAmount = 40;
-
         private static readonly AssetLocation _sensitizedPlateItemCode = new("photochemistry", "sensitizedplate");
 
-        private static bool TryGetChemicalForState(string state, out AssetLocation chemicalCode)
+        // Resolves the recipe + the step the plate is waiting for. On a clean plate the chemistry is
+        // chosen by the held item (which recipe's first step it matches); on a coated plate it's fixed by
+        // the block entity's stored chemistry, and the next step is read from its progress.
+        private bool TryResolveCurrentStep(IWorldAccessor world, BlockPos pos, ItemSlot? heldSlot,
+            out SensitizationRecipe? recipe, out int completed, out SensitizationStep? step)
         {
-            if (state == "clean") { chemicalCode = _collodionPortionCode; return true; }
-            if (state == "coated") { chemicalCode = _silverSolutionPortionCode; return true; }
-            chemicalCode = default!;
-            return false;
+            recipe = null; step = null; completed = 0;
+            string state = GetPlateState();
+
+            if (state == "coated")
+            {
+                var be = world.BlockAccessor.GetBlockEntity(pos) as BlockEntityGlassPlate;
+                recipe = SensitizationRegistry.ByChemistry(be?.ChemistryId);
+                completed = be?.StepIndex ?? 0;
+            }
+            else if (state == "clean")
+            {
+                recipe = SensitizationRegistry.MatchStartingStep(heldSlot);
+            }
+            else return false;
+
+            if (recipe == null || completed >= recipe.Steps.Count) { recipe = null; return false; }
+            step = recipe.Steps[completed];
+            return true;
         }
 
         private bool HandleInteractionStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             string state = GetPlateState();
-            bool isRough = state == "rough";
-            bool isSensitizable = state == "clean" || state == "coated";
+            ItemSlot? heldSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
 
-            bool isPolish = isRough && IsHoldingPlainCloth(byPlayer);
-            bool isSensitize = isSensitizable
-                && TryGetChemicalForState(state, out AssetLocation sensitizeChemical)
-                && CanApplySensitizationChemical(byPlayer, sensitizeChemical);
-            bool isPickup = IsEmptyHand(byPlayer);
+            bool isPolish = state == "rough" && IsHoldingPlainCloth(byPlayer);
 
-
-            // Client: return true to show the "hold to interact" prompt without performing any state changes.
-            if (world.Side == EnumAppSide.Client)
+            SensitizationStep? sensitizeStep = null;
+            if (state != "rough"
+                && TryResolveCurrentStep(world, blockSel.Position, heldSlot, out _, out _, out SensitizationStep? step)
+                && SensitizationStepIO.CanApply(heldSlot, step!))
             {
-                return isPolish || isSensitize || isPickup;
+                sensitizeStep = step;
             }
 
-            ItemStack? heldStack = byPlayer.InventoryManager?.ActiveHotbarSlot?.Itemstack;
-            ServerDebugLog.Notify(world.Api, "plate-interact: block-start state={0} polish={1} sensitize={2} pickup={3} held={4}x{5}",
-                state, isPolish, isSensitize, isPickup,
-                heldStack?.Collectible?.Code?.ToString() ?? "null", heldStack?.StackSize ?? 0);
+            bool isPickup = IsEmptyHand(byPlayer);
 
-            // Empty-hand pickup should always win so coated plates can be recovered at any point.
+            // Client just shows the "hold to interact" prompt; no state changes.
+            if (world.Side == EnumAppSide.Client)
+                return isPolish || sensitizeStep != null || isPickup;
+
+            // Empty-hand pickup wins so in-progress plates can always be recovered.
             if (isPickup)
             {
                 GiveItemAndRemoveBlock(world, byPlayer, blockSel.Position);
                 return true;
             }
 
-            if (isPolish || isSensitize)
+            if (isPolish || sensitizeStep != null)
             {
-                if (world.Side == EnumAppSide.Server)
-                {
-                    AssetLocation? sound = isPolish ? _polishSound : _collodionPourSound;
-                    if (sound != null)
-                    {
-                        world.PlaySoundAt(sound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
-                    }
-                }
-
+                AssetLocation? sound = isPolish ? _polishSound : sensitizeStep?.Sound;
+                if (sound != null)
+                    world.PlaySoundAt(sound, blockSel.Position.X + 0.5, blockSel.Position.Y + 0.5, blockSel.Position.Z + 0.5, null);
                 return true;
             }
 
             return false;
         }
 
-        private bool HandlePourInteractionStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockPos pos, string state)
+        private bool HandleSensitizeStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockPos pos)
         {
-            if (!TryGetChemicalForState(state, out AssetLocation chemicalCode)) return false;
-            if (!CanApplySensitizationChemical(byPlayer, chemicalCode)) return false;
-
+            ItemSlot? heldSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
+            if (!TryResolveCurrentStep(world, pos, heldSlot, out SensitizationRecipe? recipe, out int completed, out SensitizationStep? step))
+                return false;
+            if (!SensitizationStepIO.CanApply(heldSlot, step!)) return false;
             if (secondsUsed < GetSensitizationPourSeconds()) return true;
 
-            if (world.Side == EnumAppSide.Server)
-            {
-                if (byPlayer is not IServerPlayer sp) return false;
-                ItemSlot? chemicalSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
-                TryAdvanceSensitizationStep(world, sp, pos, state, chemicalSlot!);
-            }
+            if (world.Side == EnumAppSide.Server && byPlayer is IServerPlayer sp)
+                AdvanceSensitization(world, sp, pos, recipe!, completed, step!, heldSlot!);
 
             return false;
         }
 
-        private static bool CanApplySensitizationChemical(IPlayer player, AssetLocation chemicalCode)
+        private void AdvanceSensitization(IWorldAccessor world, IServerPlayer player, BlockPos pos,
+            SensitizationRecipe recipe, int completed, SensitizationStep step, ItemSlot heldSlot)
         {
-            ItemSlot? slot = player.InventoryManager?.ActiveHotbarSlot;
-            return PlateChemicalUtil.HasConsumableChemical(slot, chemicalCode, SensitizationChemicalAmount);
-        }
-
-        private bool TryAdvanceSensitizationStep(IWorldAccessor world, IServerPlayer player, BlockPos pos, string state, ItemSlot chemicalSlot)
-        {
-            if (!TryGetChemicalForState(state, out AssetLocation chemicalCode)) return false;
-
             bool isCreative = player.WorldData?.CurrentGameMode == EnumGameMode.Creative;
-            if (!isCreative && !PlateChemicalUtil.TryConsumeChemical(chemicalSlot, chemicalCode, SensitizationChemicalAmount))
+            if (!SensitizationStepIO.Consume(heldSlot, step, isCreative)) return;
+
+            int newCompleted = completed + 1;
+            if (newCompleted >= recipe.Steps.Count)
             {
-                ServerDebugLog.Notify(world.Api, "plate-interact: pour-complete state={0} chemical={1} → declined: could not consume {2} units from hand", state, chemicalCode, SensitizationChemicalAmount);
-                return false;
+                GiveSensitizedPlateAndRemoveBlock(world, player, pos, recipe.ChemistryId);
+                return;
             }
 
-            if (state == "clean")
+            // More steps remain: ensure the coated visual, then record progress on the block entity.
+            if (GetPlateState() != "coated")
             {
-                Block? coatedBlock = GetBlockForState(world, "coated");
-                if (coatedBlock == null)
-                {
-                    ServerDebugLog.Notify(world.Api, "plate-interact: pour-complete state=clean → declined: plate-coated block not found");
-                    return false;
-                }
-                world.BlockAccessor.SetBlock(coatedBlock.Id, pos);
-                world.BlockAccessor.MarkBlockDirty(pos);
-                return true;
+                Block? coated = GetBlockForState(world, "coated");
+                if (coated == null) return;
+                world.BlockAccessor.SetBlock(coated.Id, pos);
             }
-
-            if (state == "coated")
+            if (world.BlockAccessor.GetBlockEntity(pos) is BlockEntityGlassPlate be)
             {
-                return GiveSensitizedPlateAndRemoveBlock(world, player, pos);
+                be.ChemistryId = recipe.ChemistryId;
+                be.StepIndex = newCompleted;
+                be.MarkDirty(true);
             }
-
-            return false;
+            world.BlockAccessor.MarkBlockDirty(pos);
         }
 
-        private bool TryBuildHeldChemicalHint(IWorldAccessor world, BlockPos? pos, string state, IPlayer? player, out WorldInteraction interaction)
+        private bool TryBuildSensitizationHint(IWorldAccessor world, BlockPos? pos, IPlayer? player, out WorldInteraction interaction)
         {
             interaction = default!;
             if (pos == null || player == null) return false;
 
-            if (!TryGetChemicalForState(state, out AssetLocation chemicalCode)) return false;
-            if (!CanApplySensitizationChemical(player, chemicalCode)) return false;
+            ItemSlot? heldSlot = player.InventoryManager?.ActiveHotbarSlot;
+            if (!TryResolveCurrentStep(world, pos, heldSlot, out _, out _, out SensitizationStep? step)) return false;
 
-            string actionLangCode = state == "clean"
-                ? "photochemistry:heldhelp-coatglassplate"
-                : "photochemistry:heldhelp-plate-sensitize-next";
-
-            Item? required = world.GetItem(chemicalCode);
+            Item? required = world.GetItem(step!.Ingredient);
             if (required == null) return false;
 
             interaction = new WorldInteraction
             {
-                ActionLangCode = actionLangCode,
+                ActionLangCode = step.ActionLangCode,
                 MouseButton = EnumMouseButton.Right,
-                Itemstacks = [new ItemStack(required, SensitizationChemicalAmount)]
+                Itemstacks = [new ItemStack(required, step.Amount)]
             };
             return true;
         }
 
-        private static bool GiveSensitizedPlateAndRemoveBlock(IWorldAccessor world, IServerPlayer sp, BlockPos pos)
+        private bool GiveSensitizedPlateAndRemoveBlock(IWorldAccessor world, IServerPlayer sp, BlockPos pos, string chemistryId)
         {
             Item? sensitizedItem = world.GetItem(_sensitizedPlateItemCode);
             if (sensitizedItem == null) return false;
 
             ItemStack sensitizedPlate = new ItemStack(sensitizedItem, 1);
             PlateAttributes.SetStage(sensitizedPlate, PlateStage.Sensitized);
-            PlateAttributes.SetChemistry(sensitizedPlate, PlateAttributes.ChemistryCollodion);
+            PlateAttributes.SetChemistry(sensitizedPlate, chemistryId);
             PlateAttributes.SetNameLangCode(sensitizedPlate, "photochemistry:plate-name-sensitized");
             PlateDryingTransition.ResetTimer(world, sensitizedPlate, PlateDryingTransition.ResolveWetDurationHours(world.Api));
 

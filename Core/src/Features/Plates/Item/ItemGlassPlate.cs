@@ -46,6 +46,16 @@ namespace Photochemistry.Plates
             }
 
             world.BlockAccessor.SetBlock(plateBlock.Id, placePos);
+
+            // Restore fine sensitization progress (chemistry + step) onto the placed block entity.
+            string? plateChemistry = slot.Itemstack.Attributes.GetString("plateChemistry", null);
+            if (plateChemistry != null && world.BlockAccessor.GetBlockEntity(placePos) is Blocks.BlockEntityGlassPlate be)
+            {
+                be.ChemistryId = plateChemistry;
+                be.StepIndex = slot.Itemstack.Attributes.GetInt("plateStep", 1);
+                be.MarkDirty(true);
+            }
+
             slot.TakeOut(1);
             slot.MarkDirty();
             ServerDebugLog.Notify(api, "plate-interact: place state={0} held={1}x{2} at {3} → placed", plateBlockState, heldCode, heldSize, placePos);

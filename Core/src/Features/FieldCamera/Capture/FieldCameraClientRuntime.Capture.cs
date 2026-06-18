@@ -100,7 +100,9 @@ namespace Photochemistry.FieldCamera
                 exposureId = Guid.NewGuid().ToString("N");
             }
 
-            PlateProcessProfile profile = PlateProcessProfile.Iodide;
+            // Resolve the emulsion physics from the loaded plate's chemistry (baseline plates are always
+            // iodide; other heads' chemistries resolve here). Falls back to Iodide for absent/unknown.
+            PlateProcessProfile profile = PlateProcessProfile.Resolve(PlateAttributes.GetChemistry(loadedPlateStack));
 
             // When Prime() was called, the PBO ring is already warm so the first sample tick maps
             // a real frame immediately — no sync GL.ReadPixels stall, no 2-kick priming gap.

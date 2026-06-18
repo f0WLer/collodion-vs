@@ -20,7 +20,7 @@ namespace Photochemistry.FieldCamera
             string exposureId = trayPlate.Attributes?.GetString(PlateAttributes.ExposureId) ?? string.Empty;
             if (string.IsNullOrEmpty(exposureId)) return false;
 
-            PlateProcessProfile profile = PlateProcessProfile.Iodide;
+            PlateProcessProfile profile = PlateProcessProfile.Resolve(PlateAttributes.GetChemistry(trayPlate));
 
             // Develop with the live session's tuned physics/chemistry (from the exposure-physics dialog)
             // so the finished photo matches what the prediction preview showed. Falls back to defaults

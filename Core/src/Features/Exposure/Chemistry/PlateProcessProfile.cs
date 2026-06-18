@@ -76,6 +76,10 @@ namespace Photochemistry.Exposure
             developmentStrength: 12.0f, hdGamma: 0.85f, inertiaPoint: 0.04f,
             reciprocityExponent: 1.00f);
 
+        /// <summary>Resolves a chemistry name to its profile, falling back to <see cref="Iodide"/> for a null/empty/unknown name.</summary>
+        internal static PlateProcessProfile Resolve(string? chemistryName)
+            => !string.IsNullOrEmpty(chemistryName) && TryParse(chemistryName, out PlateProcessProfile p) ? p : Iodide;
+
         /// <summary>Parses a chemistry name (case-insensitive) into a <see cref="PlateProcessProfile"/>. Returns <see langword="false"/> when the name is unrecognised.</summary>
         internal static bool TryParse(string name, out PlateProcessProfile profile)
         {

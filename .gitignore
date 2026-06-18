@@ -1,4 +1,4 @@
-# Build outputs
+# Build outputs (includes the packaged <modid>-*-Debug.zip written to each project's bin/)
 bin/
 obj/
 

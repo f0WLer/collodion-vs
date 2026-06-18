@@ -1,5 +1,4 @@
-﻿using System;
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Photochemistry.AdminTooling;
@@ -15,9 +14,14 @@ using Photochemistry.Frame;
 
 namespace Photochemistry
 {
-    // Shared mod bootstrap, registration, and lifecycle cleanup for both sides.
-    // Holds config, channels, and runtime references shared by the client/server partials.
-    public partial class PhotochemistryModSystem : ModSystem
+    // Shared mod bootstrap, registration, and lifecycle cleanup for both sides. Holds config, channels,
+    // and runtime references shared by the client/server partials.
+    //
+    // Abstract so Photochemistry.Core.dll carries NO instantiable ModSystem: VintageStory refuses to load a
+    // mod whose zip contains more than one DLL with a ModSystem, and every head zip bundles this Core.dll.
+    // Each head supplies its own thin concrete subclass (CollodionMod, KosPhotographyMod) in its own DLL,
+    // so each head zip has exactly one ModSystem DLL (the head's). The heads are mutually-exclusive installs.
+    public abstract partial class PhotochemistryModSystem : ModSystem
     {
         public static PhotochemistryModSystem? ClientInstance { get; internal set; }
 
@@ -103,36 +107,6 @@ namespace Photochemistry
                     }
                 }
             });
-        }
-
-        // Two heads share this codebase: baseline `collodion` and the superset `kosphotography`. Each head's
-        // zip bundles Photochemistry.Core.dll, which contains this concrete PhotochemistryModSystem. A head that
-        // supplies its own subclass (e.g. KosPhotographyMod : PhotochemistryModSystem) would otherwise load BOTH
-        // systems and double-register. When a derived head is present, the base stands down so exactly one
-        // head registers; the derived head IS-A PhotochemistryModSystem and runs all base logic via base.Start(...).
-        public override bool ShouldLoad(EnumAppSide forSide) => ShouldActivateThisHead();
-        public override bool ShouldLoad(ICoreAPI api) => ShouldActivateThisHead();
-
-        private bool ShouldActivateThisHead()
-        {
-            if (GetType() != typeof(PhotochemistryModSystem)) return true; // a head subclass — always the active head
-            return !DerivedHeadPresent();
-        }
-
-        private static bool DerivedHeadPresent()
-        {
-            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                Type?[] types;
-                try { types = asm.GetTypes(); }
-                catch (System.Reflection.ReflectionTypeLoadException ex) { types = ex.Types; }
-                catch { continue; }
-
-                foreach (Type? t in types)
-                    if (t != null && t != typeof(PhotochemistryModSystem) && typeof(PhotochemistryModSystem).IsAssignableFrom(t))
-                        return true;
-            }
-            return false;
         }
 
         // Asset-backed process profile defaults are available from this lifecycle stage.

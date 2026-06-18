@@ -1,15 +1,15 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Collodion.AdminTooling;
+using Photochemistry.AdminTooling;
 
 
-namespace Collodion.Plates.Blocks
+namespace Photochemistry.Plates.Blocks
 {
     public sealed partial class BlockGlassPlate
     {
         private const float DefaultPolishSeconds = 2.0f;
         private static readonly AssetLocation _glassPlateItemCode = new("photochemistry", "glassplate");
-        private CollodionConfig? Cfg => CollodionConfigAccess.ResolveConfig(api);
+        private PhotochemistryConfig? Cfg => PhotochemistryConfigAccess.ResolveConfig(api);
         private PlateProcessingConfig? PlateCfg => Cfg?.PlateProcessing;
 
         private float GetPolishSeconds()

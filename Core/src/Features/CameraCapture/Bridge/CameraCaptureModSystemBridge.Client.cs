@@ -1,9 +1,9 @@
 ﻿using HarmonyLib;
-using Collodion.AdminTooling;
-using Collodion.CameraCapture.Contracts;
+using Photochemistry.AdminTooling;
+using Photochemistry.CameraCapture.Contracts;
 using Vintagestory.API.Client;
 
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     internal sealed partial class CameraCaptureModSystemBridge
     {

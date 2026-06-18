@@ -2,7 +2,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     // Camera render-time overrides and ground-mesh cache handling.
     // Keeps rendering concerns separate from interaction and exposure logic.

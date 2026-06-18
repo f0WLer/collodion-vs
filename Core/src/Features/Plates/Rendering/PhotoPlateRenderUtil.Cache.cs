@@ -2,7 +2,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 
-namespace Collodion.Plates.Rendering
+namespace Photochemistry.Plates.Rendering
 {
     public static partial class PhotoPlateRenderUtil
     {

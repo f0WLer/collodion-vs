@@ -1,7 +1,7 @@
 using OpenTK.Graphics.OpenGL;
 using Vintagestory.API.Client;
 
-namespace Collodion.Exposure
+namespace Photochemistry.Exposure
 {
     /// <summary>Shared utilities for the exposure pipeline: framebuffer operations.</summary>
     internal static class ExposureUtils

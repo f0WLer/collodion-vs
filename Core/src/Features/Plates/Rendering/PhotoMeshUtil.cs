@@ -2,7 +2,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Util;
 
-namespace Collodion.Plates.Rendering
+namespace Photochemistry.Plates.Rendering
 {
     internal static class PhotoMeshUtil
     {

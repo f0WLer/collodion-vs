@@ -3,10 +3,10 @@ using OpenTK.Graphics.OpenGL;
 using SkiaSharp;
 using Vintagestory.API.Client;
 using Vintagestory.Client.NoObf;
-using Collodion.AdminTooling;
-using Collodion.Exposure;
+using Photochemistry.AdminTooling;
+using Photochemistry.Exposure;
 
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     // Persistent virtual-camera preview renderer.
     // In idle mode it borrows the prepared VirtualCamera from VirtualExposureRenderer (via
@@ -19,7 +19,7 @@ namespace Collodion.CameraCapture
         private readonly ICoreClientAPI _capi;
         private readonly ClientPlatformWindows _platform;
         private readonly ClientMain _main;
-        private readonly CollodionModSystem? _modSystem;
+        private readonly PhotochemistryModSystem? _modSystem;
         private int[]? _latestPreviewPixels;
         private int _latestPreviewWidth;
         private int _latestPreviewHeight;
@@ -85,7 +85,7 @@ namespace Collodion.CameraCapture
             _capi = capi;
             _main = (ClientMain)capi.World;
             _platform = (ClientPlatformWindows)_main.Platform;
-            _modSystem = CollodionConfigAccess.ResolveModSystem(capi);
+            _modSystem = PhotochemistryConfigAccess.ResolveModSystem(capi);
         }
 
         // Returns and clears the most recently buffered preview frame, or false if none is available.

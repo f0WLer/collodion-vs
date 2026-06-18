@@ -3,7 +3,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 
-namespace Collodion.ImageEffects
+namespace Photochemistry.ImageEffects
 {
     // Named effects profile lookup, fallback, and runtime snapshot behavior.
     internal static class ImageEffectsProfileService

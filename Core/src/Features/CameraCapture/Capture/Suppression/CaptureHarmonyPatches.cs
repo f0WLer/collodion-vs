@@ -5,7 +5,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
 
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     // During self-portrait virtual renders, the game builds the local player's model matrix
     // relative to EntityPlayer.CameraPos. VirtualCamera temporarily moves CameraPos to the

@@ -1,11 +1,11 @@
-using Collodion.CameraCapture;
-using Collodion.CameraCapture.Contracts;
-using Collodion.Plates;
+using Photochemistry.CameraCapture;
+using Photochemistry.CameraCapture.Contracts;
+using Photochemistry.Plates;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     internal sealed partial class FieldCameraModSystemBridge
     {

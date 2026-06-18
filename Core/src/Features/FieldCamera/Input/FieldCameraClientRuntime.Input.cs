@@ -1,10 +1,10 @@
-using Collodion.CameraCapture;
-using Collodion.CameraCapture.Contracts;
-using Collodion.Plates;
+using Photochemistry.CameraCapture;
+using Photochemistry.CameraCapture.Contracts;
+using Photochemistry.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     // Kept off the bridge so the bridge stays pure wiring and this holds the mutable per-tick state.
     internal sealed partial class FieldCameraClientRuntime

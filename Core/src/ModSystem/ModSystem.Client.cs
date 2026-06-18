@@ -1,11 +1,11 @@
 using Vintagestory.API.Client;
-using Collodion.AdminTooling;
+using Photochemistry.AdminTooling;
 
-namespace Collodion
+namespace Photochemistry
 {
     // Client startup wiring for channels, renderers, commands, and tick listeners.
     // Keeps client-only bootstrap and config persistence separate from server startup.
-    public partial class CollodionModSystem
+    public partial class PhotochemistryModSystem
     {
         // Client startup wires networking, renderers, hotkeys, config, and the viewfinder polling loop.
         public override void StartClientSide(ICoreClientAPI api)
@@ -18,7 +18,7 @@ namespace Collodion
         }
 
         // Lazily ensures the full client config tree is available before UI or render code reads from it.
-        internal CollodionConfig GetOrLoadClientConfig(ICoreClientAPI capi)
+        internal PhotochemistryConfig GetOrLoadClientConfig(ICoreClientAPI capi)
         {
             if (Config == null)
             {

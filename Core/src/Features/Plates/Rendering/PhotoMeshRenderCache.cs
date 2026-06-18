@@ -1,6 +1,6 @@
 using Vintagestory.API.Client;
 
-namespace Collodion.Plates.Rendering
+namespace Photochemistry.Plates.Rendering
 {
     // Shared mesh render cache used by both item and plate photo render paths.
     // Stores uploaded MultiTextureMeshRef + atlas texture id per string cache key.

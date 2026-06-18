@@ -1,8 +1,8 @@
 ﻿using Vintagestory.API.Client;
-using Collodion.CameraCapture;
-using Collodion.ImageEffects;
+using Photochemistry.CameraCapture;
+using Photochemistry.ImageEffects;
 
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     // Dev-time dialog for live-tuning exposure physics toggles and key effects sliders.
     // Opened via the hotkey binding "photochemistry-exposuregui" (default: unbound, assignable in game settings).
@@ -14,12 +14,12 @@ namespace Collodion.AdminTooling
         public override string ToggleKeyCombinationCode => string.Empty;
 
         private readonly VirtualExposureRenderer _renderer;
-        private readonly CollodionModSystem _owner;
+        private readonly PhotochemistryModSystem _owner;
 
         internal GuiDialogExposurePhysics(
             ICoreClientAPI capi,
             VirtualExposureRenderer renderer,
-            CollodionModSystem owner)
+            PhotochemistryModSystem owner)
             : base(capi)
         {
             _renderer = renderer;

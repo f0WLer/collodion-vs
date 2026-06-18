@@ -2,9 +2,9 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
-using Collodion.Plates;
+using Photochemistry.Plates;
 
-namespace Collodion.PlateBox
+namespace Photochemistry.PlateBox
 {
     internal sealed class PlateBoxSlotRenderer : IRenderer, IDisposable
     {

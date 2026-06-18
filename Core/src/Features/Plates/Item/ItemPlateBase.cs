@@ -1,10 +1,10 @@
-﻿using Collodion.AdminTooling;
+﻿using Photochemistry.AdminTooling;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Config;
 
-namespace Collodion.Plates
+namespace Photochemistry.Plates
 {
     public abstract class ItemPlateBase : Item
     {
@@ -160,7 +160,7 @@ namespace Collodion.Plates
                 PlateStage stage = PlateAttributes.GetStage(inSlot?.Itemstack);
                 if (stage == PlateStage.Exposing)
                 {
-                    if (CollodionConfigAccess.ResolveConfig(api)?.Viewfinder?.PauseDryingDuringExposure ?? true)
+                    if (PhotochemistryConfigAccess.ResolveConfig(api)?.Viewfinder?.PauseDryingDuringExposure ?? true)
                         return 0f;
                 }
             }

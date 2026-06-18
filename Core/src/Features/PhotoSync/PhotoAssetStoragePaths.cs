@@ -1,7 +1,7 @@
 ﻿using SkiaSharp;
 using Vintagestory.API.Config;
 
-namespace Collodion.PhotoSync.Storage
+namespace Photochemistry.PhotoSync.Storage
 {
     // Photo id normalization and canonical on-disk photo path rules.
     internal static class PhotoAssetStoragePaths

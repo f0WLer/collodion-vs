@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     public sealed class BlockEntityRestingCamera : BlockEntity
     {

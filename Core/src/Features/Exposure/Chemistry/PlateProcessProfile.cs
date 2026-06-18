@@ -1,4 +1,4 @@
-namespace Collodion.Exposure
+namespace Photochemistry.Exposure
 {
     /// <summary>
     /// Immutable emulsion parameters for a single wet-plate chemistry variant.

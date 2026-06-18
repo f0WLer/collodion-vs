@@ -2,11 +2,11 @@
 using SkiaSharp;
 using Vintagestory.API.Client;
 using Vintagestory.Client.NoObf;
-using Collodion.AdminTooling;
-using Collodion.ImageEffects;
-using Collodion.Exposure;
+using Photochemistry.AdminTooling;
+using Photochemistry.ImageEffects;
+using Photochemistry.Exposure;
 
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     /// <summary>
     /// Persistent renderer that drives a <see cref="VirtualCamera"/> across consecutive game frames,
@@ -280,7 +280,7 @@ namespace Collodion.CameraCapture
             if (_buffer == null || _buffer.FramesAccumulated == 0)
                 throw new InvalidOperationException("No frames accumulated.");
 
-            int maxDimension = CollodionConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.PhotoCaptureMaxDimension
+            int maxDimension = PhotochemistryConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.PhotoCaptureMaxDimension
                 ?? ViewfinderConfig.DefaultPhotoCaptureMaxDimension;
 
             return ExposureSeal.ToPhoto(_buffer, maxDimension, "exposure-export", _baselineEffects, effectsOverride, ApplyFinishing);
@@ -323,7 +323,7 @@ namespace Collodion.CameraCapture
         {
             if (_buffer == null || ExposurePreviewSink == null || _buffer.FramesAccumulated == 0) return;
 
-            ViewfinderConfig? cfg = CollodionConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder;
+            ViewfinderConfig? cfg = PhotochemistryConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder;
             // Skip the GPU→CPU resolve when no one is displaying the preview (DebugPreviewPeak off).
             if (!(cfg?.DebugPreviewPeak ?? false)) return;
             int maxDimension = cfg.DebugPreviewMaxDimension;
@@ -394,7 +394,7 @@ namespace Collodion.CameraCapture
             }
 
             // Hard cap: stop regardless of stop mode once MaxAccumulatedFrames is reached.
-            int maxFrames = CollodionConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.MaxAccumulatedFrames
+            int maxFrames = PhotochemistryConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.MaxAccumulatedFrames
                 ?? ViewfinderConfig.DefaultMaxAccumulatedFrames;
             if (_buffer.FramesAccumulated >= maxFrames)
             {
@@ -424,7 +424,7 @@ namespace Collodion.CameraCapture
         {
             int sourceW = _clientApi.Render.FrameWidth;
             int sourceH = _clientApi.Render.FrameHeight;
-            int maxDim  = CollodionConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.ExposureReadbackMaxDimension
+            int maxDim  = PhotochemistryConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.ExposureReadbackMaxDimension
                           ?? ViewfinderConfig.DefaultExposureReadbackMaxDimension;
 
             GpuExposureAccumulator.ComputeTargetDimensions(sourceW, sourceH, maxDim, out int w, out int h);

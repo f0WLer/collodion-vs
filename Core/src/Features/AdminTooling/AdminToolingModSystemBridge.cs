@@ -1,10 +1,10 @@
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     internal sealed partial class AdminToolingModSystemBridge
     {
-        private readonly CollodionModSystem _owner;
+        private readonly PhotochemistryModSystem _owner;
 
-        internal AdminToolingModSystemBridge(CollodionModSystem owner)
+        internal AdminToolingModSystemBridge(PhotochemistryModSystem owner)
         {
             _owner = owner;
         }

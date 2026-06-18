@@ -1,10 +1,10 @@
-﻿using Collodion.PhotoMetadata.Model;
-using Collodion.Plates;
-using Collodion.Plates.Rendering;
-using Collodion.PhotoSync.Storage;
+﻿using Photochemistry.PhotoMetadata.Model;
+using Photochemistry.Plates;
+using Photochemistry.Plates.Rendering;
+using Photochemistry.PhotoSync.Storage;
 using Vintagestory.API.Common;
 
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     // .collodion export — bakes the currently held photo plate into a flat, viewable composite
     // PNG (silver image over an opaque black backing) under ModData/collodion/photos/exports/.

@@ -1,11 +1,11 @@
-﻿using Collodion.CameraCapture;
-using Collodion.Plates;
+﻿using Photochemistry.CameraCapture;
+using Photochemistry.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     public sealed class BlockEntityMountedCamera : BlockEntity
     {

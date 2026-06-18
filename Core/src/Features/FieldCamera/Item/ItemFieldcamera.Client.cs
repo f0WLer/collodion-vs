@@ -1,14 +1,14 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Client;
-using Collodion.AdminTooling;
+using Photochemistry.AdminTooling;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     public partial class ItemFieldcamera
     {
         private static bool IsViewfinderActive(ICoreAPI api)
         {
-            CollodionModSystem? modSys = CollodionConfigAccess.ResolveModSystem(api);
+            PhotochemistryModSystem? modSys = PhotochemistryConfigAccess.ResolveModSystem(api);
             return modSys != null && modSys.CameraCaptureBridge.IsViewfinderActive;
         }
 
@@ -16,7 +16,7 @@ namespace Collodion.FieldCamera
         {
             if (api is not ICoreClientAPI capi) return false;
 
-            CollodionModSystem? modSys = CollodionConfigAccess.ResolveModSystem(api);
+            PhotochemistryModSystem? modSys = PhotochemistryConfigAccess.ResolveModSystem(api);
             if (modSys == null) return false;
 
             ItemStack? cameraStack = CameraItemHelper.GetActiveCameraStack(capi);

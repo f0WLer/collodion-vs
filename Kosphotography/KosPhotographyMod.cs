@@ -1,6 +1,6 @@
 using System;
-using Collodion;
-using Collodion.CameraCapture;
+using Photochemistry;
+using Photochemistry.CameraCapture;
 using ProtoBuf;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -9,11 +9,11 @@ using Vintagestory.API.Server;
 namespace Kosphotography
 {
     // The kosphotography head: a superset of collodion. It inherits all baseline registration from
-    // CollodionModSystem (via base.Start/StartClientSide/StartServerSide) and adds the timed/automatic
+    // PhotochemistryModSystem (via base.Start/StartClientSide/StartServerSide) and adds the timed/automatic
     // camera item class plus the shutter stop-policy provider, config UI, and duration packet. Install
-    // instead of collodion, not alongside it — CollodionModSystem.ShouldLoad stands the baseline head down
+    // instead of collodion, not alongside it — PhotochemistryModSystem.ShouldLoad stands the baseline head down
     // when this derived head is present, so exactly one head registers.
-    public class KosPhotographyMod : CollodionModSystem
+    public class KosPhotographyMod : PhotochemistryModSystem
     {
         public const string KosChannelName = "kosphotography";
 

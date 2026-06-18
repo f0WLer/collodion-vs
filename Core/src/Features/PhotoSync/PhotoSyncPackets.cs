@@ -1,6 +1,6 @@
 using ProtoBuf;
 
-namespace Collodion.PhotoSync.Contracts
+namespace Photochemistry.PhotoSync.Contracts
 {
     // Protobuf packet DTOs for photo sync transfer and persistence messaging.
     // Keep these classes data-only and preserve ProtoMember ids for compatibility.

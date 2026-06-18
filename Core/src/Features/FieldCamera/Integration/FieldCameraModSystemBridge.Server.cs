@@ -1,7 +1,7 @@
-﻿using Collodion.CameraCapture.Contracts;
+﻿using Photochemistry.CameraCapture.Contracts;
 using Vintagestory.API.Server;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     internal sealed partial class FieldCameraModSystemBridge
     {

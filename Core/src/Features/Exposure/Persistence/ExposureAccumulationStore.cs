@@ -1,7 +1,7 @@
 ﻿using System.IO.Compression;
 using Vintagestory.API.Config;
 
-namespace Collodion.Exposure
+namespace Photochemistry.Exposure
 {
     /// <summary>
     /// Persists and restores raw exposure accumulation blobs between game sessions.

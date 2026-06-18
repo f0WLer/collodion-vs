@@ -1,7 +1,7 @@
 using SkiaSharp;
 using Vintagestory.API.Client;
 
-namespace Collodion.ImageEffects
+namespace Photochemistry.ImageEffects
 {
     // Thin seam for capture/render callers so effects runtime internals can move without touching callsites.
     internal static class ImageEffectsPipelineBridge

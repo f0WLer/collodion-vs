@@ -1,7 +1,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 
-namespace Collodion.Plates
+namespace Photochemistry.Plates
 {
     internal static class PlateChemicalUtil
     {

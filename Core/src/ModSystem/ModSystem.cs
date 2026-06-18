@@ -2,33 +2,33 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
-using Collodion.AdminTooling;
-using Collodion.CameraCapture.Integration;
-using Collodion.FieldCamera;
-using Collodion.ImageEffects;
-using Collodion.PhotoSync.Integration;
-using Collodion.PlateBox;
-using Collodion.Plates;
-using Collodion.Plates.Blocks;
-using Collodion.Tray;
-using Collodion.Frame;
+using Photochemistry.AdminTooling;
+using Photochemistry.CameraCapture.Integration;
+using Photochemistry.FieldCamera;
+using Photochemistry.ImageEffects;
+using Photochemistry.PhotoSync.Integration;
+using Photochemistry.PlateBox;
+using Photochemistry.Plates;
+using Photochemistry.Plates.Blocks;
+using Photochemistry.Tray;
+using Photochemistry.Frame;
 
-namespace Collodion
+namespace Photochemistry
 {
     // Shared mod bootstrap, registration, and lifecycle cleanup for both sides.
     // Holds config, channels, and runtime references shared by the client/server partials.
-    public partial class CollodionModSystem : ModSystem
+    public partial class PhotochemistryModSystem : ModSystem
     {
-        public static CollodionModSystem? ClientInstance { get; internal set; }
+        public static PhotochemistryModSystem? ClientInstance { get; internal set; }
 
         public const string ConfigFileName = "photochemistry.json";
         public const string ServerPhotoIndexFileName = "photochemistry-photoindex.json";
-        public CollodionConfig Config { get; internal set; } = new CollodionConfig();
-        public CollodionClientConfig ClientConfig { get; internal set; } = new CollodionClientConfig();
+        public PhotochemistryConfig Config { get; internal set; } = new PhotochemistryConfig();
+        public PhotochemistryClientConfig ClientConfig { get; internal set; } = new PhotochemistryClientConfig();
 
 
         // Applies a freshly loaded/normalized config tree, keeping ClientConfig in sync.
-        internal void ApplyConfig(CollodionConfig cfg)
+        internal void ApplyConfig(PhotochemistryConfig cfg)
         {
             Config = cfg;
             ClientConfig = cfg.Client;
@@ -73,16 +73,16 @@ namespace Collodion
         }
 
         // Two heads share this codebase: baseline `collodion` and the superset `kosphotography`. Each head's
-        // zip bundles Photochemistry.Core.dll, which contains this concrete CollodionModSystem. A head that
-        // supplies its own subclass (e.g. KosPhotographyMod : CollodionModSystem) would otherwise load BOTH
+        // zip bundles Photochemistry.Core.dll, which contains this concrete PhotochemistryModSystem. A head that
+        // supplies its own subclass (e.g. KosPhotographyMod : PhotochemistryModSystem) would otherwise load BOTH
         // systems and double-register. When a derived head is present, the base stands down so exactly one
-        // head registers; the derived head IS-A CollodionModSystem and runs all base logic via base.Start(...).
+        // head registers; the derived head IS-A PhotochemistryModSystem and runs all base logic via base.Start(...).
         public override bool ShouldLoad(EnumAppSide forSide) => ShouldActivateThisHead();
         public override bool ShouldLoad(ICoreAPI api) => ShouldActivateThisHead();
 
         private bool ShouldActivateThisHead()
         {
-            if (GetType() != typeof(CollodionModSystem)) return true; // a head subclass — always the active head
+            if (GetType() != typeof(PhotochemistryModSystem)) return true; // a head subclass — always the active head
             return !DerivedHeadPresent();
         }
 
@@ -96,7 +96,7 @@ namespace Collodion
                 catch { continue; }
 
                 foreach (Type? t in types)
-                    if (t != null && t != typeof(CollodionModSystem) && typeof(CollodionModSystem).IsAssignableFrom(t))
+                    if (t != null && t != typeof(PhotochemistryModSystem) && typeof(PhotochemistryModSystem).IsAssignableFrom(t))
                         return true;
             }
             return false;

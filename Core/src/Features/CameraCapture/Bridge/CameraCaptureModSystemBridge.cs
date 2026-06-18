@@ -1,9 +1,9 @@
-using Collodion.AdminTooling;
+using Photochemistry.AdminTooling;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     // Owner handle + ambient API/config/logger accessors shared by all partials.
     internal sealed partial class CameraCaptureModSystemBridge
@@ -11,9 +11,9 @@ namespace Collodion.CameraCapture
     // CameraCapture startup composition and packet registration wiring.
     // Keeps camera packet registration ownership in the CameraCapture feature root.
 
-        private readonly CollodionModSystem _owner;
+        private readonly PhotochemistryModSystem _owner;
 
-        internal CameraCaptureModSystemBridge(CollodionModSystem owner)
+        internal CameraCaptureModSystemBridge(PhotochemistryModSystem owner)
         {
             _owner = owner;
         }
@@ -27,7 +27,7 @@ namespace Collodion.CameraCapture
             set => _owner.ServerChannel = value;
         }
 
-        internal CollodionConfig Config
+        internal PhotochemistryConfig Config
         {
             get => _owner.Config;
             set
@@ -37,7 +37,7 @@ namespace Collodion.CameraCapture
             }
         }
 
-        internal CollodionClientConfig ClientConfig => _owner.ClientConfig;
+        internal PhotochemistryClientConfig ClientConfig => _owner.ClientConfig;
         internal ILogger? BestEffortLogger => _owner.BestEffortLogger;
         internal bool IsBestEffortDebugLoggingEnabled => _owner.IsBestEffortDebugLoggingEnabled;
     }

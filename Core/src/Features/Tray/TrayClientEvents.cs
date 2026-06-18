@@ -1,13 +1,13 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-namespace Collodion.Tray
+namespace Photochemistry.Tray
 {
     internal sealed class TrayClientEvents
     {
-        private readonly CollodionModSystem _owner;
+        private readonly PhotochemistryModSystem _owner;
         private MouseEventDelegate? _mouseUpHandler;
 
-        internal TrayClientEvents(CollodionModSystem owner)
+        internal TrayClientEvents(PhotochemistryModSystem owner)
         {
             _owner = owner;
         }

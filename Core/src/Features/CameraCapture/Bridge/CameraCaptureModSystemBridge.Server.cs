@@ -1,10 +1,10 @@
-﻿using Collodion.AdminTooling;
-using Collodion.CameraCapture.Contracts;
-using Collodion.CameraCapture.Integration;
+﻿using Photochemistry.AdminTooling;
+using Photochemistry.CameraCapture.Contracts;
+using Photochemistry.CameraCapture.Integration;
 
 using Vintagestory.API.Server;
 
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     internal sealed partial class CameraCaptureModSystemBridge
     {

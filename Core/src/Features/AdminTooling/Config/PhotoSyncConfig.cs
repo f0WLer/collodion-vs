@@ -1,4 +1,4 @@
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     public sealed class PhotoSyncConfig
     {

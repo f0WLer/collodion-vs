@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace Collodion.ImageEffects
+namespace Photochemistry.ImageEffects
 {
     // Effects command property parsing and assignment bindings.
     internal static class ImageEffectsCommandPropertyMap

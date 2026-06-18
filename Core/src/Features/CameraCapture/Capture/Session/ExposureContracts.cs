@@ -1,8 +1,8 @@
 using SkiaSharp;
-using Collodion.ImageEffects;
+using Photochemistry.ImageEffects;
 using Vintagestory.API.Common;
 
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     /// <summary>Lifecycle state of an exposure session on either the viewport or virtual-camera renderer path.</summary>
     internal enum ExposureState { Idle, Capturing, Paused, Faulted, Done }

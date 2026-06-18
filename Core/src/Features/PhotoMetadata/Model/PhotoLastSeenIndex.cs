@@ -1,6 +1,6 @@
-using Collodion.PhotoSync.Storage;
+using Photochemistry.PhotoSync.Storage;
 
-namespace Collodion.PhotoMetadata.Model
+namespace Photochemistry.PhotoMetadata.Model
 {
     public sealed class PhotoLastSeenIndex
     {

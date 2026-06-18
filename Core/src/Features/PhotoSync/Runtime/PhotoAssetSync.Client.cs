@@ -1,9 +1,9 @@
 ﻿using Vintagestory.API.MathTools;
-using Collodion.Plates.Rendering;
-using Collodion.PhotoSync.Contracts;
-using Collodion.PhotoSync.Storage;
+using Photochemistry.Plates.Rendering;
+using Photochemistry.PhotoSync.Contracts;
+using Photochemistry.PhotoSync.Storage;
 
-namespace Collodion.PhotoSync.Runtime
+namespace Photochemistry.PhotoSync.Runtime
 {
     // Client-side photo upload/download state, dedupe, and cache invalidation hooks.
     // Handles local file writes and block refresh when synced photos arrive.

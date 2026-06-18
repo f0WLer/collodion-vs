@@ -1,7 +1,7 @@
-﻿using Collodion.CameraCapture;
+﻿using Photochemistry.CameraCapture;
 using Vintagestory.API.Client;
 
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     // Client-side operator-tooling startup composition.
     // Keeps config bootstrap and startup diagnostics out of ModSystem callback bodies.
@@ -19,18 +19,18 @@ namespace Collodion.AdminTooling
         private void ConfigureClientOperatorToolingCore(ICoreClientAPI api)
         {
             _owner.ClientApi = api;
-            CollodionModSystem.ClientInstance = _owner;
+            PhotochemistryModSystem.ClientInstance = _owner;
             _owner.ClientChannel = api.Network.GetChannel("photochemistry");
         }
 
         private void ConfigureClientOperatorToolingConfig(ICoreClientAPI api)
         {
-            _owner.ApplyConfig(ConfigLifecycle.LoadOrCreate(api, CollodionModSystem.ConfigFileName));
+            _owner.ApplyConfig(ConfigLifecycle.LoadOrCreate(api, PhotochemistryModSystem.ConfigFileName));
         }
 
         private void TryReportClientOperatorToolingStartupInfo()
         {
-            var asm = typeof(CollodionModSystem).Assembly;
+            var asm = typeof(PhotochemistryModSystem).Assembly;
             string ver = asm.GetName().Version?.ToString() ?? "<nover>";
             string loc = asm.Location;
             string stamp = string.IsNullOrEmpty(loc)

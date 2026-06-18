@@ -1,6 +1,6 @@
 ﻿using Vintagestory.API.Common;
 
-namespace Collodion.Plates
+namespace Photochemistry.Plates
 {
     /// <summary>
     /// Shared camera load/exposure plate eligibility rules used by both client and server paths.

@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     // Shared camera item surface used by both client and server paths.
     // Keeps loaded-plate attribute keys and tooltip behavior centralized.
@@ -27,7 +27,7 @@ namespace Collodion.FieldCamera
         {
             handling = EnumHandHandling.PreventDefault;
 
-            // Viewfinder mode is driven by the client tick polling RMB state in CollodionModSystem.
+            // Viewfinder mode is driven by the client tick polling RMB state in PhotochemistryModSystem.
             // We still prevent default use/interact while holding the camera.
         }
 

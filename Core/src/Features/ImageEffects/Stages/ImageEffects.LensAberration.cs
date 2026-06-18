@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using SkiaSharp;
 
-namespace Collodion.ImageEffects
+namespace Photochemistry.ImageEffects
 {
     public static partial class ImageEffects
     {

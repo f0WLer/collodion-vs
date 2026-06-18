@@ -2,8 +2,8 @@
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
-using Collodion.Plates;
-namespace Collodion.Tray
+using Photochemistry.Plates;
+namespace Photochemistry.Tray
 {
     public sealed partial class BlockDevelopmentTray
     {

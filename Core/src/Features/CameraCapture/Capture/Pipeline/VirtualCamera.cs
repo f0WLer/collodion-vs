@@ -7,7 +7,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.Client;
 using Vintagestory.Client.NoObf;
 
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     // Complete pose/config snapshot for handing a virtual camera between preview,
     // exposure, and one-shot capture code without losing dimension or self-portrait state.

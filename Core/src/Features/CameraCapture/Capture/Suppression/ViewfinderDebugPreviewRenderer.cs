@@ -1,8 +1,8 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.MathTools;
-using Collodion.AdminTooling;
+using Photochemistry.AdminTooling;
 
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     // On-screen debug preview overlay.
     // Displays live frames from VirtualCameraPreviewRenderer — either idle vcam renders
@@ -12,7 +12,7 @@ namespace Collodion.CameraCapture
     {
         private readonly ICoreClientAPI _capi;
         private readonly VirtualCameraPreviewRenderer? _virtualPreviewRenderer;
-        private readonly CollodionModSystem? _modSystem;
+        private readonly PhotochemistryModSystem? _modSystem;
 
         private LoadedTexture? _previewTexture;
 
@@ -20,7 +20,7 @@ namespace Collodion.CameraCapture
         {
             _capi = capi;
             _virtualPreviewRenderer = virtualPreviewRenderer;
-            _modSystem = CollodionConfigAccess.ResolveModSystem(capi);
+            _modSystem = PhotochemistryConfigAccess.ResolveModSystem(capi);
         }
 
         public double RenderOrder => 0.97;

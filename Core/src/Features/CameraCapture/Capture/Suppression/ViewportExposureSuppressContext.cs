@@ -1,6 +1,6 @@
 using Vintagestory.API.MathTools;
 
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     /// <summary>
     /// Shared state consulted by the Harmony patch on <c>EntityPlayerShapeRenderer</c>

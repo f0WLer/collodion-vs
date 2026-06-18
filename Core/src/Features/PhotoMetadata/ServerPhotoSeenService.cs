@@ -1,8 +1,8 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Server;
-using Collodion.PhotoMetadata.Model;
+using Photochemistry.PhotoMetadata.Model;
 
-namespace Collodion.PhotoMetadata
+namespace Photochemistry.PhotoMetadata
 {
     // Owns the server-side photo-seen index: in-memory state, dirty tracking, and persistence.
     // TryFlush is single-flight (Interlocked guard) and dispatches the actual file write through

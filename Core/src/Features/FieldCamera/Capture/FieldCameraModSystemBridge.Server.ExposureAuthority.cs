@@ -1,14 +1,14 @@
-using Collodion.CameraCapture.Contracts;
-using Collodion.PhotoMetadata.Model;
-using Collodion.PhotoSync.Storage;
-using Collodion.Plates;
-using Collodion.Tray;
+using Photochemistry.CameraCapture.Contracts;
+using Photochemistry.PhotoMetadata.Model;
+using Photochemistry.PhotoSync.Storage;
+using Photochemistry.Plates;
+using Photochemistry.Tray;
 
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     // Server-authoritative capture finalization: the bridge's authority over plate-stage transitions
     // as exposures start, pause, finalize, and seal into the tray. Split out of Server.cs so that file

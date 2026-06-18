@@ -1,8 +1,8 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Server;
-using Collodion.CameraCapture.Contracts;
+using Photochemistry.CameraCapture.Contracts;
 
-namespace Collodion.CameraCapture.Integration
+namespace Photochemistry.CameraCapture.Integration
 {
     internal static class CameraCaptureChannelRegistration
     {

@@ -1,8 +1,8 @@
-﻿using Collodion.AdminTooling;
+﻿using Photochemistry.AdminTooling;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Collodion.Plates
+namespace Photochemistry.Plates
 {
     public sealed partial class ItemGlassPlate : ItemPlateBase
     {

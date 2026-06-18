@@ -1,9 +1,9 @@
-using Collodion.AdminTooling;
+using Photochemistry.AdminTooling;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     // Invisible companion block entity for BlockMountedCameraUpper — suppresses default tesselation
     // so the upper block renders nothing on its own (visuals are owned by the lower block's renderer).
@@ -43,7 +43,7 @@ namespace Collodion.FieldCamera
             if (byPlayer == null || blockSel == null) return false;
             if (world.Side == EnumAppSide.Client) return true;
 
-            CollodionModSystem? modSys = CollodionConfigAccess.ResolveModSystem(world.Api);
+            PhotochemistryModSystem? modSys = PhotochemistryConfigAccess.ResolveModSystem(world.Api);
             if (modSys == null) return false;
 
             BlockPos camPos = blockSel.Position.DownCopy();

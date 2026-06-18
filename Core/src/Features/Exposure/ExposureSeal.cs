@@ -1,8 +1,8 @@
 using SkiaSharp;
-using Collodion.ImageEffects;
-using Collodion.PhotoSync.Storage;
+using Photochemistry.ImageEffects;
+using Photochemistry.PhotoSync.Storage;
 
-namespace Collodion.Exposure
+namespace Photochemistry.Exposure
 {
     /// <summary>
     /// Finalizes an exposure accumulator into a saved Photo PNG: resolve the latent image,

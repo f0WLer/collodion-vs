@@ -1,6 +1,6 @@
 using Vintagestory.API.Common;
 
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     // Feature-owned config lifecycle policy used by client/server startup and runtime persistence paths.
     // Normalizes config trees consistently and keeps load/store error handling in one place.
@@ -8,12 +8,12 @@ namespace Collodion.AdminTooling
     {
         // Loads persisted config, falling back to defaults when missing/invalid.
         // Newly created defaults are persisted best-effort.
-        internal static CollodionConfig LoadOrCreate(ICoreAPICommon api, string fileName)
+        internal static PhotochemistryConfig LoadOrCreate(ICoreAPICommon api, string fileName)
         {
-            CollodionConfig? cfg;
+            PhotochemistryConfig? cfg;
             try
             {
-                cfg = api.LoadModConfig<CollodionConfig>(fileName);
+                cfg = api.LoadModConfig<PhotochemistryConfig>(fileName);
             }
             catch
             {
@@ -32,15 +32,15 @@ namespace Collodion.AdminTooling
         }
 
         // Ensures a non-null, clamped config tree suitable for runtime reads.
-        internal static CollodionConfig EnsureNormalized(CollodionConfig? cfg)
+        internal static PhotochemistryConfig EnsureNormalized(PhotochemistryConfig? cfg)
         {
-            cfg ??= new CollodionConfig();
+            cfg ??= new PhotochemistryConfig();
             cfg.ClampInPlace();
             return cfg;
         }
 
         // Stores config best-effort without throwing into gameplay paths.
-        internal static void TryStore(ICoreAPICommon api, string fileName, CollodionConfig cfg)
+        internal static void TryStore(ICoreAPICommon api, string fileName, PhotochemistryConfig cfg)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace Collodion.AdminTooling
         }
 
         // Normalizes config and stores it best-effort.
-        internal static void TryStoreNormalized(ICoreAPICommon api, string fileName, CollodionConfig? cfg)
+        internal static void TryStoreNormalized(ICoreAPICommon api, string fileName, PhotochemistryConfig? cfg)
         {
             if (cfg == null) return;
             TryStore(api, fileName, EnsureNormalized(cfg));

@@ -1,6 +1,6 @@
 using Vintagestory.API.Common;
 
-namespace Collodion
+namespace Photochemistry
 {
     /// <summary>
     /// Centralized log entry points that prepend the standard "[collodion] " prefix.

@@ -2,11 +2,11 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Collodion.CameraCapture;
-using Collodion.FieldCamera;
-using Collodion.Plates;
+using Photochemistry.CameraCapture;
+using Photochemistry.FieldCamera;
+using Photochemistry.Plates;
 
-namespace Collodion
+namespace Photochemistry
 {
     /// <summary>
     /// Shared camera-item access helpers used by client and server camera flows.

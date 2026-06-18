@@ -1,8 +1,8 @@
 using Vintagestory.API.Server;
-using Collodion.PhotoSync.Storage;
-using Collodion.PhotoSync.Contracts;
+using Photochemistry.PhotoSync.Storage;
+using Photochemistry.PhotoSync.Contracts;
 
-namespace Collodion.PhotoMetadata
+namespace Photochemistry.PhotoMetadata
 {
     // Server-side metadata packet semantics (seen-touch handling).
     // Caption-set handling is intentionally absent: it requires a placed-photo block entity to write caption
@@ -13,7 +13,7 @@ namespace Collodion.PhotoMetadata
     internal static class PhotoMetadataModSystemBridge
     {
         // Registers server-side metadata packet handlers on the shared transport channel.
-        internal static void ConfigureServerPhotoMetadataChannelHandlers(CollodionModSystem owner)
+        internal static void ConfigureServerPhotoMetadataChannelHandlers(PhotochemistryModSystem owner)
         {
             if (owner.ServerChannel == null) return;
 
@@ -21,7 +21,7 @@ namespace Collodion.PhotoMetadata
                 .SetMessageHandler<PhotoSeenPacket>((player, packet) => HandlePhotoMetadataSeenPacket(owner, player, packet));
         }
 
-        internal static void HandlePhotoMetadataSeenPacket(CollodionModSystem owner, IServerPlayer player, PhotoSeenPacket packet)
+        internal static void HandlePhotoMetadataSeenPacket(PhotochemistryModSystem owner, IServerPlayer player, PhotoSeenPacket packet)
         {
             if (packet == null || player == null) return;
 

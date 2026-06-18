@@ -1,32 +1,32 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
-    // Lightweight helpers to resolve CollodionModSystem and config snapshots from APIs.
+    // Lightweight helpers to resolve PhotochemistryModSystem and config snapshots from APIs.
     // Avoids repeating ModLoader lookup boilerplate across files.
-    internal static class CollodionConfigAccess
+    internal static class PhotochemistryConfigAccess
     {
         // Resolves the shared mod system instance from a generic core API handle.
-        internal static CollodionModSystem? ResolveModSystem(ICoreAPI? api)
+        internal static PhotochemistryModSystem? ResolveModSystem(ICoreAPI? api)
         {
-            return api?.ModLoader?.GetModSystem<CollodionModSystem>();
+            return api?.ModLoader?.GetModSystem<PhotochemistryModSystem>();
         }
 
         // Resolves the client mod system, preferring the cached singleton when available.
-        internal static CollodionModSystem? ResolveClientModSystem(ICoreClientAPI? capi)
+        internal static PhotochemistryModSystem? ResolveClientModSystem(ICoreClientAPI? capi)
         {
-            return CollodionModSystem.ClientInstance ?? capi?.ModLoader?.GetModSystem<CollodionModSystem>();
+            return PhotochemistryModSystem.ClientInstance ?? capi?.ModLoader?.GetModSystem<PhotochemistryModSystem>();
         }
 
         // Returns the shared runtime config snapshot for the provided API context.
-        internal static CollodionConfig? ResolveConfig(ICoreAPI? api)
+        internal static PhotochemistryConfig? ResolveConfig(ICoreAPI? api)
         {
             return ResolveModSystem(api)?.Config;
         }
 
         // Returns the client-side config snapshot for rendering/input code paths.
-        internal static CollodionConfig? ResolveClientConfig(ICoreClientAPI? capi)
+        internal static PhotochemistryConfig? ResolveClientConfig(ICoreClientAPI? capi)
         {
             return ResolveClientModSystem(capi)?.Config;
         }

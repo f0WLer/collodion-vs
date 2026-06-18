@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
-namespace Collodion.Tray
+namespace Photochemistry.Tray
 {
     internal static class TrayTimedInteractionState
     {

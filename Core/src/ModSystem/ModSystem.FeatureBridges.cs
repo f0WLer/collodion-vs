@@ -1,13 +1,13 @@
-using Collodion.AdminTooling;
-using Collodion.CameraCapture;
-using Collodion.FieldCamera;
-using Collodion.PhotoSync.Integration;
-using Collodion.Tray;
-namespace Collodion
+using Photochemistry.AdminTooling;
+using Photochemistry.CameraCapture;
+using Photochemistry.FieldCamera;
+using Photochemistry.PhotoSync.Integration;
+using Photochemistry.Tray;
+namespace Photochemistry
 {
     // Lazy feature bridge instances used by the mod-system entrypoints.
     // Callsites use modSys.XxxBridge.Method() directly rather than forwarding each method here.
-    public partial class CollodionModSystem
+    public partial class PhotochemistryModSystem
     {
         private AdminToolingModSystemBridge? _adminToolingBridge;
         private CameraCaptureModSystemBridge? _cameraCaptureBridge;

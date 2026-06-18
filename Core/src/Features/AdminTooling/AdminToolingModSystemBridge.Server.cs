@@ -1,8 +1,8 @@
-﻿using Collodion.Plates;
+﻿using Photochemistry.Plates;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     // Server-side operator-tooling startup composition.
     // Keeps config bootstrap/logging details out of ModSystem callback bodies.
@@ -10,11 +10,11 @@ namespace Collodion.AdminTooling
     {
         internal void ConfigureServerOperatorToolingStartup(ICoreServerAPI api)
         {
-            _owner.ApplyConfig(ConfigLifecycle.LoadOrCreate(api, CollodionModSystem.ConfigFileName));
+            _owner.ApplyConfig(ConfigLifecycle.LoadOrCreate(api, PhotochemistryModSystem.ConfigFileName));
 
             BestEffort.Try(_owner.BestEffortLogger,
                 "log server config load",
-                () => api.Logger.Notification($"photochemistry: loaded config '{CollodionModSystem.ConfigFileName}'"));
+                () => api.Logger.Notification($"photochemistry: loaded config '{PhotochemistryModSystem.ConfigFileName}'"));
 
             // Resolve the channel directly — _owner.ServerChannel is not yet assigned at this
             // point in startup (it is set later by ConfigureServerCameraCaptureStartup).

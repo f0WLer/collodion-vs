@@ -1,9 +1,9 @@
-using Collodion.PhotoMetadata;
-using Collodion.PhotoSync.Contracts;
-using Collodion.PhotoSync.Storage;
+using Photochemistry.PhotoMetadata;
+using Photochemistry.PhotoSync.Contracts;
+using Photochemistry.PhotoSync.Storage;
 
 
-namespace Collodion.PhotoSync.Integration
+namespace Photochemistry.PhotoSync.Integration
 {
     // PhotoSync client seen-ping dedupe state and seen-touch helper.
     internal sealed partial class PhotoSyncModSystemBridge

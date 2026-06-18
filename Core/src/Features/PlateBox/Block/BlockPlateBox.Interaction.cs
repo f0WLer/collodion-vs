@@ -2,7 +2,7 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.MathTools;
 
-namespace Collodion.PlateBox
+namespace Photochemistry.PlateBox
 {
     public sealed partial class BlockPlateBox
     {

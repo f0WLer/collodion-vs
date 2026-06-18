@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
-using Collodion.ImageEffects;
-using Collodion.Plates.Rendering;
+using Photochemistry.ImageEffects;
+using Photochemistry.Plates.Rendering;
 
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     // Client command router for .collodion subcommands.
     // Dispatches to command partials without mixing command parsing into gameplay flows.

@@ -1,10 +1,10 @@
-﻿using Collodion.Plates.Rendering;
+﻿using Photochemistry.Plates.Rendering;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-using Collodion.Plates;
-namespace Collodion.Tray
+using Photochemistry.Plates;
+namespace Photochemistry.Tray
 {
     public sealed partial class BlockEntityDevelopmentTray
     {

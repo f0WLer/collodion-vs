@@ -1,4 +1,4 @@
-namespace Collodion.PhotoMetadata.Model
+namespace Photochemistry.PhotoMetadata.Model
 {
     public static class PhotographAttrs
     {

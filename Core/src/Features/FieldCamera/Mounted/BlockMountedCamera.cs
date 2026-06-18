@@ -1,8 +1,8 @@
-using Collodion.AdminTooling;
+using Photochemistry.AdminTooling;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     public sealed class BlockMountedCamera : Block
     {
@@ -27,7 +27,7 @@ namespace Collodion.FieldCamera
             if (byPlayer == null || blockSel == null) return false;
             if (world.Side == EnumAppSide.Client) return true;
 
-            CollodionModSystem? modSys = CollodionConfigAccess.ResolveModSystem(world.Api);
+            PhotochemistryModSystem? modSys = PhotochemistryConfigAccess.ResolveModSystem(world.Api);
             if (modSys == null) return false;
 
             bool shiftDown = byPlayer?.Entity?.Controls?.ShiftKey == true || byPlayer?.Entity?.Controls?.Sneak == true;
@@ -39,7 +39,7 @@ namespace Collodion.FieldCamera
         {
             if (world.Side == EnumAppSide.Server)
             {
-                CollodionModSystem? modSys = CollodionConfigAccess.ResolveModSystem(world.Api);
+                PhotochemistryModSystem? modSys = PhotochemistryConfigAccess.ResolveModSystem(world.Api);
                 modSys?.FieldCameraBridge.HandleMountedCameraBlockBroken(world, pos, byPlayer);
 
                 // Clear the invisible companion block above so it isn't orphaned in the air.

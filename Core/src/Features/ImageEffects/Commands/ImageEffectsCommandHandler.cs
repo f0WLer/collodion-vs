@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace Collodion.ImageEffects
+namespace Photochemistry.ImageEffects
 {
     // .collodion effects/effect command behavior and persistence orchestration.
     internal static class ImageEffectsCommandHandler

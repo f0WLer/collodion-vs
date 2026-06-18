@@ -1,10 +1,10 @@
-﻿using Collodion.AdminTooling;
+﻿using Photochemistry.AdminTooling;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace Collodion.Plates.Blocks
+namespace Photochemistry.Plates.Blocks
 {
     public sealed partial class BlockGlassPlate
     {

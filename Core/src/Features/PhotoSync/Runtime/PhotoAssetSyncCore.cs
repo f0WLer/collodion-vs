@@ -1,16 +1,16 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Server;
-using Collodion.AdminTooling;
-using Collodion.PhotoSync.Contracts;
-using Collodion.PhotoSync.Storage;
+using Photochemistry.AdminTooling;
+using Photochemistry.PhotoSync.Contracts;
+using Photochemistry.PhotoSync.Storage;
 
-namespace Collodion.PhotoSync.Runtime
+namespace Photochemistry.PhotoSync.Runtime
 {
     // Shared chunk-transfer primitives and photo-id/path normalization for sync.
     // Used by both client and server photo-sync partials.
     public sealed partial class PhotoAssetSyncCore
     {
-        private readonly CollodionModSystem _mod;
+        private readonly PhotochemistryModSystem _mod;
 
         private sealed class IncomingAssembly
         {
@@ -39,7 +39,7 @@ namespace Collodion.PhotoSync.Runtime
             }
         }
 
-        public PhotoAssetSyncCore(CollodionModSystem mod)
+        public PhotoAssetSyncCore(PhotochemistryModSystem mod)
         {
             _mod = mod;
         }

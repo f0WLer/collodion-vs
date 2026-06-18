@@ -1,6 +1,6 @@
 using Vintagestory.API.Common;
 
-namespace Collodion
+namespace Photochemistry
 {
     internal readonly struct BestEffortLogPolicy
     {

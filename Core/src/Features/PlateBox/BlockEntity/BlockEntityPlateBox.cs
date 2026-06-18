@@ -1,9 +1,9 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
-using Collodion.Plates;
+using Photochemistry.Plates;
 
-namespace Collodion.PlateBox
+namespace Photochemistry.PlateBox
 {
     public sealed partial class BlockEntityPlateBox : BlockEntity
     {

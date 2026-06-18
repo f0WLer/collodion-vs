@@ -1,4 +1,4 @@
-namespace Collodion.Exposure
+namespace Photochemistry.Exposure
 {
     /// <summary>
     /// Tunable physics + chemistry-override layer applied to a <see cref="GpuExposureAccumulator"/>.

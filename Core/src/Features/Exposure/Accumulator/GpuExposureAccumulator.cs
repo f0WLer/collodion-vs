@@ -4,7 +4,7 @@ using SkiaSharp;
 using Vintagestory.API.Client;
 using Vintagestory.Client.NoObf;
 
-namespace Collodion.Exposure
+namespace Photochemistry.Exposure
 {
     /// <summary>
     /// GPU-side floating-point exposure accumulator that replaces the CPU float-array pipeline.

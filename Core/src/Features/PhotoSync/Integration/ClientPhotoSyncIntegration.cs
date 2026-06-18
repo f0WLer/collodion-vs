@@ -1,22 +1,22 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.MathTools;
-using Collodion.AdminTooling;
-using Collodion.PhotoSync.Runtime;
+using Photochemistry.AdminTooling;
+using Photochemistry.PhotoSync.Runtime;
 
-namespace Collodion.PhotoSync.Integration
+namespace Photochemistry.PhotoSync.Integration
 {
     // Feature seam: centralizes client-side photo sync access so non-feature code avoids direct PhotoSync reach-through.
     internal static class ClientPhotoSyncIntegration
     {
         private static PhotoAssetSyncCore? ResolveClientPhotoSync(ICoreClientAPI capi)
         {
-            return CollodionConfigAccess.ResolveClientModSystem(capi)?.PhotoSyncModSystemBridge.Runtime;
+            return PhotochemistryConfigAccess.ResolveClientModSystem(capi)?.PhotoSyncModSystemBridge.Runtime;
         }
 
         internal static void MaybeSendPhotoSeen(ICoreClientAPI capi, string photoId)
         {
             if (capi == null || string.IsNullOrEmpty(photoId)) return;
-            CollodionConfigAccess.ResolveClientModSystem(capi)?.PhotoSyncModSystemBridge.ClientMaybeSendPhotoSeen(photoId);
+            PhotochemistryConfigAccess.ResolveClientModSystem(capi)?.PhotoSyncModSystemBridge.ClientMaybeSendPhotoSeen(photoId);
         }
 
         internal static void NotifyPhotoCreated(ICoreClientAPI capi, string photoId)

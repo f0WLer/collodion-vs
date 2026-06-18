@@ -1,8 +1,8 @@
-﻿using Collodion.AdminTooling;
+﻿using Photochemistry.AdminTooling;
 
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-namespace Collodion.Tray
+namespace Photochemistry.Tray
 {
     internal enum TrayActionKind
     {
@@ -19,7 +19,7 @@ namespace Collodion.Tray
         internal const int RequiredDeveloperPours = 5;
         private const float DefaultPourSeconds = 1.25f;
 
-        private CollodionConfig? Cfg => CollodionConfigAccess.ResolveConfig(api);
+        private PhotochemistryConfig? Cfg => PhotochemistryConfigAccess.ResolveConfig(api);
         private int GetChemicalUnitsPerUse() => Cfg?.PlateProcessing?.DevelopmentTrayChemicalUnitsPerUse ?? 40;
 
         private static readonly AssetLocation _photoPlateItemCode = new("photochemistry", "photoplate");

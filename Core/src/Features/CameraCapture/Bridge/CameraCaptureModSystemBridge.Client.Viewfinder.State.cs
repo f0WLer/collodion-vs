@@ -3,7 +3,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.Client.NoObf;
 
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     internal sealed partial class CameraCaptureModSystemBridge
     {

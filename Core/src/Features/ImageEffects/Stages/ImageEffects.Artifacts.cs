@@ -1,6 +1,6 @@
 using SkiaSharp;
 
-namespace Collodion.ImageEffects
+namespace Photochemistry.ImageEffects
 {
     public static partial class ImageEffects
     {

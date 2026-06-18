@@ -1,21 +1,21 @@
 ﻿using SkiaSharp;
 using Vintagestory.API.Client;
 
-namespace Collodion.Plates.Rendering
+namespace Photochemistry.Plates.Rendering
 {
     internal static class PhotoImageProcessor
     {
         // Warm silvery-gray silver deposit color, shared by the in-game density map and the baked
         // composite export so both read as the exact same silver. Sourced from the single presentation
-        // descriptor (PlatePresentation.Collodion) so a future process changes the silver in one place.
-        internal static readonly byte SilverR = PlatePresentation.Collodion.DepositR;
-        internal static readonly byte SilverG = PlatePresentation.Collodion.DepositG;
-        internal static readonly byte SilverB = PlatePresentation.Collodion.DepositB;
+        // descriptor (PlatePresentation.Photochemistry) so a future process changes the silver in one place.
+        internal static readonly byte SilverR = PlatePresentation.Photochemistry.DepositR;
+        internal static readonly byte SilverG = PlatePresentation.Photochemistry.DepositG;
+        internal static readonly byte SilverB = PlatePresentation.Photochemistry.DepositB;
 
         // Tonal-response exponent for the silver density (alpha = luminance^DensityGamma). <1 lifts
         // shadow/midtone silver so the framed over-black positive keeps detail. Sourced from the
         // presentation descriptor so it is one tunable knob (and per-process later).
-        internal static readonly float DensityGamma = PlatePresentation.Collodion.DensityGamma;
+        internal static readonly float DensityGamma = PlatePresentation.Photochemistry.DensityGamma;
 
         // 256-entry lookup: raw density (luminance, 0..255) -> lifted silver alpha (0..255). Built
         // once so the per-pixel loops index it instead of calling Pow. Identity when gamma ~= 1.

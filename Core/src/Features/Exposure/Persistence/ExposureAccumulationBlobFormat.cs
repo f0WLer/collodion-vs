@@ -1,6 +1,6 @@
 using System.Buffers.Binary;
 
-namespace Collodion.Exposure
+namespace Photochemistry.Exposure
 {
     /// <summary>Typed header extracted from a raw accumulation blob by <see cref="ExposureAccumulationBlobFormat.TryReadHeader"/>.</summary>
     internal readonly record struct ExposureAccumulationBlobHeader(int Width, int Height, int ChannelCount, int FrameCount, int BackendTag);

@@ -1,8 +1,8 @@
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     // Client-only quality-of-life and debug toggles persisted in mod config.
     // Includes bounds checks so chat/tooling values stay within sane limits.
-    public sealed class CollodionClientConfig
+    public sealed class PhotochemistryClientConfig
     {
         /// <summary>How often client sends photo-seen ping updates. 0 disables pings.</summary>
         public int PhotoSeenPingIntervalSeconds = 300;

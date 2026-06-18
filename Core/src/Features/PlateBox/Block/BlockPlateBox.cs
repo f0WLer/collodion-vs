@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Collodion.PlateBox
+namespace Photochemistry.PlateBox
 {
     // Plate-box block identity, placement, drop serialization, and partial-family routing.
     // Starts from block lifecycle callbacks and delegates rendering/help and slot interaction to sibling partials.

@@ -1,9 +1,9 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-using Collodion.Plates.Rendering;
+using Photochemistry.Plates.Rendering;
 
-namespace Collodion.Plates
+namespace Photochemistry.Plates
 {
     public sealed class ItemPhotoPlate : ItemPlateBase
     {

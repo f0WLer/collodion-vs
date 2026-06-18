@@ -1,10 +1,10 @@
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     // Root persisted config tree for collodion systems.
     // Aggregates subsystem configs and enforces safe ranges through ClampInPlace.
-    public sealed class CollodionConfig
+    public sealed class PhotochemistryConfig
     {
-        public CollodionClientConfig Client = new();
+        public PhotochemistryClientConfig Client = new();
         public PlateProcessingConfig PlateProcessing = new();
         public PhotoSyncConfig PhotoSync = new();
 
@@ -17,7 +17,7 @@ namespace Collodion.AdminTooling
         // Clamps and initializes nested config branches so runtime access stays null-safe and bounded.
         internal void ClampInPlace()
         {
-            Client ??= new CollodionClientConfig();
+            Client ??= new PhotochemistryClientConfig();
             Client.ClampInPlace();
 
             PlateProcessing ??= new PlateProcessingConfig();

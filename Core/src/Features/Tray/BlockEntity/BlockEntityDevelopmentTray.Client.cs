@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-namespace Collodion.Tray
+namespace Photochemistry.Tray
 {
     public sealed partial class BlockEntityDevelopmentTray
     {

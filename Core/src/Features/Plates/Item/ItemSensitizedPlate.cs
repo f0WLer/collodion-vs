@@ -1,6 +1,6 @@
 using Vintagestory.API.Common;
 
-namespace Collodion.Plates
+namespace Photochemistry.Plates
 {
     public sealed class ItemSensitizedPlate : ItemPlateBase
     {

@@ -2,7 +2,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Collodion.PlateBox
+namespace Photochemistry.PlateBox
 {
     internal static class PlateBoxRenderLifecycle
     {

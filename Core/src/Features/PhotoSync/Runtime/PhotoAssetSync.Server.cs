@@ -1,9 +1,9 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Server;
-using Collodion.PhotoSync.Contracts;
-using Collodion.PhotoSync.Storage;
+using Photochemistry.PhotoSync.Contracts;
+using Photochemistry.PhotoSync.Storage;
 
-namespace Collodion.PhotoSync.Runtime
+namespace Photochemistry.PhotoSync.Runtime
 {
     // Server-side photo request/upload handling and incoming-assembly cleanup.
     // Reassembles chunks, validates png payloads, and persists synced photo bytes.

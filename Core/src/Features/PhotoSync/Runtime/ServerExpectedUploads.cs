@@ -1,4 +1,4 @@
-namespace Collodion.PhotoSync.Runtime
+namespace Photochemistry.PhotoSync.Runtime
 {
     // Tracks expected photo uploads per (playerUid, photoId) so the upload chunk handler
     // can reject blob uploads for photo ids the player never legitimately captured.

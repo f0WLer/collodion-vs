@@ -1,7 +1,7 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace Collodion.ImageEffects
+namespace Photochemistry.ImageEffects
 {
     // One-time client-side process-effects profile seeding and validation warnings.
     internal static class ClientEffectProfileSeeder

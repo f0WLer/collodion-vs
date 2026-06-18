@@ -2,11 +2,11 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 
-using Collodion.PhotoMetadata.Model;
-using Collodion.PhotoSync.Integration;
-using Collodion.Plates.Rendering;
+using Photochemistry.PhotoMetadata.Model;
+using Photochemistry.PhotoSync.Integration;
+using Photochemistry.Plates.Rendering;
 
-namespace Collodion.Frame
+namespace Photochemistry.Frame
 {
     // Photo-frame block entity.
     // Holds a single photo plate in its inventory (anything with a non-empty PhotoId attribute).

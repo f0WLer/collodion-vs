@@ -1,16 +1,16 @@
-﻿using Collodion.AdminTooling;
-using Collodion.CameraCapture;
-using Collodion.CameraCapture.Contracts;
-using Collodion.Exposure;
-using Collodion.ImageEffects;
-using Collodion.PhotoSync.Integration;
-using Collodion.Plates;
+﻿using Photochemistry.AdminTooling;
+using Photochemistry.CameraCapture;
+using Photochemistry.CameraCapture.Contracts;
+using Photochemistry.Exposure;
+using Photochemistry.ImageEffects;
+using Photochemistry.PhotoSync.Integration;
+using Photochemistry.Plates;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using Vintagestory.API.Config;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     internal sealed partial class FieldCameraClientRuntime
     {
@@ -341,7 +341,7 @@ namespace Collodion.FieldCamera
                     renderer.ApplyFinishing = false;
                     renderer.ExposurePreviewSink = _owner.Capture._virtualCameraPreviewRenderer;
                     renderer.Start(cameraState, profile);
-                    _maxFrames = CollodionConfigAccess.ResolveClientConfig(clientApi)?.Viewfinder?.MaxAccumulatedFrames
+                    _maxFrames = PhotochemistryConfigAccess.ResolveClientConfig(clientApi)?.Viewfinder?.MaxAccumulatedFrames
                         ?? ViewfinderConfig.DefaultMaxAccumulatedFrames;
 
                     if (!string.IsNullOrEmpty(_mountedExposureId) &&

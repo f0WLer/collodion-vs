@@ -3,8 +3,8 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
-using Collodion.AdminTooling;
-namespace Collodion.Tray
+using Photochemistry.AdminTooling;
+namespace Photochemistry.Tray
 {
     
     public sealed partial class BlockEntityDevelopmentTray
@@ -165,7 +165,7 @@ namespace Collodion.Tray
         {
             try
             {
-                var modSys = CollodionConfigAccess.ResolveClientModSystem(capi);
+                var modSys = PhotochemistryConfigAccess.ResolveClientModSystem(capi);
                 return modSys?.Config?.DevelopmentTrayInteractions;
             }
             catch (Exception ex)

@@ -1,7 +1,7 @@
 using Xunit;
-using Collodion.PhotoSync.Runtime;
+using Photochemistry.PhotoSync.Runtime;
 
-namespace Collodion.Tests.PhotoSync;
+namespace Photochemistry.Tests.PhotoSync;
 
 public class LooksLikePngTests
 {

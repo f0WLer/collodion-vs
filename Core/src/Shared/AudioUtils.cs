@@ -1,7 +1,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 
-namespace Collodion
+namespace Photochemistry
 {
     /// <summary>
     /// Shared non-blocking audio helpers for minor pitch variance and best-effort playback.

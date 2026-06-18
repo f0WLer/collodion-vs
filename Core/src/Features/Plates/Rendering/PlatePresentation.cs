@@ -1,4 +1,4 @@
-﻿namespace Collodion.Plates.Rendering
+﻿namespace Photochemistry.Plates.Rendering
 {
     /// <summary>
     /// How a developed plate's silver image is physically presented. Today only glass plates exist
@@ -48,7 +48,7 @@
         /// <summary>
         /// Wet-plate collodion: warm silver on glass, viewed as an ambrotype over a black backing.
         /// </summary>
-        internal static readonly PlatePresentation Collodion =
+        internal static readonly PlatePresentation Photochemistry =
             new PlatePresentation(213, 208, 197, PresentationMedium.GlassPlate, densityGamma: 0.60f);
     }
 }

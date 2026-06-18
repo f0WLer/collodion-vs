@@ -1,4 +1,4 @@
-namespace Collodion.CameraCapture
+namespace Photochemistry.CameraCapture
 {
     /// <summary>
     /// In-memory registry that maps stable exposure IDs to active <see cref="IGameplayExposureAccumulator"/> instances.

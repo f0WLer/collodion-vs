@@ -1,6 +1,6 @@
 using Vintagestory.API.Common;
 
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     // Server-only, config-gated diagnostic logging. Silent unless the host enables
     // Client.ShowDebugLogs in their server collodion.json. Emits at Notification level so
@@ -12,7 +12,7 @@ namespace Collodion.AdminTooling
         internal static void Notify(ICoreAPI? api, string format, params object[] args)
         {
             if (api == null || api.Side != EnumAppSide.Server) return;
-            if (CollodionConfigAccess.ResolveConfig(api)?.Client?.ShowDebugLogs != true) return;
+            if (PhotochemistryConfigAccess.ResolveConfig(api)?.Client?.ShowDebugLogs != true) return;
             Log.Notify(api.Logger, format, args);
         }
     }

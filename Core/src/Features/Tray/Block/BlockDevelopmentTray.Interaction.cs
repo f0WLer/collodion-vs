@@ -1,11 +1,11 @@
-﻿using Collodion.AdminTooling;
-using Collodion.Plates;
+﻿using Photochemistry.AdminTooling;
+using Photochemistry.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
-namespace Collodion.Tray
+namespace Photochemistry.Tray
 {
     public sealed partial class BlockDevelopmentTray
     {
@@ -119,7 +119,7 @@ namespace Collodion.Tray
                     // TrySendSealForTray is idempotent: SealToPng deletes the .pex file on success.
                     if (clientIsExposed && PlateAttributes.GetStage(clientDevPlate) == PlateStage.ExposurePaused)
                         if (world.Api is ICoreClientAPI capiSeal)
-                            CollodionConfigAccess.ResolveModSystem(capiSeal)?.FieldCameraBridge.TrySendSealForTray(capiSeal, blockSel.Position, clientDevPlate);
+                            PhotochemistryConfigAccess.ResolveModSystem(capiSeal)?.FieldCameraBridge.TrySendSealForTray(capiSeal, blockSel.Position, clientDevPlate);
 
                     TrayTimedInteractionState.Begin(byPlayer, blockSel.Position, ActionDeveloper, GetDeveloperPourSeconds());
                     return true;

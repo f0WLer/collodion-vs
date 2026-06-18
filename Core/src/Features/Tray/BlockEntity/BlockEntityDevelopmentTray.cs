@@ -1,10 +1,10 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
-using Collodion.PhotoMetadata.Model;
+using Photochemistry.PhotoMetadata.Model;
 
-using Collodion.Plates;
-namespace Collodion.Tray
+using Photochemistry.Plates;
+namespace Photochemistry.Tray
 {
     // Development-tray block entity. Holds the placed plate stack + facing,
     // mediates client-side mesh refresh through partial hooks (ClientInitialize/ClientPlateChanged),

@@ -1,7 +1,7 @@
 using Xunit;
-using Collodion.PhotoMetadata.Model;
+using Photochemistry.PhotoMetadata.Model;
 
-namespace Collodion.Tests.PhotoMetadata;
+namespace Photochemistry.Tests.PhotoMetadata;
 
 public class PhotoLastSeenIndexTests
 {

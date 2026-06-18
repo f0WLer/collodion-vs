@@ -1,6 +1,6 @@
 using Vintagestory.API.MathTools;
 
-namespace Collodion.ImageEffects
+namespace Photochemistry.ImageEffects
 {
     public static partial class ImageEffects
     {

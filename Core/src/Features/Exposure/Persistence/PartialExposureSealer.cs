@@ -1,7 +1,7 @@
 using Vintagestory.API.Client;
-using Collodion.ImageEffects;
+using Photochemistry.ImageEffects;
 
-namespace Collodion.Exposure
+namespace Photochemistry.Exposure
 {
     /// <summary>
     /// Develops a saved partial accumulation blob (<c>.pex</c> file) into a finalised PNG on disk.

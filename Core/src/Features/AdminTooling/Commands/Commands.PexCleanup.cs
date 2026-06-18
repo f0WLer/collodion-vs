@@ -1,9 +1,9 @@
-﻿using Collodion.Exposure;
-using Collodion.Plates;
+﻿using Photochemistry.Exposure;
+using Photochemistry.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     internal sealed partial class AdminToolingModSystemBridge
     {

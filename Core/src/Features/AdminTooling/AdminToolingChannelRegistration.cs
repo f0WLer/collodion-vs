@@ -1,7 +1,7 @@
 using ProtoBuf;
 using Vintagestory.API.Client;
 
-namespace Collodion.AdminTooling
+namespace Photochemistry.AdminTooling
 {
     // Packet DTO and channel registration for AdminTooling network messages.
     internal static class AdminToolingChannelRegistration

@@ -1,19 +1,19 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Server;
-using Collodion.PhotoMetadata;
-using Collodion.PhotoSync.Contracts;
-using Collodion.PhotoSync.Runtime;
+using Photochemistry.PhotoMetadata;
+using Photochemistry.PhotoSync.Contracts;
+using Photochemistry.PhotoSync.Runtime;
 
-namespace Collodion.PhotoSync.Integration
+namespace Photochemistry.PhotoSync.Integration
 {
     // PhotoSync startup composition and packet handler wiring.
     // Keeps sync runtime and sync handler registration out of camera bootstrap methods.
     internal sealed partial class PhotoSyncModSystemBridge
     {
-        private readonly CollodionModSystem _owner;
+        private readonly PhotochemistryModSystem _owner;
         internal PhotoAssetSyncCore? Runtime;
 
-        internal PhotoSyncModSystemBridge(CollodionModSystem owner)
+        internal PhotoSyncModSystemBridge(PhotochemistryModSystem owner)
         {
             _owner = owner;
         }
@@ -69,7 +69,7 @@ namespace Collodion.PhotoSync.Integration
             PhotoAssetSyncCore runtime = GetOrCreatePhotoSyncRuntime();
             _serverPhotoSyncPruneListenerId = api.Event.RegisterGameTickListener(_ => runtime.ServerPruneTick(Environment.TickCount64), 10_000);
 
-            _serverPhotoSeenService = ServerPhotoSeenService.LoadOrCreate(api, CollodionModSystem.ServerPhotoIndexFileName);
+            _serverPhotoSeenService = ServerPhotoSeenService.LoadOrCreate(api, PhotochemistryModSystem.ServerPhotoIndexFileName);
             _serverPhotoLastSeenFlushListenerId = api.Event.RegisterGameTickListener(_ => _serverPhotoSeenService?.TryFlush(api), 10_000);
         }
 

@@ -1,7 +1,7 @@
 using Xunit;
-using Collodion.PhotoSync.Storage;
+using Photochemistry.PhotoSync.Storage;
 
-namespace Collodion.Tests.PhotoSync;
+namespace Photochemistry.Tests.PhotoSync;
 
 public class NormalizePhotoIdTests
 {

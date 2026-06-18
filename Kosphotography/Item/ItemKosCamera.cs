@@ -1,6 +1,6 @@
 using System;
 using System.Text;
-using Collodion.FieldCamera;
+using Photochemistry.FieldCamera;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 

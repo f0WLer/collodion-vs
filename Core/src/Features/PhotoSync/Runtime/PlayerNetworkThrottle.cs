@@ -1,4 +1,4 @@
-namespace Collodion.PhotoSync.Runtime
+namespace Photochemistry.PhotoSync.Runtime
 {
     // Per-player token-bucket rate limiter for server packet handlers.
     // Allocates one bucket per (key, playerUid). Caller decides the key (e.g. "seen", "request").

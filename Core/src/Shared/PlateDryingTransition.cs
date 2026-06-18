@@ -2,9 +2,9 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
-using Collodion.AdminTooling;
+using Photochemistry.AdminTooling;
 
-namespace Collodion
+namespace Photochemistry
 {
     // Wraps the vanilla EnumTransitionType.Dry pipeline so plate code can ignore
     // the underlying transitionstate tree and just ask "is this plate dry yet?".
@@ -23,14 +23,14 @@ namespace Collodion
         // Resolves how fast (0 = pause, 1 = full rate) plates dry while inside a plate box.
         public static float ResolveStorageDryingRateMul(ICoreAPI? api)
         {
-            return CollodionConfigAccess.ResolveConfig(api)?.PlateProcessing?.PlateBoxDryingMultiplier
+            return PhotochemistryConfigAccess.ResolveConfig(api)?.PlateProcessing?.PlateBoxDryingMultiplier
                 ?? 0f;
         }
 
         // Resolves configured wet lifetime with a safe fallback when config is unavailable.
         public static double ResolveWetDurationHours(ICoreAPI? api)
         {
-            return CollodionConfigAccess.ResolveConfig(api)?.PlateProcessing?.WetDurationHours
+            return PhotochemistryConfigAccess.ResolveConfig(api)?.PlateProcessing?.WetDurationHours
                 ?? 0.66;
         }
 

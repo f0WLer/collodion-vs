@@ -1,11 +1,11 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Collodion.PhotoMetadata.Model;
-using Collodion.PhotoSync.Integration;
-using Collodion.PhotoSync.Storage;
+using Photochemistry.PhotoMetadata.Model;
+using Photochemistry.PhotoSync.Integration;
+using Photochemistry.PhotoSync.Storage;
 
-namespace Collodion.Plates.Rendering
+namespace Photochemistry.Plates.Rendering
 {
     public static partial class PhotoPlateRenderUtil
     {

@@ -3,9 +3,9 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
-using Collodion.PhotoMetadata.Model;
+using Photochemistry.PhotoMetadata.Model;
 
-namespace Collodion.Frame
+namespace Photochemistry.Frame
 {
     // Photo-frame placeable block.
     // Holds a single photo plate (any stack carrying a non-empty PhotoId attribute).

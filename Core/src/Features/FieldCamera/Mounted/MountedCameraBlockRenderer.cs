@@ -1,9 +1,9 @@
-﻿using Collodion.CameraCapture;
+﻿using Photochemistry.CameraCapture;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Collodion.FieldCamera
+namespace Photochemistry.FieldCamera
 {
     // Renders the mounted camera block entity mesh during EnumRenderStage.Opaque using the
     // standard block shader.  Unlike chunk-tessellated geometry this renderer can check

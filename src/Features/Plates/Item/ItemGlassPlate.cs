@@ -1,3 +1,4 @@
+using Collodion.AdminTooling;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
@@ -27,15 +28,27 @@ namespace Collodion.Plates
             BlockPos placePos = blockSel.Position.UpCopy();
             IWorldAccessor world = api.World;
 
+            string heldCode = slot.Itemstack.Collectible?.Code?.ToString() ?? "null";
+            int heldSize = slot.Itemstack.StackSize;
+
             Block? plateBlock = world.GetBlock(new AssetLocation("collodion", $"plate-{plateBlockState}"));
-            if (plateBlock == null) return;
+            if (plateBlock == null)
+            {
+                ServerDebugLog.Notify(api, "plate-interact: place state={0} held={1}x{2} → declined: plate-{0} block not found", plateBlockState, heldCode, heldSize);
+                return;
+            }
 
             Block existing = world.BlockAccessor.GetBlock(placePos);
-            if (existing.Id != 0 && !existing.IsReplacableBy(plateBlock)) return;
+            if (existing.Id != 0 && !existing.IsReplacableBy(plateBlock))
+            {
+                ServerDebugLog.Notify(api, "plate-interact: place state={0} held={1}x{2} at {3} → declined: occupied by {4}", plateBlockState, heldCode, heldSize, placePos, existing.Code);
+                return;
+            }
 
             world.BlockAccessor.SetBlock(plateBlock.Id, placePos);
             slot.TakeOut(1);
             slot.MarkDirty();
+            ServerDebugLog.Notify(api, "plate-interact: place state={0} held={1}x{2} at {3} → placed", plateBlockState, heldCode, heldSize, placePos);
         }
     }
 }

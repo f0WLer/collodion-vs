@@ -1,3 +1,4 @@
+using Collodion.AdminTooling;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -43,6 +44,11 @@ namespace Collodion.Plates.Blocks
             {
                 return isPolish || isSensitize || isPickup;
             }
+
+            ItemStack? heldStack = byPlayer.InventoryManager?.ActiveHotbarSlot?.Itemstack;
+            ServerDebugLog.Notify(world.Api, "plate-interact: block-start state={0} polish={1} sensitize={2} pickup={3} held={4}x{5}",
+                state, isPolish, isSensitize, isPickup,
+                heldStack?.Collectible?.Code?.ToString() ?? "null", heldStack?.StackSize ?? 0);
 
             // Empty-hand pickup should always win so coated plates can be recovered at any point.
             if (isPickup)
@@ -97,12 +103,19 @@ namespace Collodion.Plates.Blocks
 
             bool isCreative = player.WorldData?.CurrentGameMode == EnumGameMode.Creative;
             if (!isCreative && !PlateChemicalUtil.TryConsumeChemical(chemicalSlot, chemicalCode, SensitizationChemicalAmount))
+            {
+                ServerDebugLog.Notify(world.Api, "plate-interact: pour-complete state={0} chemical={1} → declined: could not consume {2} units from hand", state, chemicalCode, SensitizationChemicalAmount);
                 return false;
+            }
 
             if (state == "clean")
             {
                 Block? coatedBlock = GetBlockForState(world, "coated");
-                if (coatedBlock == null) return false;
+                if (coatedBlock == null)
+                {
+                    ServerDebugLog.Notify(world.Api, "plate-interact: pour-complete state=clean → declined: plate-coated block not found");
+                    return false;
+                }
                 world.BlockAccessor.SetBlock(coatedBlock.Id, pos);
                 world.BlockAccessor.MarkBlockDirty(pos);
                 return true;

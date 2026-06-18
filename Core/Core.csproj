@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <AssemblyName>Photochemistry.Core</AssemblyName>
+    <VINTAGE_STORY_PATH Condition=" '$(VINTAGE_STORY_PATH)' == '' "></VINTAGE_STORY_PATH>
+  </PropertyGroup>
+
+  <!-- Embed GPU exposure shaders. LogicalName matches what GpuExposureAccumulator.LoadShaderSource expects. -->
+  <ItemGroup>
+    <EmbeddedResource Include="src\Features\Exposure\Accumulator\Shaders\gpu-exposure-accum.frag.glsl">
+      <LogicalName>Collodion.gpu-exposure-accum.frag.glsl</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Features\Exposure\Accumulator\Shaders\gpu-exposure-develop.frag.glsl">
+      <LogicalName>Collodion.gpu-exposure-develop.frag.glsl</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="obj\**\*.cs" />
+    <Compile Remove="bin\**\*.cs" />
+    <EmbeddedResource Remove="obj\**\*" />
+  </ItemGroup>
+
+</Project>

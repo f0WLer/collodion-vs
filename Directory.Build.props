@@ -1,0 +1,47 @@
+<Project>
+
+  <!-- Read .env from the repo root for all projects in this solution. -->
+  <PropertyGroup Condition="Exists('$(MSBuildThisFileDirectory).env')">
+    <_EnvText>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory).env'))</_EnvText>
+    <VINTAGE_STORY_PATH Condition=" '$(VINTAGE_STORY_PATH)' == '' ">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvText)', '(?m)^VINTAGE_STORY_PATH\s*=\s*(.+)$').Groups[1].Value.Trim())</VINTAGE_STORY_PATH>
+    <MODS_PATH Condition=" '$(MODS_PATH)' == '' ">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvText)', '(?m)^MODS_PATH\s*=\s*(.+)$').Groups[1].Value.Trim())</MODS_PATH>
+    <SECONDARY_MODS_PATH Condition=" '$(SECONDARY_MODS_PATH)' == '' ">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvText)', '(?m)^SECONDARY_MODS_PATH\s*=\s*(.+)$').Groups[1].Value.Trim())</SECONDARY_MODS_PATH>
+  </PropertyGroup>
+
+  <!-- Game DLLs referenced by all projects: Core, Collodion, Kosphotograph, tests. -->
+  <ItemGroup Condition=" '$(VINTAGE_STORY_PATH)' != '' ">
+    <Reference Include="VintagestoryAPI">
+      <HintPath>$(VINTAGE_STORY_PATH)\VintagestoryAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VintagestoryLib">
+      <HintPath>$(VINTAGE_STORY_PATH)\VintagestoryLib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="protobuf-net">
+      <HintPath>$(VINTAGE_STORY_PATH)\Lib\protobuf-net.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SkiaSharp">
+      <HintPath>$(VINTAGE_STORY_PATH)\Lib\SkiaSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenTK.Graphics">
+      <HintPath>$(VINTAGE_STORY_PATH)\Lib\OpenTK.Graphics.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenTK.Core">
+      <HintPath>$(VINTAGE_STORY_PATH)\Lib\OpenTK.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(VINTAGE_STORY_PATH)\Lib\0Harmony.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(VINTAGE_STORY_PATH)\Lib\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

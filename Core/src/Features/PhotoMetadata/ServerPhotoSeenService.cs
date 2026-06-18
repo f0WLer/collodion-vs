@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Collodion.PhotoMetadata.Model;
 
@@ -111,7 +111,7 @@ namespace Collodion.PhotoMetadata
                 {
                     Interlocked.Exchange(ref _flushInFlight, 0);
                 }
-            }, "collodion:SeenIndexFlush");
+            }, "photochemistry:SeenIndexFlush");
         }
     }
 }

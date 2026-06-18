@@ -1,4 +1,4 @@
-using Collodion.AdminTooling;
+﻿using Collodion.AdminTooling;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -102,7 +102,7 @@ namespace Collodion.Plates
         {
             if (stack == null) return fallback;
 
-            string? explicitNameKey = stack?.Attributes?.GetString("collodionPlateNameLangCode");
+            string? explicitNameKey = stack?.Attributes?.GetString("photochemPlateNameLangCode");
             
             if (!string.IsNullOrWhiteSpace(explicitNameKey))
             {
@@ -114,25 +114,25 @@ namespace Collodion.Plates
 
             if (codePath.Equals("glassplate", StringComparison.OrdinalIgnoreCase))
             {
-                if (stage == PlateStage.Clean) return Lang.Get("collodion:plate-name-glass-clean");
-                if (stage == PlateStage.Sensitizing) return Lang.Get("collodion:plate-name-glass-sensitizing");
-                return Lang.Get("collodion:plate-name-glass");
+                if (stage == PlateStage.Clean) return Lang.Get("photochemistry:plate-name-glass-clean");
+                if (stage == PlateStage.Sensitizing) return Lang.Get("photochemistry:plate-name-glass-sensitizing");
+                return Lang.Get("photochemistry:plate-name-glass");
             }
 
             if (codePath.Equals("sensitizedplate", StringComparison.OrdinalIgnoreCase))
             {
                 // "Exposed" from the moment the exposure starts — the latent image is committed.
                 if (stage == PlateStage.Exposing || stage == PlateStage.ExposurePaused || stage == PlateStage.Exposed)
-                    return Lang.Get("collodion:plate-name-exposed");
-                return Lang.Get("collodion:plate-name-sensitized");
+                    return Lang.Get("photochemistry:plate-name-exposed");
+                return Lang.Get("photochemistry:plate-name-sensitized");
             }
 
             if (codePath.Equals("photoplate", StringComparison.OrdinalIgnoreCase))
             {
-                if (stage == PlateStage.Developing) return Lang.Get("collodion:plate-name-developing");
-                if (stage == PlateStage.Developed) return Lang.Get("collodion:plate-name-developed");
-                if (stage == PlateStage.Finished) return Lang.Get("collodion:plate-name-photo-finished");
-                return Lang.Get("collodion:plate-name-photo");
+                if (stage == PlateStage.Developing) return Lang.Get("photochemistry:plate-name-developing");
+                if (stage == PlateStage.Developed) return Lang.Get("photochemistry:plate-name-developed");
+                if (stage == PlateStage.Finished) return Lang.Get("photochemistry:plate-name-photo-finished");
+                return Lang.Get("photochemistry:plate-name-photo");
             }
 
             return fallback;

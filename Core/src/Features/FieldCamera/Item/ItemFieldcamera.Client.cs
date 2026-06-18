@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Client;
 using Collodion.AdminTooling;
 
@@ -62,7 +62,7 @@ namespace Collodion.FieldCamera
                 SetLmbPrev(byEntity, false);
         }
 
-        private const string LmbPrevAttrKey = "collodionCameraLmbPrev";
+        private const string LmbPrevAttrKey = "photochemCameraLmbPrev";
         private static bool GetLmbPrev(EntityAgent byEntity) => byEntity?.Attributes?.GetBool(LmbPrevAttrKey) ?? false;
         private static void SetLmbPrev(EntityAgent byEntity, bool value) => byEntity?.Attributes?.SetBool(LmbPrevAttrKey, value);
     }

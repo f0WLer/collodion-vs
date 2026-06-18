@@ -1,0 +1,35 @@
+﻿[
+  {
+    "ingredientPattern": "_A_,BCB,B_B",
+    "ingredients": {
+      "A": { "type": "item", "code": "game:rod-tinbronze", "quantity": 2 },
+      "B": { "type": "item", "code": "game:plank-*", "quantity": 1 },
+      "C": { "type": "item", "code": "game:metalnailsandstrips-tinbronze", "quantity": 2 }
+    },
+    "width": 3,
+    "height": 3,
+    "output": { "type": "item", "code": "photochemistry:tripod" }
+  },
+  {
+    "ingredientPattern": "_A_,BCB,B_B",
+    "ingredients": {
+      "A": { "type": "item", "code": "game:rod-bismuthbronze", "quantity": 2 },
+      "B": { "type": "item", "code": "game:plank-*", "quantity": 1 },
+      "C": { "type": "item", "code": "game:metalnailsandstrips-bismuthbronze", "quantity": 2 }
+    },
+    "width": 3,
+    "height": 3,
+    "output": { "type": "item", "code": "photochemistry:tripod" }
+  },
+  {
+    "ingredientPattern": "_A_,BCB,B_B",
+    "ingredients": {
+      "A": { "type": "item", "code": "game:rod-blackbronze", "quantity": 2 },
+      "B": { "type": "item", "code": "game:plank-*", "quantity": 1 },
+      "C": { "type": "item", "code": "game:metalnailsandstrips-blackbronze", "quantity": 2 }
+    },
+    "width": 3,
+    "height": 3,
+    "output": { "type": "item", "code": "photochemistry:tripod" }
+  }
+]

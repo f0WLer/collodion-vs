@@ -1,17 +1,17 @@
-using Collodion.Plates;
+﻿using Collodion.Plates;
 using Vintagestory.API.Common;
 
 namespace Collodion.FieldCamera
 {
     internal sealed partial class FieldCameraModSystemBridge
     {
-        private static readonly AssetLocation _sensitizedPlateItemCode = new AssetLocation("collodion", "sensitizedplate");
-        private static readonly AssetLocation _fieldcameraBaseCode = new AssetLocation("collodion", "fieldcamera");
+        private static readonly AssetLocation _sensitizedPlateItemCode = new AssetLocation("photochemistry", "sensitizedplate");
+        private static readonly AssetLocation _fieldcameraBaseCode = new AssetLocation("photochemistry", "fieldcamera");
         // Asset path remains "loaded-silvered" for backward compatibility; gameplay semantics are sensitized.
-        private static readonly AssetLocation _fieldcameraLoadedSensitizedCode = new AssetLocation("collodion", "fieldcamera-loaded-silvered");
-        private static readonly AssetLocation _fieldcameraLoadedExposedCode = new AssetLocation("collodion", "fieldcamera-loaded-exposed");
-        private static readonly AssetLocation _cameraPlateLoadSound = new AssetLocation("collodion", "sounds/glass-slide1");
-        private static readonly AssetLocation _cameraPlateUnloadSound = new AssetLocation("collodion", "sounds/glass-slide2");
+        private static readonly AssetLocation _fieldcameraLoadedSensitizedCode = new AssetLocation("photochemistry", "fieldcamera-loaded-silvered");
+        private static readonly AssetLocation _fieldcameraLoadedExposedCode = new AssetLocation("photochemistry", "fieldcamera-loaded-exposed");
+        private static readonly AssetLocation _cameraPlateLoadSound = new AssetLocation("photochemistry", "sounds/glass-slide1");
+        private static readonly AssetLocation _cameraPlateUnloadSound = new AssetLocation("photochemistry", "sounds/glass-slide2");
 
         private static AssetLocation GetBaseCode(ItemStack? cameraStack)
             => cameraStack?.Item is ItemFieldcamera cam ? cam.CameraBaseCode : _fieldcameraBaseCode;

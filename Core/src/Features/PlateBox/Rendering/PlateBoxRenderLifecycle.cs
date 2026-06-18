@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
@@ -14,7 +14,7 @@ namespace Collodion.PlateBox
 
             ICoreClientAPI capi = (ICoreClientAPI)api;
             renderer = new PlateBoxSlotRenderer(capi, owner);
-            capi.Event.RegisterRenderer(renderer, EnumRenderStage.Opaque, "collodion-platebox-slotrender");
+            capi.Event.RegisterRenderer(renderer, EnumRenderStage.Opaque, "photochemistry-platebox-slotrender");
             return renderer;
         }
 

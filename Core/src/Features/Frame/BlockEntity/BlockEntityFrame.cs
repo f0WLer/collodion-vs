@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 
@@ -11,7 +11,7 @@ namespace Collodion.Frame
     // Photo-frame block entity.
     // Holds a single photo plate in its inventory (anything with a non-empty PhotoId attribute).
     // The parent block JSON must declare a "photoshape" attribute pointing to the companion photo-plane
-    // block code (e.g. "collodion:photooverlaywall"). On the client, Initialize reads that attribute,
+    // block code (e.g. "photochemistry:photooverlaywall"). On the client, Initialize reads that attribute,
     // appends the facing suffix to get the oriented variant, then UV-stamps the plane block's default
     // mesh with the actual photo texture whenever the inventory slot changes.
     public class BlockEntityFrame : BlockEntity
@@ -26,7 +26,7 @@ namespace Collodion.Frame
         private bool _rebuildScheduled;
         private bool _photoPrefetchRequested;
 
-        private AssetLocation _photoPlaneCode = new AssetLocation("collodion", "photooverlaywall-north");
+        private AssetLocation _photoPlaneCode = new AssetLocation("photochemistry", "photooverlaywall-north");
         private int _photoUvRotation = 90;
 
         public BlockEntityFrame()
@@ -51,8 +51,8 @@ namespace Collodion.Frame
             // constant ID would collide once the inventory is networked or opened as a dialog.
             _inventory.LateInitialize("photographframe-" + Pos, api);
 
-            string photoshape = Block?.Attributes?["photoshape"]?.AsString("collodion:photooverlaywall")
-                                ?? "collodion:photooverlaywall";
+            string photoshape = Block?.Attributes?["photoshape"]?.AsString("photochemistry:photooverlaywall")
+                                ?? "photochemistry:photooverlaywall";
             string facing = Block?.LastCodePart() ?? "north";
             _photoPlaneCode = new AssetLocation(photoshape + "-" + facing);
             _photoUvRotation = Block?.Attributes?["photoUvRotation"]?.AsInt(90) ?? 90;
@@ -113,7 +113,7 @@ namespace Collodion.Frame
                 MeshData? built = TryBuildPhotoMesh(capi);
                 lock (_meshLock) { _photoMesh = built; }
                 if (built != null) MarkDirty(true);
-            }, "collodion-frame-rebuild");
+            }, "photochemistry-frame-rebuild");
         }
 
         private MeshData? TryBuildPhotoMesh(ICoreClientAPI capi)

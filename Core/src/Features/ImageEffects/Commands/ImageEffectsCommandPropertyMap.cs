@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace Collodion.ImageEffects
 {
@@ -68,7 +68,7 @@ namespace Collodion.ImageEffects
         {
             if (!_bindings.TryGetValue(property, out ImageEffectsPropertyBinding? binding))
             {
-                error = $"Collodion: unknown property '{property}'";
+                error = $"photochemistry: unknown property '{property}'";
                 return false;
             }
 
@@ -80,7 +80,7 @@ namespace Collodion.ImageEffects
         {
             if (!float.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
             {
-                error = "Collodion: value must be a number (use . not ,)";
+                error = "photochemistry: value must be a number (use . not ,)";
                 return false;
             }
 
@@ -93,7 +93,7 @@ namespace Collodion.ImageEffects
         {
             if (!int.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
             {
-                error = $"Collodion: {label} must be an integer";
+                error = $"photochemistry: {label} must be an integer";
                 return false;
             }
 
@@ -106,7 +106,7 @@ namespace Collodion.ImageEffects
         {
             if (!bool.TryParse(rawValue, out value))
             {
-                error = $"Collodion: {label} value must be true/false";
+                error = $"photochemistry: {label} value must be true/false";
                 return false;
             }
 
@@ -184,7 +184,7 @@ namespace Collodion.ImageEffects
                 return true;
             }
 
-            error = "Collodion: unsupported effect property binding";
+            error = "photochemistry: unsupported effect property binding";
             return false;
         }
     }

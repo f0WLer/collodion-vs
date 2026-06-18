@@ -1,0 +1,10 @@
+﻿{
+	"ingredientPattern": "A,B,A",
+	"ingredients": {
+		"A": { "type": "item", "code": "game:plank-*" },
+		"B": { "type": "item", "code": "game:cloth-black" }
+	},
+	"width": 1,
+	"height": 3,
+	"output": { "type": "block", "code": "photochemistry:framedphotographground-north" }
+}

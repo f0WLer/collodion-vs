@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Collodion.PhotoSync.Contracts;
 using Collodion.PhotoSync.Storage;
@@ -139,9 +139,9 @@ namespace Collodion.PhotoSync.Runtime
                         {
                             SendServerTransferAck(fromPlayer, photoId, ok: false, error ?? "Photo write failed");
                         }
-                    }, "collodion:UploadAck");
+                    }, "photochemistry:UploadAck");
                 }
-            }, "collodion:UploadWrite");
+            }, "photochemistry:UploadWrite");
         }
 
         // Removes stale in-progress uploads so disconnects or failed transfers do not leak memory indefinitely.
@@ -192,8 +192,8 @@ namespace Collodion.PhotoSync.Runtime
                     if (_mod.ServerChannel == null) return;
                     _mod.PhotoSyncModSystemBridge.ServerTouchPhotoSeen(photoId);
                     SendChunksConfigured(_mod.ServerChannel, fromPlayer, photoId, bytes, isUpload: false);
-                }, "collodion:DownloadDispatch");
-            }, "collodion:DownloadRead");
+                }, "photochemistry:DownloadDispatch");
+            }, "photochemistry:DownloadRead");
         }
 
         // Reassembles uploaded chunks from one client, validates the png, and persists it to the server photo store.

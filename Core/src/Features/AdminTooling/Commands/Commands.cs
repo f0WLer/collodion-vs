@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Collodion.ImageEffects;
 using Collodion.Plates.Rendering;
 
@@ -9,7 +9,7 @@ namespace Collodion.AdminTooling
     internal sealed partial class AdminToolingModSystemBridge
     {
         private const string PhotoplatePreviewCommandArgs = "show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]|quality <px>";
-        private const string AvailableCommandsLine = "Collodion: available commands: clearcache | clearpex [confirm] | export | preview (" + PhotoplatePreviewCommandArgs + ") | effects | effect <FieldName> <value> | effect save | effect load";
+        private const string AvailableCommandsLine = "photochemistry: available commands: clearcache | clearpex [confirm] | export | preview (" + PhotoplatePreviewCommandArgs + ") | effects | effect <FieldName> <value> | effect save | effect load";
         private const string UnknownCommandTryLine = "Try: .collodion clearcache | .collodion clearpex [confirm] | .collodion export | .collodion preview (" + PhotoplatePreviewCommandArgs + ") | .collodion effects | .collodion effect <FieldName> <value>";
 
         // Routes .collodion subcommands to their specialized handler partials.
@@ -54,7 +54,7 @@ namespace Collodion.AdminTooling
                 return;
             }
 
-            _owner.ClientApi.ShowChatMessage($"Collodion: unknown subcommand '{sub}'. {UnknownCommandTryLine}");
+            _owner.ClientApi.ShowChatMessage($"photochemistry: unknown subcommand '{sub}'. {UnknownCommandTryLine}");
         }
 
         // Clears local photo and plate render caches so existing media is reloaded from disk.
@@ -63,7 +63,7 @@ namespace Collodion.AdminTooling
             if (_owner.ClientApi == null) return;
 
             int clearedPlates = PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
-            _owner.ClientApi.ShowChatMessage($"Collodion: cleared {clearedPlates} plate renders (new photos will re-load from disk).");
+            _owner.ClientApi.ShowChatMessage($"photochemistry: cleared {clearedPlates} plate renders (new photos will re-load from disk).");
         }
 
         // Handles debug preview toggles and sizing/quality subcommands for live viewfinder diagnostics.
@@ -196,7 +196,7 @@ namespace Collodion.AdminTooling
             CommandConfigPersistence.PersistPreviewConfig(_owner, cfg, changed);
 
             _owner.ClientApi.ShowChatMessage(
-                $"Collodion: preview {cfg.Viewfinder.DebugPreviewWidth}x{cfg.Viewfinder.DebugPreviewHeight}, "
+                $"photochemistry: preview {cfg.Viewfinder.DebugPreviewWidth}x{cfg.Viewfinder.DebugPreviewHeight}, "
                 + $"refresh={cfg.Viewfinder.DebugPreviewRefreshMs}ms, anchor={cfg.Viewfinder.DebugPreviewAnchor}, "
                 + $"peak={(cfg.Viewfinder.DebugPreviewPeak ? "on" : "off")}, "
                 + $"quality={cfg.Viewfinder.DebugPreviewMaxDimension}px (plate={cfg.Viewfinder.PhotoCaptureMaxDimension}px)");

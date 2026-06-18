@@ -1,4 +1,4 @@
-using Collodion.AdminTooling;
+﻿using Collodion.AdminTooling;
 using Collodion.CameraCapture;
 using Collodion.CameraCapture.Contracts;
 using Collodion.Exposure;
@@ -39,7 +39,7 @@ namespace Collodion.FieldCamera
                     {
                         byte[]? blob = viewportAcc.ExportPartial();
                         if (blob != null && !ExposureAccumulationStore.Save(_owner.Capture.ActiveExposureId, blob))
-                            _owner.ClientApi?.ShowChatMessage(Lang.Get("collodion:msg-exposure-save-failed"));
+                            _owner.ClientApi?.ShowChatMessage(Lang.Get("photochemistry:msg-exposure-save-failed"));
                     }
 
                     SendExposureStatePacket(isExposing: false, acc.FramesAccumulated, _owner.Capture.ActiveExposureId, acc.TargetFrames);
@@ -65,7 +65,7 @@ namespace Collodion.FieldCamera
                 if (existingAcc.FramesAccumulated >= _maxFrames)
                 {
                     if (!silentIfBusy)
-                        ShowShutterGateMessageThrottled(Lang.Get("collodion:shuttergate-maxframes-message", _maxFrames));
+                        ShowShutterGateMessageThrottled(Lang.Get("photochemistry:shuttergate-maxframes-message", _maxFrames));
                     return false;
                 }
                 _owner.Capture.ActiveAccumulator = existingAcc;
@@ -163,7 +163,7 @@ namespace Collodion.FieldCamera
             }
             catch (Exception ex)
             {
-                _owner.ClientApi?.Logger.Error("Collodion: accumulation export failed — " + ex);
+                _owner.ClientApi?.Logger.Error("photochemistry: accumulation export failed — " + ex);
             }
             finally
             {
@@ -283,7 +283,7 @@ namespace Collodion.FieldCamera
             {
                 if (renderer.State == ExposureState.Capturing)
                 {
-                    ShowShutterGateMessageThrottled(Lang.Get("collodion:msg-exposure-already-active"));
+                    ShowShutterGateMessageThrottled(Lang.Get("photochemistry:msg-exposure-already-active"));
                     return;
                 }
 
@@ -313,7 +313,7 @@ namespace Collodion.FieldCamera
                         // would otherwise accumulate one extra frame before stopping again).
                         if (renderer.FramesAccumulated >= _maxFrames)
                         {
-                            ShowShutterGateMessageThrottled(Lang.Get("collodion:msg-plate-max-frames"));
+                            ShowShutterGateMessageThrottled(Lang.Get("photochemistry:msg-plate-max-frames"));
                             renderer.Discard();
                             return;
                         }
@@ -333,7 +333,7 @@ namespace Collodion.FieldCamera
             {
                 byte[]? blob = renderer.ExportPartial();
                 if (blob != null && !ExposureAccumulationStore.Save(_mountedExposureId, blob))
-                    _owner.ClientApi?.ShowChatMessage(Lang.Get("collodion:msg-exposure-save-failed"));
+                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photochemistry:msg-exposure-save-failed"));
             }
 
             renderer.Discard();
@@ -350,7 +350,7 @@ namespace Collodion.FieldCamera
             {
                 byte[]? blob = renderer.ExportPartial();
                 if (blob != null && !ExposureAccumulationStore.Save(_mountedExposureId, blob))
-                    _owner.ClientApi?.ShowChatMessage(Lang.Get("collodion:msg-exposure-save-failed"));
+                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photochemistry:msg-exposure-save-failed"));
             }
 
             // Tell the server to set the plate to ExposurePaused with the current frame count.

@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Collodion.Plates;
@@ -7,9 +7,9 @@ namespace Collodion.PlateBox
 {
     public sealed partial class BlockEntityPlateBox : BlockEntity
     {
-        private const string BlockSlotPrefix = "collodionPlateBoxSlot";
-        private const string ItemSlotPrefix = "collodionPlateBoxItemSlot";
-        private const string BlockOpenAttr = "collodionPlateBoxOpen";
+        private const string BlockSlotPrefix = "photochemPlateBoxSlot";
+        private const string ItemSlotPrefix = "photochemPlateBoxItemSlot";
+        private const string BlockOpenAttr = "photochemPlateBoxOpen";
 
         public const int SlotCount = 8;
 
@@ -174,7 +174,7 @@ namespace Collodion.PlateBox
         public override void GetBlockInfo(IPlayer forPlayer, System.Text.StringBuilder dsc)
         {
             base.GetBlockInfo(forPlayer, dsc);
-            dsc.AppendLine(Lang.Get("collodion:platebox-info-slots", GetUsedSlotCount(), SlotCount));
+            dsc.AppendLine(Lang.Get("photochemistry:platebox-info-slots", GetUsedSlotCount(), SlotCount));
         }
 
         // Accepts only plate item stacks as storable content.

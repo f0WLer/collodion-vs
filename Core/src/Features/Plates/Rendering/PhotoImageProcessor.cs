@@ -1,4 +1,4 @@
-using SkiaSharp;
+﻿using SkiaSharp;
 using Vintagestory.API.Client;
 
 namespace Collodion.Plates.Rendering
@@ -136,7 +136,7 @@ namespace Collodion.Plates.Rendering
             }
             catch (Exception ex)
             {
-                capi.Logger.Warning($"Collodion: failed to build derived photo '{derivedPath}': {ex.Message}");
+                capi.Logger.Warning($"photochemistry: failed to build derived photo '{derivedPath}': {ex.Message}");
                 return false;
             }
         }

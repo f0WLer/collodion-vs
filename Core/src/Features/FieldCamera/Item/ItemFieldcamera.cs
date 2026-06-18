@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 
 namespace Collodion.FieldCamera
@@ -8,15 +8,15 @@ namespace Collodion.FieldCamera
     // Related: ItemFieldcamera.Client*.cs (client behavior), CameraCaptureModSystemBridge.Server.cs (authority).
     public partial class ItemFieldcamera : Item
     {
-        public const string AttrLoadedPlate = "collodionLoadedPlate";
-        public const string AttrLoadedPlateStack = "collodionLoadedPlateStack";
+        public const string AttrLoadedPlate = "photochemLoadedPlate";
+        public const string AttrLoadedPlateStack = "photochemLoadedPlateStack";
 
         // Item code family used when swapping between loaded/unloaded visual variants.
         // Subclasses override these to stay within their own code family.
-        private static readonly AssetLocation _baseCode             = new("collodion", "fieldcamera");
+        private static readonly AssetLocation _baseCode             = new("photochemistry", "fieldcamera");
         // Asset code remains "loaded-silvered" for save-file backward compatibility; gameplay semantics are sensitized.
-        private static readonly AssetLocation _loadedSensitizedCode = new("collodion", "fieldcamera-loaded-silvered");
-        private static readonly AssetLocation _loadedExposedCode    = new("collodion", "fieldcamera-loaded-exposed");
+        private static readonly AssetLocation _loadedSensitizedCode = new("photochemistry", "fieldcamera-loaded-silvered");
+        private static readonly AssetLocation _loadedExposedCode    = new("photochemistry", "fieldcamera-loaded-exposed");
 
         internal virtual AssetLocation CameraBaseCode             => _baseCode;
         internal virtual AssetLocation CameraLoadedSensitizedCode => _loadedSensitizedCode;
@@ -35,26 +35,26 @@ namespace Collodion.FieldCamera
         public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
-            dsc.AppendLine(Lang.Get("collodion:camera-info-controls"));
-            dsc.AppendLine(Lang.Get("collodion:camera-info-tripod"));
+            dsc.AppendLine(Lang.Get("photochemistry:camera-info-controls"));
+            dsc.AppendLine(Lang.Get("photochemistry:camera-info-tripod"));
 
             string? loadedPlate = inSlot?.Itemstack?.Attributes?.GetString(AttrLoadedPlate, null);
             if (!string.IsNullOrEmpty(loadedPlate))
             {
-                dsc.AppendLine(Lang.Get("collodion:camera-info-plate-loaded", loadedPlate));
+                dsc.AppendLine(Lang.Get("photochemistry:camera-info-plate-loaded", loadedPlate));
             }
             else
             {
-                dsc.AppendLine(Lang.Get("collodion:camera-info-plate-none"));
+                dsc.AppendLine(Lang.Get("photochemistry:camera-info-plate-none"));
             }
 
             if (string.IsNullOrEmpty(loadedPlate))
             {
-                dsc.AppendLine(Lang.Get("collodion:camera-info-load-hint"));
+                dsc.AppendLine(Lang.Get("photochemistry:camera-info-load-hint"));
             }
             else
             {
-                dsc.AppendLine(Lang.Get("collodion:camera-info-unload-hint"));
+                dsc.AppendLine(Lang.Get("photochemistry:camera-info-unload-hint"));
             }
         }
     }

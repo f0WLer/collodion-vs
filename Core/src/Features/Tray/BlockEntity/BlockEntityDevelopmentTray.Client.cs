@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 namespace Collodion.Tray
@@ -52,8 +52,8 @@ namespace Collodion.Tray
                     {
                         bodyShape.IgnoreElements = ["plate"];
                         capiInit.Tesselator.TesselateShape(
-                            "collodion-devtray-body-fallback",
-                            Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                            "photochemistry-devtray-body-fallback",
+                            Block?.Code ?? new AssetLocation("photochemistry", "developmenttray-red"),
                             bodyShape,
                             out MeshData? fallbackMesh,
                             bodySource

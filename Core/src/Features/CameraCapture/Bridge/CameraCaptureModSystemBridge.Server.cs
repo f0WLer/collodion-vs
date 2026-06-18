@@ -1,4 +1,4 @@
-using Collodion.AdminTooling;
+﻿using Collodion.AdminTooling;
 using Collodion.CameraCapture.Contracts;
 using Collodion.CameraCapture.Integration;
 
@@ -18,7 +18,7 @@ namespace Collodion.CameraCapture
 
         private void ConfigureServerCameraCaptureCore(ICoreServerAPI api)
         {
-            ServerChannel = api.Network.GetChannel("collodion");
+            ServerChannel = api.Network.GetChannel("photochemistry");
             _owner.PhotoSyncModSystemBridge.ConfigureServerPhotoSyncRuntime(api);
         }
 

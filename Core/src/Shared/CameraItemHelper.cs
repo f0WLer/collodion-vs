@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -13,11 +13,11 @@ namespace Collodion
     /// </summary>
     public static class CameraItemHelper
     {
-        public static readonly AssetLocation TripodItemCode = new AssetLocation("collodion", "tripod");
+        public static readonly AssetLocation TripodItemCode = new AssetLocation("photochemistry", "tripod");
 
-        public const string MountedAttrKey    = "collodionMounted";
-        public const string MountedPosAttrKey = "collodionMountedPos";
-        internal const string MountedCaptureAttrKey = "collodionMountedCapture";
+        public const string MountedAttrKey    = "photochemMounted";
+        public const string MountedPosAttrKey = "photochemMountedPos";
+        internal const string MountedCaptureAttrKey = "photochemMountedCapture";
 
         // Gets the currently active hotbar slot only when it holds the field camera.
         public static ItemSlot? GetActiveCameraSlot(ICoreClientAPI? capi)

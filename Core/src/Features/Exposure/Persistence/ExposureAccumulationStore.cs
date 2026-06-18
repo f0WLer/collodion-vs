@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using Vintagestory.API.Config;
 
 namespace Collodion.Exposure
@@ -19,7 +19,7 @@ namespace Collodion.Exposure
         internal static string GetStorePath(string exposureId)
         {
             string safeId = Path.GetFileName(exposureId.Trim());
-            return Path.Combine(GamePaths.DataPath, "ModData", "collodion", FolderName, safeId + Extension);
+            return Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", FolderName, safeId + Extension);
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Collodion.Exposure
             }
             catch (Exception e)
             {
-                Log.Warn(null, $"Collodion: failed to save partial exposure '{exposureId}': {e.Message}");
+                Log.Warn(null, $"photochemistry: failed to save partial exposure '{exposureId}': {e.Message}");
                 return false;
             }
         }
@@ -69,7 +69,7 @@ namespace Collodion.Exposure
             }
             catch (Exception e)
             {
-                Log.Warn(null, $"Collodion: partial exposure '{exposureId}' is corrupt or unreadable — starting fresh: {e.Message}");
+                Log.Warn(null, $"photochemistry: partial exposure '{exposureId}' is corrupt or unreadable — starting fresh: {e.Message}");
                 return false;
             }
         }
@@ -77,7 +77,7 @@ namespace Collodion.Exposure
         /// <summary>Returns all exposure IDs that currently have a saved <c>.pex</c> file on disk.</summary>
         internal static IReadOnlyList<string> EnumerateIds()
         {
-            string folder = Path.Combine(GamePaths.DataPath, "ModData", "collodion", FolderName);
+            string folder = Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", FolderName);
             if (!Directory.Exists(folder)) return Array.Empty<string>();
 
             string[] files = Directory.GetFiles(folder, "*" + Extension);
@@ -95,7 +95,7 @@ namespace Collodion.Exposure
         {
             if (string.IsNullOrEmpty(exposureId)) return;
             try { File.Delete(GetStorePath(exposureId)); }
-            catch (Exception e) { Log.Warn(null, $"Collodion: could not delete partial exposure '{exposureId}': {e.Message}"); }
+            catch (Exception e) { Log.Warn(null, $"photochemistry: could not delete partial exposure '{exposureId}': {e.Message}"); }
         }
     }
 }

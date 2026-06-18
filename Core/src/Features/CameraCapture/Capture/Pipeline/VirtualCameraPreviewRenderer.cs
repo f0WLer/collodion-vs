@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL;
 using SkiaSharp;
 using Vintagestory.API.Client;
@@ -174,7 +174,7 @@ namespace Collodion.CameraCapture
             }
             catch (Exception ex)
             {
-                _capi.Logger.Warning($"Collodion: virtual camera preview render failed: {ex.Message}");
+                _capi.Logger.Warning($"photochemistry: virtual camera preview render failed: {ex.Message}");
             }
         }
 

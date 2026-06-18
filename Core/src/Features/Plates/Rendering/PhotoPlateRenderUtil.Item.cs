@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Collodion.PhotoMetadata.Model;
@@ -139,7 +139,7 @@ namespace Collodion.Plates.Rendering
                     }
 
                     string photoKey = Path.GetFileNameWithoutExtension(renderFileName);
-                    AssetLocation texLoc = new AssetLocation("collodion", $"photo-{photoKey}-v{versionSnapshot}");
+                    AssetLocation texLoc = new AssetLocation("photochemistry", $"photo-{photoKey}-v{versionSnapshot}");
 
                     TextureAtlasPosition texPos;
                     int texSubId;

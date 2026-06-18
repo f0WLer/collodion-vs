@@ -1,4 +1,4 @@
-using Vintagestory.API.MathTools;
+﻿using Vintagestory.API.MathTools;
 using Collodion.Plates.Rendering;
 using Collodion.PhotoSync.Contracts;
 using Collodion.PhotoSync.Storage;
@@ -210,7 +210,7 @@ namespace Collodion.PhotoSync.Runtime
                     }
                     catch { /* intentional: best-effort non-critical path */ }
                 }
-            }, "collodion-photo-arrived-markdirty");
+            }, "photochemistry-photo-arrived-markdirty");
         }
 
         // Logs failed transfer acknowledgements while keeping successful sync quiet.

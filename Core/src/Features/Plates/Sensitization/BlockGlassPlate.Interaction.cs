@@ -1,4 +1,4 @@
-using Collodion.AdminTooling;
+﻿using Collodion.AdminTooling;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -9,14 +9,14 @@ namespace Collodion.Plates.Blocks
     public sealed partial class BlockGlassPlate
     {
         private static readonly AssetLocation _plainClothCode = new("game", "cloth-plain");
-        private static readonly AssetLocation _collodionPortionCode      = new("collodion", "collodionportion");
-        private static readonly AssetLocation _silverSolutionPortionCode = new("collodion", "silversolutionportion");
+        private static readonly AssetLocation _collodionPortionCode      = new("photochemistry", "collodionportion");
+        private static readonly AssetLocation _silverSolutionPortionCode = new("photochemistry", "silversolutionportion");
 
         private static readonly AssetLocation _polishSound = new("game:sounds/player/chalkdraw");
         private static readonly AssetLocation _collodionPourSound = new("game:sounds/effect/water-fill");
         private const int SensitizationChemicalAmount = 40;
 
-        private static readonly AssetLocation _sensitizedPlateItemCode = new("collodion", "sensitizedplate");
+        private static readonly AssetLocation _sensitizedPlateItemCode = new("photochemistry", "sensitizedplate");
 
         private static bool TryGetChemicalForState(string state, out AssetLocation chemicalCode)
         {
@@ -138,8 +138,8 @@ namespace Collodion.Plates.Blocks
             if (!CanApplySensitizationChemical(player, chemicalCode)) return false;
 
             string actionLangCode = state == "clean"
-                ? "collodion:heldhelp-coatglassplate"
-                : "collodion:heldhelp-plate-sensitize-next";
+                ? "photochemistry:heldhelp-coatglassplate"
+                : "photochemistry:heldhelp-plate-sensitize-next";
 
             Item? required = world.GetItem(chemicalCode);
             if (required == null) return false;
@@ -161,7 +161,7 @@ namespace Collodion.Plates.Blocks
             ItemStack sensitizedPlate = new ItemStack(sensitizedItem, 1);
             PlateAttributes.SetStage(sensitizedPlate, PlateStage.Sensitized);
             PlateAttributes.SetChemistry(sensitizedPlate, PlateAttributes.ChemistryCollodion);
-            PlateAttributes.SetNameLangCode(sensitizedPlate, "collodion:plate-name-sensitized");
+            PlateAttributes.SetNameLangCode(sensitizedPlate, "photochemistry:plate-name-sensitized");
             PlateDryingTransition.ResetTimer(world, sensitizedPlate, PlateDryingTransition.ResolveWetDurationHours(world.Api));
 
             if (!sp.InventoryManager.TryGiveItemstack(sensitizedPlate))
@@ -229,7 +229,7 @@ namespace Collodion.Plates.Blocks
             [
                 new WorldInteraction
                 {
-                    ActionLangCode = "collodion:heldhelp-cleanroughglass",
+                    ActionLangCode = "photochemistry:heldhelp-cleanroughglass",
                     MouseButton = EnumMouseButton.Right,
                     Itemstacks = [new ItemStack(clothItem)]
                 }

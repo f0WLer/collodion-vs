@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Collodion.AdminTooling;
 
@@ -8,7 +8,7 @@ namespace Collodion.Plates.Blocks
     public sealed partial class BlockGlassPlate
     {
         private const float DefaultPolishSeconds = 2.0f;
-        private static readonly AssetLocation _glassPlateItemCode = new("collodion", "glassplate");
+        private static readonly AssetLocation _glassPlateItemCode = new("photochemistry", "glassplate");
         private CollodionConfig? Cfg => CollodionConfigAccess.ResolveConfig(api);
         private PlateProcessingConfig? PlateCfg => Cfg?.PlateProcessing;
 
@@ -50,7 +50,7 @@ namespace Collodion.Plates.Blocks
 
         private Block? GetBlockForState(IWorldAccessor world, string state)
         {
-            return world?.GetBlock(new AssetLocation(Code?.Domain ?? "collodion", $"plate-{state}"));
+            return world?.GetBlock(new AssetLocation(Code?.Domain ?? "photochemistry", $"plate-{state}"));
         }
 
         private bool TryCreatePlateItemStack(IWorldAccessor world, BlockPos pos, out ItemStack stack)
@@ -75,11 +75,11 @@ namespace Collodion.Plates.Blocks
 
             if (stage == PlateStage.Rough)
             {
-                PlateAttributes.SetNameLangCode(stack, "collodion:plate-name-glass");
+                PlateAttributes.SetNameLangCode(stack, "photochemistry:plate-name-glass");
             }
             else if (stage == PlateStage.Clean)
             {
-                PlateAttributes.SetNameLangCode(stack, "collodion:plate-name-glass-clean");
+                PlateAttributes.SetNameLangCode(stack, "photochemistry:plate-name-glass-clean");
             }
 
             return true;

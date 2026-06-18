@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
@@ -7,7 +7,7 @@ namespace Collodion.Tray
 {
     public sealed partial class BlockDevelopmentTray
     {
-        private static readonly AssetLocation _sensitizedPlateItemCode = new("collodion", "sensitizedplate");
+        private static readonly AssetLocation _sensitizedPlateItemCode = new("photochemistry", "sensitizedplate");
 
         public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
         {
@@ -60,7 +60,7 @@ namespace Collodion.Tray
 
             interactions.Add(new WorldInteraction
             {
-                ActionLangCode = "collodion:heldhelp-developmenttray-insertplate",
+                ActionLangCode = "photochemistry:heldhelp-developmenttray-insertplate",
                 MouseButton = EnumMouseButton.Right,
                 Itemstacks = stacks.ToArray()
             });
@@ -70,7 +70,7 @@ namespace Collodion.Tray
         {
             interactions.Add(new WorldInteraction
             {
-                ActionLangCode = "collodion:heldhelp-developmenttray-takeplate",
+                ActionLangCode = "photochemistry:heldhelp-developmenttray-takeplate",
                 MouseButton = EnumMouseButton.Right
             });
 
@@ -94,12 +94,12 @@ namespace Collodion.Tray
 
             if (canDevelop)
             {
-                AddChemicalInteraction(world, interactions, "collodion:heldhelp-developmenttray-develop", _developerPortionCode, GetChemicalUnitsPerUse());
+                AddChemicalInteraction(world, interactions, "photochemistry:heldhelp-developmenttray-develop", _developerPortionCode, GetChemicalUnitsPerUse());
             }
 
             if (canFix)
             {
-                AddChemicalInteraction(world, interactions, "collodion:heldhelp-developmenttray-fix", _fixerPortionCode, GetChemicalUnitsPerUse());
+                AddChemicalInteraction(world, interactions, "photochemistry:heldhelp-developmenttray-fix", _fixerPortionCode, GetChemicalUnitsPerUse());
             }
         }
 

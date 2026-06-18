@@ -1,4 +1,4 @@
-using Collodion.CameraCapture.Contracts;
+﻿using Collodion.CameraCapture.Contracts;
 using Vintagestory.API.Server;
 
 namespace Collodion.FieldCamera
@@ -7,7 +7,7 @@ namespace Collodion.FieldCamera
     {
         internal void ConfigureServerFieldCameraStartup(ICoreServerAPI api)
         {
-            ServerChannel = api.Network.GetChannel("collodion");
+            ServerChannel = api.Network.GetChannel("photochemistry");
             ServerChannel.SetMessageHandler<PhotoTakenPacket>(OnPhotoTakenReceived);
             ServerChannel.SetMessageHandler<CameraLoadPlatePacket>(OnCameraLoadPlateReceived);
             ServerChannel.SetMessageHandler<CameraTripodPacket>(OnCameraTripodReceived);

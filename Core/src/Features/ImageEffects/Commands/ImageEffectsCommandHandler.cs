@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
 namespace Collodion.ImageEffects
@@ -34,7 +34,7 @@ namespace Collodion.ImageEffects
             if (param.Equals("reset", StringComparison.OrdinalIgnoreCase))
             {
                 ImageEffectsProfileService.SaveProfile(Profile, new ImageEffectsConfig());
-                capi.ShowChatMessage("Collodion: effects reset to defaults");
+                capi.ShowChatMessage("photochemistry: effects reset to defaults");
                 return;
             }
 
@@ -44,7 +44,7 @@ namespace Collodion.ImageEffects
                 ImageEffectsConfig cfg = Load();
                 cfg.Enabled = enable;
                 ImageEffectsProfileService.SaveProfile(Profile, cfg);
-                capi.ShowChatMessage(enable ? "Collodion: effects enabled" : "Collodion: effects disabled");
+                capi.ShowChatMessage(enable ? "photochemistry: effects enabled" : "photochemistry: effects disabled");
                 return;
             }
 
@@ -64,13 +64,13 @@ namespace Collodion.ImageEffects
 
                 if (!ImageEffectsCommandPropertyMap.TryApply(prop, valStr, cfg, out string? setError))
                 {
-                    capi.ShowChatMessage(setError ?? "Collodion: failed to set effect property");
+                    capi.ShowChatMessage(setError ?? "photochemistry: failed to set effect property");
                     return;
                 }
 
                 cfg.ClampInPlace();
                 ImageEffectsProfileService.SaveProfile(Profile, cfg);
-                capi.ShowChatMessage($"Collodion: set {prop} = {valStr}");
+                capi.ShowChatMessage($"photochemistry: set {prop} = {valStr}");
                 capi.ShowChatMessage("Note: effects apply to newly taken photos. Use .collodion clearcache to reload existing photos.");
                 return;
             }

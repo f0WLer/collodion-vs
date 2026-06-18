@@ -1,4 +1,4 @@
-using Collodion.CameraCapture;
+﻿using Collodion.CameraCapture;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -151,7 +151,7 @@ namespace Collodion.FieldCamera
             }
             catch (Exception ex)
             {
-                _capi.Logger.Warning("Collodion: MountedCameraBlockRenderer mesh build failed at {0}: {1}", _pos, ex.Message);
+                _capi.Logger.Warning("photochemistry: MountedCameraBlockRenderer mesh build failed at {0}: {1}", _pos, ex.Message);
             }
         }
 
@@ -175,7 +175,7 @@ namespace Collodion.FieldCamera
             {
                 var meta = new TesselationMetaData
                 {
-                    TypeForLogging = "collodion-mounted-camera",
+                    TypeForLogging = "photochemistry-mounted-camera",
                     TexSource = texSource,
                     IgnoreElements = ignore
                 };
@@ -187,7 +187,7 @@ namespace Collodion.FieldCamera
             {
                 var meta = new TesselationMetaData
                 {
-                    TypeForLogging = "collodion-mounted-camera",
+                    TypeForLogging = "photochemistry-mounted-camera",
                     TexSource = texSource,
                     SelectiveElements = select
                 };

@@ -1,4 +1,4 @@
-using Collodion.PhotoMetadata.Model;
+﻿using Collodion.PhotoMetadata.Model;
 using Collodion.Plates;
 using Collodion.Plates.Rendering;
 using Collodion.PhotoSync.Storage;
@@ -20,21 +20,21 @@ namespace Collodion.AdminTooling
             string photoId = held?.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
             if (held == null || string.IsNullOrEmpty(photoId))
             {
-                capi.ShowChatMessage("Collodion: hold a developed photo plate to export.");
+                capi.ShowChatMessage("photochemistry: hold a developed photo plate to export.");
                 return;
             }
 
             PlateStage stage = PlateAttributes.GetStage(held);
             if (stage != PlateStage.Developed && stage != PlateStage.Finished)
             {
-                capi.ShowChatMessage("Collodion: develop the plate fully before exporting.");
+                capi.ShowChatMessage("photochemistry: develop the plate fully before exporting.");
                 return;
             }
 
             string sourcePath = PhotoAssetStoragePaths.GetPhotoPath(photoId);
             if (!File.Exists(sourcePath))
             {
-                capi.ShowChatMessage("Collodion: that photo isn't synced yet — try again in a moment.");
+                capi.ShowChatMessage("photochemistry: that photo isn't synced yet — try again in a moment.");
                 return;
             }
 
@@ -45,9 +45,9 @@ namespace Collodion.AdminTooling
             string outPath = PhotoAssetStoragePaths.GetExportPath(friendly);
 
             if (PhotoImageProcessor.TryWriteCompositePng(sourcePath, outPath))
-                capi.ShowChatMessage($"Collodion: exported photo to {outPath}");
+                capi.ShowChatMessage($"photochemistry: exported photo to {outPath}");
             else
-                capi.ShowChatMessage("Collodion: failed to export photo (see client log).");
+                capi.ShowChatMessage("photochemistry: failed to export photo (see client log).");
         }
     }
 }

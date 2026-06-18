@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 
 namespace Collodion.Plates
 {
@@ -19,9 +19,9 @@ namespace Collodion.Plates
 
     public static class PlateAttributes
     {
-        private const string AttrStage = "collodionPlateStage";
-        private const string AttrNameLangCode = "collodionPlateNameLangCode";
-        private const string AttrChemistry = "collodionPlateChemistry";
+        private const string AttrStage = "photochemPlateStage";
+        private const string AttrNameLangCode = "photochemPlateNameLangCode";
+        private const string AttrChemistry = "photochemPlateChemistry";
 
         // Canonical chemistry tag stored on a plate. Today only collodion exists; its emulsion is
         // sensitised with an iodide salt, so "iodide" is both the chemistry tag and the
@@ -118,14 +118,14 @@ namespace Collodion.Plates
 
 
         // Exposure accumulation state — written when an accumulation session starts/pauses.
-        public const string ExposureId           = "collodionExposureId";
-        public const string ExposedFrames        = "collodionExposedFrames";
-        public const string ExposureTargetFrames = "collodionExposureTargetFrames";
+        public const string ExposureId           = "photochemExposureId";
+        public const string ExposedFrames        = "photochemExposedFrames";
+        public const string ExposureTargetFrames = "photochemExposureTargetFrames";
 
         // Player UID of the photographer who started this exposure. Only the original photographer may develop the plate.
-        public const string PhotographerUid = "collodionPhotographerUid";
+        public const string PhotographerUid = "photochemPhotographerUid";
 
-        private const string AttrDevelopmentStepApplications = "collodionDevelopmentStepApplications";
+        private const string AttrDevelopmentStepApplications = "photochemDevelopmentStepApplications";
 
         public static int GetDevelopmentApplications(ItemStack? stack)
         {

@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
@@ -13,12 +13,12 @@ namespace Collodion.Tray
         private const float DeveloperOverlayScale = 1.32f;
         private const float DeveloperOverlayAlphaStart = 1.0f;
         private const float DeveloperOverlayAlphaEnd = 0.35f;
-        private static readonly AssetLocation _developerOverlayTextureAsset = new("collodion", "textures/block/liquid/developer.png");
-        private static readonly AssetLocation _developerOverlayAtlasKey = new("collodion", "devtray-developer-overlay");
-        private static readonly AssetLocation _fixerOverlayTextureAsset = new("collodion", "textures/block/liquid/fixer.png");
-        private static readonly AssetLocation _fixerOverlayAtlasKey = new("collodion", "devtray-fixer-overlay");
+        private static readonly AssetLocation _developerOverlayTextureAsset = new("photochemistry", "textures/block/liquid/developer.png");
+        private static readonly AssetLocation _developerOverlayAtlasKey = new("photochemistry", "devtray-developer-overlay");
+        private static readonly AssetLocation _fixerOverlayTextureAsset = new("photochemistry", "textures/block/liquid/fixer.png");
+        private static readonly AssetLocation _fixerOverlayAtlasKey = new("photochemistry", "devtray-fixer-overlay");
         private static readonly AssetLocation _waterOverlayTextureAsset = new("survival", "textures/block/liquid/waterportion.png");
-        private static readonly AssetLocation _waterOverlayAtlasKey = new("collodion", "devtray-water-overlay");
+        private static readonly AssetLocation _waterOverlayAtlasKey = new("photochemistry", "devtray-water-overlay");
         private bool TryBuildPourOverlayMesh(ICoreClientAPI capi, out MeshData? mesh)
         {
             mesh = null;
@@ -35,8 +35,8 @@ namespace Collodion.Tray
 
                 shape.IgnoreElements = ["base", "wall-n", "wall-s", "wall-e", "wall-w"];
                 capi.Tesselator.TesselateShape(
-                    "collodion-devtray-devoverlay",
-                    Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                    "photochemistry-devtray-devoverlay",
+                    Block?.Code ?? new AssetLocation("photochemistry", "developmenttray-red"),
                     shape,
                     out mesh,
                     texSource
@@ -213,7 +213,7 @@ namespace Collodion.Tray
             string atlasPrefix = isWater ? "devtray-water-overlay" : (isFixer ? "devtray-fixer-overlay" : "devtray-developer-overlay");
             AssetLocation atlasKey = alphaStep == alphaSteps
                 ? baseAtlasKey
-                : new AssetLocation("collodion", atlasPrefix + $"-a{alphaStep}");
+                : new AssetLocation("photochemistry", atlasPrefix + $"-a{alphaStep}");
 
             try
             {

@@ -1,4 +1,4 @@
-using Collodion.CameraCapture;
+﻿using Collodion.CameraCapture;
 using Collodion.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -10,11 +10,11 @@ namespace Collodion.FieldCamera
     public sealed class BlockEntityMountedCamera : BlockEntity
     {
         private MountedCameraBlockRenderer? _renderer;
-        private const string CameraStackAttr   = "collodionMountedCameraStack";
-        private const string OwnerUidAttr      = "collodionMountedCameraOwnerUid";
-        private const string FacingYawAttr     = "collodionMountedFacingYaw";
-        private const string SubOffsetXAttr    = "collodionMountedSubOffsetX";
-        private const string SubOffsetZAttr    = "collodionMountedSubOffsetZ";
+        private const string CameraStackAttr   = "photochemMountedCameraStack";
+        private const string OwnerUidAttr      = "photochemMountedCameraOwnerUid";
+        private const string FacingYawAttr     = "photochemMountedFacingYaw";
+        private const string SubOffsetXAttr    = "photochemMountedSubOffsetX";
+        private const string SubOffsetZAttr    = "photochemMountedSubOffsetZ";
 
         private ItemStack? _cameraStack;
         private string _ownerPlayerUid = string.Empty;
@@ -76,7 +76,7 @@ namespace Collodion.FieldCamera
             MarkDirty(true);
         }
 
-        private static readonly AssetLocation _upperBlockCode = new("collodion", "fieldcamera-tripod-upper");
+        private static readonly AssetLocation _upperBlockCode = new("photochemistry", "fieldcamera-tripod-upper");
 
         private void UpdateUpperBlock()
         {
@@ -120,7 +120,7 @@ namespace Collodion.FieldCamera
             if (api is ICoreClientAPI capi)
             {
                 _renderer = new MountedCameraBlockRenderer(capi, Pos, Block, _facingYaw, _subBlockOffsetX, _subBlockOffsetZ, _isExposing);
-                capi.Event.RegisterRenderer(_renderer, EnumRenderStage.Opaque, "collodion-mounted-camera");
+                capi.Event.RegisterRenderer(_renderer, EnumRenderStage.Opaque, "photochemistry-mounted-camera");
                 _renderer.SetHeightOffset(ComputeHeightAboveBlock());
             }
             else if (api.Side == EnumAppSide.Server)

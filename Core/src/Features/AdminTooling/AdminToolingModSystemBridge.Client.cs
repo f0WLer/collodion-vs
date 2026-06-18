@@ -1,4 +1,4 @@
-using Collodion.CameraCapture;
+﻿using Collodion.CameraCapture;
 using Vintagestory.API.Client;
 
 namespace Collodion.AdminTooling
@@ -20,7 +20,7 @@ namespace Collodion.AdminTooling
         {
             _owner.ClientApi = api;
             CollodionModSystem.ClientInstance = _owner;
-            _owner.ClientChannel = api.Network.GetChannel("collodion");
+            _owner.ClientChannel = api.Network.GetChannel("photochemistry");
         }
 
         private void ConfigureClientOperatorToolingConfig(ICoreClientAPI api)
@@ -44,7 +44,7 @@ namespace Collodion.AdminTooling
             {
                 BestEffort.Try(_owner.BestEffortLogger,
                     "report client startup version info",
-                    () => _owner.ClientApi?.ShowChatMessage($"Collodion: loaded mod dll (ver={ver}, build={stamp})"));
+                    () => _owner.ClientApi?.ShowChatMessage($"photochemistry: loaded mod dll (ver={ver}, build={stamp})"));
             }
         }
 
@@ -54,7 +54,7 @@ namespace Collodion.AdminTooling
         {
             #pragma warning disable CS0618 // Keep legacy command registration for compatibility
             api.RegisterCommand(
-                "collodion",
+                "photochemistry",
                 "Collodion mod commands",
                 ".collodion clearcache | .collodion export | .collodion preview | .collodion effects",
                 OnModClientCommand
@@ -62,11 +62,11 @@ namespace Collodion.AdminTooling
             #pragma warning restore CS0618
 
             api.Input.RegisterHotKey(
-                "collodion-exposuregui",
-                "Collodion: Open Exposure Physics GUI",
+                "photochemistry-exposuregui",
+                "photochemistry: Open Exposure Physics GUI",
                 GlKeys.Unknown,
                 HotkeyType.GUIOrOtherControls);
-            api.Input.SetHotKeyHandler("collodion-exposuregui", _ =>
+            api.Input.SetHotKeyHandler("photochemistry-exposuregui", _ =>
             {
                 VirtualExposureRenderer? renderer = _owner.CameraCaptureBridge._virtualExposureRenderer;
                 if (renderer == null) return false;

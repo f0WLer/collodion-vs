@@ -1,4 +1,4 @@
-using Collodion.AdminTooling;
+﻿using Collodion.AdminTooling;
 
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -22,10 +22,10 @@ namespace Collodion.Tray
         private CollodionConfig? Cfg => CollodionConfigAccess.ResolveConfig(api);
         private int GetChemicalUnitsPerUse() => Cfg?.PlateProcessing?.DevelopmentTrayChemicalUnitsPerUse ?? 40;
 
-        private static readonly AssetLocation _photoPlateItemCode = new("collodion", "photoplate");
+        private static readonly AssetLocation _photoPlateItemCode = new("photochemistry", "photoplate");
 
-        private static readonly AssetLocation _developerPortionCode = new("collodion", "developerportion");
-        private static readonly AssetLocation _fixerPortionCode = new("collodion", "fixerportion");
+        private static readonly AssetLocation _developerPortionCode = new("photochemistry", "developerportion");
+        private static readonly AssetLocation _fixerPortionCode = new("photochemistry", "fixerportion");
         private static readonly AssetLocation _waterPortionCode = new("game", "waterportion");
 
         public override void OnLoaded(ICoreAPI api)

@@ -1,4 +1,4 @@
-using Collodion.Exposure;
+﻿using Collodion.Exposure;
 using Collodion.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -21,7 +21,7 @@ namespace Collodion.AdminTooling
             IReadOnlyList<string> allIds = ExposureAccumulationStore.EnumerateIds();
             if (allIds.Count == 0)
             {
-                capi.ShowChatMessage("Collodion: no partial exposure files found.");
+                capi.ShowChatMessage("photochemistry: no partial exposure files found.");
                 return;
             }
 
@@ -37,25 +37,25 @@ namespace Collodion.AdminTooling
             {
                 if (toDelete.Count == 0)
                 {
-                    capi.ShowChatMessage($"Collodion: {allIds.Count} partial exposure file(s) found, all protected by plates in your inventory.");
+                    capi.ShowChatMessage($"photochemistry: {allIds.Count} partial exposure file(s) found, all protected by plates in your inventory.");
                     return;
                 }
                 capi.ShowChatMessage(
-                    $"Collodion: {allIds.Count} partial exposure file(s) — {protectedCount} protected by plates in your inventory, {toDelete.Count} orphaned. "
+                    $"photochemistry: {allIds.Count} partial exposure file(s) — {protectedCount} protected by plates in your inventory, {toDelete.Count} orphaned. "
                     + "Run '.collodion clearpex confirm' to delete orphaned files.");
                 return;
             }
 
             if (toDelete.Count == 0)
             {
-                capi.ShowChatMessage("Collodion: nothing to delete — all partial exposure files are protected by plates in your inventory.");
+                capi.ShowChatMessage("photochemistry: nothing to delete — all partial exposure files are protected by plates in your inventory.");
                 return;
             }
 
             foreach (string id in toDelete)
                 ExposureAccumulationStore.Delete(id);
 
-            capi.ShowChatMessage($"Collodion: deleted {toDelete.Count} orphaned partial exposure file(s). {protectedCount} kept.");
+            capi.ShowChatMessage($"photochemistry: deleted {toDelete.Count} orphaned partial exposure file(s). {protectedCount} kept.");
         }
 
         // Walks all inventories currently accessible to the player and collects every

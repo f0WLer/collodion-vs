@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using Collodion.AdminTooling;
 using Collodion.CameraCapture.Contracts;
 using Vintagestory.API.Client;
@@ -22,7 +22,7 @@ namespace Collodion.CameraCapture
             // EntityPlayerShapeRenderer lives in VSEssentials.dll which is a game content mod,
             // not directly referenceable at compile time — use AccessTools.TypeByName.
             // If the type is unavailable (extreme edge case), self-portrait silently degrades.
-            _selfPortraitHarmony = new Harmony("collodion.selfportrait");
+            _selfPortraitHarmony = new Harmony("photochemistry.selfportrait");
             Type? playerShapeRendererType =
                 AccessTools.TypeByName("Vintagestory.GameContent.EntityPlayerShapeRenderer");
             if (playerShapeRendererType != null)
@@ -59,17 +59,17 @@ namespace Collodion.CameraCapture
         private void ConfigureClientCameraCaptureRenderers(ICoreClientAPI api)
         {
             _virtualCameraPreviewRenderer = new VirtualCameraPreviewRenderer(api);
-            api.Event.RegisterRenderer(_virtualCameraPreviewRenderer, EnumRenderStage.Before, "collodion-virtualcamera-preview");
+            api.Event.RegisterRenderer(_virtualCameraPreviewRenderer, EnumRenderStage.Before, "photochemistry-virtualcamera-preview");
 
             _virtualExposureRenderer = new VirtualExposureRenderer(api)
             {
                 ExposurePreviewSink = _virtualCameraPreviewRenderer
             };
             _virtualCameraPreviewRenderer.ExposureRenderer = _virtualExposureRenderer;
-            api.Event.RegisterRenderer(_virtualExposureRenderer, EnumRenderStage.Before, "collodion-virtualexposure");
+            api.Event.RegisterRenderer(_virtualExposureRenderer, EnumRenderStage.Before, "photochemistry-virtualexposure");
 
             _handheldPreviewRenderer = new HandheldPreviewRenderer(api, _virtualCameraPreviewRenderer);
-            api.Event.RegisterRenderer(_handheldPreviewRenderer, EnumRenderStage.Ortho, "collodion-viewfinder-preview");
+            api.Event.RegisterRenderer(_handheldPreviewRenderer, EnumRenderStage.Ortho, "photochemistry-viewfinder-preview");
 
             // Some load orders/world joins invoke StartClientSide before the channel reports connected.
             // Defer send until connected so startup never aborts.
@@ -165,7 +165,7 @@ namespace Collodion.CameraCapture
             // Remove the self-portrait Harmony patch so it doesn't linger across hot-reloads or mod unloads.
             BestEffort.Try(BestEffortLogger, "unpatch self-portrait harmony", () =>
             {
-                _selfPortraitHarmony?.UnpatchAll("collodion.selfportrait");
+                _selfPortraitHarmony?.UnpatchAll("photochemistry.selfportrait");
                 _selfPortraitHarmony = null;
             });
         }

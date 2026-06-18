@@ -1,4 +1,4 @@
-using Collodion.CameraCapture;
+﻿using Collodion.CameraCapture;
 using Collodion.CameraCapture.Contracts;
 using Collodion.Plates;
 using Vintagestory.API.Common;
@@ -37,7 +37,7 @@ namespace Collodion.FieldCamera
 
             // Loading a dried plate is allowed, but it can no longer be exposed — let the player know.
             if (PlateDryingTransition.IsDry(Api.World, loadedPlate))
-                player.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("collodion:msg-plate-dried-reclaim"), EnumChatType.Notification);
+                player.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photochemistry:msg-plate-dried-reclaim"), EnumChatType.Notification);
 
             AudioUtils.FireAndForgetEntitySound(Api?.World, _cameraPlateLoadSound, player.Entity, AudioUtils.NextRandomPitch(Api?.World));
             return true;
@@ -156,7 +156,7 @@ namespace Collodion.FieldCamera
                 if (current.Replaceable < 6000) return false;
             }
 
-            Block? mountedBlock = Api.World.GetBlock(new AssetLocation("collodion", "fieldcamera-tripod"));
+            Block? mountedBlock = Api.World.GetBlock(new AssetLocation("photochemistry", "fieldcamera-tripod"));
             if (mountedBlock == null) return false;
 
             Api.World.BlockAccessor.SetBlock(mountedBlock.BlockId, pos);
@@ -241,7 +241,7 @@ namespace Collodion.FieldCamera
             }
 
             BlockFacing facing = BlockFacing.HorizontalFromYaw(player.Entity.Pos.Yaw);
-            Block? restingBlock = Api.World.GetBlock(new AssetLocation("collodion", $"fieldcamera-resting-{facing.Code}"));
+            Block? restingBlock = Api.World.GetBlock(new AssetLocation("photochemistry", $"fieldcamera-resting-{facing.Code}"));
             if (restingBlock == null) return;
 
             Api.World.BlockAccessor.SetBlock(restingBlock.BlockId, pos);

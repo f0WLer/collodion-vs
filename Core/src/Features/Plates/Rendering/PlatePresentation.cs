@@ -1,4 +1,4 @@
-namespace Collodion.Plates.Rendering
+﻿namespace Collodion.Plates.Rendering
 {
     /// <summary>
     /// How a developed plate's silver image is physically presented. Today only glass plates exist
@@ -16,7 +16,7 @@ namespace Collodion.Plates.Rendering
     /// <summary>
     /// The single named home for a process's final presentation characteristics — the metallic
     /// deposit colour and the physical medium. Today there is exactly one instance
-    /// (<see cref="Collodion"/>); a second process edits/adds an instance here rather than touching
+    /// (<see cref="photochemistry"/>); a second process edits/adds an instance here rather than touching
     /// the image processor. This only locates the boundary; it is not threaded from the plate yet.
     /// </summary>
     internal readonly struct PlatePresentation

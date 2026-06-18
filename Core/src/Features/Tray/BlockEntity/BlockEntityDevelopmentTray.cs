@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Collodion.PhotoMetadata.Model;
@@ -11,8 +11,8 @@ namespace Collodion.Tray
     // and serializes plate signature for change detection. Server logic lives in tray Block partials.
     public sealed partial class BlockEntityDevelopmentTray : BlockEntity
     {
-        private const string AttrPlateStack = "collodionPlateStack";
-        private const string AttrPlacementFacing = "collodionPlacementFacing";
+        private const string AttrPlateStack = "photochemPlateStack";
+        private const string AttrPlacementFacing = "photochemPlacementFacing";
 
         private readonly object _plateLock = new();
         private string? _lastPlateSignature;
@@ -179,11 +179,11 @@ namespace Collodion.Tray
 
             if (plate?.Collectible?.Code != null)
             {
-                dsc.AppendLine(Lang.Get("collodion:tray-info-plate", plate.Collectible.Code));
+                dsc.AppendLine(Lang.Get("photochemistry:tray-info-plate", plate.Collectible.Code));
             }
             else
             {
-                dsc.AppendLine(Lang.Get("collodion:tray-info-plate-none"));
+                dsc.AppendLine(Lang.Get("photochemistry:tray-info-plate-none"));
             }
         }
 

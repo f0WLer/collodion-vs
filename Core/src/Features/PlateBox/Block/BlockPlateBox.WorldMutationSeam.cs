@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
@@ -7,7 +7,7 @@ namespace Collodion.PlateBox
     public sealed partial class BlockPlateBox
     {
         private static readonly AssetLocation _padlockSound = new("game", "sounds/tool/padlock");
-        private static readonly AssetLocation _hingeSound = new("collodion", "sounds/hinge");
+        private static readonly AssetLocation _hingeSound = new("photochemistry", "sounds/hinge");
         private const int OpenCloseSoundDelayMs = 35;
 
         // Handles shift-pickup inventory transfer and authoritative block removal.
@@ -45,8 +45,8 @@ namespace Collodion.PlateBox
 
             string facing = world.BlockAccessor.GetBlock(pos)?.Variant?["facing"] ?? "south";
             AssetLocation targetCode = open
-                ? new AssetLocation("collodion", "platebox-open-" + facing)
-                : new AssetLocation("collodion", "platebox-" + facing);
+                ? new AssetLocation("photochemistry", "platebox-open-" + facing)
+                : new AssetLocation("photochemistry", "platebox-" + facing);
             Block? target = world.GetBlock(targetCode);
             if (target == null)
             {

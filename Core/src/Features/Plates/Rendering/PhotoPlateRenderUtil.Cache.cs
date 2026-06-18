@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 
@@ -29,7 +29,7 @@ namespace Collodion.Plates.Rendering
             // Clear derived photo cache (best effort)
             try
             {
-                string derivedDir = Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos", "derived");
+                string derivedDir = Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos", "derived");
                 if (Directory.Exists(derivedDir))
                 {
                     Directory.Delete(derivedDir, true);
@@ -54,7 +54,7 @@ namespace Collodion.Plates.Rendering
         private static string GetDerivedPhotoPath(string photoFileName, string profile)
         {
             string derivedFileName = GetDerivedPhotoFileName(photoFileName, profile);
-            return Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos", "derived", derivedFileName);
+            return Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos", "derived", derivedFileName);
         }
 
         // Best-effort cleanup of obsolete developed-stage variants for a photo.
@@ -77,7 +77,7 @@ namespace Collodion.Plates.Rendering
             // Pruning is intentionally soft-fail to avoid breaking render paths on IO races.
             try
             {
-                string derivedDir = Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos", "derived");
+                string derivedDir = Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos", "derived");
                 if (!Directory.Exists(derivedDir)) return;
 
                 string baseName = Path.GetFileNameWithoutExtension(photoFileName);
@@ -100,7 +100,7 @@ namespace Collodion.Plates.Rendering
             }
             catch (Exception ex)
             {
-                capi?.Logger?.VerboseDebug($"Collodion: derived prune skipped for '{photoFileName}': {ex.Message}");
+                capi?.Logger?.VerboseDebug($"photochemistry: derived prune skipped for '{photoFileName}': {ex.Message}");
             }
         }
 

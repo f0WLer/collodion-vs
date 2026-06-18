@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
@@ -7,8 +7,8 @@ namespace Collodion.Tray
 {
     public sealed partial class BlockDevelopmentTray
     {
-        private static readonly AssetLocation _glassPlateItemCode = new("collodion", "glassplate");
-        private static readonly AssetLocation _fizzSound = new("collodion", "sounds/fizz");
+        private static readonly AssetLocation _glassPlateItemCode = new("photochemistry", "glassplate");
+        private static readonly AssetLocation _fizzSound = new("photochemistry", "sounds/fizz");
 
 
         public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -149,7 +149,7 @@ namespace Collodion.Tray
                     {
                         if (world.Side == EnumAppSide.Server)
                         {
-                            Tell(byPlayer, Lang.Get("collodion:msg-tray-underdeveloped", currentApplications, RequiredDeveloperPours), pos);
+                            Tell(byPlayer, Lang.Get("photochemistry:msg-tray-underdeveloped", currentApplications, RequiredDeveloperPours), pos);
                         }
 
                         return false;
@@ -242,7 +242,7 @@ namespace Collodion.Tray
 
             ItemStack roughPlate = new ItemStack(glassPlateItem);
             PlateAttributes.SetStage(roughPlate, PlateStage.Rough);
-            PlateAttributes.SetNameLangCode(roughPlate, "collodion:plate-name-glass");
+            PlateAttributes.SetNameLangCode(roughPlate, "photochemistry:plate-name-glass");
             roughPlate.Attributes.SetString("plateBlockState", "rough");
 
             SwapTrayBlockForPlateStage(world, pos, null, null);
@@ -264,9 +264,9 @@ namespace Collodion.Tray
         {
             return actionKind switch
             {
-                TrayActionKind.Developer => Lang.Get("collodion:msg-tray-need-developer"),
-                TrayActionKind.Fixer => Lang.Get("collodion:msg-tray-need-fixer"),
-                _ => Lang.Get("collodion:msg-tray-need-water")
+                TrayActionKind.Developer => Lang.Get("photochemistry:msg-tray-need-developer"),
+                TrayActionKind.Fixer => Lang.Get("photochemistry:msg-tray-need-fixer"),
+                _ => Lang.Get("photochemistry:msg-tray-need-water")
             };
         }
     }

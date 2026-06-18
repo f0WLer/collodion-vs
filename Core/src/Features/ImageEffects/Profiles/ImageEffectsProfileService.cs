@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -12,7 +12,7 @@ namespace Collodion.ImageEffects
         internal static AssetLocation GetBundledProfileAssetLocation(string profileName)
         {
             string trimmed = (profileName ?? string.Empty).Trim().ToLowerInvariant();
-            return new AssetLocation("collodion", $"config/effects/{trimmed}.json");
+            return new AssetLocation("photochemistry", $"config/effects/{trimmed}.json");
         }
 
         internal static bool ProfileExists(string profileName)
@@ -129,7 +129,7 @@ namespace Collodion.ImageEffects
         internal static string GetProfilePath(string? name = null)
         {
             string file = string.IsNullOrWhiteSpace(name) ? "effects-tuning" : name;
-            return Path.Combine(GamePaths.DataPath, "ModData", "collodion", $"{file}.json");
+            return Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", $"{file}.json");
         }
 
         internal static void SaveProfile(string? name, ImageEffectsConfig cfg)

@@ -1,4 +1,4 @@
-using Collodion.AdminTooling;
+﻿using Collodion.AdminTooling;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
@@ -31,7 +31,7 @@ namespace Collodion.Plates
             string heldCode = slot.Itemstack.Collectible?.Code?.ToString() ?? "null";
             int heldSize = slot.Itemstack.StackSize;
 
-            Block? plateBlock = world.GetBlock(new AssetLocation("collodion", $"plate-{plateBlockState}"));
+            Block? plateBlock = world.GetBlock(new AssetLocation("photochemistry", $"plate-{plateBlockState}"));
             if (plateBlock == null)
             {
                 ServerDebugLog.Notify(api, "plate-interact: place state={0} held={1}x{2} → declined: plate-{0} block not found", plateBlockState, heldCode, heldSize);

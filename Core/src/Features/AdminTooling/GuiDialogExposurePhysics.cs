@@ -1,11 +1,11 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Collodion.CameraCapture;
 using Collodion.ImageEffects;
 
 namespace Collodion.AdminTooling
 {
     // Dev-time dialog for live-tuning exposure physics toggles and key effects sliders.
-    // Opened via the hotkey binding "collodion-exposuregui" (default: unbound, assignable in game settings).
+    // Opened via the hotkey binding "photochemistry-exposuregui" (default: unbound, assignable in game settings).
     // Changes take effect immediately in the live preview. Effects edits are session-only (they tune the
     // renderer's live effects, not disk); use .collodion effects set to persist effects to wetplate.json.
     internal sealed class GuiDialogExposurePhysics : GuiDialog

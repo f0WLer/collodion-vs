@@ -1,4 +1,4 @@
-using SkiaSharp;
+﻿using SkiaSharp;
 using Vintagestory.API.Client;
 using Collodion.AdminTooling;
 using Collodion.ImageEffects;
@@ -161,11 +161,11 @@ namespace Collodion.CameraCapture
 
             if (!_buffer.DeserializeAccumulation(data, out int restoredFrames))
             {
-                _capi.Logger.Warning("Collodion: partial exposure blob is incompatible with the current buffer dimensions — starting fresh.");
+                _capi.Logger.Warning("photochemistry: partial exposure blob is incompatible with the current buffer dimensions — starting fresh.");
                 return;
             }
 
-            _capi.Logger.Notification($"Collodion: restored {restoredFrames} accumulated frames from saved partial exposure.");
+            _capi.Logger.Notification($"photochemistry: restored {restoredFrames} accumulated frames from saved partial exposure.");
         }
 
         private const float PreviewCadenceSeconds = 0.25f;
@@ -213,7 +213,7 @@ namespace Collodion.CameraCapture
             _rendererRegistered = false;
             _capi.Event.EnqueueMainThreadTask(
                 () => _capi.Event.UnregisterRenderer(this, EnumRenderStage.AfterBlit),
-                "collodion-unregister-exposure");
+                "photochemistry-unregister-exposure");
             OnAutoHalt?.Invoke();
         }
 
@@ -267,7 +267,7 @@ namespace Collodion.CameraCapture
         private void RegisterRenderer()
         {
             if (_rendererRegistered) return;
-            _capi.Event.RegisterRenderer(this, EnumRenderStage.AfterBlit, "collodion-viewport-exposure");
+            _capi.Event.RegisterRenderer(this, EnumRenderStage.AfterBlit, "photochemistry-viewport-exposure");
             _rendererRegistered = true;
         }
 

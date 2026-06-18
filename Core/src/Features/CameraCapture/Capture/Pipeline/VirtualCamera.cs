@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using OpenTK.Graphics.OpenGL;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -183,7 +183,7 @@ namespace Collodion.CameraCapture
 
             }
 
-            fbo = _platform.CreateFramebuffer(new FramebufferAttrs("collodion-virtual-camera", width, height)
+            fbo = _platform.CreateFramebuffer(new FramebufferAttrs("photochemistry-virtual-camera", width, height)
             {
                 Attachments = attachments.ToArray()
             });

@@ -1,4 +1,4 @@
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using SkiaSharp;
 using Vintagestory.API.Client;
 using Vintagestory.Client.NoObf;
@@ -120,7 +120,7 @@ namespace Collodion.CameraCapture
             State = ExposureState.Done;
             PushPreviewFrame();
             _clientApi.Logger.Notification(
-                $"Collodion: {_process.Name} exposure complete — " +
+                $"photochemistry: {_process.Name} exposure complete — " +
                 $"{_buffer?.FramesAccumulated ?? 0}/{_process.SampleCount} samples over {(nowMs - _shutterStartMs) / 1000f:F2}s. " +
                 $"Use '.collodion exposure export' to save.");
         }
@@ -239,7 +239,7 @@ namespace Collodion.CameraCapture
             long nowMs = _clientApi.ElapsedMilliseconds;
             float elapsed = _shutterStartMs == 0 ? 0f : (nowMs - _shutterStartMs) / 1000f;
             _clientApi.Logger.Notification(
-                $"Collodion: {_process.Name} exposure stopped — " +
+                $"photochemistry: {_process.Name} exposure stopped — " +
                 $"{frames}/{_process.SampleCount} samples over {elapsed:F2}s. " +
                 $"Use '.collodion exposure export' to save.");
         }
@@ -307,11 +307,11 @@ namespace Collodion.CameraCapture
 
             if (!_buffer.DeserializeAccumulation(data, out int restoredFrames))
             {
-                _clientApi.Logger.Warning("Collodion: partial exposure blob is incompatible with the current buffer dimensions — starting fresh.");
+                _clientApi.Logger.Warning("photochemistry: partial exposure blob is incompatible with the current buffer dimensions — starting fresh.");
                 return;
             }
 
-            _clientApi.Logger.Notification($"Collodion: restored {restoredFrames} accumulated frames from saved partial exposure.");
+            _clientApi.Logger.Notification($"photochemistry: restored {restoredFrames} accumulated frames from saved partial exposure.");
         }
 
         // Resolves and shapes one debug-preview frame using the same crop/scale/finishing policy
@@ -368,7 +368,7 @@ namespace Collodion.CameraCapture
             if (_clientApi.Render.FrameWidth != _camera.fbo.Width || _clientApi.Render.FrameHeight != _camera.fbo.Height)
             {
                 ReinitializeCameraAndBufferForResize();
-                _clientApi.Logger.Warning("Collodion: window resized during exposure — accumulated frames discarded.");
+                _clientApi.Logger.Warning("photochemistry: window resized during exposure — accumulated frames discarded.");
             }
 
             // Rate limiter: never sample faster than the process cadence.
@@ -386,7 +386,7 @@ namespace Collodion.CameraCapture
             }
             catch (Exception ex)
             {
-                _clientApi.Logger.Error($"Collodion: exposure frame {_buffer.FramesAccumulated} render failed: {ex}");
+                _clientApi.Logger.Error($"photochemistry: exposure frame {_buffer.FramesAccumulated} render failed: {ex}");
                 LastFaultMessage = ex.Message;
                 _shutterFrozenMs = _clientApi.ElapsedMilliseconds;
                 State = ExposureState.Faulted;

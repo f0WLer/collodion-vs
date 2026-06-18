@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL;
 using SkiaSharp;
 using Vintagestory.API.Client;
@@ -293,7 +293,7 @@ namespace Collodion.Exposure
         {
             // Sample FBO: RGBA8, used as a staging area for each blit.
             _sampleFbo = _platform.CreateFramebuffer(
-                new FramebufferAttrs("collodion-gpu-accu-sample", Width, Height)
+                new FramebufferAttrs("photochemistry-gpu-accu-sample", Width, Height)
                 {
                     Attachments =
                     [
@@ -315,7 +315,7 @@ namespace Collodion.Exposure
 
             // Resolve FBO: RGBA8, receives the tone-mapped output for CPU readback.
             _resolveFbo = _platform.CreateFramebuffer(
-                new FramebufferAttrs("collodion-gpu-accu-resolve", Width, Height)
+                new FramebufferAttrs("photochemistry-gpu-accu-resolve", Width, Height)
                 {
                     Attachments =
                     [
@@ -361,8 +361,8 @@ namespace Collodion.Exposure
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, prevFbo);
 
             // Load fragment shaders from embedded resources and compile.
-            string accumFrag   = LoadShaderSource("Collodion.gpu-exposure-accum.frag.glsl");
-            string resolveFrag = LoadShaderSource("Collodion.gpu-exposure-develop.frag.glsl");
+            string accumFrag   = LoadShaderSource("Photochemistry.gpu-exposure-accum.frag.glsl");
+            string resolveFrag = LoadShaderSource("Photochemistry.gpu-exposure-develop.frag.glsl");
             _accumProgram   = CompileProgram(VertSrc, accumFrag);
             _resolveProgram = CompileProgram(VertSrc, resolveFrag);
 

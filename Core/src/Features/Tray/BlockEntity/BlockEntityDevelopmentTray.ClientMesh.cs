@@ -1,4 +1,4 @@
-using Collodion.Plates.Rendering;
+﻿using Collodion.Plates.Rendering;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -28,7 +28,7 @@ namespace Collodion.Tray
                 {
                     lock (_clientMeshLock) _clientMeshQueued = false;
                     BuildClientMesh(capi);
-                }, "collodion-devtray-rebuild");
+                }, "photochemistry-devtray-rebuild");
             }
             catch (Exception ex)
             {
@@ -96,8 +96,8 @@ namespace Collodion.Tray
 
                 bodyShape.IgnoreElements = ["plate"];
                 capi.Tesselator.TesselateShape(
-                    "collodion-devtray-body",
-                    Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                    "photochemistry-devtray-body",
+                    Block?.Code ?? new AssetLocation("photochemistry", "developmenttray-red"),
                     bodyShape,
                     out mesh,
                     bodySource
@@ -140,8 +140,8 @@ namespace Collodion.Tray
 
                 shape.IgnoreElements = ["base", "wall-n", "wall-s", "wall-e", "wall-w"];
                 capi.Tesselator.TesselateShape(
-                    "collodion-devtray-plainplate",
-                    Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                    "photochemistry-devtray-plainplate",
+                    Block?.Code ?? new AssetLocation("photochemistry", "developmenttray-red"),
                     shape,
                     out mesh,
                     plateSource
@@ -178,8 +178,8 @@ namespace Collodion.Tray
 
                     shape.IgnoreElements = ["base", "wall-n", "wall-s", "wall-e", "wall-w"];
                     capi.Tesselator.TesselateShape(
-                        "collodion-devtray-platephoto",
-                        Block?.Code ?? new AssetLocation("collodion", "developmenttray-red"),
+                        "photochemistry-devtray-platephoto",
+                        Block?.Code ?? new AssetLocation("photochemistry", "developmenttray-red"),
                         shape,
                         out MeshData? photoMesh,
                         texSource
@@ -219,8 +219,8 @@ namespace Collodion.Tray
             texPos = capi.BlockTextureAtlas.UnknownTexturePosition;
             try
             {
-                var atlasKey = new AssetLocation("collodion", "devtray-" + textureName);
-                var asset = new AssetLocation("collodion", "textures/item/" + textureName + ".png");
+                var atlasKey = new AssetLocation("photochemistry", "devtray-" + textureName);
+                var asset = new AssetLocation("photochemistry", "textures/item/" + textureName + ".png");
                 capi.BlockTextureAtlas.GetOrInsertTexture(
                     atlasKey,
                     out int _,

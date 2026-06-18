@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
@@ -11,14 +11,14 @@ namespace Collodion
     public static class PlateDryingTransition
     {
         // Marker set by OnTransitionNow once the Dry transition completes.
-        public const string AttrDried = "collodionPlateDried";
+        public const string AttrDried = "photochemPlateDried";
 
         // Marker for plates whose drying is permanently disabled.
-        public const string AttrNeverDries = "collodionPlateNeverDries";
+        public const string AttrNeverDries = "photochemPlateNeverDries";
 
         // Marker set by PlateBox while the stack is in storage; ItemPlateBase reads
         // this in GetTransitionRateMul to slow/freeze drying based on config.
-        public const string AttrStoredInPlateBox = "collodionPlateBoxStored";
+        public const string AttrStoredInPlateBox = "photochemPlateBoxStored";
 
         // Resolves how fast (0 = pause, 1 = full rate) plates dry while inside a plate box.
         public static float ResolveStorageDryingRateMul(ICoreAPI? api)
@@ -67,7 +67,7 @@ namespace Collodion
 
             if (stack.Attributes?.GetBool(AttrNeverDries) == true)
             {
-                dsc.AppendLine(Lang.Get("collodion:wetplate-wetness-permanent"));
+                dsc.AppendLine(Lang.Get("photochemistry:wetplate-wetness-permanent"));
                 return;
             }
 
@@ -75,11 +75,11 @@ namespace Collodion
             if (hoursLeft > 0 && !double.IsPositiveInfinity(hoursLeft))
             {
                 int minutesLeft = (int)Math.Ceiling(hoursLeft * 60);
-                dsc.AppendLine(string.Format(Lang.Get("collodion:wetplate-wetness"), minutesLeft));
+                dsc.AppendLine(string.Format(Lang.Get("photochemistry:wetplate-wetness"), minutesLeft));
             }
             else
             {
-                dsc.AppendLine(Lang.Get("collodion:wetplate-dry"));
+                dsc.AppendLine(Lang.Get("photochemistry:wetplate-dry"));
             }
         }
 

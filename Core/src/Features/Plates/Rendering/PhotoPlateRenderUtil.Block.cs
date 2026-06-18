@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Collodion.PhotoMetadata.Model;
@@ -100,7 +100,7 @@ namespace Collodion.Plates.Rendering
                 }
 
                 string photoKey = Path.GetFileNameWithoutExtension(renderFileName);
-                AssetLocation texLoc = new AssetLocation("collodion", $"photo-block-{photoKey}-v{versionSnapshot}");
+                AssetLocation texLoc = new AssetLocation("photochemistry", $"photo-block-{photoKey}-v{versionSnapshot}");
                 
                 // Lazily create atlas bitmap payload only when cache lookup misses.
                 capi.BlockTextureAtlas.GetOrInsertTexture(

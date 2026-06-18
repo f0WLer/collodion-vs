@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Collodion.AdminTooling;
@@ -20,8 +20,8 @@ namespace Collodion
     {
         public static CollodionModSystem? ClientInstance { get; internal set; }
 
-        public const string ConfigFileName = "collodion.json";
-        public const string ServerPhotoIndexFileName = "collodion-photoindex.json";
+        public const string ConfigFileName = "photochemistry.json";
+        public const string ServerPhotoIndexFileName = "photochemistry-photoindex.json";
         public CollodionConfig Config { get; internal set; } = new CollodionConfig();
         public CollodionClientConfig ClientConfig { get; internal set; } = new CollodionClientConfig();
 
@@ -65,7 +65,7 @@ namespace Collodion
             api.RegisterBlockEntityClass("BlockEntityRestingCamera", typeof(BlockEntityRestingCamera));
 
             // Register Network Channel
-            var channel = CameraCaptureChannelRegistration.RegisterCameraCaptureMessageTypes(api.Network.RegisterChannel("collodion"));
+            var channel = CameraCaptureChannelRegistration.RegisterCameraCaptureMessageTypes(api.Network.RegisterChannel("photochemistry"));
 
             CameraCaptureChannelRegistration.RegisterCameraCaptureConfigMessageTypes(PhotoSyncModSystemBridge.RegisterPhotoSyncMessageTypes(channel));
             AdminToolingChannelRegistration.RegisterAdminToolingMessageTypes(channel);

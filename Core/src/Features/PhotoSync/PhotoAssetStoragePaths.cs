@@ -1,4 +1,4 @@
-using SkiaSharp;
+﻿using SkiaSharp;
 using Vintagestory.API.Config;
 
 namespace Collodion.PhotoSync.Storage
@@ -38,7 +38,7 @@ namespace Collodion.PhotoSync.Storage
         internal static string GetPhotoPath(string photoId)
         {
             string normalized = NormalizePhotoId(photoId);
-            return Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos", normalized);
+            return Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos", normalized);
         }
 
         // Human-viewable exported composites live in photos/exports/. The caller supplies a
@@ -47,7 +47,7 @@ namespace Collodion.PhotoSync.Storage
         internal static string GetExportPath(string fileName)
         {
             string safe = SanitizeExportFileName(fileName);
-            return Path.Combine(GamePaths.DataPath, "ModData", "collodion", "photos", "exports", safe);
+            return Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos", "exports", safe);
         }
 
         // Strips path separators and invalid filename characters, caps length, and guarantees a

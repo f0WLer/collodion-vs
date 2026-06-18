@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 
 namespace Collodion.Plates
 {
@@ -8,9 +8,9 @@ namespace Collodion.Plates
     /// </summary>
     public static class CameraEligibility
     {
-        private static readonly AssetLocation _glassPlateItemCode = new("collodion", "glassplate");
-        private static readonly AssetLocation _sensitizedPlateItemCode = new("collodion", "sensitizedplate");
-        private static readonly AssetLocation _photoPlateItemCode = new("collodion", "photoplate");
+        private static readonly AssetLocation _glassPlateItemCode = new("photochemistry", "glassplate");
+        private static readonly AssetLocation _sensitizedPlateItemCode = new("photochemistry", "sensitizedplate");
+        private static readonly AssetLocation _photoPlateItemCode = new("photochemistry", "photoplate");
 
         // Validates the compact loaded-plate code string used on camera item attributes.
         public static bool IsLoadedCodeSensitized(string? loadedCode)

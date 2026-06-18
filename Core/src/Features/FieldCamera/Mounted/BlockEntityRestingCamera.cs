@@ -1,12 +1,12 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 
 namespace Collodion.FieldCamera
 {
     public sealed class BlockEntityRestingCamera : BlockEntity
     {
-        private const string CameraStackAttr = "collodionRestingCameraStack";
-        private const string FacingYawAttr   = "collodionRestingCameraYaw";
+        private const string CameraStackAttr = "photochemRestingCameraStack";
+        private const string FacingYawAttr   = "photochemRestingCameraYaw";
 
         private ItemStack? _cameraStack;
         private float _facingYaw;

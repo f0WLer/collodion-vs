@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
@@ -119,8 +119,8 @@ namespace Collodion.Frame
             }
 
             string caption = be.Inventory[0].Itemstack?.Attributes?.GetString(PhotographAttrs.Caption) ?? string.Empty;
-            string label = string.IsNullOrEmpty(caption) ? Lang.Get("collodion:frame-info-photograph") : caption;
-            string line = Lang.Get("collodion:frame-info-displaying", label);
+            string label = string.IsNullOrEmpty(caption) ? Lang.Get("photochemistry:frame-info-photograph") : caption;
+            string line = Lang.Get("photochemistry:frame-info-displaying", label);
             return string.IsNullOrEmpty(baseInfo) ? line : baseInfo + "\n" + line;
         }
 
@@ -128,12 +128,12 @@ namespace Collodion.Frame
         {
             var helps = new List<WorldInteraction>();
 
-            Item? photoPlate = world.GetItem(new AssetLocation("collodion", "photoplate"));
+            Item? photoPlate = world.GetItem(new AssetLocation("photochemistry", "photoplate"));
             if (photoPlate != null)
             {
                 helps.Add(new WorldInteraction
                 {
-                    ActionLangCode = "collodion:heldhelp-frame-insert",
+                    ActionLangCode = "photochemistry:heldhelp-frame-insert",
                     MouseButton = EnumMouseButton.Right,
                     Itemstacks = [new ItemStack(photoPlate)]
                 });
@@ -141,7 +141,7 @@ namespace Collodion.Frame
 
             helps.Add(new WorldInteraction
             {
-                ActionLangCode = "collodion:heldhelp-frame-take",
+                ActionLangCode = "photochemistry:heldhelp-frame-take",
                 HotKeyCode = "sneak",
                 MouseButton = EnumMouseButton.Right
             });

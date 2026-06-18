@@ -1,4 +1,4 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.Client.NoObf;
@@ -10,7 +10,7 @@ namespace Collodion.CameraCapture
         private bool _f4TipShownThisViewfinder;
         private bool _f4TipShownEver;
 
-        private static readonly AssetLocation _viewfinderEnterSound = new AssetLocation("collodion", "sounds/rustle");
+        private static readonly AssetLocation _viewfinderEnterSound = new AssetLocation("photochemistry", "sounds/rustle");
 
         private readonly object _viewfinderLock = new object();
         private int _viewfinderDepth;
@@ -160,7 +160,7 @@ namespace Collodion.CameraCapture
 
             _f4TipShownThisViewfinder = true;
             _f4TipShownEver = true;
-            ClientApi.ShowChatMessage(Lang.Get("collodion:msg-tip-f4-guiless"));
+            ClientApi.ShowChatMessage(Lang.Get("photochemistry:msg-tip-f4-guiless"));
         }
 
         private bool IsGuiLessModeActive() => ClientApi?.HideGuis ?? false;
@@ -179,7 +179,7 @@ namespace Collodion.CameraCapture
                     _zoomMechanismTipShownThisViewfinder = true;
                     if (ClientConfig?.ShowDebugLogs == true)
                     {
-                        ClientApi.ShowChatMessage("Collodion: viewfinder zoom via MainCamera.Fov");
+                        ClientApi.ShowChatMessage("photochemistry: viewfinder zoom via MainCamera.Fov");
                     }
                 }
 

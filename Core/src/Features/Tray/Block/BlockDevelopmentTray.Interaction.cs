@@ -1,4 +1,4 @@
-using Collodion.AdminTooling;
+﻿using Collodion.AdminTooling;
 using Collodion.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -107,7 +107,7 @@ namespace Collodion.Tray
                     if (currentPours >= RequiredDeveloperPours) return false;
                     if (PlateDryingTransition.IsDry(world, clientDevPlate))
                     {
-                        (world.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("collodion:msg-tray-plate-dried"));
+                        (world.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("photochemistry:msg-tray-plate-dried"));
                         return false;
                     }
                     if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _developerPortionCode, GetChemicalUnitsPerUse())) return false;
@@ -130,7 +130,7 @@ namespace Collodion.Tray
                     if (!TryGetFixerPourContext(be, out ItemStack clientFixPlate, out _)) return false;
                     if (PlateDryingTransition.IsDry(world, clientFixPlate))
                     {
-                        (world.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("collodion:msg-tray-plate-dried"));
+                        (world.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("photochemistry:msg-tray-plate-dried"));
                         return false;
                     }
                     if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _fixerPortionCode, GetChemicalUnitsPerUse())) return false;
@@ -213,13 +213,13 @@ namespace Collodion.Tray
                     if (currentPours >= RequiredDeveloperPours) return false;
                     if (PlateDryingTransition.IsDry(world, devPlate))
                     {
-                        Tell(byPlayer, Lang.Get("collodion:msg-tray-plate-dried"), pos);
+                        Tell(byPlayer, Lang.Get("photochemistry:msg-tray-plate-dried"), pos);
                         return false;
                     }
                     string? devPhotographer = devPlate.Attributes?.GetString(PlateAttributes.PhotographerUid);
                     if (!string.IsNullOrEmpty(devPhotographer) && !string.Equals(devPhotographer, byPlayer.PlayerUID, StringComparison.OrdinalIgnoreCase))
                     {
-                        Tell(byPlayer, Lang.Get("collodion:msg-tray-other-photographer"), pos);
+                        Tell(byPlayer, Lang.Get("photochemistry:msg-tray-other-photographer"), pos);
                         return false;
                     }
                     break;
@@ -227,20 +227,20 @@ namespace Collodion.Tray
                     if (!TryGetFixerPourContext(be, out ItemStack fixPlate, out int pours)) return false;
                     if (PlateDryingTransition.IsDry(world, fixPlate))
                     {
-                        Tell(byPlayer, Lang.Get("collodion:msg-tray-plate-dried"), pos);
+                        Tell(byPlayer, Lang.Get("photochemistry:msg-tray-plate-dried"), pos);
                         return false;
                     }
 
                     if (pours < RequiredDeveloperPours)
                     {
-                        Tell(byPlayer, Lang.Get("collodion:msg-tray-underdeveloped", pours, RequiredDeveloperPours), pos);
+                        Tell(byPlayer, Lang.Get("photochemistry:msg-tray-underdeveloped", pours, RequiredDeveloperPours), pos);
                         return false;
                     }
 
                     string? fixPhotographer = fixPlate.Attributes?.GetString(PlateAttributes.PhotographerUid);
                     if (!string.IsNullOrEmpty(fixPhotographer) && !string.Equals(fixPhotographer, byPlayer.PlayerUID, StringComparison.OrdinalIgnoreCase))
                     {
-                        Tell(byPlayer, Lang.Get("collodion:msg-tray-other-photographer"), pos);
+                        Tell(byPlayer, Lang.Get("photochemistry:msg-tray-other-photographer"), pos);
                         return false;
                     }
                     break;

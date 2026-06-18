@@ -1,4 +1,4 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Client;
 using Vintagestory.API.MathTools;
 
@@ -27,13 +27,13 @@ namespace Collodion.PlateBox
             [
                 new WorldInteraction
                 {
-                    ActionLangCode = "collodion:heldhelp-platebox-insert",
+                    ActionLangCode = "photochemistry:heldhelp-platebox-insert",
                     MouseButton = EnumMouseButton.Right,
                     Itemstacks = [new ItemStack(samplePlate)]
                 },
                 new WorldInteraction
                 {
-                    ActionLangCode = "collodion:heldhelp-platebox-take",
+                    ActionLangCode = "photochemistry:heldhelp-platebox-take",
                     MouseButton = EnumMouseButton.Right
                 }
             ];
@@ -41,9 +41,9 @@ namespace Collodion.PlateBox
 
         private static readonly AssetLocation[] _plateSetSounds =
         [
-            new("collodion", "sounds/glass-set1"),
-            new("collodion", "sounds/glass-set2"),
-            new("collodion", "sounds/glass-set3")
+            new("photochemistry", "sounds/glass-set1"),
+            new("photochemistry", "sounds/glass-set2"),
+            new("photochemistry", "sounds/glass-set3")
         ];
         
         // Routes shift-pickup, open/close toggles, and per-slot insert/remove interactions.

@@ -1,12 +1,12 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 namespace Collodion.Tray
 {
     internal static class TrayTimedInteractionState
     {
-        internal const string TimedAttrKey = "collodionDevTrayTimed";
-        internal const string TimedNeedReleaseKey = "collodionDevTrayNeedRelease";
+        internal const string TimedAttrKey = "photochemDevTrayTimed";
+        internal const string TimedNeedReleaseKey = "photochemDevTrayNeedRelease";
         internal const string TimedActionKey = "action";
         internal const string TimedXKey = "x";
         internal const string TimedYKey = "y";

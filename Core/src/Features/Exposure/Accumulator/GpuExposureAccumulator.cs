@@ -20,6 +20,9 @@ namespace Photochemistry.Exposure
         public int Width  { get; }
         public int Height { get; }
         public int FramesAccumulated => _frameCount;
+        // Reference frame count this buffer normalizes against (1/_targetSampleCount in the resolve pass).
+        // Fixed at construction; callers reusing a buffer must recreate it when they need a different count.
+        public int TargetSampleCount => _targetSampleCount;
 
         public bool  LinearizeInput          { get; set; } = true;
         public bool  ApplySpectralWeights    { get; set; } = true;

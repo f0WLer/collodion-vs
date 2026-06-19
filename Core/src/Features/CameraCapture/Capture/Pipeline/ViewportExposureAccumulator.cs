@@ -64,7 +64,9 @@ namespace Photochemistry.CameraCapture
             if (_disposed) return;
             int w = Math.Max(1, _capi.Render.FrameWidth);
             int h = Math.Max(1, _capi.Render.FrameHeight);
-            EnsureGpuAccumulator(w, h, 1);
+            // Prime with the baseline sample count so the common iodide exposure reuses this buffer on Start
+            // without reallocating. A different chemistry recreates it there (count mismatch) — still correct.
+            EnsureGpuAccumulator(w, h, PlateProcessProfile.Iodide.SampleCount);
             RegisterRenderer();
         }
 
@@ -288,7 +290,11 @@ namespace Photochemistry.CameraCapture
             int maxDimension = PhotochemistryConfigAccess.ResolveClientConfig(_capi)?.Viewfinder?.ExposureReadbackMaxDimension
                 ?? ViewfinderConfig.DefaultExposureReadbackMaxDimension;
             GpuExposureAccumulator.ComputeTargetDimensions(sourceWidth, sourceHeight, maxDimension, out int w, out int h);
-            if (_buffer == null || _buffer.Width != w || _buffer.Height != h)
+            // Recreate not only on resize but also when the requested sample count differs from the existing
+            // buffer's. _targetSampleCount is fixed at construction and drives preview/seal normalization
+            // (1/_targetSampleCount); a buffer primed with a placeholder count would otherwise be reused with
+            // the wrong reference, making the exposure start at baseline and overexpose without bound.
+            if (_buffer == null || _buffer.Width != w || _buffer.Height != h || _buffer.TargetSampleCount != sampleCount)
             {
                 _buffer?.Dispose();
                 _buffer = new GpuExposureAccumulator(_capi, w, h, sampleCount);

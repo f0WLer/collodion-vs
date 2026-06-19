@@ -30,9 +30,18 @@
     </None>
   </ItemGroup>
 
-  <!-- Link shared assets from Core into this project's output under assets\. -->
+  <!-- Link shared assets from Core (photochemistry domain) into this project's output under assets\. -->
   <ItemGroup>
     <None Include="..\Core\assets\**\*">
+      <Link>assets\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- This head's own asset overlay (collodion domain), layered on top of the shared Core assets.
+       Drop baseline-only assets under assets\collodion\ (or any non-photochemistry domain) here. -->
+  <ItemGroup>
+    <None Include="assets\**\*">
       <Link>assets\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

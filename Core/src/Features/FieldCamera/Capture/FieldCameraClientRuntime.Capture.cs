@@ -19,6 +19,9 @@ namespace Photochemistry.FieldCamera
         private long _lastShutterGateChatMs;
         private int _maxFrames = ViewfinderConfig.DefaultMaxAccumulatedFrames;
 
+        // Temporary startup-race diagnostics (gated on ShowDebugLogs). See the exposure-flakiness plan.
+        private void Diag(string msg) => _owner.BestEffortLogger?.Notification("photochemistry[diag]: " + msg);
+
         internal bool TryToggleViewfinderExposure(EntityAgent byEntity, bool silentIfBusy)
         {
             var acc = _owner.Capture.ActiveAccumulator;
@@ -119,6 +122,8 @@ namespace Photochemistry.FieldCamera
                 : null;
 
             newAcc.Start(profile);
+            Diag($"handheld start: chan={(_owner.ClientChannel == null ? "null" : _owner.ClientChannel.Connected ? "connected" : "NOT-connected")} " +
+                 $"profile={profile.Name} target={newAcc.TargetFrames}");
 
             if (crossCameraBlob != null)
                 newAcc.PrimeFromPartial(crossCameraBlob);
@@ -274,6 +279,10 @@ namespace Photochemistry.FieldCamera
         internal void ApplyMountedExposureControl(MountedCameraControlPacket packet)
         {
             var renderer = _owner.Capture._virtualExposureRenderer;
+            Diag($"mounted recv: rendererNull={renderer == null} packetNull={packet == null} " +
+                 $"isExposing={packet?.IsExposing} hasCamState={packet?.HasCameraState} prepIdle={packet?.PrepareIdlePreview} " +
+                 $"pendingState={(_pendingMountedCameraState == null ? "null" : "set")} " +
+                 $"chan={(_owner.ClientChannel == null ? "null" : _owner.ClientChannel.Connected ? "connected" : "NOT-connected")}");
             if (renderer == null || packet == null) return;
 
             // Track which camera block this player is shooting through so its renderer hides only
@@ -343,6 +352,7 @@ namespace Photochemistry.FieldCamera
                     renderer.ApplyFinishing = false;
                     renderer.ExposurePreviewSink = _owner.Capture._virtualCameraPreviewRenderer;
                     renderer.Start(cameraState, profile);
+                    Diag($"mounted start: renderer.Start called, state={renderer.State} profile={profile.Name}");
                     _maxFrames = PhotochemistryConfigAccess.ResolveClientConfig(clientApi)?.Viewfinder?.MaxAccumulatedFrames
                         ?? ViewfinderConfig.DefaultMaxAccumulatedFrames;
 
@@ -364,6 +374,10 @@ namespace Photochemistry.FieldCamera
                     }
 
                     SendExposureStatePacket(true, renderer.FramesAccumulated, _mountedExposureId, renderer.CapFrameCount);
+                }
+                else
+                {
+                    Diag("mounted start ABORTED: IsExposing but _pendingMountedCameraState is null (no camera state seeded)");
                 }
                 return;
             }

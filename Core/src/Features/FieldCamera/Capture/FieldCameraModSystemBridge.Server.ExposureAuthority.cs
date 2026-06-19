@@ -67,6 +67,10 @@ namespace Photochemistry.FieldCamera
             if (Api?.Side != EnumAppSide.Server || Api.World == null) return;
             if (player == null || packet == null) return;
 
+            BestEffortLogger?.Notification(
+                $"photochemistry[diag]: server recv ExposureState: isExposing={packet.IsExposing} " +
+                $"exposedFrames={packet.ExposedFrames} targetFrames={packet.TargetFrames}");
+
             if (!TryResolveCameraStorage(player, out ItemSlot? cameraSlot, out ItemStack? cameraStack, out BlockEntityMountedCamera? mountedBe)) return;
             if (cameraStack == null || !CameraHasLoadedPlate(cameraStack)) return;
 
@@ -112,6 +116,7 @@ namespace Photochemistry.FieldCamera
                 PlateDryingTransition.TickNow(Api.World, loadedPlate);
                 PlateAttributes.SetStage(loadedPlate, PlateStage.ExposurePaused);
                 loadedPlate.Attributes.SetInt(PlateAttributes.ExposedFrames, packet.ExposedFrames);
+                BestEffortLogger?.Notification($"photochemistry[diag]: server wrote ExposedFrames={packet.ExposedFrames} to plate");
             }
 
             SetLoadedPlateAttributes(cameraStack, loadedPlate);

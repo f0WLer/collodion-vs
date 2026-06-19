@@ -40,6 +40,12 @@ namespace Photochemistry.CameraCapture
 
         private bool _disposed;
 
+        // Temporary startup-race diagnostics (gated on ShowDebugLogs). See the exposure-flakiness plan.
+        private bool _diagFirstTick;
+        private bool _diagFirstAccum;
+        private static void Diag(string msg) =>
+            PhotochemistryModSystem.ClientInstance?.BestEffortLogger?.Notification("photochemistry[diag]: " + msg);
+
         // When set, the exposure renderer pushes developed preview frames here while capturing,
         // keeping the debug preview window live during long exposures.
         internal IExposurePreviewSink? ExposurePreviewSink { get; set; }
@@ -195,6 +201,8 @@ namespace Photochemistry.CameraCapture
             AllocateBuffer();
             ExposurePreviewSink?.BeginExposurePassthrough();
             State = ExposureState.Capturing;
+            _diagFirstTick = false;
+            _diagFirstAccum = false;
         }
 
         /// <summary>Pauses frame accumulation and freezes the shutter timer. Only valid in <see cref="ExposureState.Capturing"/> state.</summary>
@@ -358,6 +366,8 @@ namespace Photochemistry.CameraCapture
             if (State != ExposureState.Capturing) return;
             if (_camera == null || _buffer == null) return;
 
+            if (!_diagFirstTick) { _diagFirstTick = true; Diag("renderer tick: first Capturing OnRenderFrame reached"); }
+
             // Always advance both timers so preview cadence and sample interval track real time
             // independently of each other and of the game's frame rate.
             _elapsedSinceLastSample  += deltaTime;
@@ -383,6 +393,7 @@ namespace Photochemistry.CameraCapture
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
                 _buffer.Accumulate(_camera.fbo);
+                if (!_diagFirstAccum) { _diagFirstAccum = true; Diag($"renderer accumulate: first frame accumulated, frames={_buffer.FramesAccumulated}"); }
             }
             catch (Exception ex)
             {

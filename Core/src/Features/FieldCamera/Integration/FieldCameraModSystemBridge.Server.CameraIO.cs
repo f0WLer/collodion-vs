@@ -190,6 +190,10 @@ namespace Photochemistry.FieldCamera
                 packet.MountBlockZ = mountPos.Z;
             }
 
+            BestEffortLogger?.Notification(
+                $"photochemistry[diag]: server send MountedCameraControl: isExposing={packet.IsExposing} " +
+                $"hasCamState={packet.HasCameraState} prepIdle={packet.PrepareIdlePreview} hasMount={packet.HasMountBlock} " +
+                $"chan={(ServerChannel == null ? "null" : "ok")}");
             ServerChannel?.SendPacket(packet, player);
         }
 

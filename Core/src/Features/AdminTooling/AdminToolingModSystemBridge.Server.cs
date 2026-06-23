@@ -26,12 +26,22 @@ namespace Photochemistry.AdminTooling
         {
             if (_owner.ModApi?.World == null) return;
 
-            Item? item = _owner.ModApi.World.GetItem(new AssetLocation("photochemistry", "sensitizedplate"));
+            // Resolve the chemistry's sensitized item + substrate from its recipe so the plate exposes with
+            // the right per-process timing and develops on the right medium. Falls back to glass iodide.
+            string chemistry = string.IsNullOrEmpty(packet.Chemistry)
+                ? PlateAttributes.ChemistryCollodion : packet.Chemistry.ToLowerInvariant();
+            SensitizationRecipe? recipe = SensitizationRegistry.ByChemistry(chemistry);
+            AssetLocation itemCode = recipe?.SensitizedItemCode ?? new AssetLocation("photochemistry", "sensitizedplate");
+
+            Item? item = _owner.ModApi.World.GetItem(itemCode);
             if (item == null) return;
 
             var stack = new ItemStack(item, 1);
             PlateAttributes.SetStage(stack, PlateStage.Sensitized);
-            PlateAttributes.SetNameLangCode(stack, "photochemistry:plate-name-sensitized");
+            PlateAttributes.SetChemistry(stack, chemistry);
+            // Pin the glass-plate name; other substrates (paper) keep their own itemtype name.
+            if (recipe?.Substrate is null or "glass")
+                PlateAttributes.SetNameLangCode(stack, "photochemistry:plate-name-sensitized");
             PlateDryingTransition.ResetTimer(_owner.ModApi.World, stack, PlateDryingTransition.ResolveWetDurationHours(_owner.ModApi, stack));
 
             if (!player.InventoryManager.TryGiveItemstack(stack))

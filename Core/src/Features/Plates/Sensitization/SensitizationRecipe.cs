@@ -27,6 +27,9 @@ namespace Photochemistry.Plates
         // Which substrate this recipe applies to (e.g. "glass", "paper"). Scopes start-step matching so
         // a glass plate never branches into a paper recipe and vice-versa. Defaults to glass.
         public string Substrate { get; init; } = "glass";
+        // The sensitized plate item this recipe yields (paper vs glass). Lets a chemistry resolve its
+        // sensitized item directly (e.g. the admin "Give Sensitized Plate" button), without a block.
+        public AssetLocation? SensitizedItemCode { get; init; }
         public IReadOnlyList<SensitizationStep> Steps { get; init; } = System.Array.Empty<SensitizationStep>();
     }
 

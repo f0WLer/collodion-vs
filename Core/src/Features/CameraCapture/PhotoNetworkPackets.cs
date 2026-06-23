@@ -60,6 +60,9 @@ namespace Photochemistry.CameraCapture.Contracts
         [ProtoMember(13)] public int MountBlockX { get; set; }
         [ProtoMember(14)] public int MountBlockY { get; set; }
         [ProtoMember(16)] public int MountBlockZ { get; set; }
+        // Chemistry of the loaded plate, so the client resolves the correct per-process exposure timing
+        // and emulsion response instead of defaulting to iodide. Empty when no plate is loaded.
+        [ProtoMember(17)] public string Chemistry { get; set; } = string.Empty;
     }
 
     [ProtoContract]

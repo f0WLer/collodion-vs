@@ -314,9 +314,9 @@ namespace Photochemistry.FieldCamera
                 var clientApi = _owner.ClientApi;
                 if (clientApi != null)
                 {
-                    // Mounted-plate chemistry isn't threaded to the client here yet, so this
-                    // resolves to the collodion/iodide default. Pass the loaded plate once available.
-                    PlateProcessProfile previewProcess = PlateProcessProfile.Iodide;
+                    // Resolve the mounted plate's chemistry (threaded from the server) so the idle/live
+                    // preview emulsion matches the active plate; empty (no plate) falls back to iodide.
+                    PlateProcessProfile previewProcess = PlateProcessProfile.Resolve(packet.Chemistry);
 
                     // Keep idle and live mounted preview chemistry aligned with the active plate.
                     if (_owner.Capture._virtualCameraPreviewRenderer != null)
@@ -347,9 +347,9 @@ namespace Photochemistry.FieldCamera
                     var clientApi = _owner.ClientApi;
                     if (clientApi == null) return;
 
-                    // Mounted-plate chemistry isn't threaded to the client here yet, so this
-                    // resolves to the collodion/iodide default. Pass the loaded plate once available.
-                    PlateProcessProfile profile = PlateProcessProfile.Iodide;
+                    // Resolve the mounted plate's chemistry (threaded from the server) so the exposure uses
+                    // its per-process sample count and duration; empty (no plate) falls back to iodide.
+                    PlateProcessProfile profile = PlateProcessProfile.Resolve(packet.Chemistry);
 
                     renderer.ApplyFinishing = false;
                     renderer.ExposurePreviewSink = _owner.Capture._virtualCameraPreviewRenderer;

@@ -420,7 +420,12 @@ namespace Photochemistry.AdminTooling
 
         private bool OnGiveSensitizedPlate()
         {
-            _owner.ClientChannel?.SendPacket(new GiveSensitizedPlatePacket());
+            // Give a plate of the chemistry currently selected in the tuner, so its exposure timing and
+            // medium match what is being tuned (an empty/iodide tag would always expose as 40 over 8s).
+            _owner.ClientChannel?.SendPacket(new GiveSensitizedPlatePacket
+            {
+                Chemistry = _renderer.ActiveProcess.Name.ToLowerInvariant()
+            });
             return true;
         }
 

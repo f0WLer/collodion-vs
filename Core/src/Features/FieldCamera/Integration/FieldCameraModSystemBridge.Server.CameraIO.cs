@@ -166,6 +166,7 @@ namespace Photochemistry.FieldCamera
                 if (CameraItemHelper.TryGetLoadedPlateStack(cameraStack, Api.World, out ItemStack? loadedPlate) && loadedPlate != null)
                 {
                     packet.ExposureId = loadedPlate.Attributes.GetString(PlateAttributes.ExposureId, string.Empty);
+                    packet.Chemistry = PlateAttributes.GetChemistry(loadedPlate) ?? string.Empty;
                 }
 
                 if (CameraItemHelper.TryGetMountedCaptureState(cameraStack, out VirtualCameraState cameraState))

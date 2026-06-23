@@ -13,7 +13,12 @@ namespace Photochemistry.AdminTooling
         }
     }
 
-    /// <summary>Requests that the server spawn a fresh sensitized plate in the requesting player's inventory.</summary>
+    /// <summary>Requests that the server spawn a fresh sensitized plate of the given chemistry in the
+    /// requesting player's inventory. Empty chemistry falls back to the baseline iodide collodion.</summary>
     [ProtoContract]
-    internal class GiveSensitizedPlatePacket { }
+    internal class GiveSensitizedPlatePacket
+    {
+        [ProtoMember(1)]
+        public string Chemistry { get; set; } = "";
+    }
 }

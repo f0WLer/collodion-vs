@@ -85,6 +85,7 @@ namespace Photochemistry
             SensitizationRegistry.Register(new SensitizationRecipe
             {
                 ChemistryId = PlateAttributes.ChemistryCollodion, // "iodide"
+                SensitizedItemCode = new AssetLocation("photochemistry", "sensitizedplate"),
                 Steps = new[]
                 {
                     new SensitizationStep

@@ -39,6 +39,7 @@ namespace Kosphotography
             {
                 ChemistryId = "bromide",
                 Substrate = "glass",
+                SensitizedItemCode = new AssetLocation("photochemistry", "sensitizedplate"),
                 Steps = new[]
                 {
                     new SensitizationStep
@@ -62,6 +63,7 @@ namespace Kosphotography
             {
                 ChemistryId = "chloride",
                 Substrate = "paper",
+                SensitizedItemCode = new AssetLocation("kosphotography", "sensitizedpaper"),
                 Steps = new[]
                 {
                     new SensitizationStep

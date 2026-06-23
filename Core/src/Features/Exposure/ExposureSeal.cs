@@ -23,8 +23,7 @@ namespace Photochemistry.Exposure
             GpuExposureAccumulator accumulator,
             int maxDimension,
             string seedKey,
-            ImageEffectsConfig baselineEffects,
-            ImageEffectsConfig? effectsOverride,
+            ImageEffectsConfig effects,
             bool applyFinishing = true)
         {
             using SKBitmap resolved = accumulator.Resolve();
@@ -33,8 +32,7 @@ namespace Photochemistry.Exposure
             {
                 if (applyFinishing)
                 {
-                    ImageEffectsConfig profile = ImageEffectsPipelineBridge.ResolveCaptureProfile(baselineEffects, effectsOverride);
-                    ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, seedKey, profile);
+                    ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, seedKey, effects);
                 }
 
                 return PhotoAssetStoragePaths.SaveExposurePng(cropped);

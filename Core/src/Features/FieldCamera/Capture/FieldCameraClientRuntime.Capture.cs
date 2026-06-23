@@ -189,10 +189,10 @@ namespace Photochemistry.FieldCamera
 
                 ItemStack? camStack = CameraItemHelper.GetActiveCameraStack(clientApi);
                 CameraItemHelper.TryGetLoadedPlateStack(camStack, clientApi.World, out ItemStack? loadedPlate);
-                ImageEffectsConfig? effectsOverride = ImageEffectsProfileService.TryLoadProfile("wetplate", clientApi);
 
                 acc.Stop();
-                string fileName = acc.Export(effectsOverride);
+                // Effects come from the accumulator's active chemistry profile (set at Start).
+                string fileName = acc.Export();
 
                 _owner.ClientChannel?.SendPacket(new PhotoTakenPacket { PhotoId = fileName });
                 ClientPhotoSyncIntegration.NotifyPhotoCreated(clientApi, fileName);

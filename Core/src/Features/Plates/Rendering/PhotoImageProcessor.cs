@@ -5,22 +5,10 @@ namespace Photochemistry.Plates.Rendering
 {
     internal static class PhotoImageProcessor
     {
-        // Warm silvery-gray silver deposit color, shared by the in-game density map and the baked
-        // composite export so both read as the exact same silver. Sourced from the single presentation
-        // descriptor (PlatePresentation.Photochemistry) so a future process changes the silver in one place.
-        internal static readonly byte SilverR = PlatePresentation.Photochemistry.DepositR;
-        internal static readonly byte SilverG = PlatePresentation.Photochemistry.DepositG;
-        internal static readonly byte SilverB = PlatePresentation.Photochemistry.DepositB;
-
-        // Tonal-response exponent for the silver density (alpha = luminance^DensityGamma). <1 lifts
-        // shadow/midtone silver so the framed over-black positive keeps detail. Sourced from the
-        // presentation descriptor so it is one tunable knob (and per-process later).
-        internal static readonly float DensityGamma = PlatePresentation.Photochemistry.DensityGamma;
-
-        // 256-entry lookup: raw density (luminance, 0..255) -> lifted silver alpha (0..255). Built
-        // once so the per-pixel loops index it instead of calling Pow. Identity when gamma ~= 1.
-        private static readonly byte[] _densityLut = BuildDensityLut(DensityGamma);
-
+        // 256-entry lookup: raw density (luminance, 0..255) -> lifted silver alpha (0..255), built per call
+        // from the resolved presentation's density gamma so the per-pixel loops index it instead of calling
+        // Pow. Identity when gamma ~= 1. The silver/print colour and gamma are no longer hardcoded here —
+        // every caller passes the chemistry's resolved PlatePresentation (tone + gamma come from config).
         private static byte[] BuildDensityLut(float gamma)
         {
             var lut = new byte[256];
@@ -127,9 +115,7 @@ namespace Photochemistry.Plates.Rendering
                         // alpha = density (bright source = dense silver = opaque), RGB = dark silver color.
                         // Both the silver tone and the density curve come from the resolved presentation,
                         // so each chemistry develops to its own image colour and contrast.
-                        byte[] lut = MathF.Abs(presentation.DensityGamma - DensityGamma) < 1e-4f
-                            ? _densityLut
-                            : BuildDensityLut(presentation.DensityGamma);
+                        byte[] lut = BuildDensityLut(presentation.DensityGamma);
                         InvertToNegativeDensityMap(src, presentation.DepositR, presentation.DepositG, presentation.DepositB, lut);
 
                         // During development (pours 1-4), scale back silver visibility progressively.
@@ -158,13 +144,18 @@ namespace Photochemistry.Plates.Rendering
 
         // Bakes a flat, viewable "ambrotype positive" PNG from the raw positive source: the
         // silver density map flattened over an opaque black backing. Each pixel becomes
-        // silverColor * density (density = luminance), fully opaque — identical to what the
+        // depositColor * density (density = luminance), fully opaque — identical to what the
         // framed silver-over-black composite shows, but as a standalone file for viewing
-        // outside the game. Returns false on any failure (no partial file is left behind).
-        internal static bool TryWriteCompositePng(string sourcePath, string outPath)
+        // outside the game. The deposit colour and density gamma come from the resolved
+        // presentation (the photo's chemistry), not a hardcoded silver.
+        // Returns false on any failure (no partial file is left behind).
+        internal static bool TryWriteCompositePng(string sourcePath, string outPath, PlatePresentation presentation)
         {
             try
             {
+                byte[] densityLut = BuildDensityLut(presentation.DensityGamma);
+                byte depR = presentation.DepositR, depG = presentation.DepositG, depB = presentation.DepositB;
+
                 using var decoded = SKBitmap.Decode(sourcePath);
                 if (decoded == null) return false;
 
@@ -193,10 +184,10 @@ namespace Photochemistry.Plates.Rendering
                             {
                                 int i = x * 4;
                                 float density = (0.299f * row[i + 0] + 0.587f * row[i + 1] + 0.114f * row[i + 2]) / 255f;
-                                float a = _densityLut[(int)(density * 255f)] / 255f;
-                                row[i + 0] = (byte)(SilverR * a);
-                                row[i + 1] = (byte)(SilverG * a);
-                                row[i + 2] = (byte)(SilverB * a);
+                                float a = densityLut[(int)(density * 255f)] / 255f;
+                                row[i + 0] = (byte)(depR * a);
+                                row[i + 1] = (byte)(depG * a);
+                                row[i + 2] = (byte)(depB * a);
                                 row[i + 3] = 255;
                             }
                         }
@@ -210,8 +201,8 @@ namespace Photochemistry.Plates.Rendering
                         {
                             var c = dst.GetPixel(x, y);
                             float density = (0.299f * c.Red + 0.587f * c.Green + 0.114f * c.Blue) / 255f;
-                            float a = _densityLut[(int)(density * 255f)] / 255f;
-                            dst.SetPixel(x, y, new SKColor((byte)(SilverR * a), (byte)(SilverG * a), (byte)(SilverB * a), 255));
+                            float a = densityLut[(int)(density * 255f)] / 255f;
+                            dst.SetPixel(x, y, new SKColor((byte)(depR * a), (byte)(depG * a), (byte)(depB * a), 255));
                         }
                     }
                 }
@@ -229,16 +220,11 @@ namespace Photochemistry.Plates.Rendering
             }
         }
 
-        // Converts a positive source bitmap in-place to a silver density map.
-        // For each pixel: alpha = luminance (exposure density), RGB = warm silvery-gray.
-        // High luminance (bright scene, sky) → high alpha (dense opaque silver deposit).
-        // Low luminance (dark scene, shadows) → low alpha (transparent glass).
-        //
-        // The silver color is a single fixed silvery-gray used in every viewing context:
-        // the plate is one physical silver-on-glass image. Against the world the clear glass
-        // shows through; placed over a black backing panel the same image reads as a positive
-        // (ambrotype) — light silver highlights, black shadows. There is no separate negative
-        // vs ambrotype color; "how it's viewed" (the backing) is what changes, not the silver.
+        // Converts a positive source bitmap in-place to a silver density map: alpha = luminance (exposure
+        // density, opaque where the scene was bright), RGB = the chemistry's deposit colour. The plate is one
+        // physical silver-on-glass image — against the world the clear glass shows through, while over a black
+        // backing the same map reads as a positive (ambrotype). Deposit colour and density curve are passed in
+        // from the resolved presentation, so the tone is per-chemistry rather than fixed here.
         private static void InvertToNegativeDensityMap(SKBitmap bmp, byte silverR, byte silverG, byte silverB, byte[] densityLut)
         {
             if (bmp == null) return;

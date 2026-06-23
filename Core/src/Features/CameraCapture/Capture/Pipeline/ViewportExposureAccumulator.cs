@@ -18,7 +18,6 @@ namespace Photochemistry.CameraCapture
     internal sealed class ViewportExposureAccumulator : IGameplayExposureAccumulator, IRenderer
     {
         private readonly ICoreClientAPI _capi;
-        private readonly ImageEffectsConfig _baselineEffects;
         private GpuExposureAccumulator? _buffer;
         private PlateProcessProfile _process;
         private float _elapsedSinceLastSample;
@@ -51,8 +50,10 @@ namespace Photochemistry.CameraCapture
         internal ViewportExposureAccumulator(ICoreClientAPI capi)
         {
             _capi = capi;
-            _baselineEffects = ImageEffectsPipelineBridge.LoadCaptureBaseline(capi);
         }
+
+        // The active chemistry's post-effects, from the shared registry.
+        private ImageEffectsConfig Effects => ChemistryProfileRegistry.Instance.Get(_process.Name).PostEffects;
 
         /// <summary>
         /// Allocates the GPU accumulator and registers this renderer at <c>AfterBlit</c> ahead of
@@ -80,7 +81,10 @@ namespace Photochemistry.CameraCapture
             if (State == ExposureState.Paused) { Resume(); return; }
             if (State == ExposureState.Capturing) return;
 
-            _process = process;
+            // Capture + resolve from the plate chemistry's SAVED profile (config): its physics flags,
+            // per-parameter overrides, and shutter timing — identical to how the mounted/tray path develops.
+            ChemistryOverrides cfg = ChemistryProfileRegistry.Instance.Get(process.Name).ExposurePhysics;
+            _process = cfg.ApplyTimingTo(process);
             _elapsedSinceLastSample = 0f;
             _elapsedSinceLastPreview = 0f;
             _elapsedCaptureSeconds = 0f;
@@ -88,8 +92,8 @@ namespace Photochemistry.CameraCapture
 
             int w = Math.Max(1, _capi.Render.FrameWidth);
             int h = Math.Max(1, _capi.Render.FrameHeight);
-            EnsureGpuAccumulator(w, h, process.SampleCount);
-            ApplyProcessToBuffer(_buffer!, process);
+            EnsureGpuAccumulator(w, h, _process.SampleCount);
+            new ExposurePhysicsConfig { Chem = cfg }.Apply(_buffer!, _process);
             _buffer!.Reset(); // clear any frames accumulated during priming
 
             // Register renderer only if Prime() hasn’t already done so during viewfinder aiming.
@@ -149,7 +153,7 @@ namespace Photochemistry.CameraCapture
             int maxDim = PhotochemistryConfigAccess.ResolveClientConfig(_capi)?.Viewfinder?.PhotoCaptureMaxDimension
                 ?? ViewfinderConfig.DefaultPhotoCaptureMaxDimension;
 
-            return ExposureSeal.ToPhoto(_buffer, maxDim, "viewport-exposure", _baselineEffects, effectsOverride);
+            return ExposureSeal.ToPhoto(_buffer, maxDim, "viewport-exposure", effectsOverride ?? Effects);
         }
 
         /// <summary>
@@ -262,27 +266,14 @@ namespace Photochemistry.CameraCapture
             SKBitmap cropped = PhotoCropMath.ScaleDownAndCenterCropToPlateAspect(developed, maxDimension);
             try
             {
-                // Use the baseline effects captured at construction rather than re-reading wetplate.json
-                // from disk on every preview frame.
-                ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", _baselineEffects);
+                // The active chemistry's post-effects, resolved from the shared registry.
+                ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", Effects);
                 ExposurePreviewSink.StoreExposureFrame(cropped);
             }
             finally
             {
                 cropped.Dispose();
             }
-        }
-
-        private static void ApplyProcessToBuffer(GpuExposureAccumulator buf, PlateProcessProfile process)
-        {
-            buf.RedSensitivity      = process.RedSensitivity;
-            buf.GreenSensitivity    = process.GreenSensitivity;
-            buf.BlueSensitivity     = process.BlueSensitivity;
-            buf.DevelopmentStrength = process.DevelopmentStrength;
-            buf.HDGamma             = process.HDGamma;
-            buf.InertiaPoint        = process.InertiaPoint;
-            buf.ReciprocityExponent = process.ReciprocityExponent;
-            buf.ExposureGain        = process.ExposureGain;
         }
 
         private void EnsureGpuAccumulator(int sourceWidth, int sourceHeight, int sampleCount)

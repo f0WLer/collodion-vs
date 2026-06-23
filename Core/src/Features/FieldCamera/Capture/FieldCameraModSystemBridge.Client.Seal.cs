@@ -22,10 +22,10 @@ namespace Photochemistry.FieldCamera
 
             PlateProcessProfile profile = PlateProcessProfile.Resolve(PlateAttributes.GetChemistry(trayPlate));
 
-            // Develop with the live session's tuned physics/chemistry (from the exposure-physics dialog)
-            // so the finished photo matches what the prediction preview showed. Falls back to defaults
-            // (= raw process profile) when the renderer is unavailable, e.g. after a relog.
-            ExposurePhysicsConfig physics = Capture._virtualExposureRenderer?.Physics ?? new ExposurePhysicsConfig();
+            // Develop with the plate's own SAVED chemistry profile (config), never the live dialog values —
+            // the dialog only drives the preview window; its values reach develop only once saved. Canonical
+            // physics flags + this chemistry's saved exposure params.
+            ExposurePhysicsConfig physics = new() { Chem = ChemistryProfileRegistry.Instance.Get(profile.Name).ExposurePhysics };
 
             // Tray development must match normal export policy: same target exposure, output size, and effects resolution.
             ViewfinderConfig? viewfinder = PhotochemistryConfigAccess.ResolveClientConfig(capi)?.Viewfinder;
@@ -33,8 +33,8 @@ namespace Photochemistry.FieldCamera
             int maxDimension = viewfinder?.PhotoCaptureMaxDimension ?? ViewfinderConfig.DefaultPhotoCaptureMaxDimension;
             // Config gate for finishing on the saved plate photo — independent of the dialog's preview toggle.
             bool applyFinishing = viewfinder?.ApplyFinishingEffects ?? true;
-            ImageEffectsConfig baselineEffects = ImageEffectsPipelineBridge.LoadCaptureBaseline(capi);
-            ImageEffectsConfig? effectsOverride = ImageEffectsProfileService.TryLoadProfile("wetplate", capi);
+            // Finishing effects come from this chemistry's profile, matching what the preview showed.
+            ImageEffectsConfig effects = ChemistryProfileRegistry.Instance.Get(profile.Name).PostEffects;
 
             string? photoId = PartialExposureSealer.SealToPng(
                 exposureId,
@@ -43,8 +43,7 @@ namespace Photochemistry.FieldCamera
                 physics,
                 targetFrames,
                 maxDimension,
-                baselineEffects,
-                effectsOverride,
+                effects,
                 applyFinishing);
             if (string.IsNullOrEmpty(photoId)) return false;
 

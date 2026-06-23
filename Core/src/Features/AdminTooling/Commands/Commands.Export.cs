@@ -44,7 +44,7 @@ namespace Photochemistry.AdminTooling
             string friendly = string.IsNullOrWhiteSpace(caption) ? baseId : $"{caption}_{baseId}";
             string outPath = PhotoAssetStoragePaths.GetExportPath(friendly);
 
-            if (PhotoImageProcessor.TryWriteCompositePng(sourcePath, outPath))
+            if (PhotoImageProcessor.TryWriteCompositePng(sourcePath, outPath, PlatePresentation.Resolve(held)))
                 capi.ShowChatMessage($"photochemistry: exported photo to {outPath}");
             else
                 capi.ShowChatMessage("photochemistry: failed to export photo (see client log).");

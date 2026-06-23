@@ -1,33 +1,31 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
+using Photochemistry.Plates;
+using Photochemistry.Exposure;
 
 namespace Photochemistry.Plates.Rendering
 {
-    using Photochemistry.Plates;
-
     /// <summary>
-    /// How a developed plate's silver image is physically presented. Today only glass plates exist
-    /// (collodion ambrotype: a silver-on-glass image read as a positive over a black backing).
-    /// <see cref="PaperPrint"/> is reserved for a future paper process (silver chloride salt/albumen):
-    /// an opaque, reflective positive on a paper base — which would need its own render branch rather
-    /// than the silver-over-black model. Not branched on yet.
+    /// The physical render model for a developed plate's image: a silver-on-glass density map read as a
+    /// positive over a black backing (glass ambrotype), or an opaque reflective positive on a paper base.
+    /// Selected by the item's <c>plateMedium</c> attribute.
     /// </summary>
     internal enum PresentationMedium
     {
         GlassPlate,
-        PaperPrint, // reserved: opaque reflective positive on paper
+        PaperPrint,
     }
 
     /// <summary>
-    /// The single named home for a developed plate's final look, keyed by two axes: the physical
-    /// <see cref="PresentationMedium"/> (glass density map vs opaque paper positive — decides the render
-    /// model) and the chemistry (decides the silver image colour and contrast within a medium). A new
-    /// process adds an instance here and a branch in <see cref="Resolve(string?, string?)"/> rather than
-    /// touching the image processor.
+    /// A developed plate's final look: the metallic deposit colour, the density-map response, and the
+    /// physical <see cref="PresentationMedium"/>. At runtime <see cref="Resolve(ItemStack)"/> builds this
+    /// from the item's medium plus the chemistry's tuned tone in the profile registry.
+    /// The static <see cref="GlassIodide"/>/<see cref="GlassBromide"/>/<see cref="PaperPrint"/> instances
+    /// are the hardcoded tone defaults that <see cref="ChemistryProfileSeeder"/> seeds a fresh profile from.
     /// </summary>
     internal readonly struct PlatePresentation
     {
-        /// <summary>Metallic silver deposit colour applied to the density map (warm silvery-gray).</summary>
+        /// <summary>Metallic deposit colour applied to the developed image (per chemistry).</summary>
         internal readonly byte DepositR;
         internal readonly byte DepositG;
         internal readonly byte DepositB;
@@ -55,7 +53,7 @@ namespace Photochemistry.Plates.Rendering
         /// Wet-plate collodion (iodide): warm silver on glass, viewed as an ambrotype over a black
         /// backing. Also the glass-plate default for any unrecognised chemistry.
         /// </summary>
-        internal static readonly PlatePresentation Photochemistry =
+        internal static readonly PlatePresentation GlassIodide =
             new PlatePresentation(213, 208, 197, PresentationMedium.GlassPlate, densityGamma: 0.60f);
 
         /// <summary>
@@ -72,19 +70,31 @@ namespace Photochemistry.Plates.Rendering
         internal static readonly PlatePresentation PaperPrint =
             new PlatePresentation(92, 56, 42, PresentationMedium.PaperPrint, densityGamma: 0.85f);
 
-        /// <summary>Resolves the final look from the medium name (itemtype <c>plateMedium</c> attribute) and
-        /// the chemistry tag. Paper is its own medium (chloride); glass tone/contrast vary by chemistry.
-        /// Null/empty/unknown values fall back to the warm iodide glass default, so existing items are unaffected.</summary>
-        internal static PlatePresentation Resolve(string? medium, string? chemistry)
+        /// <summary>The hardcoded seed tone for a chemistry — used by the chemistry-profile seeder to populate
+        /// a fresh config's Presentation section. Runtime resolution reads the (possibly tuned) config instead.</summary>
+        internal static PlatePresentation SeedFor(string? chemistry)
         {
-            if (string.Equals(medium, "paperprint", System.StringComparison.OrdinalIgnoreCase)) return PaperPrint;
             if (string.Equals(chemistry, "bromide", System.StringComparison.OrdinalIgnoreCase)) return GlassBromide;
-            return Photochemistry;
+            if (string.Equals(chemistry, "chloride", System.StringComparison.OrdinalIgnoreCase)) return PaperPrint;
+            return GlassIodide;
         }
 
-        /// <summary>Resolves the presentation for a plate stack from its itemtype's <c>plateMedium</c> attribute
-        /// and its per-stack chemistry tag.</summary>
-        internal static PlatePresentation Resolve(ItemStack? stack) =>
-            Resolve(stack?.Collectible?.Attributes?["plateMedium"]?.AsString(null), PlateAttributes.GetChemistry(stack));
+        /// <summary>Maps an itemtype <c>plateMedium</c> attribute to the physical render model. The medium is a
+        /// property of the item (a paper sheet vs a glass plate), so it stays itemtype-driven; only the tone is data.</summary>
+        internal static PresentationMedium ResolveMedium(string? medium) =>
+            string.Equals(medium, "paperprint", System.StringComparison.OrdinalIgnoreCase)
+                ? PresentationMedium.PaperPrint : PresentationMedium.GlassPlate;
+
+        /// <summary>Resolves the presentation for a plate stack: the render model from its itemtype's
+        /// <c>plateMedium</c> attribute, and the developed tone (deposit colour + density gamma) from the
+        /// chemistry's profile in the shared registry — so the look is config-driven, not hardcoded.</summary>
+        internal static PlatePresentation Resolve(ItemStack? stack)
+        {
+            PresentationMedium medium = ResolveMedium(stack?.Collectible?.Attributes?["plateMedium"]?.AsString(null));
+            PresentationSettings tone = ChemistryProfileRegistry.Instance.Get(PlateAttributes.GetChemistry(stack)).Presentation;
+            return new PlatePresentation(ToByte(tone.DepositR), ToByte(tone.DepositG), ToByte(tone.DepositB), medium, tone.DensityGamma);
+        }
+
+        private static byte ToByte(int v) => (byte)(v < 0 ? 0 : v > 255 ? 255 : v);
     }
 }

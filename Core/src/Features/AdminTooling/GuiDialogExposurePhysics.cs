@@ -6,10 +6,10 @@ using Photochemistry.Plates;
 
 namespace Photochemistry.AdminTooling
 {
-    // Dev-time dialog for live-tuning exposure physics toggles and key effects sliders.
+    // Dev-time dialog for live-tuning the selected chemistry's exposure physics + post-effects.
     // Opened via the hotkey binding "photochemistry-exposuregui" (default: unbound, assignable in game settings).
-    // Changes take effect immediately in the live preview. Effects edits are session-only (they tune the
-    // renderer's live effects, not disk); use .collodion effects set to persist effects to wetplate.json.
+    // Changes take effect immediately in the live preview and edit the active chemistry's profile in place;
+    // the Save Profile button persists the whole profile to chemistry-profiles.json.
     internal sealed class GuiDialogExposurePhysics : GuiDialog
     {
         // Opened manually via the hotkey handler — no auto-toggle key needed.
@@ -260,7 +260,7 @@ namespace Photochemistry.AdminTooling
                 .AddAutoSizeHoverText("Final brightness multiplier applied during develop: `E = sum · gain / frames`. Calibrates mid-tone brightness independently of the full-white white point — game scenes rarely hit s=1.0, so 1.0 leaves them dark. Higher = brighter overall exposure. Affects both the preview and the final image.", CairoFont.WhiteSmallText(), 400, lExp)
 
 
-                .AddSmallButton("Reset to Config Defaults", OnResetChemistry, resetChemBtn)
+                .AddSmallButton("Reset to Defaults", OnResetChemistry, resetChemBtn)
 
                 .AddStaticText("* These options don't affect the exposure preview, only the final image.", CairoFont.WhiteDetailText(), astLabel)
 

@@ -26,13 +26,12 @@ namespace Photochemistry.Exposure
             ExposurePhysicsConfig physics,
             int targetFrameCount,
             int maxDimension,
-            ImageEffectsConfig baselineEffects,
-            ImageEffectsConfig? effectsOverride = null,
+            ImageEffectsConfig effects,
             bool applyFinishing = true)
         {
             if (!ExposureAccumulationStore.TryLoad(exposureId, out byte[]? data)) return null;
 
-            string? fileName = RenderBlobToPng(data, capi, profile, physics, targetFrameCount, maxDimension, baselineEffects, effectsOverride, applyFinishing);
+            string? fileName = RenderBlobToPng(data, capi, profile, physics, targetFrameCount, maxDimension, effects, applyFinishing);
             if (!string.IsNullOrEmpty(fileName))
             {
                 ExposureAccumulationStore.Delete(exposureId);
@@ -48,8 +47,7 @@ namespace Photochemistry.Exposure
             ExposurePhysicsConfig physics,
             int targetFrameCount,
             int maxDimension,
-            ImageEffectsConfig baselineEffects,
-            ImageEffectsConfig? effectsOverride,
+            ImageEffectsConfig effects,
             bool applyFinishing)
         {
             if (!ExposureAccumulationBlobFormat.TryReadHeader(data, out var header)) return null;
@@ -64,7 +62,7 @@ namespace Photochemistry.Exposure
 
             if (!buffer.DeserializeAccumulation(data, out _)) return null;
 
-            return ExposureSeal.ToPhoto(buffer, maxDimension, "plate-tray-development", baselineEffects, effectsOverride, applyFinishing);
+            return ExposureSeal.ToPhoto(buffer, maxDimension, "plate-tray-development", effects, applyFinishing);
         }
 
     }

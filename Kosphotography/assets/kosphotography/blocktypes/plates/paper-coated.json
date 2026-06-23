@@ -1,0 +1,29 @@
+{
+  "code": "paper-coated",
+  "class": "GlassPlate",
+  "entityClass": "BlockEntityGlassPlate",
+  "blockmaterial": "Cloth",
+  "drawtype": "json",
+  "shape": { "base": "photochemistry:block/plates/plate" },
+  "faceCullMode": "NeverCull",
+  "sideao": { "all": false },
+  "attributes": {
+    "plateSubstrate": "paper",
+    "stateBlockPrefix": "paper",
+    "baseItemCode": "kosphotography:papersheet",
+    "sensitizedItemCode": "kosphotography:sensitizedpaper"
+  },
+  "textures": {
+    "all": { "base": "photochemistry:item/plate-coated" }
+  },
+  "sounds": {
+    "place": "game:block/plate",
+    "break": "game:block/cloth",
+    "hit": "game:block/cloth"
+  },
+  "collisionbox": { "x1": 0.125, "y1": 0, "z1": 0.125, "x2": 0.875, "y2": 0.0625, "z2": 0.875 },
+  "selectionbox": { "x1": 0.125, "y1": 0, "z1": 0.125, "x2": 0.875, "y2": 0.0625, "z2": 0.875 },
+  "lightAbsorption": 0,
+  "sidesolid": { "all": "false" },
+  "sideopaque": { "all": "false" }
+}

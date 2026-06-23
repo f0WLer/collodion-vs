@@ -1,4 +1,5 @@
 ﻿using Vintagestory.API.Common;
+using Vintagestory.API.Datastructures;
 
 namespace Photochemistry.Plates
 {
@@ -114,6 +115,12 @@ namespace Photochemistry.Plates
 
             stack.Attributes.SetString(AttrChemistry, chemistryName);
         }
+
+        // Lifecycle role declared by a plate itemtype's "plateRole" attribute (e.g. "sensitized",
+        // "developed"). Medium-agnostic, so shared gates (camera load/exposure) work for any substrate
+        // without hardcoding item codes. Null when the itemtype declares none.
+        public static string? GetItemRole(ItemStack? stack)
+            => stack?.Collectible?.Attributes?["plateRole"]?.AsString(null);
 
 
 

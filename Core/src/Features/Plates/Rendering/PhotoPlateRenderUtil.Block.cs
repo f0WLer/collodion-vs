@@ -30,16 +30,19 @@ namespace Photochemistry.Plates.Rendering
                     Log.Debug(capi.Logger, "TryGetPhotoBlockTexture photo-seen notification failed: {0}", ex.Message);
             }
 
+            PlatePresentation presentation = PlatePresentation.Resolve(itemstack);
+            bool isPaper = presentation.Medium == PresentationMedium.PaperPrint;
+
             PlateStage stage = PlateAttributes.GetStage(itemstack);
             bool showNegative = stage == PlateStage.Developing || stage == PlateStage.Developed || stage == PlateStage.Finished;
-            string effectsProfile = showNegative ? "negative" : string.Empty;
+            string effectsProfile = showNegative ? (isPaper ? "paperprint" : "negative") : string.Empty;
 
             string photoFileName = PhotoAssetStoragePaths.NormalizePhotoId(photoId);
             if (string.IsNullOrEmpty(photoFileName)) return false;
 
             int maxDeveloperPours = 1;
             int developPours = maxDeveloperPours;
-            if (!string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("negative", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(effectsProfile))
             {
                 ResolveDevelopedRenderProgress(capi, itemstack, out developPours, out maxDeveloperPours);
             }
@@ -64,7 +67,7 @@ namespace Photochemistry.Plates.Rendering
 
             // Prune stale derived variants before resolving the currently active variant.
             ResolveDerivedRenderPath(capi, photoId, photoFileName, sourcePath, effectsProfile, itemstack,
-                developPours, maxDeveloperPours,
+                developPours, maxDeveloperPours, presentation,
                 out string renderPath, out string renderFileName);
 
 

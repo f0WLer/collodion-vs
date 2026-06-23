@@ -1,5 +1,6 @@
 ﻿using Photochemistry.AdminTooling;
 using Vintagestory.API.Common;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
 namespace Photochemistry.Plates
@@ -31,7 +32,10 @@ namespace Photochemistry.Plates
             string heldCode = slot.Itemstack.Collectible?.Code?.ToString() ?? "null";
             int heldSize = slot.Itemstack.StackSize;
 
-            Block? plateBlock = world.GetBlock(new AssetLocation("photochemistry", $"plate-{plateBlockState}"));
+            // Block code template for the placed substrate, JSON-driven so paper (kosphotography:paper-*)
+            // reuses this item class. Defaults to the glass plate blocks.
+            string placedPrefix = Attributes?["placedBlockPrefix"]?.AsString("photochemistry:plate") ?? "photochemistry:plate";
+            Block? plateBlock = world.GetBlock(new AssetLocation($"{placedPrefix}-{plateBlockState}"));
             if (plateBlock == null)
             {
                 ServerDebugLog.Notify(api, "plate-interact: place state={0} held={1}x{2} → declined: plate-{0} block not found", plateBlockState, heldCode, heldSize);

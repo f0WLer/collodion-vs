@@ -32,7 +32,7 @@ namespace Photochemistry.AdminTooling
             var stack = new ItemStack(item, 1);
             PlateAttributes.SetStage(stack, PlateStage.Sensitized);
             PlateAttributes.SetNameLangCode(stack, "photochemistry:plate-name-sensitized");
-            PlateDryingTransition.ResetTimer(_owner.ModApi.World, stack, PlateDryingTransition.ResolveWetDurationHours(_owner.ModApi));
+            PlateDryingTransition.ResetTimer(_owner.ModApi.World, stack, PlateDryingTransition.ResolveWetDurationHours(_owner.ModApi, stack));
 
             if (!player.InventoryManager.TryGiveItemstack(stack))
                 _owner.ModApi.World.SpawnItemEntity(stack, player.Entity.Pos.XYZ);

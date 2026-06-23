@@ -34,6 +34,17 @@ namespace Photochemistry
                 ?? 0.66;
         }
 
+        // Per-plate wet window: the plate's chemistry profile decides. A profile window of 0 means the
+        // plate never dries (e.g. the bromide dry plate); a positive value is an explicit per-chemistry
+        // window; the default sentinel (<0) falls back to the global config window above.
+        public static double ResolveWetDurationHours(ICoreAPI? api, ItemStack? stack)
+        {
+            float profileWindow = Exposure.PlateProcessProfile.Resolve(Plates.PlateAttributes.GetChemistry(stack)).WetWindowHours;
+            if (profileWindow == 0f) return 0;            // never dries
+            if (profileWindow > 0f) return profileWindow; // explicit per-chemistry window
+            return ResolveWetDurationHours(api);          // sentinel → global config window
+        }
+
         // True once the underlying Dry transition has finished and the plate is sealed dry.
         public static bool IsDry(IWorldAccessor? world, ItemStack? stack)
         {

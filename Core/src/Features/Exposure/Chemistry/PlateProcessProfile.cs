@@ -21,6 +21,12 @@ namespace Photochemistry.Exposure
         // the full-white white-point — game scenes rarely hit s=1.0, so 1.0 would leave them dark.
         internal readonly float ExposureGain;
 
+        // Wet window before a freshly sensitised plate dries out:
+        //   < 0 → use the global config window (PlateProcessing.WetDurationHours) — the wet-plate default
+        //     0 → never dries (e.g. the bromide dry plate)
+        //   > 0 → an explicit per-chemistry window in hours
+        internal readonly float WetWindowHours;
+
         /// <summary>Wall-clock seconds between consecutive virtual renders at normal cadence.</summary>
         internal float SampleInterval => DurationSeconds / SampleCount;
 
@@ -31,7 +37,8 @@ namespace Photochemistry.Exposure
             string name, float durationSeconds, int sampleCount,
             float redSensitivity, float greenSensitivity, float blueSensitivity,
             float developmentStrength, float hdGamma, float inertiaPoint = 0f,
-            float reciprocityExponent = 1f, float exposureGain = 1.75f)
+            float reciprocityExponent = 1f, float exposureGain = 1.75f,
+            float wetWindowHours = -1f)
         {
             Name = name;
             DurationSeconds = durationSeconds;
@@ -44,6 +51,7 @@ namespace Photochemistry.Exposure
             InertiaPoint = inertiaPoint;
             ReciprocityExponent = reciprocityExponent;
             ExposureGain = exposureGain;
+            WetWindowHours = wetWindowHours;
         }
 
         /// <summary>
@@ -69,12 +77,22 @@ namespace Photochemistry.Exposure
         /// <summary>
         /// Silver bromide dry plate: near-panchromatic, fast (~3 s), gradual H&amp;D shoulder.
         /// Wide exposure latitude and rich maximum density — the most capable tier.
+        /// As a gelatin dry plate it never dries out (<see cref="WetWindowHours"/> = 0).
         /// </summary>
         internal static readonly PlateProcessProfile Bromide = new PlateProcessProfile(
             "Bromide", durationSeconds: 3f, sampleCount: 32,
             redSensitivity: 0.30f, greenSensitivity: 0.59f, blueSensitivity: 1.00f,
             developmentStrength: 12.0f, hdGamma: 0.85f, inertiaPoint: 0.04f,
-            reciprocityExponent: 1.00f);
+            reciprocityExponent: 1.00f, wetWindowHours: 0f);
+
+        /// <summary>A copy of this profile with the shutter timing replaced — used to apply per-chemistry
+        /// timing overrides from the tuning file without disturbing the emulsion-response fields.</summary>
+        internal PlateProcessProfile WithTiming(float durationSeconds, int sampleCount) =>
+            new PlateProcessProfile(
+                Name, durationSeconds, sampleCount,
+                RedSensitivity, GreenSensitivity, BlueSensitivity,
+                DevelopmentStrength, HDGamma, InertiaPoint,
+                ReciprocityExponent, ExposureGain, WetWindowHours);
 
         /// <summary>Resolves a chemistry name to its profile, falling back to <see cref="Iodide"/> for a null/empty/unknown name.</summary>
         internal static PlateProcessProfile Resolve(string? chemistryName)

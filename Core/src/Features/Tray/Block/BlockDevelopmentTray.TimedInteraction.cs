@@ -1,5 +1,6 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
 using Photochemistry.Plates;
@@ -182,7 +183,12 @@ namespace Photochemistry.Tray
             ItemStack newPlate = plate;
             if (isExposed)
             {
-                Item? photoPlateItem = world.GetItem(_photoPlateItemCode);
+                // Developed output is declared by the exposed plate's itemtype ("developedItemCode"),
+                // so a glass plate yields a photoplate and salted paper yields a paperprint — data-driven.
+                AssetLocation developedCode = new(
+                    plate.Collectible?.Attributes?["developedItemCode"]?.AsString(_photoPlateItemCode.ToString())
+                    ?? _photoPlateItemCode.ToString());
+                Item? photoPlateItem = world.GetItem(developedCode);
                 if (photoPlateItem == null) return false;
 
                 newPlate = new ItemStack(photoPlateItem);
@@ -197,7 +203,7 @@ namespace Photochemistry.Tray
             PlateAttributes.SetStage(newPlate, developerComplete ? PlateStage.Developed : PlateStage.Developing);
             PlateAttributes.SetDevelopmentApplications(newPlate, developerComplete ? 0 : newPours);
 
-            PlateDryingTransition.ResetTimer(world!, newPlate, PlateDryingTransition.ResolveWetDurationHours(api));
+            PlateDryingTransition.ResetTimer(world!, newPlate, PlateDryingTransition.ResolveWetDurationHours(api, newPlate));
 
             be.TrySetPlate(newPlate);
             SwapTrayBlockForPlateStage(world!, pos, PlateAttributes.ToAttributeString(PlateAttributes.GetStage(newPlate)), newPlate);

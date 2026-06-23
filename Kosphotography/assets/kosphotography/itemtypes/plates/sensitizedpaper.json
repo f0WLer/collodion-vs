@@ -1,5 +1,5 @@
-﻿{
-  "code": "sensitizedplate",
+{
+  "code": "sensitizedpaper",
   "class": "SensitizedPlate",
   "shape": { "base": "photochemistry:item/plates/plate" },
   "textures": {
@@ -7,19 +7,19 @@
   },
   "storageFlags": 257,
   "attributes": {
-    "handbook": { "groupBy": ["wetplateplate-*"] },
     "offhandAllowed": true,
     "heldUseAnimation": "interact",
     "plateStage": "sensitized",
     "plateRole": "sensitized",
-    "developedItemCode": "photochemistry:photoplate"
+    "plateMedium": "paperprint",
+    "developedItemCode": "kosphotography:paperprint"
   },
   "transitionableProps": [
     {
       "type": "Dry",
       "freshHours": { "avg": 0.66 },
       "transitionHours": { "avg": 0.001 },
-      "transitionedStack": { "type": "item", "code": "photochemistry:sensitizedplate" },
+      "transitionedStack": { "type": "item", "code": "kosphotography:sensitizedpaper" },
       "transitionRatio": 1
     }
   ],

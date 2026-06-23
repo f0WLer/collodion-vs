@@ -10,5 +10,19 @@
     "kosphotography:camera-info-automatic": "Automatic shutter: seals the photo automatically once the target exposure is reached.",
 
     "kosphotography:shutter-timer-title": "Timed Shutter",
-    "kosphotography:shutter-timer-apply": "Apply"
+    "kosphotography:shutter-timer-apply": "Apply",
+
+    "item-drybromidemix": "Dry Bromide Mix",
+    "item-silverbromideemulsionportion": "Silver Bromide Emulsion",
+
+    "kosphotography:heldhelp-plate-bromide-emulsion": "Pour to coat with silver bromide emulsion (dry plate)",
+
+    "item-papersheet": "Paper Sheet",
+    "item-sensitizedpaper": "Sensitized Paper",
+    "item-paperprint": "Salted Paper Print",
+    "block-paper-clean": "Salting Paper",
+    "block-paper-coated": "Salting Paper",
+
+    "kosphotography:heldhelp-paper-salt": "Pour brine onto the paper",
+    "kosphotography:heldhelp-paper-silver": "Pour silver solution to sensitize the paper"
 }

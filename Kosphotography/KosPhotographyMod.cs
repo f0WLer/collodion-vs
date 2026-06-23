@@ -1,6 +1,7 @@
 using System;
 using Photochemistry;
 using Photochemistry.CameraCapture;
+using Photochemistry.Plates;
 using ProtoBuf;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -25,6 +26,62 @@ namespace Kosphotography
             api.RegisterItemClass("KosCamera", typeof(ItemKosCamera));
             ShutterSeam.PolicyProvider = new KosShutterPolicyProvider();
             api.Network.RegisterChannel(KosChannelName).RegisterMessageType(typeof(ShutterDurationPacket));
+            RegisterDryPlateProcess();
+            RegisterSaltedPaperProcess();
+        }
+
+        // Bromide dry plate: a third process on the same rough glass plate, branched by the first
+        // interaction item (silver bromide emulsion). The Bromide profile carries its physics and the
+        // never-dry window; here we only declare how the player sensitises it.
+        private static void RegisterDryPlateProcess()
+        {
+            SensitizationRegistry.Register(new SensitizationRecipe
+            {
+                ChemistryId = "bromide",
+                Substrate = "glass",
+                Steps = new[]
+                {
+                    new SensitizationStep
+                    {
+                        Type = SensitizationInteractionType.PourLiquid,
+                        Ingredient = new AssetLocation("kosphotography", "silverbromideemulsionportion"),
+                        Amount = 40,
+                        Sound = new AssetLocation("game", "sounds/effect/water-fill"),
+                        ActionLangCode = "kosphotography:heldhelp-plate-bromide-emulsion"
+                    }
+                }
+            });
+        }
+
+        // Salted paper print: a separate paper substrate, salted then sensitised with silver nitrate
+        // (the existing silver solution). Chloride chemistry; the paperprint medium drives its opaque look.
+        private static void RegisterSaltedPaperProcess()
+        {
+            AssetLocation pourSound = new("game", "sounds/effect/water-fill");
+            SensitizationRegistry.Register(new SensitizationRecipe
+            {
+                ChemistryId = "chloride",
+                Substrate = "paper",
+                Steps = new[]
+                {
+                    new SensitizationStep
+                    {
+                        Type = SensitizationInteractionType.PourLiquid,
+                        Ingredient = new AssetLocation("game", "brineportion"),
+                        Amount = 40,
+                        Sound = pourSound,
+                        ActionLangCode = "kosphotography:heldhelp-paper-salt"
+                    },
+                    new SensitizationStep
+                    {
+                        Type = SensitizationInteractionType.PourLiquid,
+                        Ingredient = new AssetLocation("photochemistry", "silversolutionportion"),
+                        Amount = 40,
+                        Sound = pourSound,
+                        ActionLangCode = "kosphotography:heldhelp-paper-silver"
+                    }
+                }
+            });
         }
 
         public override void StartClientSide(ICoreClientAPI api)

@@ -1,30 +1,18 @@
-﻿{
-  "code": "sensitizedplate",
-  "class": "SensitizedPlate",
+{
+  "code": "papersheet",
+  "class": "GlassPlate",
   "shape": { "base": "photochemistry:item/plates/plate" },
   "textures": {
-    "plate": { "base": "photochemistry:item/plate-silvered" }
+    "plate": { "base": "photochemistry:item/plate-clean" }
   },
-  "storageFlags": 257,
   "attributes": {
-    "handbook": { "groupBy": ["wetplateplate-*"] },
-    "offhandAllowed": true,
-    "heldUseAnimation": "interact",
-    "plateStage": "sensitized",
-    "plateRole": "sensitized",
-    "developedItemCode": "photochemistry:photoplate"
+    "plateBlockState": "clean",
+    "plateStage": "clean",
+    "placedBlockPrefix": "kosphotography:paper"
   },
-  "transitionableProps": [
-    {
-      "type": "Dry",
-      "freshHours": { "avg": 0.66 },
-      "transitionHours": { "avg": 0.001 },
-      "transitionedStack": { "type": "item", "code": "photochemistry:sensitizedplate" },
-      "transitionRatio": 1
-    }
-  ],
-  "maxstacksize": 1,
+  "maxstacksize": 8,
   "heldTpIdleAnimation": "holdbothhands",
+  "creativeinventory": { "general": ["*"], "items": ["*"], "photography": ["*"] },
   "guiTransform": {
     "translation": { "x": 18, "y": 1, "z": 0 },
     "rotation": { "x": 90, "y": 0, "z": -45 },

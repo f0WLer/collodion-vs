@@ -9,7 +9,6 @@ namespace Photochemistry.Plates.Blocks
     {
         private static readonly AssetLocation _plainClothCode = new("game", "cloth-plain");
         private static readonly AssetLocation _polishSound = new("game:sounds/player/chalkdraw");
-        private static readonly AssetLocation _sensitizedPlateItemCode = new("photochemistry", "sensitizedplate");
 
         // Resolves the recipe + the step the plate is waiting for. On a clean plate the chemistry is
         // chosen by the held item (which recipe's first step it matches); on a coated plate it's fixed by
@@ -28,7 +27,7 @@ namespace Photochemistry.Plates.Blocks
             }
             else if (state == "clean")
             {
-                recipe = SensitizationRegistry.MatchStartingStep(heldSlot);
+                recipe = SensitizationRegistry.MatchStartingStep(Substrate, heldSlot);
             }
             else return false;
 
@@ -141,14 +140,16 @@ namespace Photochemistry.Plates.Blocks
 
         private bool GiveSensitizedPlateAndRemoveBlock(IWorldAccessor world, IServerPlayer sp, BlockPos pos, string chemistryId)
         {
-            Item? sensitizedItem = world.GetItem(_sensitizedPlateItemCode);
+            Item? sensitizedItem = world.GetItem(SensitizedItemCode);
             if (sensitizedItem == null) return false;
 
             ItemStack sensitizedPlate = new ItemStack(sensitizedItem, 1);
             PlateAttributes.SetStage(sensitizedPlate, PlateStage.Sensitized);
             PlateAttributes.SetChemistry(sensitizedPlate, chemistryId);
-            PlateAttributes.SetNameLangCode(sensitizedPlate, "photochemistry:plate-name-sensitized");
-            PlateDryingTransition.ResetTimer(world, sensitizedPlate, PlateDryingTransition.ResolveWetDurationHours(world.Api));
+            // Pin the glass-plate name; other substrates fall back to their own itemtype name.
+            if (Substrate == "glass")
+                PlateAttributes.SetNameLangCode(sensitizedPlate, "photochemistry:plate-name-sensitized");
+            PlateDryingTransition.ResetTimer(world, sensitizedPlate, PlateDryingTransition.ResolveWetDurationHours(world.Api, sensitizedPlate));
 
             if (!sp.InventoryManager.TryGiveItemstack(sensitizedPlate))
             {

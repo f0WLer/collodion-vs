@@ -144,24 +144,26 @@ namespace Photochemistry.Plates.Rendering
             ItemStack? itemstack,
             int developPours,
             int maxDeveloperPours,
+            PlatePresentation presentation,
             out string renderPath,
             out string renderFileName)
         {
             renderPath = sourcePath;
             renderFileName = photoFileName;
 
-            bool useDevelopedStage = !string.IsNullOrWhiteSpace(effectsProfile)
-                && effectsProfile.Equals("negative", StringComparison.OrdinalIgnoreCase);
+            // effectsProfile carries the medium-specific developed tag ("negative" for glass,
+            // "paperprint" for salted paper); empty means the latent (pre-developed) stage.
+            bool useDevelopedStage = !string.IsNullOrWhiteSpace(effectsProfile);
 
             MaybePruneObsoleteDevelopedDerived(capi, photoFileName, itemstack, developPours, maxDeveloperPours, useDevelopedStage);
 
             if (!useDevelopedStage) return;
 
-            string profileTag = useDevelopedStage ? $"negative{developPours}" : "base";
+            string profileTag = $"{effectsProfile}{developPours}";
             string derivedFileName = GetDerivedPhotoFileName(photoFileName, profileTag);
             string derivedPath = GetDerivedPhotoPath(photoFileName, profileTag);
 
-            if (PhotoImageProcessor.TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{profileTag}", useDevelopedStage, developPours, maxDeveloperPours))
+            if (PhotoImageProcessor.TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{profileTag}", useDevelopedStage, developPours, maxDeveloperPours, presentation))
             {
                 renderPath = derivedPath;
                 renderFileName = derivedFileName;

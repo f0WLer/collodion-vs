@@ -1,25 +1,23 @@
-﻿{
-  "code": "sensitizedplate",
-  "class": "SensitizedPlate",
+{
+  "code": "paperprint",
+  "class": "PhotoPlate",
   "shape": { "base": "photochemistry:item/plates/plate" },
   "textures": {
-    "plate": { "base": "photochemistry:item/plate-silvered" }
+    "plate": { "base": "photochemistry:item/plate-developed" }
   },
-  "storageFlags": 257,
   "attributes": {
-    "handbook": { "groupBy": ["wetplateplate-*"] },
-    "offhandAllowed": true,
-    "heldUseAnimation": "interact",
-    "plateStage": "sensitized",
-    "plateRole": "sensitized",
-    "developedItemCode": "photochemistry:photoplate"
+    "renderPhotoOverlay": true,
+    "photoOverlayFace": "up",
+    "photoUvRotation": 180,
+    "plateStage": "developed",
+    "plateMedium": "paperprint"
   },
   "transitionableProps": [
     {
       "type": "Dry",
       "freshHours": { "avg": 0.66 },
       "transitionHours": { "avg": 0.001 },
-      "transitionedStack": { "type": "item", "code": "photochemistry:sensitizedplate" },
+      "transitionedStack": { "type": "item", "code": "kosphotography:paperprint" },
       "transitionRatio": 1
     }
   ],

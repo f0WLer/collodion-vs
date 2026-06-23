@@ -66,7 +66,9 @@ namespace Photochemistry.Plates.Rendering
         }
 
         // Ensures a derived photo variant exists and is up-to-date with source/effect inputs.
-        internal static bool TryEnsureDerivedPhoto(ICoreClientAPI capi, string sourcePath, string derivedPath, string seedKey, bool useDevelopedStage, int developPours, int maxDeveloperPours)
+        // The presentation selects the physical look: the silver-over-black glass density map (default)
+        // or the opaque reddish-brown positive of a salted-paper print.
+        internal static bool TryEnsureDerivedPhoto(ICoreClientAPI capi, string sourcePath, string derivedPath, string seedKey, bool useDevelopedStage, int developPours, int maxDeveloperPours, PlatePresentation presentation)
         {
             try
             {
@@ -114,14 +116,27 @@ namespace Photochemistry.Plates.Rendering
 
                 if (useDevelopedStage)
                 {
-                    // Convert the positive source into a silver density map:
-                    // alpha = density (bright source = dense silver = opaque), RGB = dark silver color.
-                    InvertToNegativeDensityMap(src);
+                    if (presentation.Medium == PresentationMedium.PaperPrint)
+                    {
+                        // Salted-paper print: an opaque positive composited over the paper base.
+                        BuildPaperPositiveMap(src, presentation, t);
+                    }
+                    else
+                    {
+                        // Glass plate: convert the positive source into a silver density map:
+                        // alpha = density (bright source = dense silver = opaque), RGB = dark silver color.
+                        // Both the silver tone and the density curve come from the resolved presentation,
+                        // so each chemistry develops to its own image colour and contrast.
+                        byte[] lut = MathF.Abs(presentation.DensityGamma - DensityGamma) < 1e-4f
+                            ? _densityLut
+                            : BuildDensityLut(presentation.DensityGamma);
+                        InvertToNegativeDensityMap(src, presentation.DepositR, presentation.DepositG, presentation.DepositB, lut);
 
-                    // During development (pours 1-4), scale back silver visibility progressively.
-                    // At t=1.0 (pour 5 / Developed / Finished) the full density map is kept as-is.
-                    if (t < 0.999f)
-                        ApplyNegativeSilverVisuals(src, t);
+                        // During development (pours 1-4), scale back silver visibility progressively.
+                        // At t=1.0 (pour 5 / Developed / Finished) the full density map is kept as-is.
+                        if (t < 0.999f)
+                            ApplyNegativeSilverVisuals(src, t);
+                    }
                 }
 
                 // Encode with explicit Unpremul info so the alpha channel survives as a true
@@ -224,7 +239,7 @@ namespace Photochemistry.Plates.Rendering
         // shows through; placed over a black backing panel the same image reads as a positive
         // (ambrotype) — light silver highlights, black shadows. There is no separate negative
         // vs ambrotype color; "how it's viewed" (the backing) is what changes, not the silver.
-        private static void InvertToNegativeDensityMap(SKBitmap bmp)
+        private static void InvertToNegativeDensityMap(SKBitmap bmp, byte silverR, byte silverG, byte silverB, byte[] densityLut)
         {
             if (bmp == null) return;
 
@@ -232,15 +247,10 @@ namespace Photochemistry.Plates.Rendering
             int h = bmp.Height;
             if (w <= 0 || h <= 0) return;
 
-            // Local aliases of the shared silver color (kept constant regardless of density).
-            byte silverR = SilverR;
-            byte silverG = SilverG;
-            byte silverB = SilverB;
-
             SKPixmap pixmap = bmp.PeekPixels();
             if (pixmap == null)
             {
-                InvertToNegativeDensityMapSlow(bmp, w, h, silverR, silverG, silverB);
+                InvertToNegativeDensityMapSlow(bmp, w, h, silverR, silverG, silverB, densityLut);
                 return;
             }
 
@@ -248,7 +258,7 @@ namespace Photochemistry.Plates.Rendering
             int bpp = pixmap.BytesPerPixel;
             if (bpp != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
             {
-                InvertToNegativeDensityMapSlow(bmp, w, h, silverR, silverG, silverB);
+                InvertToNegativeDensityMapSlow(bmp, w, h, silverR, silverG, silverB, densityLut);
                 return;
             }
 
@@ -282,7 +292,7 @@ namespace Photochemistry.Plates.Rendering
                         }
 
                         float density = 0.299f * r + 0.587f * g + 0.114f * b;
-                        byte alpha = _densityLut[(int)(density * 255f)];
+                        byte alpha = densityLut[(int)(density * 255f)];
 
                         if (bgra)
                         {
@@ -303,7 +313,7 @@ namespace Photochemistry.Plates.Rendering
             }
         }
 
-        private static void InvertToNegativeDensityMapSlow(SKBitmap bmp, int w, int h, byte silverR, byte silverG, byte silverB)
+        private static void InvertToNegativeDensityMapSlow(SKBitmap bmp, int w, int h, byte silverR, byte silverG, byte silverB, byte[] densityLut)
         {
             for (int y = 0; y < h; y++)
             {
@@ -314,10 +324,75 @@ namespace Photochemistry.Plates.Rendering
                     float g = c.Green / 255f;
                     float b = c.Blue / 255f;
                     float density = 0.299f * r + 0.587f * g + 0.114f * b;
-                    byte alpha = _densityLut[(int)(density * 255f)];
+                    byte alpha = densityLut[(int)(density * 255f)];
                     bmp.SetPixel(x, y, new SKColor(silverR, silverG, silverB, alpha));
                 }
             }
+        }
+
+        // Warm paper-base colour the salted print is composited over (the unexposed sheet).
+        private const byte PaperBaseR = 235, PaperBaseG = 228, PaperBaseB = 210;
+
+        // Converts a positive source bitmap in-place into an opaque salted-paper print:
+        // for each pixel the print density (dark scene = heavy deposit) blends the warm reddish-brown
+        // deposit colour over the paper base. Fully opaque — a reflective positive, not a glass density map.
+        // t (0..1) is development progress: a faint deposit early, full strength at t=1.
+        private static void BuildPaperPositiveMap(SKBitmap bmp, PlatePresentation presentation, float t)
+        {
+            if (bmp == null) return;
+            int w = bmp.Width, h = bmp.Height;
+            if (w <= 0 || h <= 0) return;
+
+            float gamma = presentation.DensityGamma <= 0f ? 1f : presentation.DensityGamma;
+            float strength = t < 0f ? 0f : (t > 1f ? 1f : t);
+            byte depR = presentation.DepositR, depG = presentation.DepositG, depB = presentation.DepositB;
+
+            SKPixmap pixmap = bmp.PeekPixels();
+            SKColorType ct = pixmap?.ColorType ?? SKColorType.Unknown;
+            if (pixmap == null || pixmap.BytesPerPixel != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
+            {
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        SKColor c = bmp.GetPixel(x, y);
+                        bmp.SetPixel(x, y, PaperPixel(c.Red / 255f, c.Green / 255f, c.Blue / 255f, gamma, strength, depR, depG, depB));
+                    }
+                return;
+            }
+
+            bool bgra = ct == SKColorType.Bgra8888;
+            unsafe
+            {
+                byte* basePtr = (byte*)pixmap.GetPixels().ToPointer();
+                int rowBytes = pixmap.RowBytes;
+                for (int y = 0; y < h; y++)
+                {
+                    byte* row = basePtr + y * rowBytes;
+                    for (int x = 0; x < w; x++)
+                    {
+                        int i = x * 4;
+                        float r = (bgra ? row[i + 2] : row[i + 0]) / 255f;
+                        float g = row[i + 1] / 255f;
+                        float b = (bgra ? row[i + 0] : row[i + 2]) / 255f;
+                        SKColor outc = PaperPixel(r, g, b, gamma, strength, depR, depG, depB);
+                        if (bgra) { row[i + 0] = outc.Blue; row[i + 1] = outc.Green; row[i + 2] = outc.Red; }
+                        else      { row[i + 0] = outc.Red;  row[i + 1] = outc.Green; row[i + 2] = outc.Blue; }
+                        row[i + 3] = 255;
+                    }
+                }
+            }
+        }
+
+        // Single salted-paper pixel: deposit = (1 - luminance)^gamma * strength, blended over the paper base.
+        private static SKColor PaperPixel(float r, float g, float b, float gamma, float strength, byte depR, byte depG, byte depB)
+        {
+            float lum = 0.299f * r + 0.587f * g + 0.114f * b;
+            float deposit = MathF.Pow(1f - lum, gamma) * strength;
+            if (deposit < 0f) deposit = 0f; else if (deposit > 1f) deposit = 1f;
+            byte or = (byte)(PaperBaseR + (depR - PaperBaseR) * deposit);
+            byte og = (byte)(PaperBaseG + (depG - PaperBaseG) * deposit);
+            byte ob = (byte)(PaperBaseB + (depB - PaperBaseB) * deposit);
+            return new SKColor(or, og, ob, 255);
         }
 
         // Scales back silver density visibility during progressive development (pours 1–4).

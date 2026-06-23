@@ -44,9 +44,14 @@ namespace Photochemistry.Plates.Rendering
             string photoId = itemstack.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
             if (string.IsNullOrEmpty(photoId)) return false;
 
+            // Physical medium (glass density map vs opaque paper positive), from the item's plateMedium attribute.
+            PlatePresentation presentation = PlatePresentation.Resolve(itemstack);
+            bool isPaper = presentation.Medium == PresentationMedium.PaperPrint;
+
             PlateStage stage = PlateAttributes.GetStage(itemstack);
             bool showNegative = stage == PlateStage.Developing || stage == PlateStage.Developed || stage == PlateStage.Finished;
-            string effectsProfile = showNegative ? "negative" : string.Empty;
+            // The derived-image tag also separates glass ("negative") from paper ("paperprint") variants.
+            string effectsProfile = showNegative ? (isPaper ? "paperprint" : "negative") : string.Empty;
 
             // Keep server-side last-seen metadata fresh while the photo is being rendered.
             try
@@ -86,7 +91,7 @@ namespace Photochemistry.Plates.Rendering
 
             int maxDeveloperPours = 1;
             int developPours = maxDeveloperPours;
-            if (!string.IsNullOrWhiteSpace(effectsProfile) && effectsProfile.Equals("negative", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(effectsProfile))
             {
                 ResolveDevelopedRenderProgress(capi, itemstack, out developPours, out maxDeveloperPours);
             }
@@ -119,7 +124,7 @@ namespace Photochemistry.Plates.Rendering
 
             // Prune stale stage variants and ensure the active derived render variant exists.
             ResolveDerivedRenderPath(capi, photoId, photoFileName, sourcePath, effectsProfile, itemstack,
-                developPours, maxDeveloperPours,
+                developPours, maxDeveloperPours, presentation,
                 out string renderPath, out string renderFileName);
 
 
@@ -155,20 +160,21 @@ namespace Photochemistry.Plates.Rendering
                     capi.Tesselator.TesselateItem(item, out MeshData baseMesh);
 
                     // Add a thin overlay quad on the configured face of the plate shape.
+                    // Glass plates alpha-blend the silver density map (transparent pass); a paper print
+                    // is an opaque reflective positive and stays in the default opaque pass.
                     string overlayFaceNorm = (overlayFace ?? "south").Trim().ToLowerInvariant();
                     if (overlayFaceNorm == "both")
                     {
                         MeshData overlaySouth = PhotoMeshUtil.CreateOverlayQuad(texPos, baseMesh, uvRotationDeg, mirrorX, photoAspect, "south");
                         MeshData overlayNorth = PhotoMeshUtil.CreateOverlayQuad(texPos, baseMesh, uvRotationDeg, mirrorX, photoAspect, "north");
-                        SetTransparentRenderPass(overlaySouth);
-                        SetTransparentRenderPass(overlayNorth);
+                        if (!isPaper) { SetTransparentRenderPass(overlaySouth); SetTransparentRenderPass(overlayNorth); }
                         baseMesh.AddMeshData(overlaySouth);
                         baseMesh.AddMeshData(overlayNorth);
                     }
                     else
                     {
                         MeshData overlay = PhotoMeshUtil.CreateOverlayQuad(texPos, baseMesh, uvRotationDeg, mirrorX, photoAspect, overlayFaceNorm);
-                        SetTransparentRenderPass(overlay);
+                        if (!isPaper) SetTransparentRenderPass(overlay);
                         baseMesh.AddMeshData(overlay);
                     }
 

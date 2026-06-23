@@ -19,11 +19,14 @@ namespace Photochemistry.Plates
         public string ActionLangCode { get; init; } = "";
     }
 
-    // The ordered steps that turn a clean glass plate into a sensitized plate of one chemistry.
+    // The ordered steps that turn a clean substrate into a sensitized plate of one chemistry.
     // The rough->clean polish is shared prep and is not part of any recipe.
     internal sealed class SensitizationRecipe
     {
         public string ChemistryId { get; init; } = "";
+        // Which substrate this recipe applies to (e.g. "glass", "paper"). Scopes start-step matching so
+        // a glass plate never branches into a paper recipe and vice-versa. Defaults to glass.
+        public string Substrate { get; init; } = "glass";
         public IReadOnlyList<SensitizationStep> Steps { get; init; } = System.Array.Empty<SensitizationStep>();
     }
 
@@ -39,6 +42,17 @@ namespace Photochemistry.Plates
             _recipes.Add(recipe);
         }
 
+        // The chemistries the current head makes obtainable, in registration order (Core registers iodide;
+        // superset heads add more). Used to populate the physics tuner's chemistry selector, so baseline
+        // collodion offers only iodide while kosphotography offers iodide/chloride/bromide.
+        internal static IReadOnlyList<string> RegisteredChemistries()
+        {
+            List<string> result = new();
+            foreach (SensitizationRecipe r in _recipes)
+                if (!string.IsNullOrEmpty(r.ChemistryId) && !result.Contains(r.ChemistryId)) result.Add(r.ChemistryId);
+            return result;
+        }
+
         internal static SensitizationRecipe? ByChemistry(string? chemistryId)
         {
             if (string.IsNullOrEmpty(chemistryId)) return null;
@@ -47,11 +61,12 @@ namespace Photochemistry.Plates
             return null;
         }
 
-        // Which chemistry a clean plate branches into: the recipe whose first step the player can apply.
-        internal static SensitizationRecipe? MatchStartingStep(ItemSlot? heldSlot)
+        // Which chemistry a clean substrate branches into: the recipe (for this substrate) whose first
+        // step the player can apply. Substrate-scoped so glass and paper recipes never cross-match.
+        internal static SensitizationRecipe? MatchStartingStep(string substrate, ItemSlot? heldSlot)
         {
             foreach (SensitizationRecipe r in _recipes)
-                if (r.Steps.Count > 0 && SensitizationStepIO.CanApply(heldSlot, r.Steps[0])) return r;
+                if (r.Substrate == substrate && r.Steps.Count > 0 && SensitizationStepIO.CanApply(heldSlot, r.Steps[0])) return r;
             return null;
         }
     }

@@ -1,9 +1,7 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Photochemistry.PhotoMetadata.Model;
 using Photochemistry.PhotoSync.Integration;
-using Photochemistry.PhotoSync.Storage;
 
 namespace Photochemistry.Plates.Rendering
 {
@@ -17,48 +15,20 @@ namespace Photochemistry.Plates.Rendering
 
             if (capi == null || itemstack == null) return false;
 
-            string photoId = itemstack.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
-            if (string.IsNullOrEmpty(photoId)) return false;
+            if (!TryResolvePhotoRenderInputs(capi, itemstack, "TryGetPhotoBlockTexture", out PhotoRenderInputs inputs))
+                return false;
 
-            // Keep server-side photo-seen telemetry up to date while blocks are displayed.
-            try
-            {
-                ClientPhotoSyncIntegration.MaybeSendPhotoSeen(capi, photoId);
-            }
-            catch (Exception ex)
-            {
-                    Log.Debug(capi.Logger, "TryGetPhotoBlockTexture photo-seen notification failed: {0}", ex.Message);
-            }
+            int versionSnapshot = inputs.VersionSnapshot;
 
-            PlatePresentation presentation = PlatePresentation.Resolve(itemstack);
-            bool isPaper = presentation.Medium == PresentationMedium.PaperPrint;
-
-            PlateStage stage = PlateAttributes.GetStage(itemstack);
-            bool showNegative = stage == PlateStage.Developing || stage == PlateStage.Developed || stage == PlateStage.Finished;
-            string effectsProfile = showNegative ? (isPaper ? "paperprint" : "negative") : string.Empty;
-
-            string photoFileName = PhotoAssetStoragePaths.NormalizePhotoId(photoId);
-            if (string.IsNullOrEmpty(photoFileName)) return false;
-
-            int maxDeveloperPours = 1;
-            int developPours = maxDeveloperPours;
-            if (!string.IsNullOrWhiteSpace(effectsProfile))
-            {
-                ResolveDevelopedRenderProgress(capi, itemstack, out developPours, out maxDeveloperPours);
-            }
-
-            int versionSnapshot = _meshRenderCache.GetAtlasVersionSnapshot();
-
-            string sourcePath = PhotoAssetStoragePaths.GetPhotoPath(photoFileName);
-            if (!File.Exists(sourcePath))
+            if (!File.Exists(inputs.SourcePath))
             {
                 // Ask PhotoSync for missing assets and remember waiting blocks for refresh.
                 try
                 {
-                    ClientPhotoSyncIntegration.RequestPhotoIfMissing(capi, photoFileName);
+                    ClientPhotoSyncIntegration.RequestPhotoIfMissing(capi, inputs.PhotoFileName);
                     if (waitingPos != null)
                     {
-                        ClientPhotoSyncIntegration.NoteBlockWaitingForPhoto(capi, photoFileName, waitingPos);
+                        ClientPhotoSyncIntegration.NoteBlockWaitingForPhoto(capi, inputs.PhotoFileName, waitingPos);
                     }
                 }
                 catch { /* intentional: PhotoSync request is best-effort; missing photo returns false and renders nothing */ }
@@ -66,9 +36,7 @@ namespace Photochemistry.Plates.Rendering
             }
 
             // Prune stale derived variants before resolving the currently active variant.
-            ResolveDerivedRenderPath(capi, photoId, photoFileName, sourcePath, effectsProfile, itemstack,
-                developPours, maxDeveloperPours, presentation,
-                out string renderPath, out string renderFileName);
+            ResolveDerivedRenderPath(capi, itemstack, inputs, out string renderPath, out string renderFileName);
 
 
             try

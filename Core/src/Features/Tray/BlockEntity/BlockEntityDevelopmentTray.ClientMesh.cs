@@ -164,7 +164,7 @@ namespace Photochemistry.Tray
                 // faces otherwise render in the opaque pass, which ignores partial alpha). Paper is a
                 // solid opaque sheet and stays in the opaque pass.
                 if (!isPaper)
-                    ForceTransparentPass(mesh);
+                    PhotoMeshUtil.SetTransparentRenderPass(mesh);
             }
             catch
             {
@@ -204,7 +204,7 @@ namespace Photochemistry.Tray
                     photoMesh.Translate(0f, 0.0012f, 0f);
                     // Glass silver image alpha-blends over the plate; a paper positive is opaque.
                     if (!PhotoPlateRenderUtil.IsPaperMedium(plate))
-                        ForceTransparentPass(photoMesh);
+                        PhotoMeshUtil.SetTransparentRenderPass(photoMesh);
 
                     // Pad the plate's per-quad passes with -1 (block default) so the overlay's
                     // Transparent entries stay aligned to the overlay quads after the merge.

@@ -4,6 +4,7 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
 using Photochemistry.AdminTooling;
+using Photochemistry.Plates.Rendering;
 namespace Photochemistry.Tray
 {
     
@@ -51,7 +52,7 @@ namespace Photochemistry.Tray
                 // Above both the plate (0.0006) and the silver image layer (0.0012).
                 mesh.Translate(0f, 0.0018f, 0f);
 
-                ForceTransparentPass(mesh);
+                PhotoMeshUtil.SetTransparentRenderPass(mesh);
                 ApplyOverlayAlpha(mesh, _clientDeveloperOverlayAlpha);
                 return true;
             }
@@ -249,27 +250,5 @@ namespace Photochemistry.Tray
             }
         }
 
-        private static void ForceTransparentPass(MeshData mesh)
-        {
-            if (mesh == null) return;
-
-            int quadCount = mesh.VerticesCount / 4;
-            if (quadCount <= 0) return;
-
-            short[] passes = mesh.RenderPassesAndExtraBits;
-            if (passes == null || passes.Length < quadCount)
-            {
-                passes = new short[quadCount];
-            }
-
-            ushort passVal = (ushort)EnumChunkRenderPass.Transparent;
-            for (int index = 0; index < quadCount; index++)
-            {
-                passes[index] = (short)passVal;
-            }
-
-            mesh.RenderPassesAndExtraBits = passes;
-            mesh.RenderPassCount = quadCount;
-        }
     }
 }

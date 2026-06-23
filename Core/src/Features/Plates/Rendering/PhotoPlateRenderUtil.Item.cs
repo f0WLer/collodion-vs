@@ -1,9 +1,7 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Photochemistry.PhotoMetadata.Model;
 using Photochemistry.PhotoSync.Integration;
-using Photochemistry.PhotoSync.Storage;
 
 namespace Photochemistry.Plates.Rendering
 {
@@ -30,73 +28,17 @@ namespace Photochemistry.Plates.Rendering
         {
             if (capi == null || itemstack == null) return false;
 
-            // Resolve item-driven overlay tuning attributes with safe fallbacks.
-            string overlayFace = "south";
-            try
-            {
-                overlayFace = itemstack.Collectible?.Attributes?["photoOverlayFace"]?.AsString("south") ?? "south";
-            }
-            catch
-            {
-                overlayFace = "south";
-            }
+            if (!TryResolvePhotoRenderInputs(capi, itemstack, "TryRenderPhotoOverlay", out PhotoRenderInputs inputs))
+                return false;
 
-            string photoId = itemstack.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
-            if (string.IsNullOrEmpty(photoId)) return false;
+            bool isPaper = inputs.IsPaper;
 
-            // Physical medium (glass density map vs opaque paper positive), from the item's plateMedium attribute.
-            PlatePresentation presentation = PlatePresentation.Resolve(itemstack);
-            bool isPaper = presentation.Medium == PresentationMedium.PaperPrint;
-
-            PlateStage stage = PlateAttributes.GetStage(itemstack);
-            bool showNegative = stage == PlateStage.Developing || stage == PlateStage.Developed || stage == PlateStage.Finished;
-            // The derived-image tag also separates glass ("negative") from paper ("paperprint") variants.
-            string effectsProfile = showNegative ? (isPaper ? "paperprint" : "negative") : string.Empty;
-
-            // Keep server-side last-seen metadata fresh while the photo is being rendered.
-            try
-            {
-                ClientPhotoSyncIntegration.MaybeSendPhotoSeen(capi, photoId);
-            }
-            catch (Exception ex)
-            {
-                    Log.Debug(capi.Logger, "TryRenderPhotoOverlay photo-seen notification failed: {0}", ex.Message);
-            }
-
-            string photoFileName = PhotoAssetStoragePaths.NormalizePhotoId(photoId);
-            if (string.IsNullOrEmpty(photoFileName)) return false;
-
-            int uvRotationDeg;
-            try
-            {
-                // Optional tuning for when the plate model/UV orientation changes.
-                uvRotationDeg = itemstack.Collectible?.Attributes?["photoUvRotation"]?.AsInt(0) ?? 0;
-            }
-            catch
-            {
-                uvRotationDeg = 0;
-            }
-
-            bool mirrorX;
-            try
-            {
-                // Default behavior: mirror only in GUI, unless explicitly overridden by item attributes.
-                bool defaultMirrorX = target == EnumItemRenderTarget.Gui;
-                mirrorX = itemstack.Collectible?.Attributes?["photoMirrorX"]?.AsBool(defaultMirrorX) ?? defaultMirrorX;
-            }
-            catch
-            {
-                mirrorX = target == EnumItemRenderTarget.Gui;
-            }
-
-            int maxDeveloperPours = 1;
-            int developPours = maxDeveloperPours;
-            if (!string.IsNullOrWhiteSpace(effectsProfile))
-            {
-                ResolveDevelopedRenderProgress(capi, itemstack, out developPours, out maxDeveloperPours);
-            }
-
-            int versionSnapshot = _meshRenderCache.GetAtlasVersionSnapshot();
+            // Item-driven overlay tuning. The null-safe attribute reads can't throw, so no guards are needed.
+            string overlayFace = itemstack.Collectible?.Attributes?["photoOverlayFace"]?.AsString("south") ?? "south";
+            int uvRotationDeg = itemstack.Collectible?.Attributes?["photoUvRotation"]?.AsInt(0) ?? 0;
+            // Default behavior: mirror only in GUI, unless explicitly overridden by item attributes.
+            bool defaultMirrorX = target == EnumItemRenderTarget.Gui;
+            bool mirrorX = itemstack.Collectible?.Attributes?["photoMirrorX"]?.AsBool(defaultMirrorX) ?? defaultMirrorX;
 
             string variant = target switch
             {
@@ -106,7 +48,7 @@ namespace Photochemistry.Plates.Rendering
             };
 
             // Reuse existing mesh refs when the render variant key is identical.
-            string cacheKey = $"{photoFileName}|{variant}|r{((uvRotationDeg % 360) + 360) % 360}|mx{(mirrorX ? 1 : 0)}|fx{effectsProfile}|dp{developPours}|v{versionSnapshot}";
+            string cacheKey = $"{inputs.PhotoFileName}|{variant}|r{((uvRotationDeg % 360) + 360) % 360}|mx{(mirrorX ? 1 : 0)}|fx{inputs.EffectsProfile}|dp{inputs.DevelopPours}|v{inputs.VersionSnapshot}";
             if (_meshRenderCache.TryGetCachedRender(cacheKey, out MultiTextureMeshRef? cachedMeshRef, out int cachedTextureId) && cachedMeshRef != null)
             {
                 renderinfo.ModelRef = cachedMeshRef;
@@ -114,18 +56,15 @@ namespace Photochemistry.Plates.Rendering
                 return true;
             }
 
-            string sourcePath = PhotoAssetStoragePaths.GetPhotoPath(photoFileName);
-            if (!File.Exists(sourcePath))
+            if (!File.Exists(inputs.SourcePath))
             {
                 // Photo may still be syncing from server; request and skip render for now.
-                BestEffort.Try(capi.Logger, "photo-sync-request", () => ClientPhotoSyncIntegration.RequestPhotoIfMissing(capi, photoFileName), BestEffortLogPolicy.WarnRateLimited(30000));
+                BestEffort.Try(capi.Logger, "photo-sync-request", () => ClientPhotoSyncIntegration.RequestPhotoIfMissing(capi, inputs.PhotoFileName), BestEffortLogPolicy.WarnRateLimited(30000));
                 return false;
             }
 
             // Prune stale stage variants and ensure the active derived render variant exists.
-            ResolveDerivedRenderPath(capi, photoId, photoFileName, sourcePath, effectsProfile, itemstack,
-                developPours, maxDeveloperPours, presentation,
-                out string renderPath, out string renderFileName);
+            ResolveDerivedRenderPath(capi, itemstack, inputs, out string renderPath, out string renderFileName);
 
 
             try
@@ -144,7 +83,7 @@ namespace Photochemistry.Plates.Rendering
                     }
 
                     string photoKey = Path.GetFileNameWithoutExtension(renderFileName);
-                    AssetLocation texLoc = new AssetLocation("photochemistry", $"photo-{photoKey}-v{versionSnapshot}");
+                    AssetLocation texLoc = new AssetLocation("photochemistry", $"photo-{photoKey}-v{inputs.VersionSnapshot}");
 
                     TextureAtlasPosition texPos;
                     int texSubId;
@@ -167,14 +106,14 @@ namespace Photochemistry.Plates.Rendering
                     {
                         MeshData overlaySouth = PhotoMeshUtil.CreateOverlayQuad(texPos, baseMesh, uvRotationDeg, mirrorX, photoAspect, "south");
                         MeshData overlayNorth = PhotoMeshUtil.CreateOverlayQuad(texPos, baseMesh, uvRotationDeg, mirrorX, photoAspect, "north");
-                        if (!isPaper) { SetTransparentRenderPass(overlaySouth); SetTransparentRenderPass(overlayNorth); }
+                        if (!isPaper) { PhotoMeshUtil.SetTransparentRenderPass(overlaySouth); PhotoMeshUtil.SetTransparentRenderPass(overlayNorth); }
                         baseMesh.AddMeshData(overlaySouth);
                         baseMesh.AddMeshData(overlayNorth);
                     }
                     else
                     {
                         MeshData overlay = PhotoMeshUtil.CreateOverlayQuad(texPos, baseMesh, uvRotationDeg, mirrorX, photoAspect, overlayFaceNorm);
-                        if (!isPaper) SetTransparentRenderPass(overlay);
+                        if (!isPaper) PhotoMeshUtil.SetTransparentRenderPass(overlay);
                         baseMesh.AddMeshData(overlay);
                     }
 
@@ -186,7 +125,7 @@ namespace Photochemistry.Plates.Rendering
                     int atlasTextureId = texPos.atlasTextureId;
                     MultiTextureMeshRef meshRef = capi.Render.UploadMultiTextureMesh(baseMesh);
 
-                    if (!_meshRenderCache.TryStore(cacheKey, versionSnapshot, meshRef, atlasTextureId))
+                    if (!_meshRenderCache.TryStore(cacheKey, inputs.VersionSnapshot, meshRef, atlasTextureId))
                     {
                         meshRef.Dispose();
                         return false;

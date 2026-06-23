@@ -1,11 +1,90 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Photochemistry.PhotoMetadata.Model;
+using Photochemistry.PhotoSync.Integration;
+using Photochemistry.PhotoSync.Storage;
 
 namespace Photochemistry.Plates.Rendering
 {
     public static partial class PhotoPlateRenderUtil
     {
+        // Photo render inputs resolved identically by the item-overlay and block-overlay paths.
+        private readonly struct PhotoRenderInputs
+        {
+            internal readonly string PhotoId;
+            internal readonly string PhotoFileName;
+            internal readonly PlatePresentation Presentation;
+            internal readonly bool IsPaper;
+            internal readonly string EffectsProfile;
+            internal readonly int DevelopPours;
+            internal readonly int MaxDeveloperPours;
+            internal readonly int VersionSnapshot;
+            internal readonly string SourcePath;
+
+            internal PhotoRenderInputs(string photoId, string photoFileName, PlatePresentation presentation, bool isPaper,
+                string effectsProfile, int developPours, int maxDeveloperPours, int versionSnapshot, string sourcePath)
+            {
+                PhotoId = photoId;
+                PhotoFileName = photoFileName;
+                Presentation = presentation;
+                IsPaper = isPaper;
+                EffectsProfile = effectsProfile;
+                DevelopPours = developPours;
+                MaxDeveloperPours = maxDeveloperPours;
+                VersionSnapshot = versionSnapshot;
+                SourcePath = sourcePath;
+            }
+        }
+
+        // Resolves the photo render inputs shared by the item and block overlay paths: the physical
+        // medium/presentation, the developed-stage effects tag (glass "negative" vs paper "paperprint"),
+        // the developer-pour progress, the atlas version snapshot, and the source photo path.
+        // Returns false (inputs defaulted) when the stack carries no photo id or it normalizes to nothing;
+        // both callers skip rendering in that case. logContext names the caller for the photo-seen log line.
+        private static bool TryResolvePhotoRenderInputs(ICoreClientAPI capi, ItemStack itemstack, string logContext, out PhotoRenderInputs inputs)
+        {
+            inputs = default;
+
+            string photoId = itemstack.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
+            if (string.IsNullOrEmpty(photoId)) return false;
+
+            // Keep server-side last-seen metadata fresh while the photo is being rendered.
+            try
+            {
+                ClientPhotoSyncIntegration.MaybeSendPhotoSeen(capi, photoId);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(capi.Logger, logContext + " photo-seen notification failed: {0}", ex.Message);
+            }
+
+            // Physical medium (glass density map vs opaque paper positive), from the item's plateMedium attribute.
+            PlatePresentation presentation = PlatePresentation.Resolve(itemstack);
+            bool isPaper = presentation.Medium == PresentationMedium.PaperPrint;
+
+            PlateStage stage = PlateAttributes.GetStage(itemstack);
+            bool showNegative = stage == PlateStage.Developing || stage == PlateStage.Developed || stage == PlateStage.Finished;
+            // The derived-image tag also separates glass ("negative") from paper ("paperprint") variants.
+            string effectsProfile = showNegative ? (isPaper ? "paperprint" : "negative") : string.Empty;
+
+            string photoFileName = PhotoAssetStoragePaths.NormalizePhotoId(photoId);
+            if (string.IsNullOrEmpty(photoFileName)) return false;
+
+            int maxDeveloperPours = 1;
+            int developPours = maxDeveloperPours;
+            if (!string.IsNullOrWhiteSpace(effectsProfile))
+            {
+                ResolveDevelopedRenderProgress(capi, itemstack, out developPours, out maxDeveloperPours);
+            }
+
+            int versionSnapshot = _meshRenderCache.GetAtlasVersionSnapshot();
+            string sourcePath = PhotoAssetStoragePaths.GetPhotoPath(photoFileName);
+
+            inputs = new PhotoRenderInputs(photoId, photoFileName, presentation, isPaper, effectsProfile,
+                developPours, maxDeveloperPours, versionSnapshot, sourcePath);
+            return true;
+        }
         // Shared mesh render cache for the plate render path (item overlay + block overlay).
         private static readonly PhotoMeshRenderCache _meshRenderCache = new();
 
@@ -104,22 +183,6 @@ namespace Photochemistry.Plates.Rendering
             }
         }
 
-        // Sets the render pass on every quad in a mesh to Transparent so alpha blending applies.
-        private static void SetTransparentRenderPass(MeshData mesh)
-        {
-            if (mesh == null) return;
-            int quadCount = mesh.VerticesCount / 4;
-            if (quadCount <= 0) return;
-            short passVal = (short)(ushort)EnumChunkRenderPass.Transparent;
-            short[] passes = mesh.RenderPassesAndExtraBits;
-            if (passes == null || passes.Length < quadCount)
-                passes = new short[quadCount];
-            for (int qi = 0; qi < quadCount; qi++)
-                passes[qi] = passVal;
-            mesh.RenderPassesAndExtraBits = passes;
-            mesh.RenderPassCount = quadCount;
-        }
-
         // Deletes the derived negative file for a single stage index.
         private static void DeleteDerivedNegativeStageFile(string derivedDir, string baseName, int stageIndex)
         {
@@ -137,33 +200,27 @@ namespace Photochemistry.Plates.Rendering
         // When no derived variant applies, renderPath == sourcePath and renderFileName == photoFileName.
         private static void ResolveDerivedRenderPath(
             ICoreClientAPI capi,
-            string photoId,
-            string photoFileName,
-            string sourcePath,
-            string effectsProfile,
             ItemStack? itemstack,
-            int developPours,
-            int maxDeveloperPours,
-            PlatePresentation presentation,
+            in PhotoRenderInputs inputs,
             out string renderPath,
             out string renderFileName)
         {
-            renderPath = sourcePath;
-            renderFileName = photoFileName;
+            renderPath = inputs.SourcePath;
+            renderFileName = inputs.PhotoFileName;
 
-            // effectsProfile carries the medium-specific developed tag ("negative" for glass,
+            // EffectsProfile carries the medium-specific developed tag ("negative" for glass,
             // "paperprint" for salted paper); empty means the latent (pre-developed) stage.
-            bool useDevelopedStage = !string.IsNullOrWhiteSpace(effectsProfile);
+            bool useDevelopedStage = !string.IsNullOrWhiteSpace(inputs.EffectsProfile);
 
-            MaybePruneObsoleteDevelopedDerived(capi, photoFileName, itemstack, developPours, maxDeveloperPours, useDevelopedStage);
+            MaybePruneObsoleteDevelopedDerived(capi, inputs.PhotoFileName, itemstack, inputs.DevelopPours, inputs.MaxDeveloperPours, useDevelopedStage);
 
             if (!useDevelopedStage) return;
 
-            string profileTag = $"{effectsProfile}{developPours}";
-            string derivedFileName = GetDerivedPhotoFileName(photoFileName, profileTag);
-            string derivedPath = GetDerivedPhotoPath(photoFileName, profileTag);
+            string profileTag = $"{inputs.EffectsProfile}{inputs.DevelopPours}";
+            string derivedFileName = GetDerivedPhotoFileName(inputs.PhotoFileName, profileTag);
+            string derivedPath = GetDerivedPhotoPath(inputs.PhotoFileName, profileTag);
 
-            if (PhotoImageProcessor.TryEnsureDerivedPhoto(capi, sourcePath, derivedPath, $"{photoId}|{profileTag}", useDevelopedStage, developPours, maxDeveloperPours, presentation))
+            if (PhotoImageProcessor.TryEnsureDerivedPhoto(capi, inputs.SourcePath, derivedPath, $"{inputs.PhotoId}|{profileTag}", useDevelopedStage, inputs.DevelopPours, inputs.MaxDeveloperPours, inputs.Presentation))
             {
                 renderPath = derivedPath;
                 renderFileName = derivedFileName;

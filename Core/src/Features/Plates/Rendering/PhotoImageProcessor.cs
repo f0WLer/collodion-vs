@@ -170,39 +170,27 @@ namespace Photochemistry.Plates.Rendering
 
                 int w = dst.Width;
                 int h = dst.Height;
+                // dst is always allocated Rgba8888/4bpp (above), so the unsafe fast path always applies;
+                // bail safely (no file written) for any unexpected format rather than carry a slow duplicate.
                 SKPixmap pixmap = dst.PeekPixels();
-                if (pixmap != null && pixmap.BytesPerPixel == 4 && pixmap.ColorType == SKColorType.Rgba8888)
+                if (pixmap == null || pixmap.BytesPerPixel != 4 || pixmap.ColorType != SKColorType.Rgba8888)
+                    return false;
+                unsafe
                 {
-                    unsafe
-                    {
-                        byte* basePtr = (byte*)pixmap.GetPixels().ToPointer();
-                        int rowBytes = pixmap.RowBytes;
-                        for (int y = 0; y < h; y++)
-                        {
-                            byte* row = basePtr + y * rowBytes;
-                            for (int x = 0; x < w; x++)
-                            {
-                                int i = x * 4;
-                                float density = (0.299f * row[i + 0] + 0.587f * row[i + 1] + 0.114f * row[i + 2]) / 255f;
-                                float a = densityLut[(int)(density * 255f)] / 255f;
-                                row[i + 0] = (byte)(depR * a);
-                                row[i + 1] = (byte)(depG * a);
-                                row[i + 2] = (byte)(depB * a);
-                                row[i + 3] = 255;
-                            }
-                        }
-                    }
-                }
-                else
-                {
+                    byte* basePtr = (byte*)pixmap.GetPixels().ToPointer();
+                    int rowBytes = pixmap.RowBytes;
                     for (int y = 0; y < h; y++)
                     {
+                        byte* row = basePtr + y * rowBytes;
                         for (int x = 0; x < w; x++)
                         {
-                            var c = dst.GetPixel(x, y);
-                            float density = (0.299f * c.Red + 0.587f * c.Green + 0.114f * c.Blue) / 255f;
+                            int i = x * 4;
+                            float density = (0.299f * row[i + 0] + 0.587f * row[i + 1] + 0.114f * row[i + 2]) / 255f;
                             float a = densityLut[(int)(density * 255f)] / 255f;
-                            dst.SetPixel(x, y, new SKColor((byte)(depR * a), (byte)(depG * a), (byte)(depB * a), 255));
+                            row[i + 0] = (byte)(depR * a);
+                            row[i + 1] = (byte)(depG * a);
+                            row[i + 2] = (byte)(depB * a);
+                            row[i + 3] = 255;
                         }
                     }
                 }
@@ -233,20 +221,12 @@ namespace Photochemistry.Plates.Rendering
             int h = bmp.Height;
             if (w <= 0 || h <= 0) return;
 
+            // The working bitmap is always allocated Rgba8888/4bpp (see TryEnsureDerivedPhoto), so the
+            // unsafe fast path always applies; the guard is a defensive no-op for any unexpected format.
             SKPixmap pixmap = bmp.PeekPixels();
-            if (pixmap == null)
-            {
-                InvertToNegativeDensityMapSlow(bmp, w, h, silverR, silverG, silverB, densityLut);
+            SKColorType ct = pixmap?.ColorType ?? SKColorType.Unknown;
+            if (pixmap == null || pixmap.BytesPerPixel != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
                 return;
-            }
-
-            SKColorType ct = pixmap.ColorType;
-            int bpp = pixmap.BytesPerPixel;
-            if (bpp != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
-            {
-                InvertToNegativeDensityMapSlow(bmp, w, h, silverR, silverG, silverB, densityLut);
-                return;
-            }
 
             bool bgra = ct == SKColorType.Bgra8888;
 
@@ -299,23 +279,6 @@ namespace Photochemistry.Plates.Rendering
             }
         }
 
-        private static void InvertToNegativeDensityMapSlow(SKBitmap bmp, int w, int h, byte silverR, byte silverG, byte silverB, byte[] densityLut)
-        {
-            for (int y = 0; y < h; y++)
-            {
-                for (int x = 0; x < w; x++)
-                {
-                    var c = bmp.GetPixel(x, y);
-                    float r = c.Red / 255f;
-                    float g = c.Green / 255f;
-                    float b = c.Blue / 255f;
-                    float density = 0.299f * r + 0.587f * g + 0.114f * b;
-                    byte alpha = densityLut[(int)(density * 255f)];
-                    bmp.SetPixel(x, y, new SKColor(silverR, silverG, silverB, alpha));
-                }
-            }
-        }
-
         // Warm paper-base colour the salted print is composited over (the unexposed sheet).
         private const byte PaperBaseR = 235, PaperBaseG = 228, PaperBaseB = 210;
 
@@ -333,18 +296,11 @@ namespace Photochemistry.Plates.Rendering
             float strength = t < 0f ? 0f : (t > 1f ? 1f : t);
             byte depR = presentation.DepositR, depG = presentation.DepositG, depB = presentation.DepositB;
 
+            // Fast path always applies for the allocated Rgba8888 working bitmap; defensive no-op otherwise.
             SKPixmap pixmap = bmp.PeekPixels();
             SKColorType ct = pixmap?.ColorType ?? SKColorType.Unknown;
             if (pixmap == null || pixmap.BytesPerPixel != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
-            {
-                for (int y = 0; y < h; y++)
-                    for (int x = 0; x < w; x++)
-                    {
-                        SKColor c = bmp.GetPixel(x, y);
-                        bmp.SetPixel(x, y, PaperPixel(c.Red / 255f, c.Green / 255f, c.Blue / 255f, gamma, strength, depR, depG, depB));
-                    }
                 return;
-            }
 
             bool bgra = ct == SKColorType.Bgra8888;
             unsafe
@@ -428,20 +384,11 @@ namespace Photochemistry.Plates.Rendering
             float gateRange = 1f - gate;
             if (gateRange < 0.001f) gateRange = 0.001f;
 
+            // Fast path always applies for the allocated Rgba8888 working bitmap; defensive no-op otherwise.
             SKPixmap pixmap = bmp.PeekPixels();
-            if (pixmap == null)
-            {
-                ApplyNegativeSilverVisualsSlow(bmp, w, h, gate, gateRange, maxAlpha, edgeFade, nx2, ny2, invCorner);
+            SKColorType ct = pixmap?.ColorType ?? SKColorType.Unknown;
+            if (pixmap == null || pixmap.BytesPerPixel != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
                 return;
-            }
-
-            SKColorType ct = pixmap.ColorType;
-            int bpp = pixmap.BytesPerPixel;
-            if (bpp != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
-            {
-                ApplyNegativeSilverVisualsSlow(bmp, w, h, gate, gateRange, maxAlpha, edgeFade, nx2, ny2, invCorner);
-                return;
-            }
 
             bool bgra = ct == SKColorType.Bgra8888;
             bool doEdge = edgeFade > 0f;
@@ -477,35 +424,6 @@ namespace Photochemistry.Plates.Rendering
                         row[i + 3] = (byte)(effectiveAlpha * 255f);
                         // RGB (silver color) is unchanged.
                     }
-                }
-            }
-        }
-
-        private static void ApplyNegativeSilverVisualsSlow(SKBitmap bmp, int w, int h, float gate, float gateRange, float maxAlpha, float edgeFade, float[] nx2, float[] ny2, float invCorner)
-        {
-            bool doEdge = edgeFade > 0f;
-
-            for (int y = 0; y < h; y++)
-            {
-                for (int x = 0; x < w; x++)
-                {
-                    var c = bmp.GetPixel(x, y);
-                    float density = c.Alpha / 255f;
-
-                    float visible = density > gate ? (density - gate) / gateRange : 0f;
-                    float effectiveAlpha = visible * maxAlpha;
-
-                    if (doEdge)
-                    {
-                        float edge = (float)Math.Sqrt(nx2[x] + ny2[y]) * invCorner;
-                        if (edge > 1f) edge = 1f;
-                        effectiveAlpha *= 1f - edge * edgeFade;
-                    }
-
-                    if (effectiveAlpha < 0f) effectiveAlpha = 0f;
-                    if (effectiveAlpha > 1f) effectiveAlpha = 1f;
-
-                    bmp.SetPixel(x, y, new SKColor(c.Red, c.Green, c.Blue, (byte)(effectiveAlpha * 255f)));
                 }
             }
         }

@@ -8,7 +8,8 @@ namespace Photochemistry.Exposure
     /// Called when an <c>ExposurePaused</c> plate is committed to a development tray rather than
     /// being resumed in the camera. The <c>.pex</c> file is deleted only after a successful render so
     /// incompatible or corrupt partials are not destroyed during a failed tray-seal attempt.
-    /// Finishing effects are applied here — accumulator paths must have <c>ApplyFinishing = false</c>.
+    /// Finishing effects are applied here when <c>applyFinishing</c> is set (gated by config for plate photos);
+    /// accumulator paths must have <c>ApplyFinishing = false</c>.
     /// </summary>
     internal static class PartialExposureSealer
     {
@@ -26,11 +27,12 @@ namespace Photochemistry.Exposure
             int targetFrameCount,
             int maxDimension,
             ImageEffectsConfig baselineEffects,
-            ImageEffectsConfig? effectsOverride = null)
+            ImageEffectsConfig? effectsOverride = null,
+            bool applyFinishing = true)
         {
             if (!ExposureAccumulationStore.TryLoad(exposureId, out byte[]? data)) return null;
 
-            string? fileName = RenderBlobToPng(data, capi, profile, physics, targetFrameCount, maxDimension, baselineEffects, effectsOverride);
+            string? fileName = RenderBlobToPng(data, capi, profile, physics, targetFrameCount, maxDimension, baselineEffects, effectsOverride, applyFinishing);
             if (!string.IsNullOrEmpty(fileName))
             {
                 ExposureAccumulationStore.Delete(exposureId);
@@ -47,7 +49,8 @@ namespace Photochemistry.Exposure
             int targetFrameCount,
             int maxDimension,
             ImageEffectsConfig baselineEffects,
-            ImageEffectsConfig? effectsOverride)
+            ImageEffectsConfig? effectsOverride,
+            bool applyFinishing)
         {
             if (!ExposureAccumulationBlobFormat.TryReadHeader(data, out var header)) return null;
             if (header.FrameCount <= 0) return null;
@@ -61,7 +64,7 @@ namespace Photochemistry.Exposure
 
             if (!buffer.DeserializeAccumulation(data, out _)) return null;
 
-            return ExposureSeal.ToPhoto(buffer, maxDimension, "plate-tray-development", baselineEffects, effectsOverride);
+            return ExposureSeal.ToPhoto(buffer, maxDimension, "plate-tray-development", baselineEffects, effectsOverride, applyFinishing);
         }
 
     }

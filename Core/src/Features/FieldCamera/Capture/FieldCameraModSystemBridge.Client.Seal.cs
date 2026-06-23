@@ -28,9 +28,11 @@ namespace Photochemistry.FieldCamera
             ExposurePhysicsConfig physics = Capture._virtualExposureRenderer?.Physics ?? new ExposurePhysicsConfig();
 
             // Tray development must match normal export policy: same target exposure, output size, and effects resolution.
+            ViewfinderConfig? viewfinder = PhotochemistryConfigAccess.ResolveClientConfig(capi)?.Viewfinder;
             int targetFrames = Math.Max(1, trayPlate.Attributes?.GetInt(PlateAttributes.ExposureTargetFrames) ?? profile.SampleCount);
-            int maxDimension = PhotochemistryConfigAccess.ResolveClientConfig(capi)?.Viewfinder?.PhotoCaptureMaxDimension
-                ?? ViewfinderConfig.DefaultPhotoCaptureMaxDimension;
+            int maxDimension = viewfinder?.PhotoCaptureMaxDimension ?? ViewfinderConfig.DefaultPhotoCaptureMaxDimension;
+            // Config gate for finishing on the saved plate photo — independent of the dialog's preview toggle.
+            bool applyFinishing = viewfinder?.ApplyFinishingEffects ?? true;
             ImageEffectsConfig baselineEffects = ImageEffectsPipelineBridge.LoadCaptureBaseline(capi);
             ImageEffectsConfig? effectsOverride = ImageEffectsProfileService.TryLoadProfile("wetplate", capi);
 
@@ -42,7 +44,8 @@ namespace Photochemistry.FieldCamera
                 targetFrames,
                 maxDimension,
                 baselineEffects,
-                effectsOverride);
+                effectsOverride,
+                applyFinishing);
             if (string.IsNullOrEmpty(photoId)) return false;
 
             ClientChannel.SendPacket(new SealAndInsertIntoTrayPacket

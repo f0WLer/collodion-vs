@@ -48,6 +48,14 @@ namespace Photochemistry.AdminTooling
         /// </summary>
         public bool PauseDryingDuringExposure = true;
 
+        /// <summary>
+        /// When true, the post-exposure finishing effects (grain, vignette, halation, lens softness,
+        /// coating unevenness, dust/scratches, edge toning) are baked into the final developed photo.
+        /// Independent of the debug dialog's "Apply Finishing" toggle, which only controls the preview peek —
+        /// so finishing can be previewed while leaving the saved plate photos clean.
+        /// </summary>
+        public bool ApplyFinishingEffects = true;
+
         // Clamps all viewfinder and preview tuning values to safe runtime ranges.
         internal void ClampInPlace()
         {

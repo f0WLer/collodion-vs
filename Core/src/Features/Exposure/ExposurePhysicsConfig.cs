@@ -1,23 +1,22 @@
 namespace Photochemistry.Exposure
 {
     /// <summary>
-    /// Tunable physics + chemistry-override layer applied to a <see cref="GpuExposureAccumulator"/>.
-    /// Physics flags pick which emulation passes run; chemistry overrides (NaN = use the active
-    /// process-profile default) let the admin physics dialog probe individual parameters live.
-    /// <see cref="Apply"/> copies the resolved settings onto a buffer before it accumulates.
+    /// Applies a chemistry's exposure settings to a <see cref="GpuExposureAccumulator"/>. Everything that
+    /// varies per chemistry — the physics emulation flags, the per-parameter overrides (NaN = use the
+    /// process-profile default), and the timing — lives on <see cref="Chem"/>; this type just resolves and
+    /// copies them onto a buffer. The owner swaps <see cref="Chem"/> when the active chemistry changes.
     /// </summary>
     internal sealed class ExposurePhysicsConfig
     {
-        public bool Linearize       = true;
-        public bool SpectralWeights = true;
-        public bool HDCurve         = true;
-        public bool Normalize       = false;
-        public bool LogAccumulation = true;
-
-        // The active chemistry's overrides (NaN per param means "use the process-profile default"). The
-        // physics flags above are model-wide and stay on this config; only these vary per chemistry, so the
-        // owner swaps this reference when the active chemistry changes. Never null.
+        // The active chemistry's settings (flags + overrides + timing). Never null.
         public ChemistryOverrides Chem { get; set; } = new();
+
+        // Read passthroughs for the dialog's flag switches.
+        public bool Linearize       => Chem.Linearize;
+        public bool SpectralWeights => Chem.SpectralWeights;
+        public bool HDCurve         => Chem.HDCurve;
+        public bool Normalize       => Chem.Normalize;
+        public bool LogAccumulation => Chem.LogAccumulation;
 
         public float EffectiveDevStrength(in PlateProcessProfile p)  => float.IsNaN(Chem.DevStrength)  ? p.DevelopmentStrength  : Chem.DevStrength;
         public float EffectiveHDGamma(in PlateProcessProfile p)      => float.IsNaN(Chem.HDGamma)      ? p.HDGamma             : Chem.HDGamma;
@@ -28,14 +27,14 @@ namespace Photochemistry.Exposure
         public float EffectiveReciprocity(in PlateProcessProfile p)  => float.IsNaN(Chem.Reciprocity)  ? p.ReciprocityExponent : Chem.Reciprocity;
         public float EffectiveExposureGain(in PlateProcessProfile p) => float.IsNaN(Chem.ExposureGain) ? p.ExposureGain        : Chem.ExposureGain;
 
-        // Copies the physics flags onto a buffer.
+        // Copies the active chemistry's physics flags onto a buffer.
         public void ApplyPhysics(GpuExposureAccumulator buf)
         {
-            buf.LinearizeInput              = Linearize;
-            buf.ApplySpectralWeights        = SpectralWeights;
-            buf.ApplyHDCurve                = HDCurve;
-            buf.NormalizeByActualFrameCount = Normalize;
-            buf.UseLogAccumulation          = LogAccumulation;
+            buf.LinearizeInput              = Chem.Linearize;
+            buf.ApplySpectralWeights        = Chem.SpectralWeights;
+            buf.ApplyHDCurve                = Chem.HDCurve;
+            buf.NormalizeByActualFrameCount = Chem.Normalize;
+            buf.UseLogAccumulation          = Chem.LogAccumulation;
         }
 
         // Copies physics flags plus chemistry (overrides resolved against the process) onto a buffer.
@@ -57,11 +56,11 @@ namespace Photochemistry.Exposure
         {
             switch (flag)
             {
-                case "linearize": Linearize       = value; break;
-                case "spectral":  SpectralWeights = value; break;
-                case "hdcurve":   HDCurve         = value; break;
-                case "normalize": Normalize       = value; break;
-                case "logaccum":  LogAccumulation = value; break;
+                case "linearize": Chem.Linearize       = value; break;
+                case "spectral":  Chem.SpectralWeights = value; break;
+                case "hdcurve":   Chem.HDCurve         = value; break;
+                case "normalize": Chem.Normalize       = value; break;
+                case "logaccum":  Chem.LogAccumulation = value; break;
                 default: return false;
             }
             return true;

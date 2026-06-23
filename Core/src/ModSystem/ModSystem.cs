@@ -43,8 +43,6 @@ namespace Photochemistry
         public IServerNetworkChannel? ServerChannel;
         internal ICoreClientAPI? ClientApi;
 
-        private bool _effectProfilesSeeded;
-
         // Registers shared item/block classes and packet types used by both client and server startup paths.
         public override void Start(ICoreAPI api)
         {
@@ -115,10 +113,9 @@ namespace Photochemistry
         {
             if (api is not ICoreClientAPI capi) return;
 
-            _effectProfilesSeeded = ClientEffectProfileSeeder.TryPrepare(
-                capi,
-                _effectProfilesSeeded,
-                BestEffortLogger);
+            // Load + seed the unified per-chemistry profiles (exposure physics, post-effects, presentation tone)
+            // now that registered chemistries and asset-backed defaults are available; creates the file if absent.
+            Exposure.ChemistryProfileRegistry.LoadAndSeed(capi.Logger);
         }
 
         // Indicates whether best-effort failure details should be emitted for diagnostics.
@@ -143,6 +140,7 @@ namespace Photochemistry
                 if (ModApi is ICoreClientAPI)
                 {
                     Plates.Rendering.PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
+                    Exposure.ChemistryProfileRegistry.Clear();
 
                     // These suppression flags are static and would otherwise survive a single-player
                     // world reload, leaving a stale mounted-camera position hidden from future captures.

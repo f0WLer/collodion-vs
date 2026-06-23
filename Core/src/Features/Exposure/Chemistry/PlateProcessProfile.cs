@@ -1,9 +1,11 @@
 namespace Photochemistry.Exposure
 {
     /// <summary>
-    /// Immutable emulsion parameters for a single wet-plate chemistry variant.
-    /// Defines shutter timing (<see cref="DurationSeconds"/>, <see cref="SampleCount"/>) and the
-    /// spectral sensitivity and H&amp;D curve values that shape how the accumulation buffer develops.
+    /// Immutable emulsion parameters for a single chemistry variant: shutter timing
+    /// (<see cref="DurationSeconds"/>, <see cref="SampleCount"/>) and the spectral sensitivity and H&amp;D
+    /// curve values that shape how the accumulation buffer develops.
+    /// The static <see cref="Iodide"/>/<see cref="Chloride"/>/<see cref="Bromide"/> instances are the
+    /// hardcoded exposure defaults that <see cref="ChemistryProfileSeeder"/> seeds a fresh profile from.
     /// </summary>
     internal readonly struct PlateProcessProfile
     {

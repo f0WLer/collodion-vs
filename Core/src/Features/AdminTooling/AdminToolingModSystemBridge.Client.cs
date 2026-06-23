@@ -1,4 +1,5 @@
-﻿using Photochemistry.CameraCapture;
+﻿using System.Linq;
+using Photochemistry.CameraCapture;
 using Vintagestory.API.Client;
 
 namespace Photochemistry.AdminTooling
@@ -68,6 +69,14 @@ namespace Photochemistry.AdminTooling
                 HotkeyType.GUIOrOtherControls);
             api.Input.SetHotKeyHandler("photochemistry-exposuregui", _ =>
             {
+                // Operator-only debug tooling. Gate on the server-operator privilege ("/op" grants it;
+                // single-player and LAN hosts have it by default).
+                if (api.World.Player?.Privileges?.Contains("controlserver") != true)
+                {
+                    api.ShowChatMessage("photochemistry: the exposure physics tuner requires operator privileges.");
+                    return false;
+                }
+
                 VirtualExposureRenderer? renderer = _owner.CameraCaptureBridge._virtualExposureRenderer;
                 if (renderer == null) return false;
                 _exposurePhysicsDialog ??= new GuiDialogExposurePhysics(api, renderer, _owner);

@@ -26,6 +26,10 @@ namespace Photochemistry.AdminTooling
         {
             if (_owner.ModApi?.World == null) return;
 
+            // Operator-only debug action: mirror the client-side dialog gate so a modified client can't
+            // request free plates without the server-operator privilege.
+            if (!player.HasPrivilege("controlserver")) return;
+
             // Resolve the chemistry's sensitized item + substrate from its recipe so the plate exposes with
             // the right per-process timing and develops on the right medium. Falls back to glass iodide.
             string chemistry = string.IsNullOrEmpty(packet.Chemistry)

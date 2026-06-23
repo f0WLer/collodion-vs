@@ -19,11 +19,9 @@ namespace Photochemistry.ImageEffects
             {
                 ImageEffectsConfig cfg = Load();
                 capi.ShowChatMessage($"Collodion photo effects: enabled={cfg.Enabled}");
-                capi.ShowChatMessage($"  greyscale={cfg.Greyscale} preGray RGB=({cfg.PreGrayRed:0.00}, {cfg.PreGrayGreen:0.00}, {cfg.PreGrayBlue:0.00})");
-                capi.ShowChatMessage($"  sepia={cfg.SepiaStrength:0.00} contrast={cfg.Contrast:0.00} brightness={cfg.Brightness:0.00}");
-                capi.ShowChatMessage($"  curve: shoulder={cfg.HighlightShoulder:0.00} threshold={cfg.HighlightThreshold:0.00} shadowfloor={cfg.ShadowFloor:0.00} contraststart={cfg.ContrastStart:0.00}");
-                capi.ShowChatMessage($"  vignette={cfg.Vignette:0.00} skyblowout={cfg.SkyBlowout:0.00} grain={cfg.Grain:0.00}");
-                capi.ShowChatMessage($"  realism: imperfection={cfg.Imperfection:0.00} microblur={cfg.MicroBlur:0.00} skyuneven={cfg.SkyUnevenness:0.00} skytop={cfg.SkyTopFraction:0.00} edgewarmth={cfg.EdgeWarmth:0.00}");
+                capi.ShowChatMessage($"  vignette={cfg.Vignette:0.00} (radius={cfg.VignetteRadius:0.00}) skyblowout={cfg.SkyBlowout:0.00} grain={cfg.Grain:0.00}");
+                capi.ShowChatMessage($"  halation={cfg.Halation:0.00} lensaberration={cfg.LensAberration:0.00}");
+                capi.ShowChatMessage($"  realism: imperfection={cfg.Imperfection:0.00} skyuneven={cfg.SkyUnevenness:0.00} skytop={cfg.SkyTopFraction:0.00} edgewarmth={cfg.EdgeWarmth:0.00}");
                 capi.ShowChatMessage($"  dust={cfg.DustCount} (opacity={cfg.DustOpacity:0.00})");
                 capi.ShowChatMessage($"  scratches={cfg.ScratchCount} (opacity={cfg.ScratchOpacity:0.00})");
                 capi.ShowChatMessage($"  dynamic={cfg.DynamicEnabled} dynamicscale={cfg.DynamicScale:0.00}");
@@ -56,7 +54,7 @@ namespace Photochemistry.ImageEffects
                 if (string.IsNullOrEmpty(prop) || string.IsNullOrEmpty(valStr))
                 {
                     capi.ShowChatMessage("usage: .collodion effects set <property> <value>");
-                    capi.ShowChatMessage("Properties: greyscale, pregrayred, pregraygreen, pregrayblue, sepia, contrast, brightness, shadowfloor, contraststart, highlightshoulder, highlightthreshold, vignette, vignetteradius, skyblowout, grain, imperfection, microblur, skyunevenness, skytopfraction, edgewarmth, dust, dustopacity, scratches, scratchopacity, dynamic, dynamicscale, halation, halationthreshold, halationradius, halationtint, lensaberration, lensaberrationstart, lensaberrationsigma, curveredtoe, curveredmid, curveredshoulder, curvegreentoe, curvegreenmid, curvegreenshoulder, curvebluetoe, curvebluemid, curveblueshoulder");
+                    capi.ShowChatMessage("Properties: vignette, vignetteradius, skyblowout, grain, imperfection, skyunevenness, skytopfraction, edgewarmth, dust, dustopacity, scratches, scratchopacity, dynamic, dynamicscale, halation, halationthreshold, halationradius, halationtint, lensaberration, lensaberrationstart, lensaberrationsigma");
                     return;
                 }
 

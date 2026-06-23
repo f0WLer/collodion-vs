@@ -20,9 +20,10 @@ namespace Photochemistry.ImageEffects
                 : baselineProfile;
         }
 
-        // Set to false to skip all finishing effects on every output path (handheld, tray seal, screenshot).
-        // Previews are unaffected — they never apply finishing effects.
-        internal static bool ApplyEffects = false;
+        // Master toggle for the post-exposure spatial effects (grain, vignette, halation, lens softness,
+        // coating unevenness, dust/scratches, edge toning). On = they bake into sealed photos. Set to false
+        // to skip all of them on every output path (handheld, tray seal, screenshot). Previews are unaffected.
+        internal static bool ApplyEffects = true;
 
         // Applies the effects pipeline in-place for one captured bitmap.
         internal static void ApplyCaptureEffects(SKBitmap bitmap, string seedKey, ImageEffectsConfig profile)

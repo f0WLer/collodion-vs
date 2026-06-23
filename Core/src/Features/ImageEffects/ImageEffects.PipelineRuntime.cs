@@ -14,12 +14,11 @@ namespace Photochemistry.ImageEffects
 
             var rng = new Random(StableHash((seedKey ?? string.Empty) + "|dyn"));
 
-            cfg.Contrast *= NextScale(rng, scale);
-            cfg.Brightness *= NextScale(rng, scale);
-            cfg.ShadowFloor *= NextScale(rng, scale);
             cfg.SkyBlowout *= NextScale(rng, scale);
             cfg.Vignette *= NextScale(rng, scale);
             cfg.Imperfection *= NextScale(rng, scale);
+            cfg.SkyUnevenness *= NextScale(rng, scale);
+            cfg.EdgeWarmth *= NextScale(rng, scale);
             cfg.Grain *= NextScale(rng, scale);
             cfg.DustOpacity *= NextScale(rng, scale);
             cfg.ScratchOpacity *= NextScale(rng, scale);
@@ -42,6 +41,15 @@ namespace Photochemistry.ImageEffects
 
         // Clamps a float into byte-channel bounds.
         private static float ClampByte(float v) => GameMath.Clamp(v, 0f, 255f);
+
+        // Smoothly blends between 0 and 1 across [a,b]. Shared by the grain and lens-aberration stages.
+        private static float SmoothStep(float a, float b, float x)
+        {
+            if (x <= a) return 0f;
+            if (x >= b) return 1f;
+            float t = (x - a) / (b - a);
+            return t * t * (3f - 2f * t);
+        }
 
         // Computes a stable FNV-1a hash for deterministic random seeding.
         private static int StableHash(string s)

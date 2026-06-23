@@ -8,32 +8,12 @@ namespace Photochemistry.ImageEffects
         private static readonly Dictionary<string, ImageEffectsPropertyBinding> _bindings =
             new(StringComparer.OrdinalIgnoreCase)
             {
-                ["greyscale"] = ImageEffectsPropertyBinding.ForBool("greyscale", (cfg, value) => cfg.Greyscale = value),
-                ["grayscale"] = ImageEffectsPropertyBinding.ForBool("greyscale", (cfg, value) => cfg.Greyscale = value),
-                ["gray"] = ImageEffectsPropertyBinding.ForBool("greyscale", (cfg, value) => cfg.Greyscale = value),
-                ["grey"] = ImageEffectsPropertyBinding.ForBool("greyscale", (cfg, value) => cfg.Greyscale = value),
-                ["pregrayred"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.PreGrayRed = value),
-                ["pregreyr"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.PreGrayRed = value),
-                ["pregraygreen"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.PreGrayGreen = value),
-                ["pregreyg"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.PreGrayGreen = value),
-                ["pregrayblue"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.PreGrayBlue = value),
-                ["pregreyb"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.PreGrayBlue = value),
                 ["imperfection"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.Imperfection = value),
-                ["microblur"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.MicroBlur = value),
                 ["skyunevenness"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.SkyUnevenness = value),
                 ["skyuneven"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.SkyUnevenness = value),
                 ["skytopfraction"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.SkyTopFraction = value),
                 ["skytop"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.SkyTopFraction = value),
                 ["edgewarmth"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.EdgeWarmth = value),
-                ["sepia"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.SepiaStrength = value),
-                ["contrast"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.Contrast = value),
-                ["highlightshoulder"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.HighlightShoulder = value),
-                ["shoulder"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.HighlightShoulder = value),
-                ["highlightthreshold"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.HighlightThreshold = value),
-                ["threshold"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.HighlightThreshold = value),
-                ["brightness"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.Brightness = value),
-                ["shadowfloor"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.ShadowFloor = value),
-                ["contraststart"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.ContrastStart = value),
                 ["vignette"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.Vignette = value),
                 ["skyblowout"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.SkyBlowout = value),
                 ["grain"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.Grain = value),
@@ -51,16 +31,7 @@ namespace Photochemistry.ImageEffects
                 ["halationtint"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.HalationTint = value),
                 ["lensaberration"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.LensAberration = value),
                 ["lensaberrationstart"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.LensAberrationStart = value),
-                ["lensaberrationsigma"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.LensAberrationSigma = value),
-                ["curveredtoe"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.CurveRedToe = value),
-                ["curveredmid"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.CurveRedMid = value),
-                ["curveredshoulder"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.CurveRedShoulder = value),
-                ["curvegreentoe"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.CurveGreenToe = value),
-                ["curvegreenmid"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.CurveGreenMid = value),
-                ["curvegreenshoulder"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.CurveGreenShoulder = value),
-                ["curvebluetoe"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.CurveBlueToe = value),
-                ["curvebluemid"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.CurveBlueMid = value),
-                ["curveblueshoulder"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.CurveBlueShoulder = value)
+                ["lensaberrationsigma"] = ImageEffectsPropertyBinding.ForFloat((cfg, value) => cfg.LensAberrationSigma = value)
             };
 
         // Resolves a property alias and applies the parsed value through its typed binding.

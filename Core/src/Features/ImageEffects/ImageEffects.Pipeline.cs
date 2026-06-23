@@ -4,7 +4,9 @@ namespace Photochemistry.ImageEffects
 {
     public static partial class ImageEffects
     {
-        // Pipeline owner: orchestrates stage order for image effects application.
+        // Pipeline owner: orchestrates stage order for post-exposure image effects.
+        // The input bitmap is already a developed silver image (resolved by the exposure accumulation physics),
+        // so this pass adds only spatial/optical/material artifacts — never tone, greyscale, or contrast.
         public static void ApplyInPlace(SKBitmap bmp, string seedKey, ImageEffectsConfig cfg)
         {
             if (bmp == null) return;
@@ -24,36 +26,16 @@ namespace Photochemistry.ImageEffects
 
             var rng = new Random(StableHash(seedKey ?? string.Empty));
 
-            // 0) Per-channel tone curves — applied to raw colour pixels before any bias or greyscale.
-            //    No-op when all curves are at linear defaults (fast path).
-            ApplyChannelCurvesInPlace(bmp, effectiveCfg);
-
-            // 1) Channel bias (orthochromatic simulation) + 2) Greyscale conversion
-            using (var srcCopy = bmp.Copy())
-            using (var srcImg = SKImage.FromBitmap(srcCopy))
-            using (var canvas = new SKCanvas(bmp))
-#pragma warning disable CS0618 // Preserve existing sampling behavior on current Skia API
-            using (var paint = new SKPaint { FilterQuality = SKFilterQuality.High })
-#pragma warning restore CS0618
-            {
-                paint.ColorFilter = CreateBaseColorFilter(effectiveCfg);
-                paint.BlendMode = SKBlendMode.Src;
-                canvas.DrawImage(srcImg, new SKRect(0, 0, w, h), paint);
-            }
-
-            // 3) Nonlinear contrast curve + 4) Highlight shoulder/clipping
-            ApplyToneCurveAndShoulderInPlace(bmp, effectiveCfg);
-
-            // 3b) Halation — glow around bright areas from light scatter through the glass base.
-            //     Must run after tone (operates on toned luminance) and before sky blowout.
+            // 1) Halation — glow around bright areas from light scatter through the glass base.
             ApplyHalation(bmp, effectiveCfg);
 
-            // 5) Sky blowout/bloom + vignette
+            // 2) Sky blowout/bloom — spatial bloom around blown highlights, top of frame.
             if (effectiveCfg.SkyBlowout > 0.001f)
             {
                 ApplySkyBlowout(bmp, rng, effectiveCfg);
             }
 
+            // 3) Vignette — radial optical falloff with a faint per-frame directional bias.
             if (effectiveCfg.Vignette > 0.001f)
             {
                 using var canvas = new SKCanvas(bmp);
@@ -94,30 +76,23 @@ namespace Photochemistry.ImageEffects
                 canvas.DrawRect(new SKRect(0, 0, w, h), chemPaint);
             }
 
-            // 6) Development defects (imperfection / uneven chemistry)
-            // Note: micro-blur is a cheap stand-in for long-exposure motion softness.
-            if (effectiveCfg.MicroBlur > 0.001f)
-            {
-                ApplyEdgePreservingMicroBlur(bmp, effectiveCfg.MicroBlur, effectiveCfg);
-            }
-
+            // 4) Development defects — one-sided density pooling + sky coating unevenness.
             if (effectiveCfg.Imperfection > 0.001f || effectiveCfg.SkyUnevenness > 0.001f)
             {
                 ApplyUnevenDensity(bmp, rng, effectiveCfg);
             }
 
-            // 6b) Radial lens aberration — edge softness from uncorrected historical optics.
-            //     After micro-blur (both are softening passes; aberration must come last to
-            //     preserve the radial mask), before grain (grain lands on soft edges naturally).
+            // 5) Radial lens aberration — edge softness from uncorrected historical optics (before grain,
+            //    so grain lands on the softened edges naturally).
             ApplyLensAberration(bmp, effectiveCfg);
 
-            // 7) Grain (silver clumps / density variations)
+            // 6) Grain (silver clumps / density variations).
             if (effectiveCfg.Grain > 0.001f)
             {
                 ApplySilverClumpGrain(bmp, rng, effectiveCfg);
             }
 
-            // 4) Dust + scratches
+            // 7) Dust + scratches.
             if (effectiveCfg.DustCount > 0 || effectiveCfg.ScratchCount > 0)
             {
                 using var canvas = new SKCanvas(bmp);
@@ -125,11 +100,8 @@ namespace Photochemistry.ImageEffects
                 DrawScratches(canvas, w, h, rng, effectiveCfg);
             }
 
-            // 9) Very light sepia (optional) at the end
-            if (effectiveCfg.SepiaStrength > 0.001f)
-            {
-                ApplySepiaAtEnd(bmp, effectiveCfg);
-            }
+            // 8) Warm toned border (uneven edge toning / oxidation) at the very end.
+            ApplyEdgeWarmth(bmp, effectiveCfg);
         }
     }
 }

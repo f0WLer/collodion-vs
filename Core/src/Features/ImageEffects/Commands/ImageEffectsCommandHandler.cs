@@ -1,79 +1,30 @@
-﻿using Vintagestory.API.Client;
+using Photochemistry.Exposure;
+using Photochemistry.Plates;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
 namespace Photochemistry.ImageEffects
 {
-    // .collodion effects/effect command behavior and persistence orchestration.
+    // .collodion effects command. Post-effects are now per-chemistry and live in the unified chemistry
+    // profile, edited in the exposure-physics dialog (Save Profile persists them). This command is therefore
+    // read-only: it reports each chemistry's current effects so they can be inspected outside the dialog.
     internal static class ImageEffectsCommandHandler
     {
-        // Handles .collodion effects subcommands and persists any config mutations to the wetplate profile.
-        private const string Profile = "wetplate";
-
         internal static void HandleEffectsCommand(ICoreClientAPI capi, CmdArgs args)
         {
-            ImageEffectsConfig Load() => ImageEffectsProfileService.TryLoadProfile(Profile, capi) ?? new ImageEffectsConfig();
+            // Consume any subcommand/args so old "set/reset" muscle memory gets a clear message rather than silence.
+            args.PopAll();
 
-            string param = args.PopWord();
+            capi.ShowChatMessage("Collodion post-effects are per-chemistry. Tune them in the exposure-physics dialog (Save Profile to persist).");
 
-            if (string.IsNullOrEmpty(param) || param.Equals("show", StringComparison.OrdinalIgnoreCase))
+            foreach (string code in SensitizationRegistry.RegisteredChemistries())
             {
-                ImageEffectsConfig cfg = Load();
-                capi.ShowChatMessage($"Collodion photo effects: enabled={cfg.Enabled}");
-                capi.ShowChatMessage($"  vignette={cfg.Vignette:0.00} (radius={cfg.VignetteRadius:0.00}) skyblowout={cfg.SkyBlowout:0.00} grain={cfg.Grain:0.00}");
-                capi.ShowChatMessage($"  halation={cfg.Halation:0.00} lensaberration={cfg.LensAberration:0.00}");
-                capi.ShowChatMessage($"  realism: imperfection={cfg.Imperfection:0.00} skyuneven={cfg.SkyUnevenness:0.00} skytop={cfg.SkyTopFraction:0.00} edgewarmth={cfg.EdgeWarmth:0.00}");
-                capi.ShowChatMessage($"  dust={cfg.DustCount} (opacity={cfg.DustOpacity:0.00})");
-                capi.ShowChatMessage($"  scratches={cfg.ScratchCount} (opacity={cfg.ScratchOpacity:0.00})");
-                capi.ShowChatMessage($"  dynamic={cfg.DynamicEnabled} dynamicscale={cfg.DynamicScale:0.00}");
-                capi.ShowChatMessage("Usage: .collodion effects <show|enable|disable|reset|set> [param] [value]");
-                return;
+                ImageEffectsConfig fx = ChemistryProfileRegistry.Instance.Get(code).PostEffects;
+                capi.ShowChatMessage(
+                    $"  {code}: enabled={fx.Enabled} grain={fx.Grain:0.000} vignette={fx.Vignette:0.000} " +
+                    $"halation={fx.Halation:0.000} skyblowout={fx.SkyBlowout:0.000} lensaberration={fx.LensAberration:0.000} " +
+                    $"imperfection={fx.Imperfection:0.000} edgewarmth={fx.EdgeWarmth:0.000} dust={fx.DustCount} scratches={fx.ScratchCount}");
             }
-
-            if (param.Equals("reset", StringComparison.OrdinalIgnoreCase))
-            {
-                ImageEffectsProfileService.SaveProfile(Profile, new ImageEffectsConfig());
-                capi.ShowChatMessage("photochemistry: effects reset to defaults");
-                return;
-            }
-
-            if (param.Equals("enable", StringComparison.OrdinalIgnoreCase) || param.Equals("disable", StringComparison.OrdinalIgnoreCase))
-            {
-                bool enable = param.Equals("enable", StringComparison.OrdinalIgnoreCase);
-                ImageEffectsConfig cfg = Load();
-                cfg.Enabled = enable;
-                ImageEffectsProfileService.SaveProfile(Profile, cfg);
-                capi.ShowChatMessage(enable ? "photochemistry: effects enabled" : "photochemistry: effects disabled");
-                return;
-            }
-
-            if (param.Equals("set", StringComparison.OrdinalIgnoreCase))
-            {
-                string prop = args.PopWord();
-                string valStr = args.PopWord();
-
-                if (string.IsNullOrEmpty(prop) || string.IsNullOrEmpty(valStr))
-                {
-                    capi.ShowChatMessage("usage: .collodion effects set <property> <value>");
-                    capi.ShowChatMessage("Properties: vignette, vignetteradius, skyblowout, grain, imperfection, skyunevenness, skytopfraction, edgewarmth, dust, dustopacity, scratches, scratchopacity, dynamic, dynamicscale, halation, halationthreshold, halationradius, halationtint, lensaberration, lensaberrationstart, lensaberrationsigma");
-                    return;
-                }
-
-                ImageEffectsConfig cfg = Load();
-
-                if (!ImageEffectsCommandPropertyMap.TryApply(prop, valStr, cfg, out string? setError))
-                {
-                    capi.ShowChatMessage(setError ?? "photochemistry: failed to set effect property");
-                    return;
-                }
-
-                cfg.ClampInPlace();
-                ImageEffectsProfileService.SaveProfile(Profile, cfg);
-                capi.ShowChatMessage($"photochemistry: set {prop} = {valStr}");
-                capi.ShowChatMessage("Note: effects apply to newly taken photos. Use .collodion clearcache to reload existing photos.");
-                return;
-            }
-
-            capi.ShowChatMessage("usage: .collodion effects <show|enable|disable|reset|set>");
         }
     }
 }

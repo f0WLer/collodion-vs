@@ -7,6 +7,9 @@ namespace Photochemistry.ImageEffects
     // structurally cannot produce (grain, vignette, halation, lens softness, coating unevenness, dust/scratches,
     // edge toning). Tone/greyscale/contrast/brightness used to live here too but are now owned by the exposure
     // accumulation physics (spectral sensitivity, H&D curve, inertia, exposure gain) and were removed.
+    //
+    // The field defaults below double as the post-effects defaults that ChemistryProfileSeeder seeds a fresh
+    // chemistry profile from (one default set, shared across chemistries until tuned per-chemistry).
     public sealed class ImageEffectsConfig
     {
         public bool Enabled = true;

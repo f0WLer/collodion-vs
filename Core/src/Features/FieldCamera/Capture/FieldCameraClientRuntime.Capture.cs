@@ -77,6 +77,7 @@ namespace Photochemistry.FieldCamera
                 {
                     viewportExisting.StopCondition = resumeCondition;
                     viewportExisting.OnAutoPause = () => OnAccumulatorAutoPause(viewportExisting, exposureId);
+                    viewportExisting.LiveEffectsSource = _owner.Capture._virtualExposureRenderer;
                 }
 
                 _owner.Capture.ActiveAccumulator = existingAcc;
@@ -112,6 +113,7 @@ namespace Photochemistry.FieldCamera
             ViewportExposureAccumulator newAcc = _owner.Capture._primedViewportAccumulator ?? new ViewportExposureAccumulator(clientApi);
             _owner.Capture._primedViewportAccumulator = null;
             newAcc.ExposurePreviewSink = _owner.Capture._virtualCameraPreviewRenderer;
+            newAcc.LiveEffectsSource = _owner.Capture._virtualExposureRenderer;
             newAcc.OnAutoHalt = () => OnAccumulatorAutoHalt(byEntity, newAcc, exposureId);
             newAcc.OnAutoPause = () => OnAccumulatorAutoPause(newAcc, exposureId);
 

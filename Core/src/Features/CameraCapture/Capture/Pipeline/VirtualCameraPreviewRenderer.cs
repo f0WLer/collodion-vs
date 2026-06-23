@@ -5,6 +5,7 @@ using Vintagestory.API.Client;
 using Vintagestory.Client.NoObf;
 using Photochemistry.AdminTooling;
 using Photochemistry.Exposure;
+using Photochemistry.ImageEffects;
 
 namespace Photochemistry.CameraCapture
 {
@@ -162,6 +163,9 @@ namespace Photochemistry.CameraCapture
 
                 using SKBitmap developed = accum.Resolve();
                 SKBitmap cropped = PhotoCropMath.CenterCropToPlateAspect(developed);
+
+                if (er.ApplyFinishing)
+                    ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", er.Effects);
 
                 int count = cropped.Width * cropped.Height;
                 if (_previewPixelScratch == null || _previewPixelScratch.Length < count)

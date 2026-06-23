@@ -52,8 +52,12 @@ namespace Photochemistry.CameraCapture
             _capi = capi;
         }
 
-        // The active chemistry's post-effects, from the shared registry.
-        private ImageEffectsConfig Effects => ChemistryProfileRegistry.Instance.Get(_process.Name).PostEffects;
+        // When the exposure-physics dialog is open, use its live working copy so slider edits are
+        // reflected immediately in the handheld preview without requiring a Save Profile round-trip.
+        internal VirtualExposureRenderer? LiveEffectsSource { get; set; }
+
+        private ImageEffectsConfig Effects
+            => LiveEffectsSource?.Effects ?? ChemistryProfileRegistry.Instance.Get(_process.Name).PostEffects;
 
         /// <summary>
         /// Allocates the GPU accumulator and registers this renderer at <c>AfterBlit</c> ahead of
@@ -266,8 +270,9 @@ namespace Photochemistry.CameraCapture
             SKBitmap cropped = PhotoCropMath.ScaleDownAndCenterCropToPlateAspect(developed, maxDimension);
             try
             {
-                // The active chemistry's post-effects, resolved from the shared registry.
-                ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", Effects);
+                // Mirrors the mounted-camera preview gate: respect ApplyFinishing when the dialog is wired in.
+                if (LiveEffectsSource == null || LiveEffectsSource.ApplyFinishing)
+                    ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", Effects);
                 ExposurePreviewSink.StoreExposureFrame(cropped);
             }
             finally

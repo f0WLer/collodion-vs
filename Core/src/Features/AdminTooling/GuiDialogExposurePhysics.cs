@@ -1,6 +1,8 @@
 ﻿using Vintagestory.API.Client;
 using Photochemistry.CameraCapture;
+using Photochemistry.Exposure;
 using Photochemistry.ImageEffects;
+using Photochemistry.Plates;
 
 namespace Photochemistry.AdminTooling
 {
@@ -28,6 +30,14 @@ namespace Photochemistry.AdminTooling
 
         private ImageEffectsConfig? _effects;
         private ImageEffectsConfig Effects => _effects ??= new ImageEffectsConfig();
+
+        // Suppresses the timing-box change handler while the boxes are being seeded on compose.
+        private bool _seedingTiming;
+
+        // Draws/second above this read as too fast (a sample more often than every 0.125 s) and turn red.
+        private const float SampleRateWarn = 8f;
+        private static readonly double[] _rateOkColor   = { 0.78, 0.78, 0.78, 1.0 };
+        private static readonly double[] _rateWarnColor = { 0.93, 0.30, 0.27, 1.0 };
 
         public override void OnGuiOpened()
         {
@@ -81,6 +91,25 @@ namespace Photochemistry.AdminTooling
             var chemHeader = B(0, y, dialogW, 20);
             y += 26;
 
+            // Chemistry selector (left) + save-this-profile button (right). The selector picks which
+            // chemistry the sliders below tune; Save persists that chemistry's values as its defaults.
+            var chemDd      = B(0, y, labelW + 30, 26);
+            var saveChemBtn = B(dialogW - 110, y + 1, 110, 24);
+            y += rowH + 6;
+
+            // Build the chemistry list from the head's registered chemistries (baseline: iodide only).
+            string[] chemCodes, chemNames;
+            int selectedChem;
+            BuildChemistryOptions(out chemCodes, out chemNames, out selectedChem);
+
+            // Shutter timing row: "[N] samples over [Y] s" + a live draws/second readout (red when too fast).
+            var tSampBox = B(0,   y,     50, 26);
+            var tSampLbl = B(54,  y + 4, 86, 20);
+            var tDurBox  = B(142, y,     50, 26);
+            var tDurLbl  = B(196, y + 4, 24, 20);
+            var tRate    = B(224, y + 4, dialogW - 224, 20);
+            y += rowH + 8;
+
             // Slider rows for chemistry params
             var (lDev, sDev) = SliderRow(y, labelW, sliderW); y += rowH;
             var (lGam, sGam) = SliderRow(y, labelW, sliderW); y += rowH;
@@ -109,16 +138,12 @@ namespace Photochemistry.AdminTooling
             var fxHeader = B(0, y, dialogW, 20);
             y += 26;
 
-            // Slider rows: [label][slider]
-            var (lCon,  sCon)  = SliderRow(y, labelW, sliderW); y += rowH;
-            var (lBri,  sBri)  = SliderRow(y, labelW, sliderW); y += rowH;
-            var (lSfl,  sSfl)  = SliderRow(y, labelW, sliderW); y += rowH;
-            var (lCst,  sCst)  = SliderRow(y, labelW, sliderW); y += rowH;
-            var (lSho,  sSho)  = SliderRow(y, labelW, sliderW); y += rowH;
-            var (lSky,  sSky)  = SliderRow(y, labelW, sliderW); y += rowH;
+            // Surviving spatial/material effects only (tone/greyscale/contrast now live in the exposure physics).
             var (lGrn,  sGrn)  = SliderRow(y, labelW, sliderW); y += rowH;
             var (lVig,  sVig)  = SliderRow(y, labelW, sliderW); y += rowH;
-            var (lImp,  sImp)  = SliderRow(y, labelW, sliderW); y += rowH + 8;
+            var (lSky,  sSky)  = SliderRow(y, labelW, sliderW); y += rowH;
+            var (lImp,  sImp)  = SliderRow(y, labelW, sliderW); y += rowH;
+            var (lEwm,  sEwm)  = SliderRow(y, labelW, sliderW); y += rowH + 8;
 
             // ── Dev Tools section ───────────────────────────────────────────────
             var devHeader    = B(0, y, dialogW, 20);
@@ -181,6 +206,17 @@ namespace Photochemistry.AdminTooling
                 // Chemistry header
                 .AddStaticText("─── Chemistry ───", CairoFont.WhiteSmallText(), chemHeader)
 
+                // Chemistry selector + save-this-profile button
+                .AddDropDown(chemCodes, chemNames, selectedChem, OnChemistrySelected, chemDd, "dd-chemistry")
+                .AddSmallButton("Save Profile", OnSaveChemistry, saveChemBtn)
+
+                // Shutter timing: sample count + duration, with a live draws/second readout.
+                .AddNumberInput(tSampBox, OnTimingChanged, CairoFont.WhiteDetailText(), "ni-samplecount")
+                .AddStaticText("samples over", CairoFont.WhiteDetailText(), tSampLbl)
+                .AddNumberInput(tDurBox, OnTimingChanged, CairoFont.WhiteDetailText(), "ni-duration")
+                .AddStaticText("sec", CairoFont.WhiteDetailText(), tDurLbl)
+                .AddDynamicText(string.Empty, CairoFont.WhiteSmallText(), tRate, "txt-samplerate")
+
                 // Dev Strength: float 0..20 → int 0..200 (÷10 = float)
                 .AddStaticText("Dev Strength",      CairoFont.WhiteDetailText(), lDev)
                 .AddSlider(v => { _renderer.SetChemistry("devstrength", v / 10f); _renderer.RequestPreviewRefresh(); return true; }, sDev, "sl-devstrength")
@@ -231,32 +267,20 @@ namespace Photochemistry.AdminTooling
                 // Effects header
                 .AddStaticText("─── Effects ───", CairoFont.WhiteSmallText(), fxHeader)
 
-                .AddStaticText("Contrast",           CairoFont.WhiteDetailText(), lCon)
-                .AddSlider(v => { Effects.Contrast          = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sCon, "sl-contrast")
-
-                .AddStaticText("Brightness",          CairoFont.WhiteDetailText(), lBri)
-                .AddSlider(v => { Effects.Brightness         = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sBri, "sl-brightness")
-
-                .AddStaticText("Shadow Floor",        CairoFont.WhiteDetailText(), lSfl)
-                .AddSlider(v => { Effects.ShadowFloor        = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sSfl, "sl-shadowfloor")
-
-                .AddStaticText("Contrast Start",      CairoFont.WhiteDetailText(), lCst)
-                .AddSlider(v => { Effects.ContrastStart      = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sCst, "sl-contraststart")
-
-                .AddStaticText("Highlight Shoulder",  CairoFont.WhiteDetailText(), lSho)
-                .AddSlider(v => { Effects.HighlightShoulder  = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sSho, "sl-shoulder")
-
-                .AddStaticText("Sky Blowout",         CairoFont.WhiteDetailText(), lSky)
-                .AddSlider(v => { Effects.SkyBlowout         = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sSky, "sl-skyblowout")
-
                 .AddStaticText("Grain",               CairoFont.WhiteDetailText(), lGrn)
-                .AddSlider(v => { Effects.Grain               = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sGrn, "sl-grain")
+                .AddSlider(v => { Effects.Grain        = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sGrn, "sl-grain")
 
                 .AddStaticText("Vignette",            CairoFont.WhiteDetailText(), lVig)
-                .AddSlider(v => { Effects.Vignette            = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sVig, "sl-vignette")
+                .AddSlider(v => { Effects.Vignette     = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sVig, "sl-vignette")
+
+                .AddStaticText("Sky Blowout",         CairoFont.WhiteDetailText(), lSky)
+                .AddSlider(v => { Effects.SkyBlowout   = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sSky, "sl-skyblowout")
 
                 .AddStaticText("Imperfection",        CairoFont.WhiteDetailText(), lImp)
-                .AddSlider(v => { Effects.Imperfection        = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sImp, "sl-imperfection")
+                .AddSlider(v => { Effects.Imperfection = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sImp, "sl-imperfection")
+
+                .AddStaticText("Edge Warmth",         CairoFont.WhiteDetailText(), lEwm)
+                .AddSlider(v => { Effects.EdgeWarmth   = v / 100f; _renderer.RequestPreviewRefresh(); return true; }, sEwm, "sl-edgewarmth")
 
                 .AddStaticText("─── Dev Tools ───", CairoFont.WhiteSmallText(), devHeader)
                 .AddSwitch(v => _owner.Config.Viewfinder.DebugPreviewPeak = v, swPreview, "sw-preview-peak", swSize)
@@ -278,17 +302,13 @@ namespace Photochemistry.AdminTooling
             c.GetSwitch("sw-finishing").SetValue(_renderer.ApplyFinishing);
             c.GetSwitch("sw-preview-peak").SetValue(_owner.Config.Viewfinder.DebugPreviewPeak);
 
-            // Sliders: 0-1 floats → int 0-100; Contrast 0-3 → 0-300; Brightness -1..1 → -100..100.
+            // Surviving effects sliders: 0..1 floats → int 0..100.
             var fx = Effects;
-            c.GetSlider("sl-contrast")    .SetValues((int)(fx.Contrast         * 100), 0,    300, 1);
-            c.GetSlider("sl-brightness")  .SetValues((int)(fx.Brightness       * 100), -100, 100, 1);
-            c.GetSlider("sl-shadowfloor") .SetValues((int)(fx.ShadowFloor      * 100), 0,    100, 1);
-            c.GetSlider("sl-contraststart").SetValues((int)(fx.ContrastStart   * 100), 0,    100, 1);
-            c.GetSlider("sl-shoulder")    .SetValues((int)(fx.HighlightShoulder* 100), 0,    100, 1);
-            c.GetSlider("sl-skyblowout")  .SetValues((int)(fx.SkyBlowout       * 100), 0,    100, 1);
-            c.GetSlider("sl-grain")       .SetValues((int)(fx.Grain            * 100), 0,    100, 1);
-            c.GetSlider("sl-vignette")    .SetValues((int)(fx.Vignette         * 100), 0,    100, 1);
-            c.GetSlider("sl-imperfection").SetValues((int)(fx.Imperfection     * 100), 0,    100, 1);
+            c.GetSlider("sl-grain")       .SetValues((int)(fx.Grain        * 100), 0, 100, 1);
+            c.GetSlider("sl-vignette")    .SetValues((int)(fx.Vignette     * 100), 0, 100, 1);
+            c.GetSlider("sl-skyblowout")  .SetValues((int)(fx.SkyBlowout   * 100), 0, 100, 1);
+            c.GetSlider("sl-imperfection").SetValues((int)(fx.Imperfection * 100), 0, 100, 1);
+            c.GetSlider("sl-edgewarmth")  .SetValues((int)(fx.EdgeWarmth   * 100), 0, 100, 1);
 
             // Chemistry sliders — seeded from effective values (override if active, else process profile).
             // Dev Strength: ×10 → int 0..200  |  H&D Gamma: ×100 → int 50..250  |  Sens: ×100 → int 0..200
@@ -303,6 +323,13 @@ namespace Photochemistry.AdminTooling
             c.GetSlider("sl-reciprocity") .SetValues((int)(_renderer.Physics.EffectiveReciprocity(proc)  * 100), 50,  100, 1);
             // Exposure Gain: 0.25..5.0 ×100 → 25..500
             c.GetSlider("sl-exposuregain").SetValues((int)(_renderer.Physics.EffectiveExposureGain(proc) * 100), 25,  500, 1);
+
+            // Shutter-timing boxes: seed from the active profile without re-firing the change handler.
+            _seedingTiming = true;
+            c.GetNumberInput("ni-samplecount").SetValue(proc.SampleCount);
+            c.GetNumberInput("ni-duration").SetValue(proc.DurationSeconds);
+            _seedingTiming = false;
+            UpdateSampleRateReadout();
         }
 
         // Returns a (labelBounds, sliderBounds) pair for a standard side-by-side row.
@@ -315,6 +342,72 @@ namespace Photochemistry.AdminTooling
                 ElementBounds.Fixed(labelW + 14, y, sliderW, h)
             );
         }
+
+        // Builds the dropdown option arrays from the head's registered chemistries, selecting the one
+        // currently active in the renderer. Falls back to the active chemistry if none are registered.
+        private void BuildChemistryOptions(out string[] codes, out string[] names, out int selectedIndex)
+        {
+            System.Collections.Generic.IReadOnlyList<string> registered = SensitizationRegistry.RegisteredChemistries();
+            codes = registered.Count > 0
+                ? new string[registered.Count]
+                : new[] { _renderer.ActiveProcess.Name.ToLowerInvariant() };
+            for (int i = 0; i < registered.Count; i++) codes[i] = registered[i];
+
+            names = new string[codes.Length];
+            for (int i = 0; i < codes.Length; i++) names[i] = PlateProcessProfile.Resolve(codes[i]).Name;
+
+            selectedIndex = 0;
+            string activeKey = _renderer.ActiveProcess.Name.ToLowerInvariant();
+            for (int i = 0; i < codes.Length; i++)
+                if (codes[i] == activeKey) { selectedIndex = i; break; }
+        }
+
+        private void OnChemistrySelected(string code, bool selected)
+        {
+            _renderer.SetTuningChemistry(PlateProcessProfile.Resolve(code));
+            // Reopen to reseed every slider from the newly selected chemistry's effective values.
+            TryClose();
+            TryOpen();
+        }
+
+        private bool OnSaveChemistry()
+        {
+            _renderer.SaveChemistryTuning();
+            capi.ShowChatMessage($"Saved {_renderer.ActiveProcess.Name} exposure profile to ModData.");
+            return true;
+        }
+
+        // Pushes the two timing boxes into the active chemistry's profile and refreshes the draws/sec readout.
+        private void OnTimingChanged(string _)
+        {
+            if (_seedingTiming) return;
+            int samples = ReadIntBox("ni-samplecount", _renderer.ActiveProcess.SampleCount);
+            float duration = ReadFloatBox("ni-duration", _renderer.ActiveProcess.DurationSeconds);
+            _renderer.SetTuningTiming(samples, duration);
+            UpdateSampleRateReadout();
+        }
+
+        // Recomputes "N.N draws/s" from the two boxes and colours it red past the warn threshold.
+        private void UpdateSampleRateReadout()
+        {
+            GuiElementDynamicText? rate = SingleComposer?.GetDynamicText("txt-samplerate");
+            if (rate == null) return;
+
+            int samples = ReadIntBox("ni-samplecount", 0);
+            float duration = ReadFloatBox("ni-duration", 0f);
+            float perSecond = duration > 0.0001f ? samples / duration : 0f;
+
+            rate.Font.Color = perSecond > SampleRateWarn ? _rateWarnColor : _rateOkColor;
+            rate.SetNewText($"= {perSecond:0.0} draws/s", forceRedraw: true);
+        }
+
+        private int ReadIntBox(string key, int fallback) =>
+            int.TryParse(SingleComposer?.GetNumberInput(key)?.GetText(), System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out int v) ? v : fallback;
+
+        private float ReadFloatBox(string key, float fallback) =>
+            float.TryParse(SingleComposer?.GetNumberInput(key)?.GetText(), System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out float v) ? v : fallback;
 
         private bool OnResetChemistry()
         {

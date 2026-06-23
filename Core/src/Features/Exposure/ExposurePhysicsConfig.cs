@@ -14,24 +14,19 @@ namespace Photochemistry.Exposure
         public bool Normalize       = false;
         public bool LogAccumulation = true;
 
-        // NaN means "use the active process profile's default".
-        public float DevStrength  = float.NaN;
-        public float HDGamma      = float.NaN;
-        public float RedSens      = float.NaN;
-        public float GreenSens    = float.NaN;
-        public float BlueSens     = float.NaN;
-        public float Inertia      = float.NaN;
-        public float Reciprocity  = float.NaN;
-        public float ExposureGain = float.NaN;
+        // The active chemistry's overrides (NaN per param means "use the process-profile default"). The
+        // physics flags above are model-wide and stay on this config; only these vary per chemistry, so the
+        // owner swaps this reference when the active chemistry changes. Never null.
+        public ChemistryOverrides Chem { get; set; } = new();
 
-        public float EffectiveDevStrength(in PlateProcessProfile p)  => float.IsNaN(DevStrength)  ? p.DevelopmentStrength  : DevStrength;
-        public float EffectiveHDGamma(in PlateProcessProfile p)      => float.IsNaN(HDGamma)      ? p.HDGamma             : HDGamma;
-        public float EffectiveRedSens(in PlateProcessProfile p)      => float.IsNaN(RedSens)      ? p.RedSensitivity      : RedSens;
-        public float EffectiveGreenSens(in PlateProcessProfile p)    => float.IsNaN(GreenSens)    ? p.GreenSensitivity    : GreenSens;
-        public float EffectiveBlueSens(in PlateProcessProfile p)     => float.IsNaN(BlueSens)     ? p.BlueSensitivity     : BlueSens;
-        public float EffectiveInertia(in PlateProcessProfile p)      => float.IsNaN(Inertia)      ? p.InertiaPoint        : Inertia;
-        public float EffectiveReciprocity(in PlateProcessProfile p)  => float.IsNaN(Reciprocity)  ? p.ReciprocityExponent : Reciprocity;
-        public float EffectiveExposureGain(in PlateProcessProfile p) => float.IsNaN(ExposureGain) ? p.ExposureGain        : ExposureGain;
+        public float EffectiveDevStrength(in PlateProcessProfile p)  => float.IsNaN(Chem.DevStrength)  ? p.DevelopmentStrength  : Chem.DevStrength;
+        public float EffectiveHDGamma(in PlateProcessProfile p)      => float.IsNaN(Chem.HDGamma)      ? p.HDGamma             : Chem.HDGamma;
+        public float EffectiveRedSens(in PlateProcessProfile p)      => float.IsNaN(Chem.RedSens)      ? p.RedSensitivity      : Chem.RedSens;
+        public float EffectiveGreenSens(in PlateProcessProfile p)    => float.IsNaN(Chem.GreenSens)    ? p.GreenSensitivity    : Chem.GreenSens;
+        public float EffectiveBlueSens(in PlateProcessProfile p)     => float.IsNaN(Chem.BlueSens)     ? p.BlueSensitivity     : Chem.BlueSens;
+        public float EffectiveInertia(in PlateProcessProfile p)      => float.IsNaN(Chem.Inertia)      ? p.InertiaPoint        : Chem.Inertia;
+        public float EffectiveReciprocity(in PlateProcessProfile p)  => float.IsNaN(Chem.Reciprocity)  ? p.ReciprocityExponent : Chem.Reciprocity;
+        public float EffectiveExposureGain(in PlateProcessProfile p) => float.IsNaN(Chem.ExposureGain) ? p.ExposureGain        : Chem.ExposureGain;
 
         // Copies the physics flags onto a buffer.
         public void ApplyPhysics(GpuExposureAccumulator buf)
@@ -72,28 +67,26 @@ namespace Photochemistry.Exposure
             return true;
         }
 
-        // Sets a named chemistry override. Returns false when the name is unrecognised.
+        // Sets a named override on the active chemistry. Returns false when the name is unrecognised.
         public bool SetChemistry(string param, float value)
         {
             switch (param)
             {
-                case "devstrength": DevStrength = value; break;
-                case "hdgamma":     HDGamma     = value; break;
-                case "redsens":     RedSens     = value; break;
-                case "greensens":   GreenSens   = value; break;
-                case "bluesens":    BlueSens    = value; break;
-                case "inertia":     Inertia     = value; break;
-                case "reciprocity":  Reciprocity  = value; break;
-                case "exposuregain": ExposureGain = value; break;
+                case "devstrength": Chem.DevStrength = value; break;
+                case "hdgamma":     Chem.HDGamma     = value; break;
+                case "redsens":     Chem.RedSens     = value; break;
+                case "greensens":   Chem.GreenSens   = value; break;
+                case "bluesens":    Chem.BlueSens    = value; break;
+                case "inertia":     Chem.Inertia     = value; break;
+                case "reciprocity":  Chem.Reciprocity  = value; break;
+                case "exposuregain": Chem.ExposureGain = value; break;
                 default: return false;
             }
             return true;
         }
 
-        // Clears all chemistry overrides, restoring process-profile defaults.
-        public void ResetChemistryOverrides()
-        {
-            DevStrength = HDGamma = RedSens = GreenSens = BlueSens = Inertia = Reciprocity = ExposureGain = float.NaN;
-        }
+        // Clears the active chemistry's overrides in place, restoring its process-profile defaults.
+        // Resets in place (not a new instance) so the owner's per-chemistry store keeps the same reference.
+        public void ResetChemistryOverrides() => Chem.Reset();
     }
 }

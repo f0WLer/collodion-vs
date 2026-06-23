@@ -1,10 +1,12 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using SkiaSharp;
 using Vintagestory.API.Client;
+using Vintagestory.API.Common;
 using Vintagestory.Client.NoObf;
 using Photochemistry.AdminTooling;
 using Photochemistry.ImageEffects;
 using Photochemistry.Exposure;
+using Photochemistry.Plates;
 
 namespace Photochemistry.CameraCapture
 {
@@ -70,9 +72,26 @@ namespace Photochemistry.CameraCapture
         // Post-development finishing toggle. When off, exposure preview/export stop after emulsion develop.
         internal bool ApplyFinishing = false;
 
-        // Tunable physics + chemistry overrides for this session, applied to each new buffer.
+        // Tunable physics flags + the active chemistry's overrides, applied to each new buffer.
         // The admin physics dialog and the live preview read/tune this directly.
         internal ExposurePhysicsConfig Physics { get; } = new();
+
+        // Persisted per-chemistry overrides (keyed by lowercase chemistry name), loaded once at construction.
+        // Physics.Chem always points at the active chemistry's entry here, so tuning one chemistry never bleeds
+        // into another and real exposures pick up that chemistry's saved tuning.
+        private readonly Dictionary<string, ChemistryOverrides> _chemOverrides;
+
+        // The active chemistry's override set, creating an empty (inherit-defaults) one on first use.
+        private ChemistryOverrides OverridesFor(string chemistryName)
+        {
+            string key = (chemistryName ?? string.Empty).ToLowerInvariant();
+            if (!_chemOverrides.TryGetValue(key, out ChemistryOverrides? ov))
+            {
+                ov = new ChemistryOverrides();
+                _chemOverrides[key] = ov;
+            }
+            return ov;
+        }
 
         // Live, session-only effects (seeded from wetplate.json at construction). The exposure-physics
         // dialog mutates this directly so the preview reflects edits immediately; it is never persisted.
@@ -94,11 +113,43 @@ namespace Photochemistry.CameraCapture
             return ok;
         }
 
-        // Clears all chemistry overrides and restores process defaults on the live buffer.
+        // Clears the active chemistry's overrides and restores process defaults on the live buffer.
         internal void ResetChemistryOverrides()
         {
             Physics.ResetChemistryOverrides();
             if (_buffer != null) Physics.Apply(_buffer, _process);
+        }
+
+        // Switches which chemistry the tuner edits and previews, pointing Physics at that chemistry's override
+        // set. Ignored while an exposure is in flight so a live capture's profile/timing is never disturbed.
+        internal void SetTuningChemistry(PlateProcessProfile process)
+        {
+            if (State == ExposureState.Capturing || State == ExposureState.Paused) return;
+            Physics.Chem = OverridesFor(process.Name);
+            _process = ApplyTiming(process, Physics.Chem);
+            if (_buffer != null) Physics.Apply(_buffer, _process);
+            RequestPreviewRefresh();
+        }
+
+        // Sets the active chemistry's shutter timing (sample count over duration) from the tuner's boxes and
+        // rebuilds the active profile. Ignored mid-exposure so a live capture's frame target isn't moved.
+        internal void SetTuningTiming(int sampleCount, float durationSeconds)
+        {
+            if (State == ExposureState.Capturing || State == ExposureState.Paused) return;
+            Physics.Chem.SampleCount     = Math.Max(1, sampleCount);
+            Physics.Chem.DurationSeconds = Math.Max(0.05f, durationSeconds);
+            _process = ApplyTiming(_process, Physics.Chem);
+            RequestPreviewRefresh();
+        }
+
+        // Persists the active chemistry's effective parameters (materialised to concrete values), merged into
+        // any previously-saved tuning so other chemistries are preserved. These load as that chemistry's
+        // defaults on the next launch.
+        internal void SaveChemistryTuning()
+        {
+            Dictionary<string, ChemistryOverrides> data = ChemistryProfileStore.Load(_clientApi.Logger);
+            data[_process.Name.ToLowerInvariant()] = Physics.Chem.Materialize(_process);
+            ChemistryProfileStore.Save(data, _clientApi.Logger);
         }
 
         // Re-resolves the buffer immediately if capturing, otherwise resets the idle-preview timer.
@@ -118,6 +169,34 @@ namespace Photochemistry.CameraCapture
             _main = (ClientMain)capi.World;
             _platform = (ClientPlatformWindows)_main.Platform;
             _baselineEffects = ImageEffectsPipelineBridge.LoadCaptureBaseline(capi);
+            _chemOverrides = LoadOrSeedChemistryProfiles(capi.Logger);
+            Physics.Chem = OverridesFor(_process.Name);
+            _process = ApplyTiming(_process, Physics.Chem);
+        }
+
+        // Bakes the chemistry's shutter-timing overrides (samples / duration) into a profile, leaving its
+        // emulsion-response fields untouched (those are applied per-buffer via ExposurePhysicsConfig). NaN
+        // values inherit the profile default; duration/samples are clamped to sane minimums.
+        private static PlateProcessProfile ApplyTiming(PlateProcessProfile p, ChemistryOverrides ov)
+        {
+            float duration = float.IsNaN(ov.DurationSeconds) ? p.DurationSeconds : Math.Max(0.05f, ov.DurationSeconds);
+            int samples = float.IsNaN(ov.SampleCount) ? p.SampleCount : Math.Max(1, (int)MathF.Round(ov.SampleCount));
+            return p.WithTiming(duration, samples);
+        }
+
+        // Reads the per-chemistry exposure profiles from disk, creating the file on first run by seeding it
+        // from the hardcoded PlateProcessProfile defaults for the head's registered chemistries. After this
+        // the file is the source of truth: the values returned here drive every exposure and the tuner sliders.
+        private static Dictionary<string, ChemistryOverrides> LoadOrSeedChemistryProfiles(ILogger? log)
+        {
+            Dictionary<string, ChemistryOverrides> profiles = ChemistryProfileStore.Load(log);
+            if (profiles.Count > 0) return profiles;
+
+            foreach (string code in SensitizationRegistry.RegisteredChemistries())
+                profiles[code.ToLowerInvariant()] = new ChemistryOverrides().Materialize(PlateProcessProfile.Resolve(code));
+
+            if (profiles.Count > 0) ChemistryProfileStore.Save(profiles, log);
+            return profiles;
         }
 
         private void CompleteAutoStop(long nowMs)
@@ -179,7 +258,8 @@ namespace Photochemistry.CameraCapture
         internal void Start(VirtualCameraState cameraState, PlateProcessProfile process)
         {
             Discard(); // Clears buffer/state but preserves any prepared _camera.
-            _process = process;
+            Physics.Chem = OverridesFor(process.Name);   // apply this chemistry's saved tuning to the exposure
+            _process = ApplyTiming(process, Physics.Chem); // bake its samples/duration into the active profile
             LastFaultMessage = null;
             _elapsedSinceLastSample  = 0f;
             _elapsedSinceLastPreview = 0f;

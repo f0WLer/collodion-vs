@@ -1,5 +1,4 @@
 ﻿using OpenTK.Graphics.OpenGL;
-using SkiaSharp;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.Client.NoObf;
@@ -373,52 +372,16 @@ namespace Photochemistry.CameraCapture
         /// the call is a no-op and the exposure continues from zero frames.
         /// </summary>
         internal void PrimeFromPartial(byte[] data)
-        {
-            if (_buffer == null) return;
-
-            if (!_buffer.DeserializeAccumulation(data, out int restoredFrames))
-            {
-                _clientApi.Logger.Warning("photochemistry: partial exposure blob is incompatible with the current buffer dimensions — starting fresh.");
-                return;
-            }
-
-            _clientApi.Logger.Notification($"photochemistry: restored {restoredFrames} accumulated frames from saved partial exposure.");
-        }
+            => ExposureFrameOps.RestorePartial(_buffer, _clientApi.Logger, data);
 
         // Resolves and shapes one debug-preview frame using the same crop/scale/finishing policy
         // as the normal virtual camera preview path.
         // Normalises by actual frame count so the preview shows a "final-exposure" prediction
         // rather than the current underexposed state (which would be proportionally darker for
         // every frame before the target count is reached).
+        // Finishing applies the active chemistry's post-effects (tuned live in the exposure-physics dialog).
         private void PushPreviewFrame()
-        {
-            if (_buffer == null || ExposurePreviewSink == null || _buffer.FramesAccumulated == 0) return;
-
-            ViewfinderConfig? cfg = PhotochemistryConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder;
-            // Skip the GPU→CPU resolve when no one is displaying the preview (DebugPreviewPeak off).
-            if (!(cfg?.DebugPreviewPeak ?? false)) return;
-            int maxDimension = cfg.DebugPreviewMaxDimension;
-
-            SKBitmap developed = _buffer.Resolve();
-
-            using (developed)
-            {
-                SKBitmap cropped = PhotoCropMath.ScaleDownAndCenterCropToPlateAspect(developed, maxDimension);
-                try
-                {
-                    if (ApplyFinishing)
-                    {
-                        // Apply the active chemistry's post-effects (tuned live in the exposure-physics dialog).
-                        ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", Effects);
-                    }
-                    ExposurePreviewSink.StoreExposureFrame(cropped);
-                }
-                finally
-                {
-                    cropped.Dispose();
-                }
-            }
-        }
+            => ExposureFrameOps.PublishDevelopedPreview(_clientApi, _buffer, ExposurePreviewSink, ApplyFinishing, Effects);
 
         // Minimum wall-clock seconds between consecutive preview pushes.
         private const float PreviewCadenceSeconds = 0.25f;

@@ -1,5 +1,4 @@
-﻿using SkiaSharp;
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Photochemistry.AdminTooling;
 using Photochemistry.ImageEffects;
 using Photochemistry.Exposure;
@@ -176,17 +175,7 @@ namespace Photochemistry.CameraCapture
         /// When the blob's dimensions do not match the current buffer the call is a no-op.
         /// </summary>
         internal void PrimeFromPartial(byte[] data)
-        {
-            if (_buffer == null) return;
-
-            if (!_buffer.DeserializeAccumulation(data, out int restoredFrames))
-            {
-                _capi.Logger.Warning("photochemistry: partial exposure blob is incompatible with the current buffer dimensions — starting fresh.");
-                return;
-            }
-
-            _capi.Logger.Notification($"photochemistry: restored {restoredFrames} accumulated frames from saved partial exposure.");
-        }
+            => ExposureFrameOps.RestorePartial(_buffer, _capi.Logger, data);
 
         private const float PreviewCadenceSeconds = 0.25f;
 
@@ -258,28 +247,11 @@ namespace Photochemistry.CameraCapture
             OnAutoPause?.Invoke();
         }
 
+        // Mirrors the mounted-camera preview gate: respect ApplyFinishing when the dialog is wired in.
         private void PushPreviewFrame()
-        {
-            if (_buffer == null || ExposurePreviewSink == null || _buffer.FramesAccumulated == 0) return;
-
-            ViewfinderConfig? cfg = PhotochemistryConfigAccess.ResolveClientConfig(_capi)?.Viewfinder;
-            if (!(cfg?.DebugPreviewPeak ?? false)) return;
-            int maxDimension = cfg.DebugPreviewMaxDimension;
-
-            using SKBitmap developed = _buffer.Resolve();
-            SKBitmap cropped = PhotoCropMath.ScaleDownAndCenterCropToPlateAspect(developed, maxDimension);
-            try
-            {
-                // Mirrors the mounted-camera preview gate: respect ApplyFinishing when the dialog is wired in.
-                if (LiveEffectsSource == null || LiveEffectsSource.ApplyFinishing)
-                    ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", Effects);
-                ExposurePreviewSink.StoreExposureFrame(cropped);
-            }
-            finally
-            {
-                cropped.Dispose();
-            }
-        }
+            => ExposureFrameOps.PublishDevelopedPreview(
+                _capi, _buffer, ExposurePreviewSink,
+                LiveEffectsSource == null || LiveEffectsSource.ApplyFinishing, Effects);
 
         private void EnsureGpuAccumulator(int sourceWidth, int sourceHeight, int sampleCount)
         {

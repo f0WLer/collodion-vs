@@ -134,10 +134,12 @@ namespace Photochemistry.Frame
 
             MeshData cloned = baseMesh.Clone();
             PhotoMeshUtil.StampUvByRotationCropped(cloned, texPos, _photoUvRotation, photoAspect, PhotoMeshUtil.PhotoTargetAspect);
-            // Blend the silver smoothly over the frame's static black backing (the recessed
-            // #backing face in framedwall.json) so it reads as a positive ambrotype rather than
-            // an alpha-tested hard cutout in the opaque pass.
-            PhotoMeshUtil.SetTransparentRenderPass(cloned);
+            // Glass plates blend the silver positive smoothly over the frame's static black backing
+            // (the recessed #backing face in framedwall.json) so it reads as a positive ambrotype rather
+            // than an alpha-tested hard cutout in the opaque pass. A paper print is an opaque reflective
+            // positive and stays in the opaque pass.
+            if (!PhotoPlateRenderUtil.IsPaperMedium(stack))
+                PhotoMeshUtil.SetTransparentRenderPass(cloned);
 
             // StampUvByRotationCropped wrote absolute atlas UVs for texPos's page, but left
             // TextureIds/TextureIndices pointing at the plane block's baked (linen) page. When

@@ -10,9 +10,14 @@ namespace Photochemistry.Plates.Blocks
         {
             base.OnLoaded(api);
 
-            // These blocks use per-texture alpha. If rendered in the opaque pass, they will write depth
-            // and can cause "see under terrain" artifacts because terrain behind them never renders.
-            RenderPass = EnumChunkRenderPass.Transparent;
+            // Glass plates use per-texture alpha. If rendered in the opaque pass they write depth and can
+            // cause "see under terrain" artifacts because terrain behind them never renders. Paper substrates
+            // are fully opaque, so they stay in the opaque pass and read as a solid sheet instead of
+            // translucent glass.
+            bool isPaper = string.Equals(
+                Attributes?["plateSubstrate"]?.AsString(null), "paper", System.StringComparison.OrdinalIgnoreCase);
+            if (!isPaper)
+                RenderPass = EnumChunkRenderPass.Transparent;
         }
 
         public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)

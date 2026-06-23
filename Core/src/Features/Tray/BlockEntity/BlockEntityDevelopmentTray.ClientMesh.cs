@@ -124,12 +124,18 @@ namespace Photochemistry.Tray
             {
                 ITexPositionSource baseSource = capi.Tesselator.GetTextureSource(Block);
 
-                // During the Developing pours the tray block stays "-exposed" (there is no
-                // "-developing" block), so its plate texture is plate-exposed. Swap to the
-                // developed texture so the body matches the stage. Other stages already carry the
-                // right plate texture via their block type.
+                // Paper plates carry their own opaque sheet texture for every stage (via the plate item's
+                // own "plate" texture, e.g. kosphotography:item/paper-sensitized / paper-developed), so the
+                // tray body reads as paper rather than the glass texture the tray block carries.
+                // Glass plates keep using the tray block's texture, swapping to plate-developed during the
+                // Developing pours (the tray stays "-exposed" because there is no "-developing" block).
+                bool isPaper = PhotoPlateRenderUtil.IsPaperMedium(plate);
                 ITexPositionSource plateSource = baseSource;
-                if (plateStage == PlateStage.Developing
+                if (isPaper && TryGetPlatePaperTexture(capi, plate, out TextureAtlasPosition paperTex))
+                {
+                    plateSource = new PlatePhotoTextureSource(baseSource, paperTex);
+                }
+                else if (plateStage == PlateStage.Developing
                     && TryGetItemPlateTexture(capi, "plate-developed", out TextureAtlasPosition devTex))
                 {
                     plateSource = new PlatePhotoTextureSource(baseSource, devTex);
@@ -155,8 +161,10 @@ namespace Photochemistry.Tray
                 mesh.Translate(0f, 0.0006f, 0f);
 
                 // Glass plate: alpha-blend so the texture's baked translucency is visible (block
-                // faces otherwise render in the opaque pass, which ignores partial alpha).
-                ForceTransparentPass(mesh);
+                // faces otherwise render in the opaque pass, which ignores partial alpha). Paper is a
+                // solid opaque sheet and stays in the opaque pass.
+                if (!isPaper)
+                    ForceTransparentPass(mesh);
             }
             catch
             {
@@ -194,7 +202,9 @@ namespace Photochemistry.Tray
 
                     // One offset step above the plate's up face (the pour liquid sits above both).
                     photoMesh.Translate(0f, 0.0012f, 0f);
-                    ForceTransparentPass(photoMesh);
+                    // Glass silver image alpha-blends over the plate; a paper positive is opaque.
+                    if (!PhotoPlateRenderUtil.IsPaperMedium(plate))
+                        ForceTransparentPass(photoMesh);
 
                     // Pad the plate's per-quad passes with -1 (block default) so the overlay's
                     // Transparent entries stay aligned to the overlay quads after the merge.
@@ -211,16 +221,37 @@ namespace Photochemistry.Tray
             return true;
         }
 
-        // Inserts (once per texture) and returns an item plate texture in the block atlas, so the
-        // tray can render a stage-specific plate texture that the current block type doesn't carry
-        // (used for the Developing stage, where the block is still "-exposed").
+        // Glass-plate convenience overload: loads photochemistry:textures/item/<name>.png into the block
+        // atlas (used for the Developing stage, where the tray block is still "-exposed").
         private static bool TryGetItemPlateTexture(ICoreClientAPI capi, string textureName, out TextureAtlasPosition texPos)
+            => TryGetPlateTextureFromAsset(
+                capi,
+                new AssetLocation("photochemistry", "devtray-" + textureName),
+                new AssetLocation("photochemistry", "textures/item/" + textureName + ".png"),
+                out texPos);
+
+        // Resolves the plate item's own "plate" texture (e.g. kosphotography:item/paper-sensitized or
+        // paper-developed) so the tray body renders the correct opaque paper sheet for the current stage,
+        // regardless of which asset domain the texture lives in.
+        private static bool TryGetPlatePaperTexture(ICoreClientAPI capi, ItemStack plate, out TextureAtlasPosition texPos)
+        {
+            texPos = capi.BlockTextureAtlas.UnknownTexturePosition;
+            if (plate.Collectible is not Item item || item.Textures == null) return false;
+            if (!item.Textures.TryGetValue("plate", out CompositeTexture? ct) || ct?.Base == null) return false;
+
+            AssetLocation baseLoc = ct.Base;
+            var atlasKey = new AssetLocation(baseLoc.Domain, "devtray-plate-" + baseLoc.Path.Replace('/', '-'));
+            var asset = new AssetLocation(baseLoc.Domain, "textures/" + baseLoc.Path + ".png");
+            return TryGetPlateTextureFromAsset(capi, atlasKey, asset, out texPos);
+        }
+
+        // Inserts (once per atlas key) and returns a texture in the block atlas, loading its PNG from the
+        // given asset path, so the tray can render a plate texture the current tray block type doesn't carry.
+        private static bool TryGetPlateTextureFromAsset(ICoreClientAPI capi, AssetLocation atlasKey, AssetLocation asset, out TextureAtlasPosition texPos)
         {
             texPos = capi.BlockTextureAtlas.UnknownTexturePosition;
             try
             {
-                var atlasKey = new AssetLocation("photochemistry", "devtray-" + textureName);
-                var asset = new AssetLocation("photochemistry", "textures/item/" + textureName + ".png");
                 capi.BlockTextureAtlas.GetOrInsertTexture(
                     atlasKey,
                     out int _,

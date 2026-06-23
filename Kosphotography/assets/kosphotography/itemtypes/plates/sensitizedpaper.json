@@ -1,9 +1,9 @@
 {
   "code": "sensitizedpaper",
   "class": "SensitizedPlate",
-  "shape": { "base": "photochemistry:item/plates/plate" },
+  "shape": { "base": "kosphotography:item/plates/paper" },
   "textures": {
-    "plate": { "base": "photochemistry:item/plate-silvered" }
+    "plate": { "base": "kosphotography:item/paper-sensitized" }
   },
   "storageFlags": 257,
   "attributes": {

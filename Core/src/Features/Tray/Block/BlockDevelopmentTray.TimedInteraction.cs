@@ -218,7 +218,10 @@ namespace Photochemistry.Tray
                 return false;
             }
 
-            Item? photoPlateItem = world.GetItem(_photoPlateItemCode);
+            // Fixing only advances the stage, so keep the plate's current developed itemtype: a paper
+            // print stays a paperprint, while a glass plate is already the photoplate item at this point.
+            // Falling back to the configured glass photoplate only if the current collectible isn't an Item.
+            Item? photoPlateItem = plate.Collectible as Item ?? world.GetItem(_photoPlateItemCode);
             if (photoPlateItem == null) return false;
 
             ItemStack finishedPlate = new ItemStack(photoPlateItem);

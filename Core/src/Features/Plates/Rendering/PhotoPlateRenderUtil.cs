@@ -7,6 +7,14 @@ namespace Photochemistry.Plates.Rendering
     {
         private const int MaxDeveloperPours = 5;
 
+        // True when the plate's itemtype declares the paper-print medium (an opaque reflective positive)
+        // rather than the default silver-on-glass density map. Drives opaque-vs-transparent render choices
+        // across the held item, the development tray, frames, and placed plate blocks.
+        public static bool IsPaperMedium(ItemStack? stack)
+            => string.Equals(
+                stack?.Collectible?.Attributes?["plateMedium"]?.AsString(null),
+                "paperprint", System.StringComparison.OrdinalIgnoreCase);
+
         // Resolves effective developer progress for render-stage visuals, clamped to process limits.
         private static void ResolveDevelopedRenderProgress(ICoreClientAPI capi, ItemStack itemstack, out int developPours, out int maxDeveloperPours)
         {

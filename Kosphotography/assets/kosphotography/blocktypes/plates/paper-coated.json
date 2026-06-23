@@ -4,7 +4,7 @@
   "entityClass": "BlockEntityGlassPlate",
   "blockmaterial": "Cloth",
   "drawtype": "json",
-  "shape": { "base": "photochemistry:block/plates/plate" },
+  "shape": { "base": "kosphotography:block/plates/paper" },
   "faceCullMode": "NeverCull",
   "sideao": { "all": false },
   "attributes": {
@@ -14,7 +14,7 @@
     "sensitizedItemCode": "kosphotography:sensitizedpaper"
   },
   "textures": {
-    "all": { "base": "photochemistry:item/plate-coated" }
+    "all": { "base": "kosphotography:item/paper-coated" }
   },
   "sounds": {
     "place": "game:block/plate",

@@ -1,9 +1,9 @@
 {
   "code": "paperprint",
   "class": "PhotoPlate",
-  "shape": { "base": "photochemistry:item/plates/plate" },
+  "shape": { "base": "kosphotography:item/plates/paper" },
   "textures": {
-    "plate": { "base": "photochemistry:item/plate-developed" }
+    "plate": { "base": "kosphotography:item/paper-developed" }
   },
   "attributes": {
     "renderPhotoOverlay": true,

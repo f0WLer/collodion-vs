@@ -15,9 +15,6 @@ namespace Photochemistry.CameraCapture
     /// </summary>
     internal static class ExposureFrameOps
     {
-        // Resolves the current buffer to a developed preview frame, crops it to the plate aspect,
-        // optionally applies finishing effects, and stores it in the preview sink.
-        // No-op when there is nothing to show or the debug preview peek is off.
         internal static void PublishDevelopedPreview(
             ICoreClientAPI capi,
             GpuExposureAccumulator? buffer,
@@ -45,8 +42,6 @@ namespace Photochemistry.CameraCapture
             }
         }
 
-        // Restores a previously serialized accumulation blob into the live buffer. No-op when the
-        // buffer is unallocated; logs and starts fresh when the blob's dimensions are incompatible.
         internal static void RestorePartial(GpuExposureAccumulator? buffer, ILogger logger, byte[] data)
         {
             if (buffer == null) return;

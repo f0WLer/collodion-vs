@@ -9,8 +9,6 @@ using Vintagestory.Client.NoObf;
 
 namespace Photochemistry.CameraCapture
 {
-    // Complete pose/config snapshot for handing a virtual camera between preview,
-    // exposure, and one-shot capture code without losing dimension or self-portrait state.
     internal readonly struct VirtualCameraState
     {
         internal readonly Vec3d Position;
@@ -31,8 +29,7 @@ namespace Photochemistry.CameraCapture
         }
     }
 
-    // Off-screen virtual camera backed by a dedicated OpenGL FBO.
-    // Adapted from CamerasLib (Moby_) - Oblique projection removed, FBO setup and render pipeline unchanged.
+    // Adapted from CamerasLib (Moby_) — oblique projection removed, FBO setup and render pipeline unchanged.
     internal sealed class VirtualCamera
     {
         private readonly struct SavedMainCameraState
@@ -67,9 +64,7 @@ namespace Photochemistry.CameraCapture
             }
         }
 
-        // Snapshot of every camera/renderer field flipped to render the local player in
-        // third-person for a self-portrait pass. Captured up-front so Restore() can put
-        // the player-facing camera back exactly as it was.
+        // Captured up-front so Restore() can put the player-facing camera back exactly as it was.
         private readonly struct SelfPortraitSnapshot
         {
             internal readonly int TppMin;
@@ -105,7 +100,6 @@ namespace Photochemistry.CameraCapture
 
         internal float Fov = 0f;
 
-        // Render the local player's full third-person model from this virtual viewpoint.
         internal bool SelfPortrait = false;
 
         internal int Dimension = 0;
@@ -318,8 +312,6 @@ namespace Photochemistry.CameraCapture
             // the original value by RestoreMainCamera via SavedMainCameraState.Fov.
         }
 
-        // Returns an anchor sitting near CameraPos: allocates one centered on the map if missing,
-        // and re-anchors to CameraPos when CameraPos has drifted further than maxDistSq.
         // Mirrors the rebase logic in PlayerCamera so single-precision uniforms stay usable.
         private Vec3d EnsureReferenceAnchor(Vec3d? anchor, double maxDistSq)
         {
@@ -451,9 +443,6 @@ namespace Photochemistry.CameraCapture
             }
         }
 
-        // Re-evaluate entity.IsRendered for all non-player entities using the virtual camera's
-        // frustum (which is already active via SyncPerspectiveState).  Returns a snapshot of the
-        // original flags so they can be restored after the virtual passes complete.
         private Dictionary<long, bool> OverrideEntityVisibilityForVirtualCamera()
         {
             Entity playerEntity = _capi.World.Player.Entity;

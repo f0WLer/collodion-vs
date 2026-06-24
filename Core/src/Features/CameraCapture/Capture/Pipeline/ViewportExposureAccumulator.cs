@@ -5,15 +5,6 @@ using Photochemistry.Exposure;
 
 namespace Photochemistry.CameraCapture
 {
-    /// <summary>
-    /// Accumulates frames from the player's live viewport into a <see cref="GpuExposureAccumulator"/>.
-    /// Registered as an <c>IRenderer</c> at <c>EnumRenderStage.AfterBlit</c> while actively capturing;
-    /// blits the back buffer each sample interval directly into the GPU accumulator’s RGBA32F ping-pong FBOs
-    /// via a GLSL accumulate shader. No CPU readback occurs until <see cref="Export"/> at shutter close.
-    /// <para>Lifecycle: <see cref="Start"/> → <see cref="ExposureState.Capturing"/> → optional
-    /// <see cref="Pause"/>/<see cref="Resume"/> → <see cref="Stop"/> or <see cref="Export"/>.
-    /// <see cref="OnAutoHalt"/> fires when a timer or sample-count stop policy is satisfied.</para>
-    /// </summary>
     internal sealed class ViewportExposureAccumulator : IGameplayExposureAccumulator, IRenderer
     {
         private readonly ICoreClientAPI _capi;
@@ -26,13 +17,10 @@ namespace Photochemistry.CameraCapture
         private bool _rendererRegistered;
         private bool _disposed;
 
-        /// <summary>Fired when an auto-halt policy transitions the accumulator from <see cref="ExposureState.Capturing"/> to <see cref="ExposureState.Done"/>.</summary>
         internal Action? OnAutoHalt { get; set; }
-
-        /// <summary>Fired when the stop policy auto-pauses the accumulator (resumable), instead of sealing.</summary>
         internal Action? OnAutoPause { get; set; }
 
-        /// <summary>Optional head-supplied shutter stop policy. Null ⇒ default hard-cap auto-seal (manual shutter).</summary>
+        // Null falls back to hard-cap auto-seal (manual shutter).
         internal IExposureStopCondition? StopCondition { get; set; }
 
         internal IExposurePreviewSink? ExposurePreviewSink { get; set; }
@@ -56,13 +44,9 @@ namespace Photochemistry.CameraCapture
         internal VirtualExposureRenderer? LiveEffectsSource { get; set; }
 
         private ImageEffectsConfig Effects
-            => LiveEffectsSource?.Effects ?? ChemistryProfileRegistry.Instance.Get(_process.Name).PostEffects;
+            => LiveEffectsSource?.PreviewEffects ?? ChemistryProfileRegistry.Instance.Get(_process.Name).PostEffects;
 
-        /// <summary>
-        /// Allocates the GPU accumulator and registers this renderer at <c>AfterBlit</c> ahead of
-        /// shutter press, pre-compiling GLSL programs and allocating RGBA32F ping-pong textures so
-        /// there is no first-frame GPU resource stall when the player opens the shutter.
-        /// </summary>
+        // Pre-allocates GPU resources to avoid a first-frame stall when the shutter opens.
         internal void Prime()
         {
             if (_disposed) return;
@@ -74,10 +58,6 @@ namespace Photochemistry.CameraCapture
             RegisterRenderer();
         }
 
-        /// <summary>
-        /// Starts a fresh accumulation session with the given chemistry and stop policy.
-        /// If already <see cref="ExposureState.Paused"/>, resumes instead. No-op when already capturing.
-        /// </summary>
         internal void Start(PlateProcessProfile process)
         {
             if (_disposed) return;
@@ -105,7 +85,6 @@ namespace Photochemistry.CameraCapture
             ViewportExposureSuppressContext.ExposureCapturing = true;
             ExposurePreviewSink?.BeginExposurePassthrough();
 
-            // at the end of Start(), after State = ExposureState.Capturing:
             _maxFrames = PhotochemistryConfigAccess.ResolveClientConfig(_capi)?.Viewfinder?.MaxAccumulatedFrames
                 ?? ViewfinderConfig.DefaultMaxAccumulatedFrames;
         }
@@ -144,10 +123,6 @@ namespace Photochemistry.CameraCapture
             State = ExposureState.Done;
         }
 
-        /// <summary>
-        /// Seals the exposure: resolves the buffer, applies finishing effects, and saves a PNG.
-        /// Returns the saved file name. Throws when no frames have been accumulated.
-        /// </summary>
         public string Export(ImageEffectsConfig? effectsOverride = null)
         {
             if (_buffer == null || _buffer.FramesAccumulated == 0)
@@ -159,21 +134,11 @@ namespace Photochemistry.CameraCapture
             return ExposureSeal.ToPhoto(_buffer, maxDim, "viewport-exposure", effectsOverride ?? Effects);
         }
 
-        /// <summary>
-        /// Serializes the current accumulated frame sums for pause/resume and tray-seal workflows.
-        /// Returns <see langword="null"/> when no frames have been accumulated.
-        /// </summary>
         internal byte[]? ExportPartial()
         {
             return _buffer?.SerializeAccumulation();
         }
 
-        /// <summary>
-        /// Restores a previously serialized accumulation blob into the live buffer after <see cref="Start"/> is called.
-        /// Compatible with blobs produced by either <see cref="ViewportExposureAccumulator"/> or
-        /// <see cref="VirtualExposureRenderer"/> (both use <see cref="GpuExposureAccumulator"/> serialization).
-        /// When the blob's dimensions do not match the current buffer the call is a no-op.
-        /// </summary>
         internal void PrimeFromPartial(byte[] data)
             => ExposureFrameOps.RestorePartial(_buffer, _capi.Logger, data);
 
@@ -197,8 +162,6 @@ namespace Photochemistry.CameraCapture
             // GPU blit scales into the fixed-size staging FBO, so viewport resize needs no special handling.
             _buffer.Accumulate(0, w, h);
 
-            // Consult the shutter stop policy. With no head-supplied condition this falls back to the
-            // hard-cap auto-seal (today's manual-shutter behavior).
             ExposureStopAction action = StopCondition?.Evaluate(_buffer.FramesAccumulated, _elapsedSinceResume, _maxFrames, TargetFrames)
                 ?? (_buffer.FramesAccumulated >= _maxFrames ? ExposureStopAction.AutoSeal : ExposureStopAction.Continue);
 
@@ -236,9 +199,7 @@ namespace Photochemistry.CameraCapture
             OnAutoHalt?.Invoke();
         }
 
-        // Auto-pause path (e.g. timed-shutter burst elapsed): suspend accumulation but keep the buffer
-        // and renderer alive so the exposure can resume. Mirrors Pause(); the OnAutoPause callback runs
-        // the same bookkeeping (persist partial, notify server, exit viewfinder) as a manual pause.
+        // Keep the buffer and renderer alive so the exposure can resume — mirrors Pause().
         private void CompleteAutoPause()
         {
             State = ExposureState.Paused;

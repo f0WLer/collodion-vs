@@ -9,17 +9,6 @@ using Photochemistry.Plates;
 
 namespace Photochemistry.CameraCapture
 {
-    /// <summary>
-    /// Persistent renderer that drives a <see cref="VirtualCamera"/> across consecutive game frames,
-    /// accumulating pixel data via a <see cref="GpuExposureAccumulator"/>.
-    /// Registered at <c>EnumRenderStage.Before</c> while a session is active.
-    /// <para>Lifecycle: <see cref="Start"/> → Capturing → optional <see cref="Pause"/>/<see cref="Resume"/> →
-    /// <see cref="Stop"/> (preserves buffer) or <see cref="Discard"/> (clears buffer).  <see cref="Export"/>
-    /// can be called any time frames exist; <see cref="ExportPartial"/> serializes the raw buffer for
-    /// cross-session persistence.</para>
-    /// <para><see cref="ApplyFinishing"/> defaults to <see langword="false"/>; finishing is applied
-    /// by <see cref="PartialExposureSealer"/> at development time, not here.</para>
-    /// </summary>
     internal sealed class VirtualExposureRenderer : IRenderer, IDisposable
     {
         private readonly ICoreClientAPI _clientApi;
@@ -32,7 +21,6 @@ namespace Photochemistry.CameraCapture
         private float _elapsedSinceLastSample;
         private float _elapsedSinceLastPreview;
 
-        // Wall-clock shutter timing (milliseconds from _capi.ElapsedMilliseconds).
         private long _shutterStartMs;
         private long _pauseStartedMs;
         private long _shutterFrozenMs;
@@ -45,16 +33,10 @@ namespace Photochemistry.CameraCapture
         private static void Diag(string msg) =>
             PhotochemistryModSystem.ClientInstance?.BestEffortLogger?.Notification("photochemistry[diag]: " + msg);
 
-        // When set, the exposure renderer pushes developed preview frames here while capturing,
-        // keeping the debug preview window live during long exposures.
         internal IExposurePreviewSink? ExposurePreviewSink { get; set; }
-
-        // Process profile applied to the current or next exposure session.
-        // Controls timing (duration, sample count) and emulsion response (spectral weights, H&D curve).
         internal PlateProcessProfile ActiveProcess => _process;
 
         internal ExposureState State { get; private set; } = ExposureState.Idle;
-        // Set when a render exception transitions the session to Faulted; cleared on Start.
         internal string? LastFaultMessage { get; private set; }
         internal int FramesAccumulated => _buffer?.FramesAccumulated ?? 0;
         internal int CapFrameCount => _process.SampleCount;
@@ -62,43 +44,33 @@ namespace Photochemistry.CameraCapture
         private long GetEffectiveShutterNowMs()
             => _shutterFrozenMs != 0 ? _shutterFrozenMs : _clientApi.ElapsedMilliseconds;
 
-        // Wall-clock time elapsed since shutter open. Returns 0 when no exposure is active.
         internal float ElapsedSeconds
             => _shutterStartMs == 0 ? 0f : Math.Max(0f, (GetEffectiveShutterNowMs() - _shutterStartMs) / 1000f);
 
-        // Post-development finishing toggle. When off, exposure preview/export stop after emulsion develop.
         internal bool ApplyFinishing = false;
-
-        // Tunable physics flags + the active chemistry's overrides, applied to each new buffer.
-        // The admin physics dialog and the live preview read/tune this directly.
         internal ExposurePhysicsConfig Physics { get; } = new();
 
-        // Live, preview-only working copies of the active chemistry's profile, seeded from the saved config.
-        // The dialog edits THESE (never the saved profile), so they only affect the preview window; develop and
-        // every other real output reads the saved profile directly. Save copies these back into the config.
-        private ImageEffectsConfig _liveEffects = new();
-        private string _liveChemistry = string.Empty;
+        // The dialog edits these; SaveChemistryTuning commits them to the saved profile.
+        private ImageEffectsConfig _previewEffects = new();
+        private string _previewChemistryName = string.Empty;
 
-        // Re-seeds the live working copies from a chemistry's saved profile (on a chemistry change only, so
-        // in-progress edits survive a same-chemistry exposure Start).
-        private void SeedLiveFrom(string chemistry)
+        private void SeedPreviewFrom(string chemistry)
         {
             ChemistryProfile prof = ChemistryProfileRegistry.Instance.Get(chemistry);
             Physics.Chem = prof.ExposurePhysics.Clone();
-            _liveEffects = prof.PostEffects.Clone();
-            _liveChemistry = chemistry;
+            _previewEffects = prof.PostEffects.Clone();
+            _previewChemistryName = chemistry;
         }
 
-        private void EnsureLiveFor(string chemistry)
+        // Only reseed when the chemistry changes — preserves in-progress dialog edits.
+        private void EnsurePreviewFor(string chemistry)
         {
-            if (!string.Equals(_liveChemistry, chemistry, StringComparison.OrdinalIgnoreCase)) SeedLiveFrom(chemistry);
+            if (!string.Equals(_previewChemistryName, chemistry, StringComparison.OrdinalIgnoreCase)) SeedPreviewFrom(chemistry);
         }
 
-        // The active chemistry's live (preview-only) post-effects. The exposure-physics dialog mutates this
-        // copy so the preview reflects edits immediately, without touching the saved profile until Save.
-        internal ImageEffectsConfig Effects => _liveEffects;
+        internal ImageEffectsConfig PreviewEffects => _previewEffects;
 
-        // Sets a named physics flag and reapplies it to the live buffer (if any).
+
         internal bool SetPhysics(string flag, bool value)
         {
             bool ok = Physics.SetPhysics(flag, value);
@@ -106,7 +78,6 @@ namespace Photochemistry.CameraCapture
             return ok;
         }
 
-        // Sets a named chemistry override and reapplies it to the live buffer (if any).
         internal bool SetChemistry(string param, float value)
         {
             bool ok = Physics.SetChemistry(param, value);
@@ -114,49 +85,40 @@ namespace Photochemistry.CameraCapture
             return ok;
         }
 
-        // Clears the active chemistry's overrides and restores process defaults on the live buffer.
         internal void ResetChemistryOverrides()
         {
             Physics.ResetChemistryOverrides();
             if (_buffer != null) Physics.Apply(_buffer, _process);
         }
 
-        // Switches which chemistry the tuner edits and previews, pointing Physics at that chemistry's override
-        // set. Ignored while an exposure is in flight so a live capture's profile/timing is never disturbed.
+        // Ignored while an exposure is in flight so a live capture's profile/timing is never disturbed.
         internal void SetTuningChemistry(PlateProcessProfile process)
         {
             if (State == ExposureState.Capturing || State == ExposureState.Paused) return;
-            EnsureLiveFor(process.Name);
-            _process = ApplyTiming(process, Physics.Chem);
+            EnsurePreviewFor(process.Name);
+            _process = ApplyTimingOverrides(process, Physics.Chem);
             if (_buffer != null) Physics.Apply(_buffer, _process);
             RequestPreviewRefresh();
         }
 
-        // Sets the active chemistry's shutter timing (sample count over duration) from the tuner's boxes and
-        // rebuilds the active profile. Ignored mid-exposure so a live capture's frame target isn't moved.
+        // Ignored mid-exposure so a live capture's frame target isn't moved.
         internal void SetTuningTiming(int sampleCount, float durationSeconds)
         {
             if (State == ExposureState.Capturing || State == ExposureState.Paused) return;
             Physics.Chem.SampleCount     = Math.Max(1, sampleCount);
             Physics.Chem.DurationSeconds = Math.Max(0.05f, durationSeconds);
-            _process = ApplyTiming(_process, Physics.Chem);
+            _process = ApplyTimingOverrides(_process, Physics.Chem);
             RequestPreviewRefresh();
         }
 
-        // Persists the active chemistry's effective parameters (materialised to concrete values), merged into
-        // any previously-saved tuning so other chemistries are preserved. These load as that chemistry's
-        // defaults on the next launch.
-        // Commits the live (preview) working values into the active chemistry's saved profile and persists it,
-        // so they begin to apply to develop and every other real output.
         internal void SaveChemistryTuning()
         {
             ChemistryProfile prof = ChemistryProfileRegistry.Instance.Get(_process.Name);
             prof.ExposurePhysics.CopyFrom(Physics.Chem);
-            prof.PostEffects = _liveEffects.Clone();
+            prof.PostEffects = _previewEffects.Clone();
             ChemistryProfileRegistry.Instance.Save(_clientApi.Logger);
         }
 
-        // Re-resolves the buffer immediately if capturing, otherwise resets the idle-preview timer.
         internal void RequestPreviewRefresh()
         {
             if (State == ExposureState.Capturing && _buffer?.FramesAccumulated > 0)
@@ -172,13 +134,11 @@ namespace Photochemistry.CameraCapture
             _clientApi = capi;
             _main = (ClientMain)capi.World;
             _platform = (ClientPlatformWindows)_main.Platform;
-            SeedLiveFrom(_process.Name);
-            _process = ApplyTiming(_process, Physics.Chem);
+            SeedPreviewFrom(_process.Name);
+            _process = ApplyTimingOverrides(_process, Physics.Chem);
         }
 
-        // Bakes the chemistry's shutter-timing overrides (samples / duration) into a profile, leaving its
-        // emulsion-response fields untouched (those are applied per-buffer via ExposurePhysicsConfig).
-        private static PlateProcessProfile ApplyTiming(PlateProcessProfile p, ChemistryOverrides ov) => ov.ApplyTimingTo(p);
+        private static PlateProcessProfile ApplyTimingOverrides(PlateProcessProfile p, ChemistryOverrides ov) => ov.ApplyTimingTo(p);
 
         private void CompleteAutoStop(long nowMs)
         {
@@ -191,11 +151,6 @@ namespace Photochemistry.CameraCapture
                 $"Use '.collodion exposure export' to save.");
         }
 
-        /// <summary>
-        /// Prepares the virtual camera for preview before an exposure begins.
-        /// Only valid when <see cref="State"/> is <see cref="ExposureState.Idle"/>; no-op otherwise.
-        /// Replaces any previously prepared camera.
-        /// </summary>
         internal void PrepareCamera(VirtualCameraState cameraState)
         {
             if (State != ExposureState.Idle && State != ExposureState.Paused) return;
@@ -206,11 +161,6 @@ namespace Photochemistry.CameraCapture
             _camera = cam;
         }
 
-        /// <summary>
-        /// Returns the prepared virtual camera when idle (no active or completed exposure),
-        /// allowing the preview renderer to render idle viewfinder frames.
-        /// Returns <see langword="false"/> during any active, paused, done, or faulted session.
-        /// </summary>
         internal bool TryGetIdleCameraForPreview(out VirtualCamera camera)
         {
             if (State == ExposureState.Idle && _camera != null)
@@ -222,25 +172,15 @@ namespace Photochemistry.CameraCapture
             return false;
         }
 
-        /// <summary>
-        /// Returns <see langword="true"/> when a virtual camera is prepared and no exposure session is active.
-        /// Use this for boolean checks; use <see cref="TryGetIdleCameraForPreview"/> when you also need the camera instance.
-        /// </summary>
         internal bool HasIdleCameraForPreview => State == ExposureState.Idle && _camera != null;
 
-        /// <summary>
-        /// Destroys the prepared virtual camera and returns it to an uninitialized state.
-        /// Call when the owning mounted-camera block is removed.
-        /// No-op when no camera is prepared.
-        /// </summary>
         internal void ClearCamera() => DestroyCamera();
 
-        /// <summary>Starts a new exposure session with the given camera state, chemistry, and stop policy. Any previous session is discarded.</summary>
         internal void Start(VirtualCameraState cameraState, PlateProcessProfile process)
         {
-            Discard(); // Clears buffer/state but preserves any prepared _camera.
-            EnsureLiveFor(process.Name);                   // live preview values for this chemistry (saved-config seeded)
-            _process = ApplyTiming(process, Physics.Chem); // bake its samples/duration into the active profile
+            Discard();
+            EnsurePreviewFor(process.Name);
+            _process = ApplyTimingOverrides(process, Physics.Chem);
             LastFaultMessage = null;
             _elapsedSinceLastSample  = 0f;
             _elapsedSinceLastPreview = 0f;
@@ -266,7 +206,6 @@ namespace Photochemistry.CameraCapture
             _diagFirstAccum = false;
         }
 
-        /// <summary>Pauses frame accumulation and freezes the shutter timer. Only valid in <see cref="ExposureState.Capturing"/> state.</summary>
         internal void Pause()
         {
             if (State == ExposureState.Capturing)
@@ -277,12 +216,10 @@ namespace Photochemistry.CameraCapture
             }
         }
 
-        /// <summary>Resumes frame accumulation and extends the shutter window by the pause duration. Only valid in <see cref="ExposureState.Paused"/> state.</summary>
         internal void Resume()
         {
             if (State == ExposureState.Paused)
             {
-                // Extend the shutter window by however long we were paused.
                 long pausedFor = _clientApi.ElapsedMilliseconds - _pauseStartedMs;
                 _shutterStartMs += pausedFor;
                 _pauseStartedMs = 0;
@@ -291,12 +228,6 @@ namespace Photochemistry.CameraCapture
             }
         }
 
-        /// <summary>
-        /// Closes the shutter and transitions to <see cref="ExposureState.Done"/>.
-        /// Drains any in-flight readback PBOs first so no samples are lost.
-        /// The accumulated buffer and the prepared virtual camera are both preserved;
-        /// call <see cref="Discard"/> to clear the buffer and return to <see cref="ExposureState.Idle"/>.
-        /// </summary>
         internal void Stop()
         {
             _shutterFrozenMs = _clientApi.ElapsedMilliseconds;
@@ -312,11 +243,6 @@ namespace Photochemistry.CameraCapture
                 $"Use '.collodion exposure export' to save.");
         }
 
-        /// <summary>
-        /// Clears the accumulated buffer and returns to <see cref="ExposureState.Idle"/>.
-        /// The prepared virtual camera is preserved so idle preview rendering continues uninterrupted.
-        /// Call <see cref="ClearCamera"/> separately when the mounted-camera block is removed.
-        /// </summary>
         internal void Discard()
         {
             _buffer?.Dispose();
@@ -325,6 +251,7 @@ namespace Photochemistry.CameraCapture
             _pauseStartedMs = 0;
             _shutterFrozenMs = 0;
             ExposurePreviewSink?.EndExposurePassthrough();
+            // Camera preserved so idle preview continues.
             State = ExposureState.Idle;
         }
 
@@ -336,35 +263,19 @@ namespace Photochemistry.CameraCapture
             int maxDimension = PhotochemistryConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.PhotoCaptureMaxDimension
                 ?? ViewfinderConfig.DefaultPhotoCaptureMaxDimension;
 
-            return ExposureSeal.ToPhoto(_buffer, maxDimension, "exposure-export", effectsOverride ?? Effects, ApplyFinishing);
+            return ExposureSeal.ToPhoto(_buffer, maxDimension, "exposure-export", effectsOverride ?? PreviewEffects, ApplyFinishing);
         }
 
-        /// <summary>
-        /// Serializes the raw float accumulation sums to a binary blob for cross-session persistence.
-        /// Returns <see langword="null"/> when no frames have been accumulated or the buffer is not allocated.
-        /// The blob is self-describing and can be passed to <see cref="PrimeFromPartial"/> after a future <see cref="Start"/>.
-        /// </summary>
         internal byte[]? ExportPartial()
         {
             return _buffer?.SerializeAccumulation();
         }
 
-        /// <summary>
-        /// Restores a previously serialized accumulation blob into the live buffer after <see cref="Start"/> is called.
-        /// When the blob's dimensions do not match the current buffer (e.g. the screen was resized since the session was paused),
-        /// the call is a no-op and the exposure continues from zero frames.
-        /// </summary>
         internal void PrimeFromPartial(byte[] data)
             => ExposureFrameOps.RestorePartial(_buffer, _clientApi.Logger, data);
 
-        // Resolves and shapes one debug-preview frame using the same crop/scale/finishing policy
-        // as the normal virtual camera preview path.
-        // Normalises by actual frame count so the preview shows a "final-exposure" prediction
-        // rather than the current underexposed state (which would be proportionally darker for
-        // every frame before the target count is reached).
-        // Finishing applies the active chemistry's post-effects (tuned live in the exposure-physics dialog).
         private void PushPreviewFrame()
-            => ExposureFrameOps.PublishDevelopedPreview(_clientApi, _buffer, ExposurePreviewSink, ApplyFinishing, Effects);
+            => ExposureFrameOps.PublishDevelopedPreview(_clientApi, _buffer, ExposurePreviewSink, ApplyFinishing, PreviewEffects);
 
         // Minimum wall-clock seconds between consecutive preview pushes.
         private const float PreviewCadenceSeconds = 0.25f;
@@ -381,7 +292,6 @@ namespace Photochemistry.CameraCapture
             _elapsedSinceLastSample  += deltaTime;
             _elapsedSinceLastPreview += deltaTime;
 
-            // Reinitialize FBO and buffer if the window was resized.
             // Mixed-dimension frames cannot be averaged so accumulated data must be discarded.
             if (_clientApi.Render.FrameWidth != _camera.fbo.Width || _clientApi.Render.FrameHeight != _camera.fbo.Height)
             {
@@ -389,7 +299,6 @@ namespace Photochemistry.CameraCapture
                 _clientApi.Logger.Warning("photochemistry: window resized during exposure — accumulated frames discarded.");
             }
 
-            // Rate limiter: never sample faster than the process cadence.
             if (_elapsedSinceLastSample < _process.SampleInterval) return;
             _elapsedSinceLastSample -= _process.SampleInterval;
 
@@ -412,7 +321,6 @@ namespace Photochemistry.CameraCapture
                 return;
             }
 
-            // Hard cap: stop regardless of stop mode once MaxAccumulatedFrames is reached.
             int maxFrames = PhotochemistryConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.MaxAccumulatedFrames
                 ?? ViewfinderConfig.DefaultMaxAccumulatedFrames;
             if (_buffer.FramesAccumulated >= maxFrames)
@@ -421,8 +329,6 @@ namespace Photochemistry.CameraCapture
                 return;
             }
 
-            // Push preview on wall-clock cadence; only after new data has been accumulated
-            // so the preview reflects the latest exposure state without redundant develop calls.
             if (ExposurePreviewSink != null && _buffer.FramesAccumulated > 0 &&
                 (_buffer.FramesAccumulated == 1 || _elapsedSinceLastPreview >= PreviewCadenceSeconds))
             {
@@ -438,7 +344,6 @@ namespace Photochemistry.CameraCapture
             _camera = null;
         }
 
-        // Allocates a GpuExposureAccumulator sized to the current frame (possibly downsampled).
         private void AllocateBuffer()
         {
             int sourceW = _clientApi.Render.FrameWidth;

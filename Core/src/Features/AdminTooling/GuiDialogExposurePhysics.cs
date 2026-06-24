@@ -41,8 +41,8 @@ namespace Photochemistry.AdminTooling
 
         public override void OnGuiOpened()
         {
-            // Tune the renderer's live, session-only effects directly so slider edits drive the preview.
-            _effects = _renderer.Effects;
+            // Assign by reference so slider mutations propagate to the renderer's preview immediately.
+            _effects = _renderer.PreviewEffects;
             ComposeDialog();
         }
 

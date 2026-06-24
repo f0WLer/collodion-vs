@@ -1,6 +1,7 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Photochemistry.PhotoMetadata.Model;
+using Photochemistry.PhotoSync.Storage;
 
 namespace Photochemistry.PhotoMetadata
 {
@@ -56,6 +57,57 @@ namespace Photochemistry.PhotoMetadata
         {
             _index.Touch(photoId);
             _isDirty = true;
+        }
+
+        // Snapshots the current index rows (cloned) for read-only audit on the main thread. The clone
+        // keeps callers isolated from concurrent Touch() writes between snapshot and use.
+        internal IReadOnlyDictionary<string, PhotoLastSeenEntry> SnapshotEntries()
+        {
+            var copy = new Dictionary<string, PhotoLastSeenEntry>(StringComparer.OrdinalIgnoreCase);
+            foreach (KeyValuePair<string, PhotoLastSeenEntry> kvp in _index.Entries)
+            {
+                if (kvp.Value == null) continue;
+                copy[kvp.Key] = new PhotoLastSeenEntry
+                {
+                    FirstSeenUtc = kvp.Value.FirstSeenUtc,
+                    LastSeenUtc = kvp.Value.LastSeenUtc
+                };
+            }
+            return copy;
+        }
+
+        // Removes a single index row (e.g. after its source photo is deleted) and marks the index
+        // dirty so the next TryFlush persists the removal. Returns true when a row was removed.
+        internal bool RemoveEntry(string photoId)
+        {
+            string normalized = PhotoAssetStoragePaths.NormalizePhotoId(photoId);
+            if (string.IsNullOrEmpty(normalized)) return false;
+
+            if (_index.Entries.Remove(normalized))
+            {
+                _isDirty = true;
+                return true;
+            }
+            return false;
+        }
+
+        // Drops every index row whose backing source file no longer exists, per the supplied predicate.
+        // Marks dirty when anything was removed. Returns the number of rows removed.
+        internal int RemoveEntriesWithoutFile(System.Func<string, bool> fileExists)
+        {
+            List<string>? stale = null;
+            foreach (KeyValuePair<string, PhotoLastSeenEntry> kvp in _index.Entries)
+            {
+                if (fileExists(kvp.Key)) continue;
+                stale ??= new List<string>();
+                stale.Add(kvp.Key);
+            }
+
+            if (stale == null) return 0;
+
+            foreach (string id in stale) _index.Entries.Remove(id);
+            _isDirty = true;
+            return stale.Count;
         }
 
         // Called on the main server thread by a periodic tick listener. Snapshots the index and dispatches

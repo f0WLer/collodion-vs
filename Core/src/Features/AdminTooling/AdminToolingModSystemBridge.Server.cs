@@ -20,6 +20,9 @@ namespace Photochemistry.AdminTooling
             // point in startup (it is set later by ConfigureServerCameraCaptureStartup).
             api.Network.GetChannel("photochemistry")
                .SetMessageHandler<GiveSensitizedPlatePacket>(OnGiveSensitizedPlateReceived);
+
+            // Operator disk-audit tooling: /photoadmin (controlserver-gated).
+            ServerPhotoCommands.Register(api, _owner);
         }
 
         private void OnGiveSensitizedPlateReceived(IServerPlayer player, GiveSensitizedPlatePacket packet)

@@ -12,6 +12,10 @@ namespace Photochemistry.PhotoSync.Integration
         private long? _serverPhotoLastSeenFlushListenerId;
         private long? _serverPhotoSyncPruneListenerId;
 
+        // Server-side last-seen index service, for operator disk-audit tooling. Null until server runtime
+        // startup (ConfigureServerPhotoSyncRuntime) has run.
+        internal ServerPhotoSeenService? PhotoSeenService => _serverPhotoSeenService;
+
         private long _clientPhotoSeenLastPruneMs;
         private readonly Dictionary<string, long> _clientLastPhotoSeenPingMs = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 

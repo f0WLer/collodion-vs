@@ -26,6 +26,12 @@ namespace Photochemistry.AdminTooling
         /// <summary>Maximum concurrent in-flight uploads accepted from one player. Excess uploads are dropped.</summary>
         public int ServerMaxOpenUploadsPerPlayer = 2;
 
+        /// <summary>Grace period, in real-world hours, before a source photo becomes eligible for /photoadmin
+        /// age/count deletion. Photos whose first-seen (or file mtime, for never-seen files) is younger than
+        /// this are never auto-selected, so a freshly-taken photo that no client has rendered yet is protected.
+        /// Explicit "delete id" selection bypasses this. Default 24h.</summary>
+        public double PhotoDeleteGraceHours = 24.0;
+
         internal void ClampInPlace()
         {
             if (ChunkSizeBytes < 1024) ChunkSizeBytes = 1024;
@@ -51,6 +57,9 @@ namespace Photochemistry.AdminTooling
 
             if (ServerMaxOpenUploadsPerPlayer < 1) ServerMaxOpenUploadsPerPlayer = 1;
             if (ServerMaxOpenUploadsPerPlayer > 32) ServerMaxOpenUploadsPerPlayer = 32;
+
+            if (PhotoDeleteGraceHours < 0.0) PhotoDeleteGraceHours = 0.0;
+            if (PhotoDeleteGraceHours > 8760.0) PhotoDeleteGraceHours = 8760.0; // cap at 1 year
         }
     }
 }

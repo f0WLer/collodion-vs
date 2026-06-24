@@ -38,7 +38,111 @@ namespace Photochemistry.PhotoSync.Storage
         internal static string GetPhotoPath(string photoId)
         {
             string normalized = NormalizePhotoId(photoId);
-            return Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos", normalized);
+            return Path.Combine(GetPhotosDirectory(), normalized);
+        }
+
+        // Root directory holding the ground-truth source photos. Derived silver-density masks and
+        // human-viewable exports live in the derived/ and exports/ subdirectories beneath it.
+        internal static string GetPhotosDirectory()
+            => Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos");
+
+        internal static string GetDerivedDirectory()
+            => Path.Combine(GetPhotosDirectory(), "derived");
+
+        // Enumerates the normalized ids (file names) of every ground-truth source photo on disk.
+        // Top-level only — the derived/ and exports/ subdirectories are intentionally excluded.
+        internal static IReadOnlyList<string> EnumeratePhotoIds()
+        {
+            string dir = GetPhotosDirectory();
+            if (!Directory.Exists(dir)) return Array.Empty<string>();
+
+            var ids = new List<string>();
+            try
+            {
+                foreach (string path in Directory.EnumerateFiles(dir, "*.png", SearchOption.TopDirectoryOnly))
+                    ids.Add(Path.GetFileName(path));
+            }
+            catch
+            {
+                // Best-effort: a transient IO error yields whatever was enumerated so far.
+            }
+            return ids;
+        }
+
+        // Size in bytes of a source photo, or 0 when missing/unreadable.
+        internal static long GetPhotoSizeBytes(string photoId)
+        {
+            string normalized = NormalizePhotoId(photoId);
+            if (string.IsNullOrEmpty(normalized)) return 0;
+            try
+            {
+                var info = new FileInfo(Path.Combine(GetPhotosDirectory(), normalized));
+                return info.Exists ? info.Length : 0;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        // Last-write time (UTC) of a source photo, or null when missing/unreadable. Used as the
+        // grace-period fallback for never-seen files (which have no FirstSeenUtc index row).
+        internal static DateTime? GetPhotoModifiedUtc(string photoId)
+        {
+            string normalized = NormalizePhotoId(photoId);
+            if (string.IsNullOrEmpty(normalized)) return null;
+            try
+            {
+                string path = Path.Combine(GetPhotosDirectory(), normalized);
+                return File.Exists(path) ? File.GetLastWriteTimeUtc(path) : (DateTime?)null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // Deletes a source photo and all of its derived mask variants (derived/<base>__*.png).
+        // Returns true when the source file existed and was removed. Derived deletion is best-effort
+        // so a locked/missing mask never blocks reclaiming the source.
+        internal static bool DeletePhotoAndDerived(string photoId)
+        {
+            string normalized = NormalizePhotoId(photoId);
+            if (string.IsNullOrEmpty(normalized)) return false;
+
+            bool removed = false;
+            try
+            {
+                string sourcePath = Path.Combine(GetPhotosDirectory(), normalized);
+                if (File.Exists(sourcePath))
+                {
+                    File.Delete(sourcePath);
+                    removed = true;
+                }
+            }
+            catch
+            {
+                // Best-effort: report not-removed; caller keeps the index row so a retry is possible.
+            }
+
+            try
+            {
+                string derivedDir = GetDerivedDirectory();
+                if (Directory.Exists(derivedDir))
+                {
+                    string baseName = Path.GetFileNameWithoutExtension(normalized);
+                    foreach (string path in Directory.EnumerateFiles(derivedDir, baseName + "__*.png", SearchOption.TopDirectoryOnly))
+                    {
+                        try { File.Delete(path); } catch { /* best-effort per-file */ }
+                    }
+                }
+            }
+            catch
+            {
+                // Best-effort derived cleanup; a leftover mask is harmless and re-derives from source.
+            }
+
+            return removed;
         }
 
         // Human-viewable exported composites live in photos/exports/. The caller supplies a

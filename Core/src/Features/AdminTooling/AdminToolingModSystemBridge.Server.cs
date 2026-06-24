@@ -8,6 +8,13 @@ namespace Photochemistry.AdminTooling
     // Keeps config bootstrap/logging details out of ModSystem callback bodies.
     internal sealed partial class AdminToolingModSystemBridge
     {
+        private readonly PhotochemistryModSystem _owner;
+
+        internal AdminToolingModSystemBridge(PhotochemistryModSystem owner)
+        {
+            _owner = owner;
+        }
+
         internal void ConfigureServerOperatorToolingStartup(ICoreServerAPI api)
         {
             _owner.ApplyConfig(ConfigLifecycle.LoadOrCreate(api, PhotochemistryModSystem.ConfigFileName));

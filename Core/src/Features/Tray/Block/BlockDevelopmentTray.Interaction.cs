@@ -275,24 +275,8 @@ namespace Photochemistry.Tray
             if (!TryValidateStartForAction(world, byPlayer, trayPos, be, activeSlot, chemKind)) return false;
 
             world.PlaySoundAt(_chemicalPourSound, trayPos.X + 0.5, trayPos.Y + 0.5, trayPos.Z + 0.5, null);
-
-            switch (chemKind)
-            {
-                case TrayActionKind.Developer:
-                    TrayTimedInteractionState.Begin(byPlayer, trayPos, ActionDeveloper, GetDeveloperPourSeconds());
-                    return true;
-
-                case TrayActionKind.Fixer:
-                    TrayTimedInteractionState.Begin(byPlayer, trayPos, ActionFixer, GetFixerPourSeconds());
-                    return true;
-
-                case TrayActionKind.Water:
-                    TrayTimedInteractionState.Begin(byPlayer, trayPos, ActionWater, GetWaterPourSeconds());
-                    return true;
-
-                default:
-                    return false;
-            }
+            TrayTimedInteractionState.Begin(byPlayer, trayPos, GetActionString(chemKind), GetDurationSeconds(chemKind));
+            return true;
         }
 
         private static bool IsDrySensitizedForReclaim(IWorldAccessor world, ItemStack? stack)

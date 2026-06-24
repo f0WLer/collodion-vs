@@ -117,16 +117,14 @@ namespace Photochemistry.PlateBox
             }
         }
 
-        // Builds or reuses the south/north-oriented slot mesh.
-        private bool EnsureSlotMesh()
+        // Builds or uploads an oriented slot mesh. xScale/zScale are swapped between S/N and E/W variants
+        // to keep the plate thin on the correct axis: S/N is thin in X, E/W is thin in Z.
+        private bool EnsureSlotMeshOriented(ref MeshRef? meshRef, float xScale, float zScale)
         {
-            if (_slotMeshRef != null && !_slotMeshRef.Disposed && _slotMeshRef.Initialized)
-            {
-                return true;
-            }
+            if (meshRef != null && !meshRef.Disposed && meshRef.Initialized) return true;
 
-            _slotMeshRef?.Dispose();
-            _slotMeshRef = null;
+            meshRef?.Dispose();
+            meshRef = null;
 
             try
             {
@@ -136,11 +134,11 @@ namespace Photochemistry.PlateBox
 
                 MeshData mesh = CubeMeshUtil.GetCube();
                 mesh = mesh.WithTexPos(texPos);
-                mesh.Scale(new Vec3f(0f, 0f, 0f), BlockEntityPlateBox.SlotPlateWidth, BlockEntityPlateBox.SlotPlateRenderHeight, BlockEntityPlateBox.SlotPlateDepth);
+                mesh.Scale(new Vec3f(0f, 0f, 0f), xScale, BlockEntityPlateBox.SlotPlateRenderHeight, zScale);
                 mesh.Rgba?.Fill((byte)255);
 
-                _slotMeshRef = _capi.Render.UploadMesh(mesh);
-                return _slotMeshRef != null;
+                meshRef = _capi.Render.UploadMesh(mesh);
+                return meshRef != null;
             }
             catch
             {
@@ -148,37 +146,8 @@ namespace Photochemistry.PlateBox
             }
         }
 
-        // Builds or reuses the east/west-oriented slot mesh.
-        private bool EnsureSlotMeshEW()
-        {
-            if (_slotMeshRefEW != null && !_slotMeshRefEW.Disposed && _slotMeshRefEW.Initialized)
-            {
-                return true;
-            }
-
-            _slotMeshRefEW?.Dispose();
-            _slotMeshRefEW = null;
-
-            try
-            {
-                ITexPositionSource source = _capi.Tesselator.GetTextureSource(_owner.Block);
-                TextureAtlasPosition? texPos = source["plate"];
-                if (texPos == null || texPos == _capi.BlockTextureAtlas.UnknownTexturePosition) return false;
-
-                MeshData mesh = CubeMeshUtil.GetCube();
-                mesh = mesh.WithTexPos(texPos);
-                // Swap X and Z so the plate stands thin in Z and has depth in X — correct for E/W boxes.
-                mesh.Scale(new Vec3f(0f, 0f, 0f), BlockEntityPlateBox.SlotPlateDepth, BlockEntityPlateBox.SlotPlateRenderHeight, BlockEntityPlateBox.SlotPlateWidth);
-                mesh.Rgba?.Fill((byte)255);
-
-                _slotMeshRefEW = _capi.Render.UploadMesh(mesh);
-                return _slotMeshRefEW != null;
-            }
-            catch
-            {
-                return false;
-            }
-        }
+        private bool EnsureSlotMesh()   => EnsureSlotMeshOriented(ref _slotMeshRef,   BlockEntityPlateBox.SlotPlateWidth, BlockEntityPlateBox.SlotPlateDepth);
+        private bool EnsureSlotMeshEW() => EnsureSlotMeshOriented(ref _slotMeshRefEW, BlockEntityPlateBox.SlotPlateDepth, BlockEntityPlateBox.SlotPlateWidth);
 
         // Chooses a stage-aware tint fallback for slot plates.
         private static Vec4f GetSlotTint(string path, PlateStage stage)

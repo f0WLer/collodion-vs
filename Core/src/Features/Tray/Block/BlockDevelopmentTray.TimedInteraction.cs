@@ -259,6 +259,13 @@ namespace Photochemistry.Tray
             return true;
         }
 
+        private static string GetActionString(TrayActionKind actionKind) => actionKind switch
+        {
+            TrayActionKind.Developer => ActionDeveloper,
+            TrayActionKind.Fixer     => ActionFixer,
+            _                        => ActionWater
+        };
+
         private static AssetLocation GetPortionCode(TrayActionKind actionKind)
         {
             return actionKind switch

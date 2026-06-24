@@ -9,7 +9,7 @@ namespace Photochemistry.Exposure
         internal static string? SealToPng(
             string exposureId,
             ICoreClientAPI capi,
-            PlateProcessProfile profile,
+            EmulsionProfile profile,
             ExposurePhysicsConfig physics,
             int targetFrameCount,
             int maxDimension,
@@ -30,7 +30,7 @@ namespace Photochemistry.Exposure
         private static string? RenderBlobToPng(
             byte[] data,
             ICoreClientAPI capi,
-            PlateProcessProfile profile,
+            EmulsionProfile profile,
             ExposurePhysicsConfig physics,
             int targetFrameCount,
             int maxDimension,

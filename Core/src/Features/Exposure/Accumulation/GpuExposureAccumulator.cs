@@ -110,7 +110,7 @@ namespace Photochemistry.Exposure
             try
             {
                 DisableRenderStateForFullscreenPass();
-                ExposureUtils.BlitYFlipped(sourceFboId, sourceWidth, sourceHeight, _sampleFbo);
+                ExposureBlit.BlitYFlipped(sourceFboId, sourceWidth, sourceHeight, _sampleFbo);
                 AccumulateFromSampleFbo();
             }
             finally
@@ -127,7 +127,7 @@ namespace Photochemistry.Exposure
             try
             {
                 DisableRenderStateForFullscreenPass();
-                ExposureUtils.BlitYFlipped(sourceFbo, _sampleFbo);
+                ExposureBlit.BlitYFlipped(sourceFbo, _sampleFbo);
                 AccumulateFromSampleFbo();
             }
             finally

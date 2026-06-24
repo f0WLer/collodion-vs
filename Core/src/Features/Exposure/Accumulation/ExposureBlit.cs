@@ -3,7 +3,7 @@ using Vintagestory.API.Client;
 
 namespace Photochemistry.Exposure
 {
-    internal static class ExposureUtils
+    internal static class ExposureBlit
     {
         // Y-flip corrects OpenGL's bottom-left origin to top-left for CPU readback.
         internal static void BlitYFlipped(FrameBufferRef fromFbo, FrameBufferRef toFbo)

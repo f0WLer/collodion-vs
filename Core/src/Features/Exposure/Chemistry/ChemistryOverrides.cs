@@ -49,7 +49,7 @@ namespace Photochemistry.Exposure
         }
 
         // NaN→profile-default so a persisted chemistry fully defines all params. Flags have no profile-level default.
-        public ChemistryOverrides Materialize(in PlateProcessProfile p) => new()
+        public ChemistryOverrides Materialize(in EmulsionProfile p) => new()
         {
             Linearize = Linearize, SpectralWeights = SpectralWeights, HDCurve = HDCurve,
             Normalize = Normalize, LogAccumulation = LogAccumulation,
@@ -65,7 +65,7 @@ namespace Photochemistry.Exposure
             SampleCount     = float.IsNaN(SampleCount)     ? p.SampleCount         : SampleCount,
         };
 
-        public PlateProcessProfile ApplyTimingTo(in PlateProcessProfile p)
+        public EmulsionProfile ApplyTimingTo(in EmulsionProfile p)
         {
             float duration = float.IsNaN(DurationSeconds) ? p.DurationSeconds : Math.Max(0.05f, DurationSeconds);
             int samples = float.IsNaN(SampleCount) ? p.SampleCount : Math.Max(1, (int)MathF.Round(SampleCount));

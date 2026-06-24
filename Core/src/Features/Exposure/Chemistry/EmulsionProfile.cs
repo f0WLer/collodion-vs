@@ -1,7 +1,7 @@
 namespace Photochemistry.Exposure
 {
     // Static instances are the hardcoded defaults that ChemistryProfileSeeder seeds a fresh profile from.
-    internal readonly struct PlateProcessProfile
+    internal readonly struct EmulsionProfile
     {
         internal readonly string Name;
         internal readonly float DurationSeconds;
@@ -25,7 +25,7 @@ namespace Photochemistry.Exposure
 
         internal float SampleInterval => DurationSeconds / SampleCount;
 
-        internal PlateProcessProfile(
+        internal EmulsionProfile(
             string name, float durationSeconds, int sampleCount,
             float redSensitivity, float greenSensitivity, float blueSensitivity,
             float developmentStrength, float hdGamma, float inertiaPoint = 0f,
@@ -50,7 +50,7 @@ namespace Photochemistry.Exposure
         /// Primitive silver chloride: blue-only sensitivity, very slow (~25 s), steep H&amp;D curve.
         /// Produces high-contrast images with compressed shadow range — demanding to expose correctly.
         /// </summary>
-        internal static readonly PlateProcessProfile Chloride = new PlateProcessProfile(
+        internal static readonly EmulsionProfile Chloride = new EmulsionProfile(
             "Chloride", durationSeconds: 25f, sampleCount: 128,
             redSensitivity: 0.04f, greenSensitivity: 0.35f, blueSensitivity: 1.00f,
             developmentStrength: 5.0f, hdGamma: 1.50f, inertiaPoint: 0.20f,
@@ -60,7 +60,7 @@ namespace Photochemistry.Exposure
         /// Wet-plate collodion iodide: expanded spectral response, moderate speed (~8 s).
         /// Balanced H&amp;D curve — forgiving enough for skilled use, demanding enough to matter.
         /// </summary>
-        internal static readonly PlateProcessProfile Iodide = new PlateProcessProfile(
+        internal static readonly EmulsionProfile Iodide = new EmulsionProfile(
             "Iodide", durationSeconds: 8f, sampleCount: 40,
             redSensitivity: 0.12f, greenSensitivity: 0.45f, blueSensitivity: 1.00f,
             developmentStrength: 8.0f, hdGamma: 1.10f, inertiaPoint: 0.10f,
@@ -71,24 +71,24 @@ namespace Photochemistry.Exposure
         /// Wide exposure latitude and rich maximum density — the most capable tier.
         /// As a gelatin dry plate it never dries out (<see cref="WetWindowHours"/> = 0).
         /// </summary>
-        internal static readonly PlateProcessProfile Bromide = new PlateProcessProfile(
+        internal static readonly EmulsionProfile Bromide = new EmulsionProfile(
             "Bromide", durationSeconds: 3f, sampleCount: 32,
             redSensitivity: 0.30f, greenSensitivity: 0.59f, blueSensitivity: 1.00f,
             developmentStrength: 12.0f, hdGamma: 0.85f, inertiaPoint: 0.04f,
             reciprocityExponent: 1.00f, wetWindowHours: 0f);
 
         // Replaces shutter timing only — emulsion-response fields are preserved.
-        internal PlateProcessProfile WithTiming(float durationSeconds, int sampleCount) =>
-            new PlateProcessProfile(
+        internal EmulsionProfile WithTiming(float durationSeconds, int sampleCount) =>
+            new EmulsionProfile(
                 Name, durationSeconds, sampleCount,
                 RedSensitivity, GreenSensitivity, BlueSensitivity,
                 DevelopmentStrength, HDGamma, InertiaPoint,
                 ReciprocityExponent, ExposureGain, WetWindowHours);
 
-        internal static PlateProcessProfile Resolve(string? chemistryName)
-            => !string.IsNullOrEmpty(chemistryName) && TryParse(chemistryName, out PlateProcessProfile p) ? p : Iodide;
+        internal static EmulsionProfile Resolve(string? chemistryName)
+            => !string.IsNullOrEmpty(chemistryName) && TryParse(chemistryName, out EmulsionProfile p) ? p : Iodide;
 
-        internal static bool TryParse(string name, out PlateProcessProfile profile)
+        internal static bool TryParse(string name, out EmulsionProfile profile)
         {
             switch (name.ToLowerInvariant())
             {

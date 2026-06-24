@@ -11,14 +11,14 @@ namespace Photochemistry.Exposure
         public bool Normalize       => Chem.Normalize;
         public bool LogAccumulation => Chem.LogAccumulation;
 
-        public float EffectiveDevStrength(in PlateProcessProfile p)  => float.IsNaN(Chem.DevStrength)  ? p.DevelopmentStrength  : Chem.DevStrength;
-        public float EffectiveHDGamma(in PlateProcessProfile p)      => float.IsNaN(Chem.HDGamma)      ? p.HDGamma             : Chem.HDGamma;
-        public float EffectiveRedSens(in PlateProcessProfile p)      => float.IsNaN(Chem.RedSens)      ? p.RedSensitivity      : Chem.RedSens;
-        public float EffectiveGreenSens(in PlateProcessProfile p)    => float.IsNaN(Chem.GreenSens)    ? p.GreenSensitivity    : Chem.GreenSens;
-        public float EffectiveBlueSens(in PlateProcessProfile p)     => float.IsNaN(Chem.BlueSens)     ? p.BlueSensitivity     : Chem.BlueSens;
-        public float EffectiveInertia(in PlateProcessProfile p)      => float.IsNaN(Chem.Inertia)      ? p.InertiaPoint        : Chem.Inertia;
-        public float EffectiveReciprocity(in PlateProcessProfile p)  => float.IsNaN(Chem.Reciprocity)  ? p.ReciprocityExponent : Chem.Reciprocity;
-        public float EffectiveExposureGain(in PlateProcessProfile p) => float.IsNaN(Chem.ExposureGain) ? p.ExposureGain        : Chem.ExposureGain;
+        public float EffectiveDevStrength(in EmulsionProfile p)  => float.IsNaN(Chem.DevStrength)  ? p.DevelopmentStrength  : Chem.DevStrength;
+        public float EffectiveHDGamma(in EmulsionProfile p)      => float.IsNaN(Chem.HDGamma)      ? p.HDGamma             : Chem.HDGamma;
+        public float EffectiveRedSens(in EmulsionProfile p)      => float.IsNaN(Chem.RedSens)      ? p.RedSensitivity      : Chem.RedSens;
+        public float EffectiveGreenSens(in EmulsionProfile p)    => float.IsNaN(Chem.GreenSens)    ? p.GreenSensitivity    : Chem.GreenSens;
+        public float EffectiveBlueSens(in EmulsionProfile p)     => float.IsNaN(Chem.BlueSens)     ? p.BlueSensitivity     : Chem.BlueSens;
+        public float EffectiveInertia(in EmulsionProfile p)      => float.IsNaN(Chem.Inertia)      ? p.InertiaPoint        : Chem.Inertia;
+        public float EffectiveReciprocity(in EmulsionProfile p)  => float.IsNaN(Chem.Reciprocity)  ? p.ReciprocityExponent : Chem.Reciprocity;
+        public float EffectiveExposureGain(in EmulsionProfile p) => float.IsNaN(Chem.ExposureGain) ? p.ExposureGain        : Chem.ExposureGain;
 
         public void ApplyPhysics(GpuExposureAccumulator buf)
         {
@@ -29,7 +29,7 @@ namespace Photochemistry.Exposure
             buf.UseLogAccumulation          = Chem.LogAccumulation;
         }
 
-        public void Apply(GpuExposureAccumulator buf, in PlateProcessProfile process)
+        public void Apply(GpuExposureAccumulator buf, in EmulsionProfile process)
         {
             ApplyPhysics(buf);
             buf.RedSensitivity      = EffectiveRedSens(process);

@@ -36,7 +36,7 @@ namespace Photochemistry.Exposure
 
         // Materialises to concrete values so no NaN inherit-sentinels survive into the persisted file.
         private static ChemistryOverrides DefaultExposure(string chemistry)
-            => new ChemistryOverrides().Materialize(PlateProcessProfile.Resolve(chemistry));
+            => new ChemistryOverrides().Materialize(EmulsionProfile.Resolve(chemistry));
 
         private static PresentationSettings DefaultPresentation(string chemistry)
         {

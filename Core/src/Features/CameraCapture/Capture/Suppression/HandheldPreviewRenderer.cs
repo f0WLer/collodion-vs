@@ -4,10 +4,6 @@ using Photochemistry.AdminTooling;
 
 namespace Photochemistry.CameraCapture
 {
-    // On-screen debug preview overlay.
-    // Displays live frames from VirtualCameraPreviewRenderer — either idle vcam renders
-    // (when DebugPreviewPeak is on and no exposure is active) or exposure-accumulation
-    // frames pushed via IExposurePreviewSink during an active exposure session.
     internal sealed class HandheldPreviewRenderer : IRenderer
     {
         private readonly ICoreClientAPI _capi;
@@ -26,8 +22,6 @@ namespace Photochemistry.CameraCapture
         public double RenderOrder => 0.97;
         public int RenderRange => 0;
 
-        // Periodically draws the preview overlay when DebugPreviewPeak is on and the
-        // virtual preview renderer has content available (idle vcam or active exposure frames).
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
             if (stage != EnumRenderStage.Ortho) return;
@@ -35,7 +29,6 @@ namespace Photochemistry.CameraCapture
             ViewfinderConfig? cfg = _modSystem?.Config?.Viewfinder;
             if (cfg == null) return;
 
-            // All preview output (idle vcam or active exposure) requires peak mode.
             if (!cfg.DebugPreviewPeak) return;
             if (_virtualPreviewRenderer?.IsActive != true) return;
 
@@ -136,7 +129,6 @@ namespace Photochemistry.CameraCapture
             }
         }
 
-        // Releases the preview texture when the renderer is shut down.
         public void Dispose()
         {
             _previewTexture?.Dispose();

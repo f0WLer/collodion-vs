@@ -1,6 +1,6 @@
 namespace Photochemistry.CameraCapture
 {
-    // Thread-local state shared with EntityPlayerSelfPortraitPatch for one virtual render pass.
+    // Shared with EntityPlayerSelfPortraitPatch for one virtual render pass.
     internal static class VirtualCameraSelfPortraitContext
     {
         [ThreadStatic]

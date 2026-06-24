@@ -1,11 +1,9 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using Vintagestory.API.Client;
-using Vintagestory.API.Common;
 using Vintagestory.Client.NoObf;
 using Photochemistry.AdminTooling;
 using Photochemistry.ImageEffects;
 using Photochemistry.Exposure;
-using Photochemistry.Plates;
 
 namespace Photochemistry.CameraCapture
 {

@@ -34,7 +34,7 @@ namespace Photochemistry.CameraCapture
 
                 _selfPortraitHarmony.Patch(
                     AccessTools.Method(playerShapeRendererType, "DoRender3DOpaque"),
-                    prefix: new HarmonyMethod(typeof(EntityPlayerSelfPortraitPatch), "SuppressPrefix"));
+                    prefix: new HarmonyMethod(typeof(EntityPlayerSelfPortraitPatch), "LocalPlayerBodyRenderSuppressPrefix"));
             }
 
             // SystemSelectedBlockOutline lives in VintagestoryLib, accessible by type name.

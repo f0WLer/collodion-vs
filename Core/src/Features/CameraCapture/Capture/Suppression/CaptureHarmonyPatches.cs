@@ -16,15 +16,14 @@ namespace Photochemistry.CameraCapture
         private static FieldInfo? _modelMatField;
         private static bool _modelMatChecked;
 
-        // Skips DoRender3DOpaque (body + FP hands) for the local player during viewport exposure.
         [HarmonyPrefix]
-        internal static bool SuppressPrefix(object __instance)
+        internal static bool LocalPlayerBodyRenderSuppressPrefix(object __instance)
         {
             if (!ViewportExposureSuppressContext.SuppressLocalPlayer) return true;
             // Never suppress during a virtual self-portrait pass — the mounted camera must see the player.
             if (VirtualCameraSelfPortraitContext.Active) return true;
             bool isSelf = Traverse.Create(__instance).Property<bool>("IsSelf").Value;
-            return !isSelf; // false = skip original for local player
+            return !isSelf;
         }
 
         [HarmonyPrefix]
@@ -67,7 +66,6 @@ namespace Photochemistry.CameraCapture
             if (val.MountedOn != null)
                 return;
 
-            // Resolve the ModelMat field once and cache; degrade gracefully if absent.
             if (!_modelMatChecked)
             {
                 _modelMatChecked = true;
@@ -100,8 +98,6 @@ namespace Photochemistry.CameraCapture
         }
     }
 
-    // Suppresses the hovered-block wireframe outline during any capture pass
-    // (both virtual camera renders and viewport exposure accumulation).
     internal static class SelectedBlockOutlinePatch
     {
         [HarmonyPrefix]

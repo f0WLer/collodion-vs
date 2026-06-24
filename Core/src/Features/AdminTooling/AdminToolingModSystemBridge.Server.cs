@@ -21,7 +21,11 @@ namespace Photochemistry.AdminTooling
             api.Network.GetChannel("photochemistry")
                .SetMessageHandler<GiveSensitizedPlatePacket>(OnGiveSensitizedPlateReceived);
 
-            // Operator disk-audit tooling: /photoadmin (controlserver-gated).
+            // Develop whitelist: load state + start pushing per-player permission on join. Must run
+            // before ServerPhotoCommands.Register so the /photoadmin whitelist subtree finds the service.
+            ConfigureServerWhitelistStartup(api);
+
+            // Operator disk-audit + whitelist tooling: /photoadmin (controlserver-gated).
             ServerPhotoCommands.Register(api, _owner);
         }
 

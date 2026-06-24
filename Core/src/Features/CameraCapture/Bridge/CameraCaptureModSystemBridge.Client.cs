@@ -53,6 +53,7 @@ namespace Photochemistry.CameraCapture
             if (ClientChannel == null) return;
 
             _owner.PhotoSyncModSystemBridge.ConfigureClientPhotoSyncTransferChannelHandlers();
+            _owner.AdminToolingBridge.ConfigureClientDevelopPermissionChannelHandler();
             ClientChannel.SetMessageHandler<PhotoCaptureConfigPacket>(OnPhotoCaptureConfigReceived);
         }
 

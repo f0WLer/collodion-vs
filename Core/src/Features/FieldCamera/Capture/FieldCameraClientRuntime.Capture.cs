@@ -175,6 +175,11 @@ namespace Photochemistry.FieldCamera
             SendExposureStatePacket(isExposing: false, acc.FramesAccumulated, exposureId, acc.TargetFrames);
         }
 
+        // Client-side develop-whitelist verdict (server-pushed; defaults allowed). UX guard only —
+        // the server independently enforces the gate at upload-authorization time.
+        private bool IsDevelopAllowedClient()
+            => PhotochemistryConfigAccess.ResolveClientModSystem(_owner.ClientApi)?.AdminToolingBridge.ClientDevelopAllowed ?? true;
+
         private void ExportAndSealExposure(EntityAgent? byEntity, string? knownExposureId = null)
         {
             var acc = _owner.Capture.ActiveAccumulator;
@@ -192,6 +197,21 @@ namespace Photochemistry.FieldCamera
                 ItemStack? camStack = CameraItemHelper.GetActiveCameraStack(clientApi);
                 CameraItemHelper.TryGetLoadedPlateStack(camStack, clientApi.World, out ItemStack? loadedPlate);
 
+                string exposureId = knownExposureId
+                    ?? _owner.Capture.ActiveExposureId
+                    ?? loadedPlate?.Attributes?.GetString(PlateAttributes.ExposureId)
+                    ?? string.Empty;
+
+                // Develop whitelist: finalizing into a photo is the data-creating act. A blocked client
+                // keeps the exposure as a resumable partial (pause-save) instead of losing it; the server
+                // gate is authoritative. Resolve exposureId first so the partial saves under its key.
+                if (!IsDevelopAllowedClient())
+                {
+                    clientApi.ShowChatMessage(Lang.Get("photochemistry:msg-develop-not-whitelisted"));
+                    HandleExposurePaused(acc, exposureId);
+                    return;
+                }
+
                 acc.Stop();
                 // Effects come from the accumulator's active chemistry profile (set at Start).
                 string fileName = acc.Export();
@@ -202,10 +222,6 @@ namespace Photochemistry.FieldCamera
                 if (byEntity != null)
                     clientApi.World.PlaySoundAt(new AssetLocation("game:sounds/effect/woodclick"), byEntity, null, true, 32, 1f);
 
-                string exposureId = knownExposureId
-                    ?? _owner.Capture.ActiveExposureId
-                    ?? loadedPlate?.Attributes?.GetString(PlateAttributes.ExposureId)
-                    ?? string.Empty;
                 if (!string.IsNullOrEmpty(exposureId))
                 {
                     ExposureAccumulationStore.Delete(exposureId);

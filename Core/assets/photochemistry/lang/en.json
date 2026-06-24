@@ -170,6 +170,7 @@
     "photochemistry:msg-tray-underdeveloped":        "photochemistry: plate not fully developed ({0}/{1}).",
     "photochemistry:msg-tray-need-developer":        "photochemistry: need developer (at least 1 portion).",
     "photochemistry:msg-tray-need-fixer":            "photochemistry: need fixer (at least 1 portion).",
-    "photochemistry:msg-tray-need-water":            "photochemistry: need water (at least 1 portion)."
+    "photochemistry:msg-tray-need-water":            "photochemistry: need water (at least 1 portion).",
+    "photochemistry:msg-develop-not-whitelisted":    "photochemistry: you aren't on this server's develop whitelist — you can expose plates, but only whitelisted players can develop them. Your exposure has been kept."
 }
 

@@ -27,6 +27,7 @@ namespace Photochemistry
 
         public const string ConfigFileName = "photochemistry.json";
         public const string ServerPhotoIndexFileName = "photochemistry-photoindex.json";
+        public const string ServerDevelopWhitelistFileName = "photochemistry-develop-whitelist.json";
         public PhotochemistryConfig Config { get; internal set; } = new PhotochemistryConfig();
         public PhotochemistryClientConfig ClientConfig { get; internal set; } = new PhotochemistryClientConfig();
 
@@ -153,6 +154,7 @@ namespace Photochemistry
                 {
                     PhotoSyncModSystemBridge.DisposeServerPhotoSyncAndMetadataRuntime(sapi);
                     FieldCameraBridge.DisposeServerFieldCamera(sapi);
+                    AdminToolingBridge.DisposeServerWhitelist(sapi);
                 }
             }
             finally

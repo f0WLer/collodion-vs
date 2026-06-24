@@ -119,7 +119,17 @@ namespace Photochemistry.Tray
                     // TrySendSealForTray is idempotent: SealToPng deletes the .pex file on success.
                     if (clientIsExposed && PlateAttributes.GetStage(clientDevPlate) == PlateStage.ExposurePaused)
                         if (world.Api is ICoreClientAPI capiSeal)
+                        {
+                            // Develop whitelist: sealing is the act that creates server data. If this client
+                            // isn't allowed, refuse the pour now so the exposure (.pex) is kept rather than
+                            // sealed-then-rejected server-side. The server gate is the real enforcement.
+                            if (!(PhotochemistryConfigAccess.ResolveClientModSystem(capiSeal)?.AdminToolingBridge.ClientDevelopAllowed ?? true))
+                            {
+                                capiSeal.ShowChatMessage(Lang.Get("photochemistry:msg-develop-not-whitelisted"));
+                                return false;
+                            }
                             PhotochemistryConfigAccess.ResolveModSystem(capiSeal)?.FieldCameraBridge.TrySendSealForTray(capiSeal, blockSel.Position, clientDevPlate);
+                        }
 
                     TrayTimedInteractionState.Begin(byPlayer, blockSel.Position, ActionDeveloper, GetDeveloperPourSeconds());
                     return true;

@@ -5,6 +5,7 @@ using Photochemistry.Plates;
 using Photochemistry.Tray;
 
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
@@ -34,6 +35,14 @@ namespace Photochemistry.FieldCamera
 
             // Plate expired before the shutter fired — drying clock ran out mid-exposure.
             if (PlateDryingTransition.IsDry(Api.World, loadedPlate)) return;
+
+            // Develop whitelist: finalizing the exposure into a photo is the act that creates a
+            // server-housed image. Deny before any mutation so a blocked player keeps the exposure.
+            if (!DevelopAllowed(player))
+            {
+                TellNotWhitelisted(player);
+                return;
+            }
 
             PlateAttributes.SetStage(loadedPlate, PlateStage.Exposed);
             loadedPlate.Attributes.SetString(PhotographAttrs.PhotoId, photoId);
@@ -151,6 +160,14 @@ namespace Photochemistry.FieldCamera
             string exposureId = trayPlate.Attributes.GetString(PlateAttributes.ExposureId) ?? string.Empty;
             if (!string.Equals(exposureId, packet.ExposureId, StringComparison.OrdinalIgnoreCase)) return;
 
+            // Develop whitelist: a legitimate client is pre-gated and never reaches here; this denies a
+            // modified client. Refuse to register the upload — the existing IsExpected gate then drops it.
+            if (!DevelopAllowed(player))
+            {
+                TellNotWhitelisted(player);
+                return;
+            }
+
             trayPlate.Attributes.SetString(PhotographAttrs.PhotoId, photoId);
             trayPlate.Attributes.RemoveAttribute(PlateAttributes.ExposureId);
             trayPlate.Attributes.RemoveAttribute(PlateAttributes.ExposedFrames);
@@ -164,5 +181,13 @@ namespace Photochemistry.FieldCamera
             _owner.PhotoSyncModSystemBridge.ServerTouchPhotoSeen(photoId);
             _owner.PhotoSyncModSystemBridge.Runtime?.RegisterExpectedUpload(player.PlayerUID, photoId);
         }
+
+        // Authoritative develop gate. Open when the whitelist is uninitialised/disabled; operators always pass.
+        private bool DevelopAllowed(IServerPlayer player)
+            => _owner.AdminToolingBridge.ExposureWhitelist?.IsAllowed(player) ?? true;
+
+        private static void TellNotWhitelisted(IServerPlayer player)
+            => player.SendMessage(GlobalConstants.GeneralChatGroup,
+                Lang.Get("photochemistry:msg-develop-not-whitelisted"), EnumChatType.Notification);
     }
 }

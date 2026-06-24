@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -63,6 +64,35 @@ namespace Photochemistry.AdminTooling
                     .WithDescription("Drop last-seen index rows whose backing photo file no longer exists. Dry-run unless 'confirm'.")
                     .WithArgs(p.OptionalWord("confirm"))
                     .HandleWith(OnPruneIndex)
+                .EndSubCommand()
+                .BeginSubCommand("whitelist")
+                    .WithDescription("Restrict who may develop exposures (the act that stores photos on the server). Disabled by default.")
+                    .BeginSubCommand("status")
+                        .WithDescription("Show whether the develop whitelist is on and how many players it holds.")
+                        .HandleWith(OnWhitelistStatus)
+                    .EndSubCommand()
+                    .BeginSubCommand("enable")
+                        .WithDescription("Turn the develop whitelist on: only listed players (and operators) may develop.")
+                        .HandleWith(OnWhitelistEnable)
+                    .EndSubCommand()
+                    .BeginSubCommand("disable")
+                        .WithDescription("Turn the develop whitelist off: everyone may develop again.")
+                        .HandleWith(OnWhitelistDisable)
+                    .EndSubCommand()
+                    .BeginSubCommand("add")
+                        .WithDescription("Allow a player to develop. Accepts an online name or a known last-seen name.")
+                        .WithArgs(p.Word("player"))
+                        .HandleWith(OnWhitelistAdd)
+                    .EndSubCommand()
+                    .BeginSubCommand("remove")
+                        .WithDescription("Revoke a player's develop permission.")
+                        .WithArgs(p.Word("player"))
+                        .HandleWith(OnWhitelistRemove)
+                    .EndSubCommand()
+                    .BeginSubCommand("list")
+                        .WithDescription("List the players currently allowed to develop.")
+                        .HandleWith(OnWhitelistList)
+                    .EndSubCommand()
                 .EndSubCommand();
         }
 
@@ -202,6 +232,146 @@ namespace Photochemistry.AdminTooling
 
         private static bool IsConfirm(object? arg)
             => arg is string s && s.Equals("confirm", StringComparison.OrdinalIgnoreCase);
+
+        // ---- develop whitelist ----
+
+        private Whitelist.ExposureWhitelistService? TryGetWhitelist(out string error)
+        {
+            Whitelist.ExposureWhitelistService? wl = _owner.AdminToolingBridge.ExposureWhitelist;
+            if (wl == null)
+            {
+                error = "the develop whitelist is not initialised yet (server still starting up).";
+                return null;
+            }
+            error = string.Empty;
+            return wl;
+        }
+
+        private TextCommandResult OnWhitelistStatus(TextCommandCallingArgs args)
+        {
+            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
+
+            return TextCommandResult.Success(
+                $"photoadmin: develop whitelist is {(wl.Enabled ? "ENABLED" : "disabled")} with {wl.Count} player(s)."
+              + (wl.Enabled ? "" : " (disabled = everyone may develop)"));
+        }
+
+        private TextCommandResult OnWhitelistEnable(TextCommandCallingArgs args)
+        {
+            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
+
+            bool changed = wl.SetEnabled(true);
+            _owner.AdminToolingBridge.BroadcastDevelopPermission(_sapi);
+            _sapi.Logger.Notification("photochemistry: /photoadmin develop whitelist enabled.");
+            return TextCommandResult.Success(
+                $"photoadmin: develop whitelist {(changed ? "enabled" : "already enabled")} — {wl.Count} player(s) allowed (operators always allowed).");
+        }
+
+        private TextCommandResult OnWhitelistDisable(TextCommandCallingArgs args)
+        {
+            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
+
+            bool changed = wl.SetEnabled(false);
+            _owner.AdminToolingBridge.BroadcastDevelopPermission(_sapi);
+            _sapi.Logger.Notification("photochemistry: /photoadmin develop whitelist disabled.");
+            return TextCommandResult.Success($"photoadmin: develop whitelist {(changed ? "disabled" : "already disabled")} — everyone may develop.");
+        }
+
+        private TextCommandResult OnWhitelistAdd(TextCommandCallingArgs args)
+        {
+            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
+
+            string name = (string)args[0];
+            if (!TryResolvePlayer(name, out string uid, out string resolvedName, out string resolveErr))
+                return TextCommandResult.Error("photoadmin: " + resolveErr);
+
+            bool added = wl.Add(uid, resolvedName);
+            _owner.AdminToolingBridge.BroadcastDevelopPermission(_sapi);
+            _sapi.Logger.Notification($"photochemistry: /photoadmin develop whitelist add {resolvedName} ({uid}).");
+            return TextCommandResult.Success(
+                added
+                    ? $"photoadmin: added {resolvedName} to the develop whitelist ({wl.Count} player(s))."
+                    : $"photoadmin: {resolvedName} was already on the develop whitelist.");
+        }
+
+        private TextCommandResult OnWhitelistRemove(TextCommandCallingArgs args)
+        {
+            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
+
+            string arg = (string)args[0];
+
+            // Escape hatch: accept a raw UID (as printed by `list`) so a member whose player-data was
+            // purged or who was renamed can always be removed — name resolution can't reach them.
+            string uid;
+            string resolvedName;
+            if (wl.Contains(arg))
+            {
+                uid = arg;
+                resolvedName = wl.GetName(arg) ?? arg;
+            }
+            else if (!TryResolvePlayer(arg, out uid, out resolvedName, out string resolveErr))
+            {
+                return TextCommandResult.Error("photoadmin: " + resolveErr);
+            }
+
+            bool removed = wl.Remove(uid);
+            _owner.AdminToolingBridge.BroadcastDevelopPermission(_sapi);
+            if (removed) _sapi.Logger.Notification($"photochemistry: /photoadmin develop whitelist remove {resolvedName} ({uid}).");
+            return TextCommandResult.Success(
+                removed
+                    ? $"photoadmin: removed {resolvedName} from the develop whitelist ({wl.Count} player(s))."
+                    : $"photoadmin: {resolvedName} was not on the develop whitelist.");
+        }
+
+        private TextCommandResult OnWhitelistList(TextCommandCallingArgs args)
+        {
+            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
+
+            IReadOnlyDictionary<string, string> players = wl.Snapshot();
+            if (players.Count == 0)
+                return TextCommandResult.Success("photoadmin: the develop whitelist is empty (only operators may develop while it is enabled).");
+
+            var sb = new StringBuilder();
+            sb.Append($"photoadmin: {players.Count} player(s) on the develop whitelist:");
+            foreach (KeyValuePair<string, string> kvp in players)
+                sb.Append($"\n  {kvp.Value}  ·  {kvp.Key}");
+            return TextCommandResult.Success(sb.ToString());
+        }
+
+        // Resolves an online player by name, falling back to last-known player data so offline players can
+        // be managed. Returns the stable UID (the whitelist key) plus a display name.
+        private bool TryResolvePlayer(string name, out string uid, out string resolvedName, out string error)
+        {
+            uid = string.Empty;
+            resolvedName = name;
+            error = string.Empty;
+
+            IPlayer? online = _sapi.World.AllOnlinePlayers
+                .FirstOrDefault(p => string.Equals(p.PlayerName, name, StringComparison.OrdinalIgnoreCase));
+            if (online != null)
+            {
+                uid = online.PlayerUID;
+                resolvedName = online.PlayerName;
+                return true;
+            }
+
+            IServerPlayerData? data = _sapi.PlayerData.GetPlayerDataByLastKnownName(name);
+            if (data != null)
+            {
+                uid = data.PlayerUID;
+                resolvedName = data.LastKnownPlayername ?? name;
+                return true;
+            }
+
+            error = $"no online or known player named '{name}'. Have them join once, or pass the exact last-seen name.";
+            return false;
+        }
 
         private static string FormatAge(DateTime? t, DateTime now)
         {

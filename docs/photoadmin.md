@@ -44,8 +44,36 @@ Deletes specific photos by id, comma-separated with no spaces. Ignores the grace
 **`/photoadmin prune-index [confirm]`**
 Drops last-seen records whose photo file is already gone. Tidies the index; frees no image disk.
 
+## Limiting who can develop (the whitelist)
+
+`/photoadmin delete …` reclaims space after the fact. The whitelist tackles the other end: it limits
+who can add to the store in the first place.
+
+Taking an exposure is local to the player and costs the server nothing. The image only starts living
+on the server when someone *develops* it — the first developer pour in a tray, or a field-camera
+capture finalising. When the develop whitelist is on, only listed players (and operators) can perform
+that step. Everyone can still expose plates as normal; a blocked player who tries to develop is told
+so, and keeps their exposure to hand off to someone who can. It is **off by default**, so nothing
+changes until you turn it on.
+
+**`/photoadmin whitelist status`** — whether it's on, and how many players are listed.
+
+**`/photoadmin whitelist enable` / `disable`** — turn it on or off. While on, only listed players and
+operators can develop; off, everyone can.
+
+**`/photoadmin whitelist add <player>` / `remove <player>`** — manage who's allowed. Works on an
+online player, or an offline one by their exact last-seen name. `remove` also accepts a raw UID (as
+printed by `list`), so you can always drop someone even if their name is gone or changed. Operators
+are always allowed and don't need adding.
+
+**`/photoadmin whitelist list`** — the players currently allowed, with their UIDs.
+
+Changes take effect immediately for everyone online — no relog needed.
+
 ## Notes
 
 - Deleting a photo also removes its derived render files and its last-seen record.
 - A deleted photo cannot be recovered from in-game. Any plate or frame still pointing at it renders blank.
 - Run a delete without `confirm` first — it prints exactly what it would remove and how much space that frees.
+- The develop whitelist is enforced server-side: a modified client can't bypass it. Disabling it lets
+  everyone develop again.

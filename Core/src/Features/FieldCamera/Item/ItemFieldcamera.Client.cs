@@ -22,7 +22,7 @@ namespace Photochemistry.FieldCamera
             ItemStack? cameraStack = CameraItemHelper.GetActiveCameraStack(capi);
 
             if (CameraItemHelper.HasMountedTripod(cameraStack))
-                return modSys.FieldCameraBridge.RequestMountedPhotoCapture(byEntity, silentIfBusy);
+                return modSys.FieldCameraBridge.RequestMountedPhotoCapture(silentIfBusy);
 
             return modSys.FieldCameraBridge.TryToggleViewfinderExposure(byEntity, silentIfBusy);
         }

@@ -34,7 +34,6 @@ namespace Photochemistry.CameraCapture
 
         // Wall-clock shutter timing (milliseconds from _capi.ElapsedMilliseconds).
         private long _shutterStartMs;
-        private long _shutterEndMs;
         private long _pauseStartedMs;
         private long _shutterFrozenMs;
 
@@ -286,7 +285,6 @@ namespace Photochemistry.CameraCapture
                 // Extend the shutter window by however long we were paused.
                 long pausedFor = _clientApi.ElapsedMilliseconds - _pauseStartedMs;
                 _shutterStartMs += pausedFor;
-                _shutterEndMs   += pausedFor;
                 _pauseStartedMs = 0;
                 _shutterFrozenMs = 0;
                 State = ExposureState.Capturing;
@@ -324,25 +322,10 @@ namespace Photochemistry.CameraCapture
             _buffer?.Dispose();
             _buffer = null;
             _shutterStartMs = 0;
-            _shutterEndMs   = 0;
             _pauseStartedMs = 0;
             _shutterFrozenMs = 0;
             ExposurePreviewSink?.EndExposurePassthrough();
             State = ExposureState.Idle;
-        }
-
-        /// <summary>Clears accumulated frames and restarts capture from the same camera position. No-op when no camera is alive.</summary>
-        internal void Reset()
-        {
-            if (_buffer == null || _camera == null) return;
-            _buffer.Reset();
-            _elapsedSinceLastSample  = 0f;
-            _elapsedSinceLastPreview = 0f;
-            long now = _clientApi.ElapsedMilliseconds;
-            _shutterStartMs = now;
-            _pauseStartedMs = 0;
-            _shutterFrozenMs = 0;
-            State = ExposureState.Capturing;
         }
 
         internal string Export(ImageEffectsConfig? effectsOverride = null)

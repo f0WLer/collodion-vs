@@ -156,7 +156,7 @@ namespace Photochemistry.Tray
 
         private static float GetWaterPourSeconds(ICoreClientAPI capi)
         {
-            float seconds = 1.25f;
+            float seconds = GetDevelopmentTrayInteractionConfig(capi)?.Water?.DurationSeconds ?? 1.25f;
             if (seconds < 0.05f) seconds = 0.05f;
             if (seconds > 30f) seconds = 30f;
             return seconds;

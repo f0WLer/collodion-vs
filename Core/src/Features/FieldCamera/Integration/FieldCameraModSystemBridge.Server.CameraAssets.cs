@@ -5,7 +5,6 @@ namespace Photochemistry.FieldCamera
 {
     internal sealed partial class FieldCameraModSystemBridge
     {
-        private static readonly AssetLocation _sensitizedPlateItemCode = new AssetLocation("photochemistry", "sensitizedplate");
         private static readonly AssetLocation _fieldcameraBaseCode = new AssetLocation("photochemistry", "fieldcamera");
         // Asset path remains "loaded-silvered" for backward compatibility; gameplay semantics are sensitized.
         private static readonly AssetLocation _fieldcameraLoadedSensitizedCode = new AssetLocation("photochemistry", "fieldcamera-loaded-silvered");

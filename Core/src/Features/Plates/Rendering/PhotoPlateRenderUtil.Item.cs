@@ -9,20 +9,6 @@ namespace Photochemistry.Plates.Rendering
     {
         private const float GroundScale = 2.5f;
 
-        // Returns whether the item explicitly opts into plate photo overlay rendering.
-        public static bool ShouldRenderPhotoOverlay(ItemStack? itemstack)
-        {
-            if (itemstack?.Collectible == null) return false;
-            try
-            {
-                return itemstack.Collectible.Attributes?["renderPhotoOverlay"]?.AsBool(false) ?? false;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         // Builds or reuses an item mesh with the resolved photo texture overlay.
         public static bool TryRenderPhotoOverlay(ICoreClientAPI capi, ItemStack? itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {

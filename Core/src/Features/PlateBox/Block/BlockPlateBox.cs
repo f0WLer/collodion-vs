@@ -7,7 +7,7 @@ namespace Photochemistry.PlateBox
     // Starts from block lifecycle callbacks and delegates rendering/help and slot interaction to sibling partials.
     // Delegates persistent slot state to BlockEntityPlateBox and presentation/help to sibling partials.
     // Side: mixed block owner. Keep authoritative slot mutation in the interaction partial, not in render/presentation helpers.
-    // Related files: BlockPlateBox.Interaction.cs, BlockPlateBox.Presentation.cs, BlockEntityPlateBox.cs.
+    // Related files: BlockPlateBox.Interaction.cs, BlockPlateBox.WorldMutationSeam.cs, BlockEntityPlateBox.cs.
     public sealed partial class BlockPlateBox : Block
     {
         private static readonly AssetLocation _samplePlateCode = new("photochemistry", "sensitizedplate");

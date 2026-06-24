@@ -43,13 +43,5 @@ namespace Photochemistry.Plates
             PlateStage stage = PlateAttributes.GetStage(stack);
             return stage == PlateStage.Sensitized || stage == PlateStage.ExposurePaused;
         }
-
-        // Checks whether a plate can be exposed now (must be sensitized stage, not just loadable).
-        public static bool IsPlateSensitizedForExposure(ItemStack? stack)
-        {
-            if (!IsSensitizedItem(stack)) return false;
-
-            return PlateAttributes.GetStage(stack) == PlateStage.Sensitized;
-        }
     }
 }

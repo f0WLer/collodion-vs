@@ -32,9 +32,6 @@ namespace Photochemistry.Exposure
         /// <summary>Wall-clock seconds between consecutive virtual renders at normal cadence.</summary>
         internal float SampleInterval => DurationSeconds / SampleCount;
 
-        /// <summary>ISO-equivalent film speed: reciprocal of <see cref="DurationSeconds"/>.</summary>
-        internal float IsoEquivalent => 1f / DurationSeconds;
-
         internal PlateProcessProfile(
             string name, float durationSeconds, int sampleCount,
             float redSensitivity, float greenSensitivity, float blueSensitivity,

@@ -28,11 +28,6 @@ namespace Photochemistry.Tray
         private static readonly AssetLocation _fixerPortionCode = new("photochemistry", "fixerportion");
         private static readonly AssetLocation _waterPortionCode = new("game", "waterportion");
 
-        public override void OnLoaded(ICoreAPI api)
-        {
-            base.OnLoaded(api);
-        }
-
         public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
         {
             bool placed = base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);

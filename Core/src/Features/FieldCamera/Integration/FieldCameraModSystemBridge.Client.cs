@@ -30,7 +30,7 @@ namespace Photochemistry.FieldCamera
             CaptureClientRuntime.ApplyMountedExposureControl(packet);
         }
 
-        internal bool RequestMountedPhotoCapture(EntityAgent byEntity, bool silentIfBusy = false)
+        internal bool RequestMountedPhotoCapture(bool silentIfBusy = false)
         {
             var capi = ClientApi;
             if (capi != null)

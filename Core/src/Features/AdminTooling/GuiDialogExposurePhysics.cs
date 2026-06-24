@@ -354,7 +354,7 @@ namespace Photochemistry.AdminTooling
             for (int i = 0; i < registered.Count; i++) codes[i] = registered[i];
 
             names = new string[codes.Length];
-            for (int i = 0; i < codes.Length; i++) names[i] = PlateProcessProfile.Resolve(codes[i]).Name;
+            for (int i = 0; i < codes.Length; i++) names[i] = EmulsionProfile.Resolve(codes[i]).Name;
 
             selectedIndex = 0;
             string activeKey = _renderer.ActiveProcess.Name.ToLowerInvariant();
@@ -364,7 +364,7 @@ namespace Photochemistry.AdminTooling
 
         private void OnChemistrySelected(string code, bool selected)
         {
-            _renderer.SetTuningChemistry(PlateProcessProfile.Resolve(code));
+            _renderer.SetTuningChemistry(EmulsionProfile.Resolve(code));
             // Reopen to reseed every slider from the newly selected chemistry's effective values.
             TryClose();
             TryOpen();

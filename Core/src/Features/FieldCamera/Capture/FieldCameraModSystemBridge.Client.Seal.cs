@@ -20,7 +20,7 @@ namespace Photochemistry.FieldCamera
             string exposureId = trayPlate.Attributes?.GetString(PlateAttributes.ExposureId) ?? string.Empty;
             if (string.IsNullOrEmpty(exposureId)) return false;
 
-            PlateProcessProfile profile = PlateProcessProfile.Resolve(PlateAttributes.GetChemistry(trayPlate));
+            EmulsionProfile profile = EmulsionProfile.Resolve(PlateAttributes.GetChemistry(trayPlate));
 
             // Develop with the plate's own SAVED chemistry profile (config), never the live dialog values —
             // the dialog only drives the preview window; its values reach develop only once saved. Canonical

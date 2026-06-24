@@ -39,7 +39,7 @@ namespace Photochemistry
         // window; the default sentinel (<0) falls back to the global config window above.
         public static double ResolveWetDurationHours(ICoreAPI? api, ItemStack? stack)
         {
-            float profileWindow = Exposure.PlateProcessProfile.Resolve(Plates.PlateAttributes.GetChemistry(stack)).WetWindowHours;
+            float profileWindow = Exposure.EmulsionProfile.Resolve(Plates.PlateAttributes.GetChemistry(stack)).WetWindowHours;
             if (profileWindow == 0f) return 0;            // never dries
             if (profileWindow > 0f) return profileWindow; // explicit per-chemistry window
             return ResolveWetDurationHours(api);          // sentinel → global config window

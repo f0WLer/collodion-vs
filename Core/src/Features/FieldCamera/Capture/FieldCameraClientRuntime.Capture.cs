@@ -106,7 +106,7 @@ namespace Photochemistry.FieldCamera
 
             // Resolve the emulsion physics from the loaded plate's chemistry (baseline plates are always
             // iodide; other heads' chemistries resolve here). Falls back to Iodide for absent/unknown.
-            PlateProcessProfile profile = PlateProcessProfile.Resolve(PlateAttributes.GetChemistry(loadedPlateStack));
+            EmulsionProfile profile = EmulsionProfile.Resolve(PlateAttributes.GetChemistry(loadedPlateStack));
 
             // When Prime() was called, the PBO ring is already warm so the first sample tick maps
             // a real frame immediately — no sync GL.ReadPixels stall, no 2-kick priming gap.
@@ -332,7 +332,7 @@ namespace Photochemistry.FieldCamera
                 {
                     // Resolve the mounted plate's chemistry (threaded from the server) so the idle/live
                     // preview emulsion matches the active plate; empty (no plate) falls back to iodide.
-                    PlateProcessProfile previewProcess = PlateProcessProfile.Resolve(packet.Chemistry);
+                    EmulsionProfile previewProcess = EmulsionProfile.Resolve(packet.Chemistry);
 
                     // Keep idle and live mounted preview chemistry aligned with the active plate.
                     if (_owner.Capture._virtualCameraPreviewRenderer != null)
@@ -365,7 +365,7 @@ namespace Photochemistry.FieldCamera
 
                     // Resolve the mounted plate's chemistry (threaded from the server) so the exposure uses
                     // its per-process sample count and duration; empty (no plate) falls back to iodide.
-                    PlateProcessProfile profile = PlateProcessProfile.Resolve(packet.Chemistry);
+                    EmulsionProfile profile = EmulsionProfile.Resolve(packet.Chemistry);
 
                     renderer.ApplyFinishing = false;
                     renderer.ExposurePreviewSink = _owner.Capture._virtualCameraPreviewRenderer;

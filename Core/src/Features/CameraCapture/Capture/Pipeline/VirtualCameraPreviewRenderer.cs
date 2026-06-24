@@ -23,7 +23,7 @@ namespace Photochemistry.CameraCapture
         private long _lastRenderMs;
         private bool _disposed;
 
-        internal PlateProcessProfile EmulsionProcess { get; set; } = PlateProcessProfile.Iodide;
+        internal EmulsionProfile EmulsionProcess { get; set; } = EmulsionProfile.Iodide;
 
         // Set by the bridge after both renderers are constructed.
         internal VirtualExposureRenderer? ExposureRenderer { get; set; }

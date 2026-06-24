@@ -15,7 +15,7 @@ namespace Photochemistry.CameraCapture
 
         private VirtualCamera? _camera;
         private GpuExposureAccumulator? _buffer;
-        private PlateProcessProfile _process = PlateProcessProfile.Iodide;
+        private EmulsionProfile _process = EmulsionProfile.Iodide;
         private float _elapsedSinceLastSample;
         private float _elapsedSinceLastPreview;
 
@@ -32,7 +32,7 @@ namespace Photochemistry.CameraCapture
             PhotochemistryModSystem.ClientInstance?.BestEffortLogger?.Notification("photochemistry[diag]: " + msg);
 
         internal IExposurePreviewSink? ExposurePreviewSink { get; set; }
-        internal PlateProcessProfile ActiveProcess => _process;
+        internal EmulsionProfile ActiveProcess => _process;
 
         internal ExposureState State { get; private set; } = ExposureState.Idle;
         internal string? LastFaultMessage { get; private set; }
@@ -90,7 +90,7 @@ namespace Photochemistry.CameraCapture
         }
 
         // Ignored while an exposure is in flight so a live capture's profile/timing is never disturbed.
-        internal void SetTuningChemistry(PlateProcessProfile process)
+        internal void SetTuningChemistry(EmulsionProfile process)
         {
             if (State == ExposureState.Capturing || State == ExposureState.Paused) return;
             EnsurePreviewFor(process.Name);
@@ -136,7 +136,7 @@ namespace Photochemistry.CameraCapture
             _process = ApplyTimingOverrides(_process, Physics.Chem);
         }
 
-        private static PlateProcessProfile ApplyTimingOverrides(PlateProcessProfile p, ChemistryOverrides ov) => ov.ApplyTimingTo(p);
+        private static EmulsionProfile ApplyTimingOverrides(EmulsionProfile p, ChemistryOverrides ov) => ov.ApplyTimingTo(p);
 
         private void CompleteAutoStop(long nowMs)
         {
@@ -174,7 +174,7 @@ namespace Photochemistry.CameraCapture
 
         internal void ClearCamera() => DestroyCamera();
 
-        internal void Start(VirtualCameraState cameraState, PlateProcessProfile process)
+        internal void Start(VirtualCameraState cameraState, EmulsionProfile process)
         {
             Discard();
             EnsurePreviewFor(process.Name);

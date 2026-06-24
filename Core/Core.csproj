@@ -14,10 +14,10 @@
 
   <!-- Embed GPU exposure shaders. LogicalName matches what GpuExposureAccumulator.LoadShaderSource expects. -->
   <ItemGroup>
-    <EmbeddedResource Include="src\Features\Exposure\Accumulator\Shaders\gpu-exposure-accum.frag.glsl">
+    <EmbeddedResource Include="src\Features\Exposure\Accumulation\Shaders\gpu-exposure-accum.frag.glsl">
       <LogicalName>Photochemistry.gpu-exposure-accum.frag.glsl</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Features\Exposure\Accumulator\Shaders\gpu-exposure-develop.frag.glsl">
+    <EmbeddedResource Include="src\Features\Exposure\Accumulation\Shaders\gpu-exposure-develop.frag.glsl">
       <LogicalName>Photochemistry.gpu-exposure-develop.frag.glsl</LogicalName>
     </EmbeddedResource>
   </ItemGroup>

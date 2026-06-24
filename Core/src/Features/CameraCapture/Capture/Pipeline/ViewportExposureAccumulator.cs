@@ -9,7 +9,7 @@ namespace Photochemistry.CameraCapture
     {
         private readonly ICoreClientAPI _capi;
         private GpuExposureAccumulator? _buffer;
-        private PlateProcessProfile _process;
+        private EmulsionProfile _process;
         private float _elapsedSinceLastSample;
         private float _elapsedSinceLastPreview;
         private float _elapsedCaptureSeconds;
@@ -54,11 +54,11 @@ namespace Photochemistry.CameraCapture
             int h = Math.Max(1, _capi.Render.FrameHeight);
             // Prime with the baseline sample count so the common iodide exposure reuses this buffer on Start
             // without reallocating. A different chemistry recreates it there (count mismatch) — still correct.
-            EnsureGpuAccumulator(w, h, PlateProcessProfile.Iodide.SampleCount);
+            EnsureGpuAccumulator(w, h, EmulsionProfile.Iodide.SampleCount);
             RegisterRenderer();
         }
 
-        internal void Start(PlateProcessProfile process)
+        internal void Start(EmulsionProfile process)
         {
             if (_disposed) return;
             if (State == ExposureState.Paused) { Resume(); return; }

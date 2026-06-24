@@ -26,7 +26,7 @@ namespace Photochemistry.Plates
 
         // Canonical chemistry tag stored on a plate. Today only collodion exists; its emulsion is
         // sensitised with an iodide salt, so "iodide" is both the chemistry tag and the
-        // PlateProcessProfile key the exposure layer resolves it to. Future processes add their own.
+        // EmulsionProfile key the exposure layer resolves it to. Future processes add their own.
         public const string ChemistryCollodion = "iodide";
 
         public static string ToAttributeString(PlateStage stage) => stage switch
@@ -100,7 +100,7 @@ namespace Photochemistry.Plates
         }
 
         // Records which photographic chemistry (emulsion/process) a plate was sensitised with.
-        // Read back by the exposure layer to pick the matching PlateProcessProfile. Absent on
+        // Read back by the exposure layer to pick the matching EmulsionProfile. Absent on
         // legacy plates, which resolve to the collodion/iodide default.
         public static string? GetChemistry(ItemStack? stack)
             => stack?.Attributes?.GetString(AttrChemistry);

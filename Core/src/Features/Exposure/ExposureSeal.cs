@@ -4,21 +4,10 @@ using Photochemistry.PhotoSync.Storage;
 
 namespace Photochemistry.Exposure
 {
-    /// <summary>
-    /// Finalizes an exposure accumulator into a saved Photo PNG: resolve the latent image,
-    /// crop to plate aspect, optionally apply wet-plate finishing, and write the file.
-    /// The caller supplies the finishing profile (gameplay decides which one), so the seal
-    /// itself carries no plate/player knowledge.
-    /// </summary>
+    // The caller supplies finishing effects so the seal has no plate/player knowledge.
     internal static class ExposureSeal
     {
-        /// <summary>
-        /// Resolves <paramref name="accumulator"/>, crops to plate aspect within
-        /// <paramref name="maxDimension"/>, applies finishing when <paramref name="applyFinishing"/>
-        /// is set, and saves the PNG — returning the saved file name (usable as a photo id).
-        /// <paramref name="seedKey"/> seeds deterministic finishing (grain etc.), so distinct
-        /// call sites pass distinct keys to keep their grain patterns stable.
-        /// </summary>
+        // seedKey seeds deterministic finishing effects — pass a distinct key per call site so grain patterns don't alias.
         internal static string ToPhoto(
             GpuExposureAccumulator accumulator,
             int maxDimension,

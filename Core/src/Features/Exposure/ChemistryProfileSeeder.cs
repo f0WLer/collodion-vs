@@ -1,22 +1,12 @@
 using Photochemistry.ImageEffects;
-using Photochemistry.Plates;
 using Photochemistry.Plates.Rendering;
 
 namespace Photochemistry.Exposure
 {
-    /// <summary>
-    /// The single place that produces default chemistry profiles and fills any gaps. Every default value in
-    /// the system flows from here: exposure physics from the hardcoded <see cref="PlateProcessProfile"/>,
-    /// presentation tone from the hardcoded <see cref="PlatePresentation"/> seeds, and post-effects from the
-    /// <see cref="ImageEffectsConfig"/> code defaults. Nothing else hardcodes a per-chemistry value — handlers
-    /// read the resolved profile, and missing pieces are seeded here on load.
-    /// </summary>
+    // The single place that seeds default values — nothing else hardcodes per-chemistry parameters.
     internal static class ChemistryProfileSeeder
     {
-        /// <summary>
-        /// Ensures every registered chemistry has a complete profile, adding any missing chemistry or section
-        /// from the central defaults. Returns true when something was added so the caller can persist the file.
-        /// </summary>
+        // Returns true when something was added so the caller can persist the file.
         internal static bool EnsureComplete(Dictionary<string, ChemistryProfile> profiles, IReadOnlyList<string> chemistries)
         {
             bool changed = false;
@@ -37,7 +27,6 @@ namespace Photochemistry.Exposure
             return changed;
         }
 
-        /// <summary>A complete default profile for one chemistry, seeded entirely from the central defaults.</summary>
         internal static ChemistryProfile DefaultFor(string chemistry) => new()
         {
             ExposurePhysics = DefaultExposure(chemistry),
@@ -45,11 +34,10 @@ namespace Photochemistry.Exposure
             Presentation = DefaultPresentation(chemistry),
         };
 
-        // Exposure seed: the hardcoded process profile materialised to concrete values (no inherit sentinels).
+        // Materialises to concrete values so no NaN inherit-sentinels survive into the persisted file.
         private static ChemistryOverrides DefaultExposure(string chemistry)
             => new ChemistryOverrides().Materialize(PlateProcessProfile.Resolve(chemistry));
 
-        // Presentation seed: the hardcoded silver/print tone for this chemistry's default developed look.
         private static PresentationSettings DefaultPresentation(string chemistry)
         {
             PlatePresentation seed = PlatePresentation.SeedFor(chemistry);

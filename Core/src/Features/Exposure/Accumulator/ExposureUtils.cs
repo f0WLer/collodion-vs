@@ -3,20 +3,13 @@ using Vintagestory.API.Client;
 
 namespace Photochemistry.Exposure
 {
-    /// <summary>Shared utilities for the exposure pipeline: framebuffer operations.</summary>
     internal static class ExposureUtils
     {
-        /// <summary>
-        /// Blits <paramref name="fromFbo"/> into <paramref name="toFbo"/> with a vertical flip,
-        /// converting OpenGL's bottom-left-origin image to top-left origin.
-        /// </summary>
+        // Y-flip corrects OpenGL's bottom-left origin to top-left for CPU readback.
         internal static void BlitYFlipped(FrameBufferRef fromFbo, FrameBufferRef toFbo)
             => BlitYFlipped(fromFbo.FboId, fromFbo.Width, fromFbo.Height, toFbo);
 
-        /// <summary>
-        /// Overload that accepts a raw GL framebuffer ID and dimensions.
-        /// Used when the source is not wrapped in a <see cref="FrameBufferRef"/> — e.g. the default back-buffer (ID 0).
-        /// </summary>
+        // Overload for raw GL IDs — used when the source is the default back-buffer (ID 0).
         internal static void BlitYFlipped(int fromFboId, int fromW, int fromH, FrameBufferRef toFbo)
         {
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fromFboId);

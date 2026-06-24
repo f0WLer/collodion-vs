@@ -1,12 +1,6 @@
 namespace Photochemistry.Exposure
 {
-    /// <summary>
-    /// Immutable emulsion parameters for a single chemistry variant: shutter timing
-    /// (<see cref="DurationSeconds"/>, <see cref="SampleCount"/>) and the spectral sensitivity and H&amp;D
-    /// curve values that shape how the accumulation buffer develops.
-    /// The static <see cref="Iodide"/>/<see cref="Chloride"/>/<see cref="Bromide"/> instances are the
-    /// hardcoded exposure defaults that <see cref="ChemistryProfileSeeder"/> seeds a fresh profile from.
-    /// </summary>
+    // Static instances are the hardcoded defaults that ChemistryProfileSeeder seeds a fresh profile from.
     internal readonly struct PlateProcessProfile
     {
         internal readonly string Name;
@@ -29,7 +23,6 @@ namespace Photochemistry.Exposure
         //   > 0 → an explicit per-chemistry window in hours
         internal readonly float WetWindowHours;
 
-        /// <summary>Wall-clock seconds between consecutive virtual renders at normal cadence.</summary>
         internal float SampleInterval => DurationSeconds / SampleCount;
 
         internal PlateProcessProfile(
@@ -84,8 +77,7 @@ namespace Photochemistry.Exposure
             developmentStrength: 12.0f, hdGamma: 0.85f, inertiaPoint: 0.04f,
             reciprocityExponent: 1.00f, wetWindowHours: 0f);
 
-        /// <summary>A copy of this profile with the shutter timing replaced — used to apply per-chemistry
-        /// timing overrides from the tuning file without disturbing the emulsion-response fields.</summary>
+        // Replaces shutter timing only — emulsion-response fields are preserved.
         internal PlateProcessProfile WithTiming(float durationSeconds, int sampleCount) =>
             new PlateProcessProfile(
                 Name, durationSeconds, sampleCount,
@@ -93,11 +85,9 @@ namespace Photochemistry.Exposure
                 DevelopmentStrength, HDGamma, InertiaPoint,
                 ReciprocityExponent, ExposureGain, WetWindowHours);
 
-        /// <summary>Resolves a chemistry name to its profile, falling back to <see cref="Iodide"/> for a null/empty/unknown name.</summary>
         internal static PlateProcessProfile Resolve(string? chemistryName)
             => !string.IsNullOrEmpty(chemistryName) && TryParse(chemistryName, out PlateProcessProfile p) ? p : Iodide;
 
-        /// <summary>Parses a chemistry name (case-insensitive) into a <see cref="PlateProcessProfile"/>. Returns <see langword="false"/> when the name is unrecognised.</summary>
         internal static bool TryParse(string name, out PlateProcessProfile profile)
         {
             switch (name.ToLowerInvariant())

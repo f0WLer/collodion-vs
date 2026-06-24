@@ -6,22 +6,13 @@ using Vintagestory.Client.NoObf;
 
 namespace Photochemistry.Exposure
 {
-    /// <summary>
-    /// GPU-side floating-point exposure accumulator that replaces the CPU float-array pipeline.
-    /// Each sample is blitted Y-flipped into a staging FBO, then accumulated on the GPU via
-    /// a GLSL shader into a pair of RGBA32F ping-pong framebuffers.
-    /// <see cref="Resolve"/> renders the accumulated sums through the spectral-weights and H&amp;D
-    /// GLSL shader into an RGBA8 FBO and reads it back synchronously — triggered only by
-    /// preview cadence or shutter close, not per sample.
-    /// All OpenGL state disturbed by public methods is saved and restored so VS's render pipeline is unaffected.
-    /// </summary>
+    // GL state is saved and restored around all public operations so VS's render pipeline is unaffected.
     internal sealed class GpuExposureAccumulator : IDisposable
     {
         public int Width  { get; }
         public int Height { get; }
         public int FramesAccumulated => _frameCount;
-        // Reference frame count this buffer normalizes against (1/_targetSampleCount in the resolve pass).
-        // Fixed at construction; callers reusing a buffer must recreate it when they need a different count.
+        // Fixed at construction — callers must recreate the buffer when the target sample count changes.
         public int TargetSampleCount => _targetSampleCount;
 
         public bool  LinearizeInput          { get; set; } = true;
@@ -38,37 +29,30 @@ namespace Photochemistry.Exposure
         public bool  UseLogAccumulation      { get; set; } = true;
         public float ReciprocityExponent     { get; set; } = 1f;
 
-        // Internal state.
         private readonly ICoreClientAPI _capi;
         private readonly ClientPlatformWindows _platform;
         private readonly int _targetSampleCount;
         private int _frameCount;
 
-        // Sample FBO: RGBA8, receives the blit from the source camera FBO each frame.
         private FrameBufferRef _sampleFbo = null!;
 
-        // Two RGBA32F accumulation FBOs (ping-pong).
         private readonly int[] _accumFboIds = new int[2];
         private readonly int[] _accumTexIds = new int[2];
-        private int _readIdx  = 0;  // current accumulated sum
-        private int _writeIdx = 1;  // scratch target for next add
+        private int _readIdx  = 0;
+        private int _writeIdx = 1;
 
-        // Resolve FBO: RGBA8, receives the final tone-mapped output for CPU readback.
         private FrameBufferRef _resolveFbo = null!;
 
-        // OpenGL objects.
         private int _accumProgram;
         private int _resolveProgram;
         private int _fullscreenVao;
 
-        // Cached uniform locations for _accumProgram.
         private int _uAccumSample;
         private int _uAccumAccum;
         private int _uAccumLinearize;
         private int _uAccumLogAccum;
         private int _uAccumDevStrength;
 
-        // Cached uniform locations for _resolveProgram.
         private int _uResolveAccum;
         private int _uResolveInvRef;
         private int _uResolveSpectral;
@@ -85,9 +69,7 @@ namespace Photochemistry.Exposure
 
         private bool _disposed;
 
-        // Vertex shader — fullscreen triangle from gl_VertexID, no VBO needed.
-        // UVs (0,0)→(1,1) via the large-triangle trick; shared by both GPU programs.
-        // Fragment shaders are loaded from embedded resources at construction time.
+        // Large-triangle trick: fullscreen quad from gl_VertexID, no VBO needed.
         private const string VertSrc = @"
             #version 330 core
             out vec2 v_uv;
@@ -111,10 +93,6 @@ namespace Photochemistry.Exposure
             AllocateGpuResources();
         }
 
-        /// <summary>
-        /// Computes the target accumulation dimensions from a source frame size and a max-dimension budget,
-        /// preserving aspect ratio and clamping to the source size.
-        /// </summary>
         internal static void ComputeTargetDimensions(int sourceW, int sourceH, int maxDim, out int width, out int height)
         {
             float scale = (float)maxDim / Math.Max(sourceW, sourceH);
@@ -123,9 +101,7 @@ namespace Photochemistry.Exposure
             height = Math.Max(1, (int)(sourceH * scale));
         }
 
-        /// <summary>
-        /// Accumulates from a raw GL framebuffer ID (e.g. the back buffer, ID 0).
-        /// </summary>
+        // Overload for raw GL IDs — used when the source is the default back-buffer (ID 0).
         public void Accumulate(int sourceFboId, int sourceWidth, int sourceHeight)
         {
             if (_disposed) return;
@@ -160,8 +136,7 @@ namespace Photochemistry.Exposure
             }
         }
 
-        // Runs the GLSL accumulate pass from _sampleFbo into the ping-pong accum FBOs.
-        // GL state must already be saved and render state disabled before calling.
+        // Precondition: GL state saved and render state disabled by the caller.
         private void AccumulateFromSampleFbo()
         {
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, _accumFboIds[_writeIdx]);
@@ -214,9 +189,7 @@ namespace Photochemistry.Exposure
             {
                 DisableRenderStateForFullscreenPass();
 
-                // Normalise by actual or reference frame count, then scale by ExposureGain.
-                // Gain > 1 lifts mid-tones toward white without adjusting the u_norm calibration,
-                // equivalent to exposing for longer than the reference frame count.
+                // ExposureGain scales invRef without touching u_norm — equivalent to extending the exposure beyond the reference.
                 float invRef = ExposureGain * (NormalizeByActualFrameCount
                     ? 1f / _frameCount
                     : 1f / _targetSampleCount);
@@ -226,7 +199,6 @@ namespace Photochemistry.Exposure
                 float wSum = rw + gw + bw;
                 if (wSum > 1e-6f) { rw /= wSum; gw /= wSum; bw /= wSum; }
 
-                // Render accumulated sums → developed RGBA8 FBO.
                 GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, _resolveFbo.FboId);
                 GL.Viewport(0, 0, Width, Height);
 
@@ -267,7 +239,7 @@ namespace Photochemistry.Exposure
                 GL.BindVertexArray(_fullscreenVao);
                 GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
 
-                // Synchronous readback — acceptable here since Develop() is not in the hot path.
+                // Synchronous readback — acceptable since Resolve() is triggered only on preview/shutter-close, not per sample.
                 GL.Finish();
                 int byteCount = Width * Height * 4;
                 byte[] pixels = new byte[byteCount];
@@ -294,7 +266,6 @@ namespace Photochemistry.Exposure
 
         private void AllocateGpuResources()
         {
-            // Sample FBO: RGBA8, used as a staging area for each blit.
             _sampleFbo = _platform.CreateFramebuffer(
                 new FramebufferAttrs("photochemistry-gpu-accu-sample", Width, Height)
                 {
@@ -316,7 +287,6 @@ namespace Photochemistry.Exposure
                     ]
                 });
 
-            // Resolve FBO: RGBA8, receives the tone-mapped output for CPU readback.
             _resolveFbo = _platform.CreateFramebuffer(
                 new FramebufferAttrs("photochemistry-gpu-accu-resolve", Width, Height)
                 {
@@ -338,8 +308,7 @@ namespace Photochemistry.Exposure
                     ]
                 });
 
-            // Accumulation FBOs: RGBA32F ping-pong.
-            // Created via raw GL since EnumTextureInternalFormat may not expose Rgba32f.
+            // Raw GL — EnumTextureInternalFormat may not expose Rgba32f.
             GL.GenTextures(2, _accumTexIds);
             GL.GenFramebuffers(2, _accumFboIds);
             GL.GetInteger(GetPName.DrawFramebufferBinding, out int prevFbo);
@@ -363,13 +332,12 @@ namespace Photochemistry.Exposure
             }
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, prevFbo);
 
-            // Load fragment shaders from embedded resources and compile.
             string accumFrag   = LoadShaderSource("Photochemistry.gpu-exposure-accum.frag.glsl");
             string resolveFrag = LoadShaderSource("Photochemistry.gpu-exposure-develop.frag.glsl");
             _accumProgram   = CompileProgram(VertSrc, accumFrag);
             _resolveProgram = CompileProgram(VertSrc, resolveFrag);
 
-            // Cache uniform locations (queried once here; zero-cost per draw call).
+            // Cache uniform locations — queried once here so per-draw-call cost is zero.
             _uAccumSample    = GL.GetUniformLocation(_accumProgram,   "u_sample");
             _uAccumAccum     = GL.GetUniformLocation(_accumProgram,   "u_accum");
             _uAccumLinearize = GL.GetUniformLocation(_accumProgram,   "u_linearize");
@@ -390,7 +358,7 @@ namespace Photochemistry.Exposure
             _uResolveLogAccum    = GL.GetUniformLocation(_resolveProgram, "u_log_accum");
             _uResolveReciprocity = GL.GetUniformLocation(_resolveProgram, "u_reciprocity");
 
-            // Empty VAO for vertex-ID-based fullscreen draws.
+            // Empty VAO required for vertex-ID-based draws.
             GL.GenVertexArrays(1, out _fullscreenVao);
         }
 
@@ -419,8 +387,6 @@ namespace Photochemistry.Exposure
             bitmap.Erase(SKColors.Black);
             return bitmap;
         }
-
-        // ── GL state save/restore ─────────────────────────────────────────────────────────
 
         private readonly struct GlState
         {
@@ -543,7 +509,6 @@ namespace Photochemistry.Exposure
             SaveGlState(out GlState state);
             try
             {
-                // Upload float data into the read accumulation texture and clear the write texture.
                 GL.BindTexture(TextureTarget.Texture2D, _accumTexIds[_readIdx]);
                 GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, Width, Height,
                     PixelFormat.Rgba, PixelType.Float, floats);

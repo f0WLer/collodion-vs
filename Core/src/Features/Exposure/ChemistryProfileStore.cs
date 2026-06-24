@@ -4,11 +4,7 @@ using Vintagestory.API.Config;
 
 namespace Photochemistry.Exposure
 {
-    // Reads/writes the unified per-chemistry profiles to a single ModData file. The file maps chemistry name
-    // -> ChemistryProfile (ExposurePhysics + PostEffects + Presentation) and is the source of truth for every
-    // per-process value the handlers read. ChemistryProfileSeeder fills any gaps and the file is written back,
-    // so a fresh install creates it (and baseline collodion seeds iodide only — no chloride/bromide data is
-    // ever written into a baseline file).
+    // Baseline collodion seeds iodide only — no chloride/bromide data is written into a baseline file.
     internal static class ChemistryProfileStore
     {
         private static string FilePath =>

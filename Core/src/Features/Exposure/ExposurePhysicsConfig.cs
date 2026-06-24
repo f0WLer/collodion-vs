@@ -1,17 +1,10 @@
 namespace Photochemistry.Exposure
 {
-    /// <summary>
-    /// Applies a chemistry's exposure settings to a <see cref="GpuExposureAccumulator"/>. Everything that
-    /// varies per chemistry — the physics emulation flags, the per-parameter overrides (NaN = use the
-    /// process-profile default), and the timing — lives on <see cref="Chem"/>; this type just resolves and
-    /// copies them onto a buffer. The owner swaps <see cref="Chem"/> when the active chemistry changes.
-    /// </summary>
+    // Chem is swapped by the owner when the active chemistry changes; NaN parameters inherit the process-profile default.
     internal sealed class ExposurePhysicsConfig
     {
-        // The active chemistry's settings (flags + overrides + timing). Never null.
         public ChemistryOverrides Chem { get; set; } = new();
 
-        // Read passthroughs for the dialog's flag switches.
         public bool Linearize       => Chem.Linearize;
         public bool SpectralWeights => Chem.SpectralWeights;
         public bool HDCurve         => Chem.HDCurve;
@@ -27,7 +20,6 @@ namespace Photochemistry.Exposure
         public float EffectiveReciprocity(in PlateProcessProfile p)  => float.IsNaN(Chem.Reciprocity)  ? p.ReciprocityExponent : Chem.Reciprocity;
         public float EffectiveExposureGain(in PlateProcessProfile p) => float.IsNaN(Chem.ExposureGain) ? p.ExposureGain        : Chem.ExposureGain;
 
-        // Copies the active chemistry's physics flags onto a buffer.
         public void ApplyPhysics(GpuExposureAccumulator buf)
         {
             buf.LinearizeInput              = Chem.Linearize;
@@ -37,7 +29,6 @@ namespace Photochemistry.Exposure
             buf.UseLogAccumulation          = Chem.LogAccumulation;
         }
 
-        // Copies physics flags plus chemistry (overrides resolved against the process) onto a buffer.
         public void Apply(GpuExposureAccumulator buf, in PlateProcessProfile process)
         {
             ApplyPhysics(buf);
@@ -51,7 +42,6 @@ namespace Photochemistry.Exposure
             buf.ExposureGain        = EffectiveExposureGain(process);
         }
 
-        // Sets a named physics flag. Returns false when the name is unrecognised.
         public bool SetPhysics(string flag, bool value)
         {
             switch (flag)
@@ -66,7 +56,6 @@ namespace Photochemistry.Exposure
             return true;
         }
 
-        // Sets a named override on the active chemistry. Returns false when the name is unrecognised.
         public bool SetChemistry(string param, float value)
         {
             switch (param)
@@ -84,8 +73,7 @@ namespace Photochemistry.Exposure
             return true;
         }
 
-        // Clears the active chemistry's overrides in place, restoring its process-profile defaults.
-        // Resets in place (not a new instance) so the owner's per-chemistry store keeps the same reference.
+        // Resets in place (not a new instance) so the owner's reference to Chem stays valid.
         public void ResetChemistryOverrides() => Chem.Reset();
     }
 }

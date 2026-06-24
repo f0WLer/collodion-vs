@@ -3,29 +3,19 @@ using Vintagestory.API.Config;
 
 namespace Photochemistry.Exposure
 {
-    /// <summary>
-    /// Persists and restores raw exposure accumulation blobs between game sessions.
-    /// Files are keyed by exposure ID and stored under the mod's data folder so they
-    /// survive server restarts, logouts, and game relaunches.
-    /// Each file is a self-describing binary blob produced by <see cref="GpuExposureAccumulator.SerializeAccumulation"/>,
-    /// compressed with GZip.
-    /// </summary>
+    // Files survive server restarts and relaunches; each blob is GZip-compressed.
     internal static class ExposureAccumulationStore
     {
-        private const string FolderName = "partialexposures"; 
+        private const string FolderName = "partialexposures";
         private const string Extension  = ".pex";
 
-        /// <summary>Returns the absolute path to the <c>.pex</c> file for the given exposure ID.</summary>
         internal static string GetStorePath(string exposureId)
         {
             string safeId = Path.GetFileName(exposureId.Trim());
             return Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", FolderName, safeId + Extension);
         }
 
-        /// <summary>
-        /// Compresses the serialized accumulation blob with GZip and writes it to disk.
-        /// Returns <see langword="false"/> if the write fails (disk full, permissions, etc.); the caller should warn the player.
-        /// </summary>
+        // Returns false on failure — caller should warn the player.
         internal static bool Save(string exposureId, byte[] data)
         {
             if (string.IsNullOrEmpty(exposureId) || data.Length == 0) return true;
@@ -46,10 +36,6 @@ namespace Photochemistry.Exposure
             }
         }
 
-        /// <summary>
-        /// Reads and decompresses a previously saved blob.
-        /// Returns <see langword="false"/> when no file exists for this ID, or if the file is corrupt or unreadable.
-        /// </summary>
         internal static bool TryLoad(string exposureId, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out byte[]? data)
         {
             data = null;
@@ -74,7 +60,6 @@ namespace Photochemistry.Exposure
             }
         }
 
-        /// <summary>Returns all exposure IDs that currently have a saved <c>.pex</c> file on disk.</summary>
         internal static IReadOnlyList<string> EnumerateIds()
         {
             string folder = Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", FolderName);
@@ -90,7 +75,6 @@ namespace Photochemistry.Exposure
             return ids;
         }
 
-        /// <summary>Deletes the saved partial for this exposure. Called after successful development or on expiry.</summary>
         internal static void Delete(string exposureId)
         {
             if (string.IsNullOrEmpty(exposureId)) return;

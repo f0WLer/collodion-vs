@@ -1,7 +1,5 @@
 ﻿using Vintagestory.API.Common;
-using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
-using Photochemistry.AdminTooling;
 using Photochemistry.Configuration;
 
 

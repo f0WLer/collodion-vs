@@ -1,6 +1,5 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Client;
-using Photochemistry.AdminTooling;
 using Photochemistry.Configuration;
 
 namespace Photochemistry.FieldCamera

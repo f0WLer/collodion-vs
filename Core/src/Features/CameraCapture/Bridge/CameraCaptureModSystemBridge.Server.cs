@@ -1,5 +1,4 @@
-﻿using Photochemistry.AdminTooling;
-using Photochemistry.CameraCapture.Contracts;
+﻿using Photochemistry.CameraCapture.Contracts;
 using Photochemistry.CameraCapture.Integration;
 
 using Vintagestory.API.Server;

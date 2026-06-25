@@ -1,8 +1,6 @@
-﻿using Photochemistry.AdminTooling;
-using Photochemistry.CameraCapture;
+﻿using Photochemistry.CameraCapture;
 using Photochemistry.CameraCapture.Contracts;
 using Photochemistry.Exposure;
-using Photochemistry.ImageEffects;
 using Photochemistry.PhotoSync.Integration;
 using Photochemistry.Plates;
 using Vintagestory.API.Common;

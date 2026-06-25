@@ -2,7 +2,6 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
-using Photochemistry.AdminTooling;
 using Photochemistry.Configuration;
 
 namespace Photochemistry

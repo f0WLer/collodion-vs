@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using Photochemistry.AdminTooling;
 using Photochemistry.CameraCapture.Contracts;
 using Vintagestory.API.Client;
 using Photochemistry.Configuration;

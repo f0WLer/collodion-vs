@@ -5,7 +5,6 @@ using Photochemistry.AdminTooling;
 using Photochemistry.Configuration;
 using Photochemistry.CameraCapture.Integration;
 using Photochemistry.FieldCamera;
-using Photochemistry.ImageEffects;
 using Photochemistry.PhotoSync.Integration;
 using Photochemistry.PlateBox;
 using Photochemistry.Plates;

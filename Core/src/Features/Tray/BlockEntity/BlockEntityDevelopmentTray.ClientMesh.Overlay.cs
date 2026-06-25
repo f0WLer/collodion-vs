@@ -3,7 +3,6 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
-using Photochemistry.AdminTooling;
 using Photochemistry.Configuration;
 using Photochemistry.Plates.Rendering;
 namespace Photochemistry.Tray

@@ -1,4 +1,3 @@
-using System.Linq;
 using Photochemistry.PhotoSync.Storage;
 
 namespace Photochemistry.PhotoMetadata

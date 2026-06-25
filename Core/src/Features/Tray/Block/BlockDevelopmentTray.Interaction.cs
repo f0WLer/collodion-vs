@@ -1,5 +1,4 @@
-﻿using Photochemistry.AdminTooling;
-using Photochemistry.Plates;
+﻿using Photochemistry.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;

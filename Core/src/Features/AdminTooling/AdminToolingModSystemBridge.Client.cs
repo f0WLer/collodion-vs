@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Photochemistry.CameraCapture;
+﻿using Photochemistry.CameraCapture;
 using Vintagestory.API.Client;
 using Photochemistry.Configuration;
 

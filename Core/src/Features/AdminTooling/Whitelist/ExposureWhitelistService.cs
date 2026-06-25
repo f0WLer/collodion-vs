@@ -1,4 +1,3 @@
-using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
 namespace Photochemistry.AdminTooling.Whitelist

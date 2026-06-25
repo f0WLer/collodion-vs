@@ -33,7 +33,6 @@ namespace Photochemistry.AdminTooling
             // before ServerPhotoCommands.Register so the /photoadmin whitelist subtree finds the service.
             ConfigureServerWhitelistStartup(api);
 
-            // Operator disk-audit + whitelist tooling: /photoadmin (controlserver-gated).
             ServerPhotoCommands.Register(api, _owner);
         }
 
@@ -45,8 +44,6 @@ namespace Photochemistry.AdminTooling
             // request free plates without the server-operator privilege.
             if (!player.HasPrivilege("controlserver")) return;
 
-            // Resolve the chemistry's sensitized item + substrate from its recipe so the plate exposes with
-            // the right per-process timing and develops on the right medium. Falls back to glass iodide.
             string chemistry = string.IsNullOrEmpty(packet.Chemistry)
                 ? PlateAttributes.ChemistryCollodion : packet.Chemistry.ToLowerInvariant();
             SensitizationRecipe? recipe = SensitizationRegistry.ByChemistry(chemistry);

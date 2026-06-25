@@ -6,10 +6,6 @@ using Photochemistry.Plates;
 
 namespace Photochemistry.AdminTooling
 {
-    // Dev-time dialog for live-tuning the selected chemistry's exposure physics + post-effects.
-    // Opened via the hotkey binding "photochemistry-exposuregui" (default: unbound, assignable in game settings).
-    // Changes take effect immediately in the live preview and edit the active chemistry's profile in place;
-    // the Save Profile button persists the whole profile to chemistry-profiles.json.
     internal sealed class GuiDialogExposurePhysics : GuiDialog
     {
         // Opened manually via the hotkey handler — no auto-toggle key needed.
@@ -56,7 +52,6 @@ namespace Photochemistry.AdminTooling
             const double swSize   = 25.0;
             const double rowH     = 32.0;
 
-            // Helper — absolute child-element bounds (relative to bgBounds content area).
             static ElementBounds B(double x, double y, double w, double h)
                 => ElementBounds.Fixed(x, y, w, h);
 
@@ -97,12 +92,10 @@ namespace Photochemistry.AdminTooling
             var saveChemBtn = B(dialogW - 110, y + 1, 110, 24);
             y += rowH + 6;
 
-            // Build the chemistry list from the head's registered chemistries (baseline: iodide only).
             string[] chemCodes, chemNames;
             int selectedChem;
             BuildChemistryOptions(out chemCodes, out chemNames, out selectedChem);
 
-            // Shutter timing row: "[N] samples over [Y] s" + a live draws/second readout (red when too fast).
             var tSampBox = B(0,   y,     50, 26);
             var tSampLbl = B(54,  y + 4, 86, 20);
             var tDurBox  = B(142, y,     50, 26);
@@ -292,7 +285,6 @@ namespace Photochemistry.AdminTooling
                 .EndChildElements()
                 .Compose();
 
-            // ── Initialise switch states ──────────────────────────────────────────
             var c = SingleComposer;
             c.GetSwitch("sw-linearize").SetValue(_renderer.Physics.Linearize);
             c.GetSwitch("sw-spectral") .SetValue(_renderer.Physics.SpectralWeights);
@@ -302,7 +294,6 @@ namespace Photochemistry.AdminTooling
             c.GetSwitch("sw-finishing").SetValue(_renderer.ApplyFinishing);
             c.GetSwitch("sw-preview-peak").SetValue(_owner.Config.Viewfinder.DebugPreviewPeak);
 
-            // Surviving effects sliders: 0..1 floats → int 0..100.
             var fx = Effects;
             c.GetSlider("sl-grain")       .SetValues((int)(fx.Grain        * 100), 0, 100, 1);
             c.GetSlider("sl-vignette")    .SetValues((int)(fx.Vignette     * 100), 0, 100, 1);
@@ -310,8 +301,6 @@ namespace Photochemistry.AdminTooling
             c.GetSlider("sl-imperfection").SetValues((int)(fx.Imperfection * 100), 0, 100, 1);
             c.GetSlider("sl-edgewarmth")  .SetValues((int)(fx.EdgeWarmth   * 100), 0, 100, 1);
 
-            // Chemistry sliders — seeded from effective values (override if active, else process profile).
-            // Dev Strength: ×10 → int 0..200  |  H&D Gamma: ×100 → int 50..250  |  Sens: ×100 → int 0..200
             var proc = _renderer.ActiveProcess;
             c.GetSlider("sl-devstrength").SetValues((int)(_renderer.Physics.EffectiveDevStrength(proc) * 10),  0,   200, 1);
             c.GetSlider("sl-hdgamma")    .SetValues((int)(_renderer.Physics.EffectiveHDGamma(proc)     * 100), 50,  250, 1);
@@ -332,7 +321,6 @@ namespace Photochemistry.AdminTooling
             UpdateSampleRateReadout();
         }
 
-        // Returns a (labelBounds, sliderBounds) pair for a standard side-by-side row.
         private static (ElementBounds label, ElementBounds slider) SliderRow(
             double y, double labelW, double sliderW)
         {
@@ -343,8 +331,6 @@ namespace Photochemistry.AdminTooling
             );
         }
 
-        // Builds the dropdown option arrays from the head's registered chemistries, selecting the one
-        // currently active in the renderer. Falls back to the active chemistry if none are registered.
         private void BuildChemistryOptions(out string[] codes, out string[] names, out int selectedIndex)
         {
             System.Collections.Generic.IReadOnlyList<string> registered = SensitizationRegistry.RegisteredChemistries();
@@ -377,7 +363,6 @@ namespace Photochemistry.AdminTooling
             return true;
         }
 
-        // Pushes the two timing boxes into the active chemistry's profile and refreshes the draws/sec readout.
         private void OnTimingChanged(string _)
         {
             if (_seedingTiming) return;
@@ -387,7 +372,6 @@ namespace Photochemistry.AdminTooling
             UpdateSampleRateReadout();
         }
 
-        // Recomputes "N.N draws/s" from the two boxes and colours it red past the warn threshold.
         private void UpdateSampleRateReadout()
         {
             GuiElementDynamicText? rate = SingleComposer?.GetDynamicText("txt-samplerate");

@@ -344,8 +344,6 @@ namespace Photochemistry.AdminTooling
             return TextCommandResult.Success(sb.ToString());
         }
 
-        // Resolves an online player by name, falling back to last-known player data so offline players can
-        // be managed. Returns the stable UID (the whitelist key) plus a display name.
         private bool TryResolvePlayer(string name, out string uid, out string resolvedName, out string error)
         {
             uid = string.Empty;

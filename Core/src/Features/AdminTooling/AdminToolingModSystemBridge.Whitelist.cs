@@ -47,8 +47,6 @@ namespace Photochemistry.AdminTooling
             _owner.ServerChannel.SendPacket(new DevelopPermissionPacket { Allowed = _exposureWhitelist.IsAllowed(player) }, player);
         }
 
-        // Re-pushes permission to everyone online — used after a whitelist mutation so blocked/unblocked
-        // clients update immediately rather than only on their next reconnect.
         internal void BroadcastDevelopPermission(ICoreServerAPI api)
         {
             if (_owner.ServerChannel == null || _exposureWhitelist == null) return;
@@ -56,7 +54,6 @@ namespace Photochemistry.AdminTooling
                 PushDevelopPermission(player);
         }
 
-        // Client-side: wired from camera-capture client startup once ClientChannel is guaranteed set.
         internal void ConfigureClientDevelopPermissionChannelHandler()
         {
             if (_owner.ClientChannel == null) return;

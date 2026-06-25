@@ -3,7 +3,6 @@ using Vintagestory.API.Client;
 
 namespace Photochemistry.AdminTooling
 {
-    // Packet DTO and channel registration for AdminTooling network messages.
     internal static class AdminToolingChannelRegistration
     {
         internal static INetworkChannel RegisterAdminToolingMessageTypes(INetworkChannel channel)

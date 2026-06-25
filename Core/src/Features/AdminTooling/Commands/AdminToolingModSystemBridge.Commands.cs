@@ -5,8 +5,6 @@ using Photochemistry.Configuration;
 
 namespace Photochemistry.AdminTooling
 {
-    // Client command router for .photochemistry subcommands.
-    // Dispatches to command partials without mixing command parsing into gameplay flows.
     internal sealed partial class AdminToolingModSystemBridge
     {
         private const string PhotoplatePreviewCommandArgs = "show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]|quality <px>";
@@ -14,7 +12,6 @@ namespace Photochemistry.AdminTooling
         private const string AvailableCommandsLine = "photochemistry: available commands: " + SubcommandList;
         private const string UnknownCommandTryLine = "Try: .photochemistry " + SubcommandList;
 
-        // Routes .photochemistry subcommands to their specialized handler partials.
         internal void OnModClientCommand(int groupId, Vintagestory.API.Common.CmdArgs args)
         {
             if (_owner.ClientApi == null) return;
@@ -59,7 +56,6 @@ namespace Photochemistry.AdminTooling
             _owner.ClientApi.ShowChatMessage($"photochemistry: unknown subcommand '{sub}'. {UnknownCommandTryLine}");
         }
 
-        // Clears local photo and plate render caches so existing media is reloaded from disk.
         internal void HandleModClearCacheCommand()
         {
             if (_owner.ClientApi == null) return;
@@ -68,7 +64,6 @@ namespace Photochemistry.AdminTooling
             _owner.ClientApi.ShowChatMessage($"photochemistry: cleared {clearedPlates} plate renders (new photos will re-load from disk).");
         }
 
-        // Handles debug preview toggles and sizing/quality subcommands for live viewfinder diagnostics.
         internal void HandlePhotoplatePreviewCommand(Vintagestory.API.Common.CmdArgs args)
         {
             if (_owner.ClientApi == null) return;

@@ -7,10 +7,6 @@ namespace Photochemistry.AdminTooling
 {
     internal sealed partial class AdminToolingModSystemBridge
     {
-        // Handles .photochemistry clearpex [confirm].
-        // Dry-run (no confirm): reports how many .pex files exist and how many are protected
-        // by plates currently in the player's accessible inventories.
-        // With confirm: deletes only the unprotected (orphaned) files.
         internal void HandleClearPexCommand(CmdArgs args)
         {
             var capi = _owner.ClientApi;
@@ -58,9 +54,6 @@ namespace Photochemistry.AdminTooling
             capi.ShowChatMessage($"photochemistry: deleted {toDelete.Count} orphaned partial exposure file(s). {protectedCount} kept.");
         }
 
-        // Walks all inventories currently accessible to the player and collects every
-        // exposure ID referenced by a plate or fieldcamera-loaded plate, to protect those
-        // .pex files from the cleanup command.
         private HashSet<string> CollectInventoryExposureIds(ICoreClientAPI capi)
         {
             var ids = new HashSet<string>(StringComparer.Ordinal);

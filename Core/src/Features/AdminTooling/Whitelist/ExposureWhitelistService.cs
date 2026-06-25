@@ -59,7 +59,6 @@ namespace Photochemistry.AdminTooling.Whitelist
         internal string? GetName(string playerUid)
             => _state.Players.TryGetValue(playerUid, out string? name) ? name : null;
 
-        // Returns true when the flag actually changed (so the caller can avoid a redundant broadcast).
         internal bool SetEnabled(bool enabled)
         {
             if (_state.Enabled == enabled) return false;
@@ -68,7 +67,6 @@ namespace Photochemistry.AdminTooling.Whitelist
             return true;
         }
 
-        // Adds or refreshes a member by UID; returns true when the UID was newly added.
         internal bool Add(string playerUid, string playerName)
         {
             if (string.IsNullOrEmpty(playerUid)) return false;
@@ -86,7 +84,6 @@ namespace Photochemistry.AdminTooling.Whitelist
             return true;
         }
 
-        // Cloned snapshot (uid -> name) for read-only command output.
         internal IReadOnlyDictionary<string, string> Snapshot()
             => new Dictionary<string, string>(_state.Players, StringComparer.Ordinal);
 

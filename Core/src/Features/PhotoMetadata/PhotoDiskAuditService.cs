@@ -4,7 +4,6 @@ using Photochemistry.PhotoSync.Storage;
 
 namespace Photochemistry.PhotoMetadata
 {
-    // Result of executing a delete plan against the photo store.
     internal readonly struct DeleteResult
     {
         internal readonly int Deleted;

@@ -37,7 +37,6 @@ namespace Photochemistry.PhotoMetadata.Model
                 return;
             }
 
-            // Remove obviously invalid keys.
             var toRemove = new List<string>();
             foreach (var kvp in Entries)
             {

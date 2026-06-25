@@ -76,8 +76,6 @@ namespace Photochemistry.PhotoMetadata
             return copy;
         }
 
-        // Removes a single index row (e.g. after its source photo is deleted) and marks the index
-        // dirty so the next TryFlush persists the removal. Returns true when a row was removed.
         internal bool RemoveEntry(string photoId)
         {
             string normalized = PhotoAssetStoragePaths.NormalizePhotoId(photoId);
@@ -91,8 +89,6 @@ namespace Photochemistry.PhotoMetadata
             return false;
         }
 
-        // Drops every index row whose backing source file no longer exists, per the supplied predicate.
-        // Marks dirty when anything was removed. Returns the number of rows removed.
         internal int RemoveEntriesWithoutFile(System.Func<string, bool> fileExists)
         {
             List<string>? stale = null;
@@ -116,7 +112,6 @@ namespace Photochemistry.PhotoMetadata
         {
             if (!_isDirty) return;
 
-            // Skip if a previous flush is still in flight; we'll retry on the next tick.
             if (Interlocked.CompareExchange(ref _flushInFlight, 1, 0) != 0) return;
 
             // Optimistically clear dirty; restore on failure so the next tick retries.

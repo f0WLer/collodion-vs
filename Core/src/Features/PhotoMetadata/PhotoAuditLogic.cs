@@ -24,7 +24,6 @@ namespace Photochemistry.PhotoMetadata
         internal bool NeverSeen => LastSeenUtc == null;
     }
 
-    // A resolved set of photo ids selected for deletion, with the disk footprint they represent.
     internal readonly struct DeletePlan
     {
         internal readonly IReadOnlyList<string> Ids;
@@ -104,7 +103,6 @@ namespace Photochemistry.PhotoMetadata
                 .ThenBy(r => r.NeverSeen ? (r.ModifiedUtc ?? DateTime.MinValue) : (r.LastSeenUtc ?? DateTime.MinValue))
                 .ThenBy(r => r.Id, StringComparer.OrdinalIgnoreCase);
 
-        // The [count] least-recently-seen, grace-filtered, for the count-based bulk delete.
         internal static DeletePlan PlanOldest(IReadOnlyList<PhotoAuditRow> rows, int count, DateTime nowUtc, double graceHours)
         {
             if (count <= 0) return DeletePlan.From(Array.Empty<PhotoAuditRow>());

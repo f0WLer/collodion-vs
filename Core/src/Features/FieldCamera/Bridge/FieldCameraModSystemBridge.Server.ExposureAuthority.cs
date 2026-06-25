@@ -30,10 +30,8 @@ namespace Photochemistry.FieldCamera
             if (!CameraItemHelper.TryGetLoadedPlateStack(cameraStack, Api.World, out ItemStack? loadedPlate) || loadedPlate == null) return;
 
             PlateStage stage = PlateAttributes.GetStage(loadedPlate);
-            // Exposed or later means the photo was already recorded — nothing to finalize.
             if (stage != PlateStage.Sensitized && stage != PlateStage.Exposing && stage != PlateStage.ExposurePaused) return;
 
-            // Plate expired before the shutter fired — drying clock ran out mid-exposure.
             if (PlateDryingTransition.IsDry(Api.World, loadedPlate)) return;
 
             // Develop whitelist: finalizing the exposure into a photo is the act that creates a
@@ -119,7 +117,6 @@ namespace Photochemistry.FieldCamera
             }
             else
             {
-                // Pausing: accept only from Exposing.
                 if (stage != PlateStage.Exposing && stage != PlateStage.ExposurePaused) return;
 
                 PlateDryingTransition.TickNow(Api.World, loadedPlate);

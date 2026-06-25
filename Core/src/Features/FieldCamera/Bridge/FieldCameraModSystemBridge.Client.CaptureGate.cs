@@ -13,8 +13,6 @@ namespace Photochemistry.FieldCamera
                 loadedPlateStack = null;
 
                 if (owner.ClientApi == null || owner.ClientChannel == null) return false;
-                // Handheld capture needs the client renderers wired at startup; the viewport
-                // accumulator pushes frames to the preview sink, so gate on that sink's readiness.
                 if (!isMounted && owner.Capture._virtualCameraPreviewRenderer == null) return false;
 
                 // Prevent "late shutter" after RMB release.

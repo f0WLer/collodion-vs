@@ -4,7 +4,6 @@ using Vintagestory.API.MathTools;
 
 namespace Photochemistry.FieldCamera
 {
-    // Camera render-time overrides and ground-mesh cache handling.
     // Keeps rendering concerns separate from interaction and exposure logic.
     public partial class ItemFieldcamera
     {
@@ -12,7 +11,6 @@ namespace Photochemistry.FieldCamera
         private static readonly Vec3f _groundMeshScaleCenter = new Vec3f(0.5f, 0.5f, 0.5f);
         private static MultiTextureMeshRef? _groundMeshRef;
 
-        // Builds and caches the enlarged ground mesh.
         private bool TryGetGroundMesh(ICoreClientAPI capi, out MultiTextureMeshRef? meshRef)
         {
             lock (_groundMeshLock)
@@ -55,7 +53,6 @@ namespace Photochemistry.FieldCamera
             }
         }
 
-        // Applies ground-mesh and GUI transform overrides for client camera rendering.
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
 #pragma warning disable CS0618 // Preserve FP pose behavior on older targets
@@ -114,7 +111,6 @@ namespace Photochemistry.FieldCamera
             return dst;
         }
 
-        // Releases the cached ground mesh when the item is unloaded on the client.
         public override void OnUnloaded(ICoreAPI api)
         {
             base.OnUnloaded(api);

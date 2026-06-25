@@ -16,23 +16,19 @@ namespace Photochemistry.FieldCamera
         private const float MaxInnerTranslate = 7f / 16f; // inner pole travels 5 more model units
 
         private static readonly string[] _baseMeshIgnore = [
-            // camera group
             "CameraRoot", "BottomBoard", "SlingClip1", "SlingClip2",
             "FrontBoard", "BackBoard", "BackSide1", "BackSide2", "BackCover", "MetalNib1", "MetalNib2",
             "Bellows1", "Bellows2", "Bellows3", "Bellows4",
             "KnobPlate", "KnobStem", "Knob",
             "LensHousingPlate", "LensHousing", "LensPiece", "TripodMount",
-            // pole group
             "Tripod-PoleBase", "Tripod-PoleInner"
         ];
         private static readonly string[] _poleBaseMeshIgnore = [
-            // camera group
             "CameraRoot", "BottomBoard", "SlingClip1", "SlingClip2",
             "FrontBoard", "BackBoard", "BackSide1", "BackSide2", "BackCover", "MetalNib1", "MetalNib2",
             "Bellows1", "Bellows2", "Bellows3", "Bellows4",
             "KnobPlate", "KnobStem", "Knob",
             "LensHousingPlate", "LensHousing", "LensPiece", "TripodMount",
-            // base group
             "Arm Hub", "HingeBackRight", "MountBR", "LegBR", "FootBR",
             "HingeBackLeft", "MountBL", "LegBL", "FootBL",
             "HingeFront", "MountF", "LegF", "FootF",
@@ -41,11 +37,9 @@ namespace Photochemistry.FieldCamera
         ];
         private static readonly string[] _poleInnerSelect = ["Tripod-PoleInner"];
         private static readonly string[] _cameraMeshIgnore = [
-            // base group
             "Arm Hub", "HingeBackRight", "MountBR", "LegBR", "FootBR",
             "HingeBackLeft", "MountBL", "LegBL", "FootBL",
             "HingeFront", "MountF", "LegF", "FootF",
-            // pole group
             "Tripod-PoleBase", "Tripod-PoleInner"
         ];
 

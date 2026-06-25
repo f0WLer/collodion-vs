@@ -2,9 +2,6 @@ using Vintagestory.API.Client;
 
 namespace Photochemistry.Plates.Rendering
 {
-    // Shared mesh render cache used by both item and plate photo render paths.
-    // Stores uploaded MultiTextureMeshRef + atlas texture id per string cache key.
-    // Versioning allows callers to detect atlas invalidation between snapshot and store.
     internal sealed class PhotoMeshRenderCache
     {
         private sealed class CachedRender

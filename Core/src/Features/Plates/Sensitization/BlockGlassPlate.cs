@@ -22,7 +22,6 @@ namespace Photochemistry.Plates
 
         public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)
         {
-            // Plates should drop their corresponding *item* (rough/clean/coated), not the block itself.
             if (TryCreatePlateItemStack(world, pos, out ItemStack stack)) return [stack];
 
             return base.GetDrops(world, pos, byPlayer, dropQuantityMultiplier);

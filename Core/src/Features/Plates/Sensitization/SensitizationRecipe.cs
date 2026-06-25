@@ -2,14 +2,12 @@ using Vintagestory.API.Common;
 
 namespace Photochemistry.Plates
 {
-    // How a single sensitization step is applied to the plate.
     internal enum SensitizationInteractionType
     {
-        PourLiquid, // hold a liquid container with >= Amount units of Ingredient (timed pour)
-        ApplySolid  // hold >= Amount of the solid item Ingredient (consumed)
+        PourLiquid,
+        ApplySolid
     }
 
-    // One step in a chemistry's sensitization sequence.
     internal sealed class SensitizationStep
     {
         public SensitizationInteractionType Type { get; init; }
@@ -19,7 +17,6 @@ namespace Photochemistry.Plates
         public string ActionLangCode { get; init; } = "";
     }
 
-    // The ordered steps that turn a clean substrate into a sensitized plate of one chemistry.
     // The rough->clean polish is shared prep and is not part of any recipe.
     internal sealed class SensitizationRecipe
     {

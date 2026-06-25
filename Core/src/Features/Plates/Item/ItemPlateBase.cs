@@ -47,7 +47,6 @@ namespace Photochemistry.Plates
             }
         }
 
-        // Releases cached ground meshes for this item instance during asset reload/unload.
         private void DisposeGroundMeshCache()
         {
             lock (_groundMeshLock)
@@ -60,10 +59,7 @@ namespace Photochemistry.Plates
                     {
                         meshRef?.Dispose();
                     }
-                    catch
-                    {
-                        // best-effort cache cleanup on unload
-                    }
+                    catch { }
                 }
 
                 _groundMeshCache.Clear();

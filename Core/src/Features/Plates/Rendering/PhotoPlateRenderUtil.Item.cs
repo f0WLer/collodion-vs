@@ -19,10 +19,8 @@ namespace Photochemistry.Plates.Rendering
 
             bool isPaper = inputs.IsPaper;
 
-            // Item-driven overlay tuning. The null-safe attribute reads can't throw, so no guards are needed.
             string overlayFace = itemstack.Collectible?.Attributes?["photoOverlayFace"]?.AsString("south") ?? "south";
             int uvRotationDeg = itemstack.Collectible?.Attributes?["photoUvRotation"]?.AsInt(0) ?? 0;
-            // Default behavior: mirror only in GUI, unless explicitly overridden by item attributes.
             bool defaultMirrorX = target == EnumItemRenderTarget.Gui;
             bool mirrorX = itemstack.Collectible?.Attributes?["photoMirrorX"]?.AsBool(defaultMirrorX) ?? defaultMirrorX;
 

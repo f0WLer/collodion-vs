@@ -24,7 +24,6 @@ namespace Photochemistry.Plates.Rendering
             return lut;
         }
 
-        // Reads PNG width/height directly from IHDR bytes without full image decode.
         internal static bool TryGetPngDimensions(byte[] pngBytes, out int width, out int height)
         {
             width = 0;
@@ -279,7 +278,6 @@ namespace Photochemistry.Plates.Rendering
             }
         }
 
-        // Warm paper-base colour the salted print is composited over (the unexposed sheet).
         private const byte PaperBaseR = 235, PaperBaseG = 228, PaperBaseB = 210;
 
         // Converts a positive source bitmap in-place into an opaque salted-paper print:
@@ -296,7 +294,6 @@ namespace Photochemistry.Plates.Rendering
             float strength = t < 0f ? 0f : (t > 1f ? 1f : t);
             byte depR = presentation.DepositR, depG = presentation.DepositG, depB = presentation.DepositB;
 
-            // Fast path always applies for the allocated Rgba8888 working bitmap; defensive no-op otherwise.
             SKPixmap pixmap = bmp.PeekPixels();
             SKColorType ct = pixmap?.ColorType ?? SKColorType.Unknown;
             if (pixmap == null || pixmap.BytesPerPixel != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
@@ -384,7 +381,6 @@ namespace Photochemistry.Plates.Rendering
             float gateRange = 1f - gate;
             if (gateRange < 0.001f) gateRange = 0.001f;
 
-            // Fast path always applies for the allocated Rgba8888 working bitmap; defensive no-op otherwise.
             SKPixmap pixmap = bmp.PeekPixels();
             SKColorType ct = pixmap?.ColorType ?? SKColorType.Unknown;
             if (pixmap == null || pixmap.BytesPerPixel != 4 || (ct != SKColorType.Bgra8888 && ct != SKColorType.Rgba8888))
@@ -428,7 +424,6 @@ namespace Photochemistry.Plates.Rendering
             }
         }
 
-        // Clamped linear interpolation helper.
         private static float Lerp(float a, float b, float t)
         {
             if (t < 0f) t = 0f;

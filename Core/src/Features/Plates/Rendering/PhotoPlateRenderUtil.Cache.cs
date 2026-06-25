@@ -120,7 +120,6 @@ namespace Photochemistry.Plates.Rendering
                 developPours, maxDeveloperPours, versionSnapshot, sourcePath);
             return true;
         }
-        // Shared mesh render cache for the plate render path (item overlay + block overlay).
         private static readonly PhotoMeshRenderCache _meshRenderCache = new();
 
         // Auxiliary cache lock guards aspect-ratio and prune-state entries only.
@@ -129,7 +128,6 @@ namespace Photochemistry.Plates.Rendering
         private static readonly Dictionary<string, float> _blockPhotoAspectCache = new(StringComparer.OrdinalIgnoreCase);
         private static readonly HashSet<string> _derivedPruneState = new(StringComparer.OrdinalIgnoreCase);
 
-        // Disposes cached mesh refs, clears render caches, and bumps versioned cache keys.
         public static int ClearClientRenderCacheAndBumpVersion()
         {
             int cleared = _meshRenderCache.ClearAndBumpVersion();
@@ -157,21 +155,18 @@ namespace Photochemistry.Plates.Rendering
             return cleared;
         }
 
-        // Builds a deterministic derived image filename for a profile variant.
         private static string GetDerivedPhotoFileName(string photoFileName, string profile)
         {
             string baseName = Path.GetFileNameWithoutExtension(photoFileName);
             return $"{baseName}__{profile}.png";
         }
 
-        // Builds the full on-disk path for a derived image variant.
         private static string GetDerivedPhotoPath(string photoFileName, string profile)
         {
             string derivedFileName = GetDerivedPhotoFileName(photoFileName, profile);
             return Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos", "derived", derivedFileName);
         }
 
-        // Best-effort cleanup of obsolete developed-stage variants for a photo.
         private static void MaybePruneObsoleteDevelopedDerived(ICoreClientAPI capi, string photoFileName, ItemStack? itemstack, int developPours, int maxDeveloperPours, bool useDevelopedStage)
         {
             if (string.IsNullOrWhiteSpace(photoFileName) || itemstack?.Attributes == null) return;
@@ -218,7 +213,6 @@ namespace Photochemistry.Plates.Rendering
             }
         }
 
-        // Deletes the derived negative file for a single stage index.
         private static void DeleteDerivedNegativeStageFile(string derivedDir, string baseName, int stageIndex)
         {
             if (stageIndex < 1) return;

@@ -6,10 +6,8 @@ namespace Photochemistry.Plates.Rendering
 {
     internal static class PhotoMeshUtil
     {
-        // Plate/frame visible area is 5w x 5.5h => aspect = 10/11.
         internal const float PhotoTargetAspect = 10f / 11f;
 
-        // Creates an overlay quad aligned to the requested face of the base plate mesh bounds.
         internal static MeshData CreateOverlayQuad(TextureAtlasPosition texPos, MeshData baseMesh, int uvRotationDeg, bool mirrorX, float photoAspect, string face)
         {
             // Derive the photo quad from the current plate model bounds so shape changes
@@ -201,7 +199,6 @@ namespace Photochemistry.Plates.Rendering
             return m.WithTexPos(texPos);
         }
 
-        // Applies centered UV cropping so source photo aspect fills target aspect without stretch.
         internal static void ApplyUvCenterCropToAspect(MeshData mesh, float sourceAspect, float targetAspect, int rotationDeg)
         {
             if (mesh.Uv == null || mesh.VerticesCount <= 0) return;
@@ -226,7 +223,6 @@ namespace Photochemistry.Plates.Rendering
             }
         }
 
-        // Rotates mesh UVs clockwise in 90-degree increments.
         internal static void ApplyUvRotationCw(MeshData mesh, int uvRotationDeg)
         {
             int rot = ((uvRotationDeg % 360) + 360) % 360;
@@ -263,7 +259,6 @@ namespace Photochemistry.Plates.Rendering
             }
         }
 
-        // Mirrors mesh UVs on the U axis.
         internal static void ApplyUvMirrorX(MeshData mesh)
         {
             float[] uv = mesh.Uv;
@@ -273,7 +268,6 @@ namespace Photochemistry.Plates.Rendering
             }
         }
 
-        // Stamps cropped atlas UVs onto each quad in the mesh for the requested rotation.
         internal static void StampUvByRotationCropped(MeshData mesh, TextureAtlasPosition texPos, int rotationDeg, float sourceAspect, float targetAspect)
         {
             if (mesh?.Uv == null || mesh.VerticesCount < 4) return;
@@ -323,7 +317,6 @@ namespace Photochemistry.Plates.Rendering
             EnsureOpaqueVertexColors(mesh);
         }
 
-        // Computes a center-cropped atlas rectangle, accounting for UV rotation orientation.
         internal static void GetCroppedTexRect(TextureAtlasPosition texPos, float sourceAspect, float targetAspect, int rotationDeg, out float x1, out float x2, out float y1, out float y2)
         {
             x1 = texPos.x1;
@@ -380,7 +373,6 @@ namespace Photochemistry.Plates.Rendering
             }
         }
 
-        // Guarantees full-opacity vertex color payload for mesh quads.
         internal static void EnsureOpaqueVertexColors(MeshData mesh)
         {
             int expectedRgbaLen = mesh.VerticesCount * 4;

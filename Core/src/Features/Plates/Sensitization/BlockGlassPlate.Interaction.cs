@@ -53,7 +53,6 @@ namespace Photochemistry.Plates
 
             bool isPickup = IsEmptyHand(byPlayer);
 
-            // Client just shows the "hold to interact" prompt; no state changes.
             if (world.Side == EnumAppSide.Client)
                 return isPolish || sensitizeStep != null || isPickup;
 

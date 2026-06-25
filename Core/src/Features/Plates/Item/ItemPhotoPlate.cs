@@ -38,7 +38,6 @@ namespace Photochemistry.Plates
             }
         }
 
-        // Once the plate is finished it's a permanent photograph; no longer dries.
         protected override bool ShouldTrackDryness(ItemStack stack)
             => PlateAttributes.GetStage(stack) != PlateStage.Finished;
     }

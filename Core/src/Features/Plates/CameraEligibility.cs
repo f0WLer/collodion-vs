@@ -25,7 +25,6 @@ namespace Photochemistry.Plates
             return path.StartsWith("sensitized", StringComparison.OrdinalIgnoreCase);
         }
 
-        // Checks whether an item stack is a loadable sensitized plate for camera insertion.
         public static bool CanLoadIntoCamera(ItemStack? stack)
         {
             if (!IsSensitizedItem(stack)) return false;
@@ -35,7 +34,6 @@ namespace Photochemistry.Plates
                 || stage == PlateStage.Exposing  || stage == PlateStage.ExposurePaused;
         }
 
-        // Checks whether a plate can start or resume accumulation (Sensitized or ExposurePaused).
         public static bool IsPlateExposable(ItemStack? stack)
         {
             if (!IsSensitizedItem(stack)) return false;

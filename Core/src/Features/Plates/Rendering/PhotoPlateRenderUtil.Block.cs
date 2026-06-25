@@ -7,7 +7,6 @@ namespace Photochemistry.Plates.Rendering
 {
     public static partial class PhotoPlateRenderUtil
     {
-        // Resolves or inserts the block texture atlas entry for a plate photo overlay.
         public static bool TryGetPhotoBlockTexture(ICoreClientAPI capi, ItemStack? itemstack, out TextureAtlasPosition texPos, out float photoAspect, BlockPos? waitingPos = null)
         {
             texPos = capi.BlockTextureAtlas.UnknownTexturePosition;

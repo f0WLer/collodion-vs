@@ -6,7 +6,7 @@ using Vintagestory.API.Common;
 
 namespace Photochemistry.AdminTooling
 {
-    // .collodion export — bakes the currently held photo plate into a flat, viewable composite
+    // .photochemistry export — bakes the currently held photo plate into a flat, viewable composite
     // PNG (silver image over an opaque black backing) under ModData/collodion/photos/exports/.
     // Entirely client-side: reads the already-synced raw, writes a derived file, no server I/O.
     internal sealed partial class AdminToolingModSystemBridge

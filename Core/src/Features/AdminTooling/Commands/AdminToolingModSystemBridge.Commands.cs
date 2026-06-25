@@ -5,15 +5,16 @@ using Photochemistry.Configuration;
 
 namespace Photochemistry.AdminTooling
 {
-    // Client command router for .collodion subcommands.
+    // Client command router for .photochemistry subcommands.
     // Dispatches to command partials without mixing command parsing into gameplay flows.
     internal sealed partial class AdminToolingModSystemBridge
     {
         private const string PhotoplatePreviewCommandArgs = "show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]|quality <px>";
-        private const string AvailableCommandsLine = "photochemistry: available commands: clearcache | clearpex [confirm] | export | preview (" + PhotoplatePreviewCommandArgs + ") | effects | effect <FieldName> <value> | effect save | effect load";
-        private const string UnknownCommandTryLine = "Try: .collodion clearcache | .collodion clearpex [confirm] | .collodion export | .collodion preview (" + PhotoplatePreviewCommandArgs + ") | .collodion effects | .collodion effect <FieldName> <value>";
+        private const string SubcommandList = "clearcache | clearpex [confirm] | export | preview (" + PhotoplatePreviewCommandArgs + ") | effects | effect <FieldName> <value> | effect save | effect load";
+        private const string AvailableCommandsLine = "photochemistry: available commands: " + SubcommandList;
+        private const string UnknownCommandTryLine = "Try: .photochemistry " + SubcommandList;
 
-        // Routes .collodion subcommands to their specialized handler partials.
+        // Routes .photochemistry subcommands to their specialized handler partials.
         internal void OnModClientCommand(int groupId, Vintagestory.API.Common.CmdArgs args)
         {
             if (_owner.ClientApi == null) return;
@@ -108,7 +109,7 @@ namespace Photochemistry.AdminTooling
                             break;
 
                         default:
-                            _owner.ClientApi.ShowChatMessage("usage: .collodion preview peak [show|on|off|toggle]");
+                            _owner.ClientApi.ShowChatMessage("usage: .photochemistry preview peak [show|on|off|toggle]");
                             return;
                     }
                     break;
@@ -137,7 +138,7 @@ namespace Photochemistry.AdminTooling
                         if (!int.TryParse(wStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int w)
                             || !int.TryParse(hStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int h))
                         {
-                            _owner.ClientApi.ShowChatMessage("usage: .collodion preview size <width> <height>");
+                            _owner.ClientApi.ShowChatMessage("usage: .photochemistry preview size <width> <height>");
                             return;
                         }
 
@@ -152,7 +153,7 @@ namespace Photochemistry.AdminTooling
                         string msStr = args.PopWord();
                         if (!int.TryParse(msStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int ms))
                         {
-                            _owner.ClientApi.ShowChatMessage("usage: .collodion preview refresh <milliseconds>");
+                            _owner.ClientApi.ShowChatMessage("usage: .photochemistry preview refresh <milliseconds>");
                             return;
                         }
 
@@ -166,7 +167,7 @@ namespace Photochemistry.AdminTooling
                         string anchor = args.PopWord();
                         if (string.IsNullOrWhiteSpace(anchor))
                         {
-                            _owner.ClientApi.ShowChatMessage("usage: .collodion preview anchor <topleft|topright|bottomleft|bottomright>");
+                            _owner.ClientApi.ShowChatMessage("usage: .photochemistry preview anchor <topleft|topright|bottomleft|bottomright>");
                             return;
                         }
 
@@ -180,7 +181,7 @@ namespace Photochemistry.AdminTooling
                         string dimStr = args.PopWord();
                         if (!int.TryParse(dimStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int dim))
                         {
-                            _owner.ClientApi.ShowChatMessage($"usage: .collodion preview quality <pixels> (current: {cfg.Viewfinder.DebugPreviewMaxDimension}, plate capture: {cfg.Viewfinder.PhotoCaptureMaxDimension})");
+                            _owner.ClientApi.ShowChatMessage($"usage: .photochemistry preview quality <pixels> (current: {cfg.Viewfinder.DebugPreviewMaxDimension}, plate capture: {cfg.Viewfinder.PhotoCaptureMaxDimension})");
                             return;
                         }
 
@@ -190,11 +191,16 @@ namespace Photochemistry.AdminTooling
                     }
 
                 default:
-                    _owner.ClientApi.ShowChatMessage("usage: .collodion preview <show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]|quality <pixels>>");
+                    _owner.ClientApi.ShowChatMessage("usage: .photochemistry preview <show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]|quality <pixels>>");
                     return;
             }
 
-            CommandConfigPersistence.PersistPreviewConfig(_owner, cfg, changed);
+            if (changed)
+            {
+                cfg.Viewfinder ??= new ViewfinderConfig();
+                cfg.Viewfinder.ClampInPlace();
+                _owner.SaveClientConfig(_owner.ClientApi);
+            }
 
             _owner.ClientApi.ShowChatMessage(
                 $"photochemistry: preview {cfg.Viewfinder.DebugPreviewWidth}x{cfg.Viewfinder.DebugPreviewHeight}, "

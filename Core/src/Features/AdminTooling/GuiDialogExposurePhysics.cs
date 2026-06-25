@@ -29,7 +29,7 @@ namespace Photochemistry.AdminTooling
         }
 
         private ImageEffectsConfig? _effects;
-        private ImageEffectsConfig Effects => _effects ??= new ImageEffectsConfig();
+        private ImageEffectsConfig Effects => _effects!;
 
         // Suppresses the timing-box change handler while the boxes are being seeded on compose.
         private bool _seedingTiming;

@@ -7,7 +7,7 @@ namespace Photochemistry.AdminTooling
 {
     internal sealed partial class AdminToolingModSystemBridge
     {
-        // Handles .collodion clearpex [confirm].
+        // Handles .photochemistry clearpex [confirm].
         // Dry-run (no confirm): reports how many .pex files exist and how many are protected
         // by plates currently in the player's accessible inventories.
         // With confirm: deletes only the unprotected (orphaned) files.
@@ -42,7 +42,7 @@ namespace Photochemistry.AdminTooling
                 }
                 capi.ShowChatMessage(
                     $"photochemistry: {allIds.Count} partial exposure file(s) — {protectedCount} protected by plates in your inventory, {toDelete.Count} orphaned. "
-                    + "Run '.collodion clearpex confirm' to delete orphaned files.");
+                    + "Run '.photochemistry clearpex confirm' to delete orphaned files.");
                 return;
             }
 

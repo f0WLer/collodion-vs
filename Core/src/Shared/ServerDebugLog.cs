@@ -1,7 +1,7 @@
 using Vintagestory.API.Common;
 using Photochemistry.Configuration;
 
-namespace Photochemistry.AdminTooling
+namespace Photochemistry
 {
     // Server-only, config-gated diagnostic logging. Silent unless the host enables
     // Client.ShowDebugLogs in their server collodion.json. Emits at Notification level so

@@ -56,8 +56,8 @@ namespace Photochemistry.AdminTooling
             #pragma warning disable CS0618 // Keep legacy command registration for compatibility
             api.RegisterCommand(
                 "photochemistry",
-                "Collodion mod commands",
-                ".collodion clearcache | .collodion export | .collodion preview | .collodion effects",
+                "Photochemistry mod commands",
+                SubcommandList,
                 OnModClientCommand
             );
             #pragma warning restore CS0618

@@ -5,7 +5,7 @@ using Photochemistry.AdminTooling;
 using Photochemistry.Configuration;
 
 
-namespace Photochemistry.Plates.Blocks
+namespace Photochemistry.Plates
 {
     public sealed partial class BlockGlassPlate
     {

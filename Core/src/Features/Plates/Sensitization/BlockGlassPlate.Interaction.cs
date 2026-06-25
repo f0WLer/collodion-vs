@@ -3,7 +3,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace Photochemistry.Plates.Blocks
+namespace Photochemistry.Plates
 {
     public sealed partial class BlockGlassPlate
     {

@@ -9,7 +9,6 @@ using Photochemistry.ImageEffects;
 using Photochemistry.PhotoSync.Integration;
 using Photochemistry.PlateBox;
 using Photochemistry.Plates;
-using Photochemistry.Plates.Blocks;
 using Photochemistry.Tray;
 using Photochemistry.Frame;
 

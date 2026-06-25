@@ -1,7 +1,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 
-namespace Photochemistry.Plates.Blocks
+namespace Photochemistry.Plates
 {
     // Tracks fine sensitization progress on a placed glass plate: which chemistry it's becoming and how
     // many recipe steps are done. The block code still carries the coarse visual (clean/coated); this

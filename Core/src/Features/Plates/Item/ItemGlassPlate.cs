@@ -53,7 +53,7 @@ namespace Photochemistry.Plates
 
             // Restore fine sensitization progress (chemistry + step) onto the placed block entity.
             string? plateChemistry = slot.Itemstack.Attributes.GetString("plateChemistry", null);
-            if (plateChemistry != null && world.BlockAccessor.GetBlockEntity(placePos) is Blocks.BlockEntityGlassPlate be)
+            if (plateChemistry != null && world.BlockAccessor.GetBlockEntity(placePos) is BlockEntityGlassPlate be)
             {
                 be.ChemistryId = plateChemistry;
                 be.StepIndex = slot.Itemstack.Attributes.GetInt("plateStep", 1);

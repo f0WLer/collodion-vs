@@ -2,6 +2,7 @@
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Photochemistry.AdminTooling;
+using Photochemistry.Configuration;
 
 
 namespace Photochemistry.Plates.Blocks

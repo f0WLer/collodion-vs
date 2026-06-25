@@ -1,7 +1,7 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace Photochemistry.AdminTooling
+namespace Photochemistry.Configuration
 {
     // Lightweight helpers to resolve PhotochemistryModSystem and config snapshots from APIs.
     // Avoids repeating ModLoader lookup boilerplate across files.

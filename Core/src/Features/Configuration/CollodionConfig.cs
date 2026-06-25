@@ -1,4 +1,4 @@
-namespace Photochemistry.AdminTooling
+namespace Photochemistry.Configuration
 {
     // Root persisted config tree for collodion systems.
     // Aggregates subsystem configs and enforces safe ranges through ClampInPlace.

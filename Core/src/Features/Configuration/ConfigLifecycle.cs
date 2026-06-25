@@ -1,6 +1,6 @@
 using Vintagestory.API.Common;
 
-namespace Photochemistry.AdminTooling
+namespace Photochemistry.Configuration
 {
     // Feature-owned config lifecycle policy used by client/server startup and runtime persistence paths.
     // Normalizes config trees consistently and keeps load/store error handling in one place.

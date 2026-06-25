@@ -1,6 +1,7 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Server;
 using Photochemistry.AdminTooling;
+using Photochemistry.Configuration;
 using Photochemistry.PhotoSync.Contracts;
 using Photochemistry.PhotoSync.Storage;
 

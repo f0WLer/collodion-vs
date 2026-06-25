@@ -6,6 +6,7 @@ using Vintagestory.Client.NoObf;
 using Photochemistry.AdminTooling;
 using Photochemistry.Exposure;
 using Photochemistry.ImageEffects;
+using Photochemistry.Configuration;
 
 namespace Photochemistry.CameraCapture
 {

@@ -1,3 +1,5 @@
+using Photochemistry.Configuration;
+
 namespace Photochemistry.AdminTooling
 {
     // Feature-owned command persistence helpers for operator-tooling config writes.

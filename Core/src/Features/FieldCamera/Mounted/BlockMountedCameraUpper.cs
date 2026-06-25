@@ -2,6 +2,7 @@ using Photochemistry.AdminTooling;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Photochemistry.Configuration;
 
 namespace Photochemistry.FieldCamera
 {

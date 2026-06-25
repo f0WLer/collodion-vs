@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using Photochemistry.ImageEffects;
 using Photochemistry.Plates.Rendering;
+using Photochemistry.Configuration;
 
 namespace Photochemistry.AdminTooling
 {

@@ -3,6 +3,7 @@ using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Photochemistry.PhotoMetadata;
+using Photochemistry.Configuration;
 
 namespace Photochemistry.AdminTooling
 {

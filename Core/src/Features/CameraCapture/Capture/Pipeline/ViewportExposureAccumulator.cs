@@ -2,6 +2,7 @@
 using Photochemistry.AdminTooling;
 using Photochemistry.ImageEffects;
 using Photochemistry.Exposure;
+using Photochemistry.Configuration;
 
 namespace Photochemistry.CameraCapture
 {

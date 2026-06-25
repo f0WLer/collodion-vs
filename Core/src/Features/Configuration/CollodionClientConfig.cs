@@ -1,4 +1,4 @@
-namespace Photochemistry.AdminTooling
+namespace Photochemistry.Configuration
 {
     // Client-only quality-of-life and debug toggles persisted in mod config.
     // Includes bounds checks so chat/tooling values stay within sane limits.

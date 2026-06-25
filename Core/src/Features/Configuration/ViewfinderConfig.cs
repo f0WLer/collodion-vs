@@ -1,4 +1,4 @@
-namespace Photochemistry.AdminTooling
+namespace Photochemistry.Configuration
 {
     // Tunables for viewfinder zoom, hold-still scoring, and debug preview behavior.
     // Values are clamped in-place to keep runtime behavior stable.

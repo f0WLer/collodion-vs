@@ -1,4 +1,4 @@
-namespace Photochemistry.AdminTooling
+namespace Photochemistry.Configuration
 {
     public sealed class DevelopmentTrayInteractionConfig
     {

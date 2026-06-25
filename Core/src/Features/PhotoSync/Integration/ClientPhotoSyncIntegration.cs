@@ -2,6 +2,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.MathTools;
 using Photochemistry.AdminTooling;
 using Photochemistry.PhotoSync.Runtime;
+using Photochemistry.Configuration;
 
 namespace Photochemistry.PhotoSync.Integration
 {

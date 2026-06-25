@@ -2,6 +2,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Photochemistry.AdminTooling;
+using Photochemistry.Configuration;
 using Photochemistry.CameraCapture.Integration;
 using Photochemistry.FieldCamera;
 using Photochemistry.ImageEffects;

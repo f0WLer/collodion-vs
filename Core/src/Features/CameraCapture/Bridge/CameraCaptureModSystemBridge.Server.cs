@@ -3,6 +3,7 @@ using Photochemistry.CameraCapture.Contracts;
 using Photochemistry.CameraCapture.Integration;
 
 using Vintagestory.API.Server;
+using Photochemistry.Configuration;
 
 namespace Photochemistry.CameraCapture
 {

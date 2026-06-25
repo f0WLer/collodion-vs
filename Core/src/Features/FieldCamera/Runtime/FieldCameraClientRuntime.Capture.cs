@@ -9,6 +9,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using Vintagestory.API.Config;
+using Photochemistry.Configuration;
 
 namespace Photochemistry.FieldCamera
 {

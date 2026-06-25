@@ -1,4 +1,5 @@
 using Vintagestory.API.Common;
+using Photochemistry.Configuration;
 
 namespace Photochemistry.AdminTooling
 {

@@ -10,7 +10,6 @@ namespace Photochemistry.PlateBox
         private static readonly AssetLocation _hingeSound = new("photochemistry", "sounds/hinge");
         private const int OpenCloseSoundDelayMs = 35;
 
-        // Handles shift-pickup inventory transfer and authoritative block removal.
         private bool TryPickupBoxAndGiveDrop(IWorldAccessor world, IPlayer byPlayer, BlockPos pos)
         {
             if (world == null || byPlayer == null || pos == null) return false;
@@ -26,7 +25,6 @@ namespace Photochemistry.PlateBox
             return true;
         }
 
-        // Gives a stack to player inventory first and falls back to spawning in-world when full.
         private static bool TryGiveOrSpawnStack(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, ItemStack stack)
         {
             if (world == null || byPlayer == null || pos == null || stack == null) return false;
@@ -38,7 +36,6 @@ namespace Photochemistry.PlateBox
             return true;
         }
 
-        // Swaps between open/closed facing variants while preserving BlockEntity slot state.
         private static bool TrySetOpenState(IWorldAccessor world, BlockPos pos, BlockEntityPlateBox be, bool open)
         {
             if (world == null || pos == null || be == null) return false;
@@ -83,7 +80,6 @@ namespace Photochemistry.PlateBox
             return false;
         }
 
-        // Plays the plate-box open/close foley sequence on the authoritative server side.
         private static void PlayOpenCloseSoundPair(IWorldAccessor world, BlockPos pos)
         {
             if (world == null || pos == null || world.Side != EnumAppSide.Server) return;
@@ -97,7 +93,6 @@ namespace Photochemistry.PlateBox
             PlaySoundWithDelay(world, x, y, z, _hingeSound, OpenCloseSoundDelayMs * 2);
         }
 
-        // Schedules delayed sounds with an immediate fallback when callback scheduling fails.
         private static void PlaySoundWithDelay(IWorldAccessor world, double x, double y, double z, AssetLocation sound, int delayMs)
         {
             if (delayMs <= 0)

@@ -14,7 +14,6 @@ namespace Photochemistry.PlateBox
         private MeshRef? _slotMeshRef;   // south/north: thin in X, depth in Z  (PW × PH × PD)
         private MeshRef? _slotMeshRefEW; // east/west:   thin in Z, depth in X  (PD × PH × PW)
 
-        // Captures the owning BE reference and client rendering API.
         public PlateBoxSlotRenderer(ICoreClientAPI capi, BlockEntityPlateBox owner)
         {
             _capi = capi;
@@ -24,7 +23,6 @@ namespace Photochemistry.PlateBox
         public double RenderOrder => 0.5;
         public int RenderRange => 64;
 
-        // Draws plate-slot meshes for open plate boxes each frame on the opaque stage.
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
             if (stage != EnumRenderStage.Opaque) return;
@@ -149,7 +147,6 @@ namespace Photochemistry.PlateBox
         private bool EnsureSlotMesh()   => EnsureSlotMeshOriented(ref _slotMeshRef,   BlockEntityPlateBox.SlotPlateWidth, BlockEntityPlateBox.SlotPlateDepth);
         private bool EnsureSlotMeshEW() => EnsureSlotMeshOriented(ref _slotMeshRefEW, BlockEntityPlateBox.SlotPlateDepth, BlockEntityPlateBox.SlotPlateWidth);
 
-        // Chooses a stage-aware tint fallback for slot plates.
         private static Vec4f GetSlotTint(string path, PlateStage stage)
         {
             if (stage == PlateStage.Rough) return new Vec4f(0.80f, 0.82f, 0.86f, 1f);
@@ -168,7 +165,6 @@ namespace Photochemistry.PlateBox
             return new Vec4f(0.92f, 0.92f, 0.92f, 1f);
         }
 
-        // Releases uploaded mesh references when the renderer is torn down.
         public void Dispose()
         {
             _slotMeshRef?.Dispose();

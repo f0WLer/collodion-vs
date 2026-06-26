@@ -29,35 +29,30 @@ namespace Photochemistry.PlateBox
 
         private PlateBoxSlotRenderer? _clientSlotRenderer;
 
-        // Registers the per-slot renderer for this BlockEntity instance on the client.
         partial void ClientInitialize(ICoreAPI api)
         {
             _clientSlotRenderer = PlateBoxRenderLifecycle.EnsureRendererRegistered(api, this, _clientSlotRenderer);
             PlateBoxRenderLifecycle.TryMarkBlockDirty(api, Pos);
         }
 
-        // Marks the block dirty client-side so slot visuals refresh after state changes.
         partial void ClientSlotsChanged(bool markBlockDirty)
         {
             if (!markBlockDirty) return;
             PlateBoxRenderLifecycle.TryMarkBlockDirty(Api, Pos);
         }
 
-        // Disposes renderer resources when the block is removed.
         public override void OnBlockRemoved()
         {
             DisposeClientRenderer();
             base.OnBlockRemoved();
         }
 
-        // Disposes renderer resources when the block entity unloads.
         public override void OnBlockUnloaded()
         {
             DisposeClientRenderer();
             base.OnBlockUnloaded();
         }
 
-        // Unregisters and disposes the slot renderer safely.
         private void DisposeClientRenderer()
         {
             _clientSlotRenderer = PlateBoxRenderLifecycle.DisposeRenderer(Api, _clientSlotRenderer);

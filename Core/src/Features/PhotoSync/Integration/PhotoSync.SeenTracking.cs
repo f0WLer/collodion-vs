@@ -5,15 +5,12 @@ using Photochemistry.PhotoSync.Storage;
 
 namespace Photochemistry.PhotoSync.Integration
 {
-    // PhotoSync client seen-ping dedupe state and seen-touch helper.
     internal sealed partial class PhotoSyncModSystemBridge
     {
         private ServerPhotoSeenService? _serverPhotoSeenService;
         private long? _serverPhotoLastSeenFlushListenerId;
         private long? _serverPhotoSyncPruneListenerId;
 
-        // Server-side last-seen index service, for operator disk-audit tooling. Null until server runtime
-        // startup (ConfigureServerPhotoSyncRuntime) has run.
         internal ServerPhotoSeenService? PhotoSeenService => _serverPhotoSeenService;
 
         private long _clientPhotoSeenLastPruneMs;
@@ -27,7 +24,6 @@ namespace Photochemistry.PhotoSync.Integration
             _serverPhotoSeenService?.Touch(normalized);
         }
 
-        // Sends deduplicated photo-seen pings so the server can track when a synced image has actually been observed by this client.
         internal void ClientMaybeSendPhotoSeen(string photoId)
         {
             if (_owner.ClientApi == null || _owner.ClientChannel == null) return;

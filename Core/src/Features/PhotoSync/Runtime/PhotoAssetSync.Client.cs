@@ -5,34 +5,27 @@ using Photochemistry.PhotoSync.Storage;
 
 namespace Photochemistry.PhotoSync.Runtime
 {
-    // Client-side photo upload/download state, dedupe, and cache invalidation hooks.
-    // Handles local file writes and block refresh when synced photos arrive.
     public sealed partial class PhotoAssetSyncCore
     {
         // Accessed only from main thread (render callbacks and client event handlers).
         private readonly Dictionary<string, double> _clientRequestedAt = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
 
-        // client-side: in-progress download assemblies by photoId
         private readonly Dictionary<string, IncomingAssembly> _clientIncoming = new Dictionary<string, IncomingAssembly>(StringComparer.OrdinalIgnoreCase);
         private readonly object _clientIncomingLock = new object();
 
-        // client-side: mounted blocks waiting for a specific photoId
         private readonly object _clientWaitLock = new object();
         private readonly Dictionary<string, HashSet<BlockPos>> _clientBlocksWaitingForPhoto = new Dictionary<string, HashSet<BlockPos>>(StringComparer.OrdinalIgnoreCase);
 
         private long _clientLastStateCleanupMs;
 
-        // Starts the upload path after a local capture has successfully written its png to disk.
         public void ClientOnPhotoCreated(string photoId)
         {
             if (_mod.ClientApi == null || _mod.ClientChannel == null) return;
 
-            // Upload to server (best effort).
             string path = PhotoAssetStoragePaths.GetPhotoPath(photoId);
             TryUploadPhoto(photoId, path);
         }
 
-        // Requests a missing photo from the server with short-term dedupe so repeated render checks do not spam packets.
         public void ClientRequestPhotoIfMissing(string photoId)
         {
             if (_mod.ClientApi == null || _mod.ClientChannel == null) return;
@@ -56,7 +49,6 @@ namespace Photochemistry.PhotoSync.Runtime
             _mod.ClientChannel.SendPacket(new PhotoBlobRequestPacket { PhotoId = normalizedPhotoId });
         }
 
-        // Records that a mounted-photo block is waiting on this photo so it can be marked dirty when the download completes.
         public void ClientNoteBlockWaitingForPhoto(string photoId, BlockPos pos)
         {
             if (_mod.ClientApi == null) return;
@@ -79,7 +71,6 @@ namespace Photochemistry.PhotoSync.Runtime
         }
 
 
-        // Reads the just-captured local png and uploads it to the server if it fits the configured transfer limits.
         private void TryUploadPhoto(string photoId, string path)
         {
             if (_mod.ClientApi == null || _mod.ClientChannel == null) return;
@@ -88,7 +79,6 @@ namespace Photochemistry.PhotoSync.Runtime
 
             if (!File.Exists(path))
             {
-                // Nothing to upload.
                 return;
             }
 
@@ -111,12 +101,11 @@ namespace Photochemistry.PhotoSync.Runtime
             SendChunksConfigured(_mod.ClientChannel, normalizedPhotoId, bytes, isUpload: true);
         }
 
-        // Reassembles incoming download chunks, writes the finished file to disk, and invalidates waiting client renders.
         public void ClientHandleChunk(PhotoBlobChunkPacket packet)
         {
             if (_mod.ClientApi == null) return;
             if (packet == null) return;
-            if (packet.IsUpload) return; // ignore uploads on client
+            if (packet.IsUpload) return;
 
             long nowMs = Environment.TickCount64;
             ClientMaybeCleanupState(nowMs, nowMs / 1000.0);
@@ -129,7 +118,6 @@ namespace Photochemistry.PhotoSync.Runtime
                 return;
             }
 
-            // Basic PNG signature check
             if (!LooksLikePng(completed.Buffer, completed.TotalSize))
             {
                 Log.Warn(_mod.ClientApi.Logger, $"downloaded bytes for {photoId} do not look like PNG; ignoring");
@@ -147,11 +135,9 @@ namespace Photochemistry.PhotoSync.Runtime
             // the new frame BE is expected to register its own invalidation if it adds caching.)
             PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
 
-            // Nudge any mounted-photo blocks that were waiting on this file.
             ClientMarkWaitingBlocksDirty(photoId);
         }
 
-        // Periodically prunes stale request dedupe and abandoned incoming download assemblies.
         private void ClientMaybeCleanupState(long nowMs, double nowSeconds)
         {
             long cleanupIntervalMs = SyncCfg?.ClientStateCleanupIntervalMs ?? 15_000;
@@ -183,7 +169,6 @@ namespace Photochemistry.PhotoSync.Runtime
             PruneStaleIncomingAssemblies(_clientIncoming, _clientIncomingLock, nowMs, incomingStaleMs);
         }
 
-        // Marks all mounted-photo blocks waiting on this photo as dirty so their meshes refresh from the newly written file.
         private void ClientMarkWaitingBlocksDirty(string photoId)
         {
             if (_mod.ClientApi == null) return;
@@ -213,10 +198,8 @@ namespace Photochemistry.PhotoSync.Runtime
             }, "photochemistry-photo-arrived-markdirty");
         }
 
-        // Logs failed transfer acknowledgements while keeping successful sync quiet.
         public void ClientHandleAck(PhotoBlobAckPacket packet)
         {
-            // Keep quiet unless failure.
             if (_mod.ClientApi == null) return;
             if (packet == null) return;
 

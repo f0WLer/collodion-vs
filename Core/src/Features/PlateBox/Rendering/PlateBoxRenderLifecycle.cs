@@ -6,7 +6,6 @@ namespace Photochemistry.PlateBox
 {
     internal static class PlateBoxRenderLifecycle
     {
-        // Registers the client renderer once per BE instance and returns the active renderer reference.
         internal static PlateBoxSlotRenderer? EnsureRendererRegistered(ICoreAPI api, BlockEntityPlateBox owner, PlateBoxSlotRenderer? renderer)
         {
             if (api?.Side != EnumAppSide.Client) return renderer;
@@ -18,7 +17,6 @@ namespace Photochemistry.PlateBox
             return renderer;
         }
 
-        // Marks the block dirty client-side to trigger chunk retesselation.
         internal static void TryMarkBlockDirty(ICoreAPI? api, BlockPos pos)
         {
             if (api?.Side != EnumAppSide.Client) return;
@@ -26,7 +24,6 @@ namespace Photochemistry.PlateBox
             ((ICoreClientAPI)api).World.BlockAccessor.MarkBlockDirty(pos);
         }
 
-        // Unregisters and disposes renderer resources when BE lifecycle ends.
         internal static PlateBoxSlotRenderer? DisposeRenderer(ICoreAPI? api, PlateBoxSlotRenderer? renderer)
         {
             if (api?.Side != EnumAppSide.Client || renderer == null) return renderer;

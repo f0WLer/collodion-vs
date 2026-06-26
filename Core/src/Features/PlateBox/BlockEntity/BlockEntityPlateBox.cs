@@ -17,19 +17,15 @@ namespace Photochemistry.PlateBox
         private readonly ItemStack?[] _plateSlots = new ItemStack?[SlotCount];
         private bool _isOpen;
 
-        // Client-side renderer/bootstrap hook implemented in the .Client partial.
         partial void ClientInitialize(ICoreAPI api);
-        // Client-side dirty/render invalidation hook implemented in the .Client partial.
         partial void ClientSlotsChanged(bool markBlockDirty);
 
-        // Initializes base state and client renderer lifecycle hooks.
         public override void Initialize(ICoreAPI api)
         {
             base.Initialize(api);
             ClientInitialize(api);
         }
 
-        // Returns whether a specific slot currently contains a plate stack.
         public bool HasPlateAt(int slotIndex)
         {
             if ((uint)slotIndex >= SlotCount) return false;
@@ -40,7 +36,6 @@ namespace Photochemistry.PlateBox
             }
         }
 
-        // Exposes whether the current runtime variant should be treated as open.
         public bool IsOpen
         {
             get
@@ -52,7 +47,6 @@ namespace Photochemistry.PlateBox
             }
         }
 
-        // Updates open state and triggers a synchronized state-change notification when needed.
         internal bool SetOpen(bool open)
         {
             bool changed;
@@ -71,7 +65,6 @@ namespace Photochemistry.PlateBox
             return changed;
         }
 
-        // Counts non-empty slots for tooltip and debug reporting.
         private int GetUsedSlotCount()
         {
             int count = 0;
@@ -135,7 +128,6 @@ namespace Photochemistry.PlateBox
             return output;
         }
 
-        // Serializes slots and open-state into block entity tree attributes.
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
             base.ToTreeAttributes(tree);
@@ -143,7 +135,6 @@ namespace Photochemistry.PlateBox
             tree.SetBool(BlockOpenAttr, IsOpen);
         }
 
-        // Deserializes slots and open-state from block entity tree attributes.
         public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldAccessForResolve)
         {
             base.FromTreeAttributes(tree, worldAccessForResolve);
@@ -156,34 +147,29 @@ namespace Photochemistry.PlateBox
             ReadSlotsFromAttributes(tree, BlockSlotPrefix, worldAccessForResolve);
         }
 
-        // Saves slot contents to an item payload for drop/pick/place persistence.
         internal void SaveToItemStack(ItemStack target)
         {
             if (target?.Attributes == null) return;
             WriteSlotsToAttributes(target.Attributes, ItemSlotPrefix);
         }
 
-        // Loads slot contents from an item payload after placement.
         internal void LoadFromItemStack(ItemStack source, IWorldAccessor world)
         {
             if (source?.Attributes == null) return;
             ReadSlotsFromAttributes(source.Attributes, ItemSlotPrefix, world);
         }
 
-        // Appends compact plate-slot usage information to block inspection text.
         public override void GetBlockInfo(IPlayer forPlayer, System.Text.StringBuilder dsc)
         {
             base.GetBlockInfo(forPlayer, dsc);
             dsc.AppendLine(Lang.Get("photochemistry:platebox-info-slots", GetUsedSlotCount(), SlotCount));
         }
 
-        // Accepts only plate item stacks as storable content.
         public static bool IsInsertablePlate(ItemStack? stack)
         {
             return stack?.Item is ItemPlateBase;
         }
 
-        // Writes each slot stack using the provided key prefix.
         private void WriteSlotsToAttributes(ITreeAttribute attrs, string prefix)
         {
             lock (_slotLock)
@@ -198,7 +184,6 @@ namespace Photochemistry.PlateBox
             }
         }
 
-        // Reads, resolves, and sanitizes slot stacks from prefixed attribute keys.
         private void ReadSlotsFromAttributes(ITreeAttribute attrs, string prefix, IWorldAccessor world)
         {
             lock (_slotLock)

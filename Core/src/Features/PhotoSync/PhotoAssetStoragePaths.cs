@@ -3,7 +3,6 @@ using Vintagestory.API.Config;
 
 namespace Photochemistry.PhotoSync.Storage
 {
-    // Photo id normalization and canonical on-disk photo path rules.
     internal static class PhotoAssetStoragePaths
     {
         internal static string NormalizePhotoId(string photoId)
@@ -69,7 +68,6 @@ namespace Photochemistry.PhotoSync.Storage
             return ids;
         }
 
-        // Size in bytes of a source photo, or 0 when missing/unreadable.
         internal static long GetPhotoSizeBytes(string photoId)
         {
             string normalized = NormalizePhotoId(photoId);

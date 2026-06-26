@@ -6,26 +6,20 @@ using Photochemistry.PhotoSync.Storage;
 
 namespace Photochemistry.PhotoSync.Runtime
 {
-    // Shared chunk-transfer primitives and photo-id/path normalization for sync.
-    // Used by both client and server photo-sync partials.
     public sealed partial class PhotoAssetSyncCore
     {
         private readonly PhotochemistryModSystem _mod;
 
         private sealed class IncomingAssembly
         {
-            // Declared transfer envelope from the first accepted chunk.
             public readonly int TotalSize;
             public readonly int ChunkCount;
 
-            // Shared destination buffer for all chunks in this transfer.
             public readonly byte[] Buffer;
 
-            // Sparse-receive bookkeeping so out-of-order chunks and duplicates are handled safely.
             public int ReceivedChunks;
             public readonly bool[] Received;
 
-            // Monotonic timestamp used by stale-assembly pruning.
             public long LastTouchedMs;
 
             public IncomingAssembly(int totalSize, int chunkCount)
@@ -46,21 +40,16 @@ namespace Photochemistry.PhotoSync.Runtime
 
         private PhotoSyncConfig? SyncCfg => _mod?.Config?.PhotoSync;
 
-        // -------------------- Chunk helpers --------------------
-
-        // Sends all chunks through the configured client channel using the current chunk-size setting.
         private void SendChunksConfigured(IClientNetworkChannel channel, string photoId, byte[] bytes, bool isUpload)
         {
             SendChunksCommon(photoId, bytes, isUpload, GetChunkSizeBytes(), pkt => channel.SendPacket(pkt));
         }
 
-        // Sends all chunks through the configured server channel to a specific player using the current chunk-size setting.
         private void SendChunksConfigured(IServerNetworkChannel channel, IServerPlayer toPlayer, string photoId, byte[] bytes, bool isUpload)
         {
             SendChunksCommon(photoId, bytes, isUpload, GetChunkSizeBytes(), pkt => channel.SendPacket(pkt, toPlayer));
         }
 
-        // Splits a byte buffer into ordered chunk packets for either uploads or downloads.
         private static void SendChunksCommon(string photoId, byte[] bytes, bool isUpload, int chunkSizeBytes, Action<PhotoBlobChunkPacket> send)
         {
             int chunkSize = Math.Max(1024, chunkSizeBytes);
@@ -85,7 +74,6 @@ namespace Photochemistry.PhotoSync.Runtime
             }
         }
 
-        // Validates the transfer envelope of one chunk packet before any assembly or copy work starts.
         private static bool IsChunkPacketShapeValid(PhotoBlobChunkPacket packet, int maxTransferBytes)
         {
             if (packet == null) return false;
@@ -109,14 +97,12 @@ namespace Photochemistry.PhotoSync.Runtime
             return true;
         }
 
-        // Canonical photo-id normalization gate shared by client/server sync flows.
         private static bool TryNormalizePhotoId(string rawPhotoId, out string photoId)
         {
             photoId = PhotoAssetStoragePaths.NormalizePhotoId(rawPhotoId);
             return !string.IsNullOrEmpty(photoId);
         }
 
-        // Canonical chunk packet gate shared by client/server handlers.
         private bool TryNormalizeAndValidateChunkPacket(PhotoBlobChunkPacket packet, out string photoId)
         {
             if (!TryNormalizePhotoId(packet.PhotoId, out photoId)) return false;
@@ -124,7 +110,6 @@ namespace Photochemistry.PhotoSync.Runtime
             return IsChunkPacketShapeValid(packet, GetMaxTransferBytes());
         }
 
-        // Applies one validated chunk into an in-progress assembly.
         private static bool TryApplyChunkToAssembly(IncomingAssembly asm, PhotoBlobChunkPacket packet)
         {
             if (asm.Received[packet.ChunkIndex]) return false;
@@ -136,7 +121,6 @@ namespace Photochemistry.PhotoSync.Runtime
             return true;
         }
 
-        // Resolves or creates one incoming assembly, applies the chunk, and returns a completed buffer when the transfer finishes.
         private static bool TryProcessIncomingChunk(
             Dictionary<string, IncomingAssembly> incomingByKey,
             object incomingLock,
@@ -169,7 +153,6 @@ namespace Photochemistry.PhotoSync.Runtime
             }
         }
 
-        // Removes stale incoming assemblies older than the configured age budget.
         private static void PruneStaleIncomingAssemblies(
             Dictionary<string, IncomingAssembly> incomingByKey,
             object incomingLock,
@@ -199,7 +182,6 @@ namespace Photochemistry.PhotoSync.Runtime
             }
         }
 
-        // Persists completed photo bytes to canonical storage, optionally under a caller-supplied write lock.
         private static bool TryWritePhotoBytes(string photoId, byte[] bytes, object? writeLock, out string? error)
         {
             error = null;
@@ -230,7 +212,6 @@ namespace Photochemistry.PhotoSync.Runtime
             }
         }
 
-        // Fast signature gate used before writing assembled bytes to disk.
         internal static bool LooksLikePng(byte[] buffer, int totalSize)
         {
             return totalSize >= 8

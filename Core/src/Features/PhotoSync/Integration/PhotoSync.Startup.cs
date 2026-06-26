@@ -6,8 +6,6 @@ using Photochemistry.PhotoSync.Runtime;
 
 namespace Photochemistry.PhotoSync.Integration
 {
-    // PhotoSync startup composition and packet handler wiring.
-    // Keeps sync runtime and sync handler registration out of camera bootstrap methods.
     internal sealed partial class PhotoSyncModSystemBridge
     {
         private readonly PhotochemistryModSystem _owner;
@@ -35,13 +33,11 @@ namespace Photochemistry.PhotoSync.Integration
                 .RegisterMessageType(typeof(PhotoSeenPacket));
         }
 
-        // Composes client-side PhotoSync startup for runtime state needed before handler wiring.
         internal void ConfigureClientPhotoSyncStartup()
         {
             GetOrCreatePhotoSyncRuntime();
         }
 
-        // Registers client handlers for sync transfer packets.
         internal void ConfigureClientPhotoSyncTransferChannelHandlers()
         {
             if (_owner.ClientChannel == null) return;
@@ -63,7 +59,6 @@ namespace Photochemistry.PhotoSync.Integration
             GetOrCreatePhotoSyncRuntime().ClientHandleAck(packet);
         }
 
-        // Initializes server-side photo-sync runtime service and maintenance listeners.
         internal void ConfigureServerPhotoSyncRuntime(ICoreServerAPI api)
         {
             PhotoAssetSyncCore runtime = GetOrCreatePhotoSyncRuntime();
@@ -73,7 +68,6 @@ namespace Photochemistry.PhotoSync.Integration
             _serverPhotoLastSeenFlushListenerId = api.Event.RegisterGameTickListener(_ => _serverPhotoSeenService?.TryFlush(api), 10_000);
         }
 
-        // Registers server handlers for sync transfer packets.
         internal void ConfigureServerPhotoSyncTransferChannelHandlers()
         {
             if (_owner.ServerChannel == null) return;
@@ -83,7 +77,6 @@ namespace Photochemistry.PhotoSync.Integration
                 .SetMessageHandler<PhotoBlobChunkPacket>(HandleServerPhotoSyncChunkPacket);
         }
 
-        // Registers the server handler for client photo-seen pings.
         internal void ConfigureServerPhotoSeenChannelHandler()
         {
             if (_owner.ServerChannel == null) return;
@@ -108,7 +101,6 @@ namespace Photochemistry.PhotoSync.Integration
             GetOrCreatePhotoSyncRuntime().ServerHandleChunk(player, packet);
         }
 
-        // Owns server-side sync/metadata maintenance teardown that was registered during feature startup.
         internal void DisposeServerPhotoSyncAndMetadataRuntime(ICoreServerAPI sapi)
         {
             if (_serverPhotoLastSeenFlushListenerId.HasValue && _serverPhotoLastSeenFlushListenerId.Value > 0)

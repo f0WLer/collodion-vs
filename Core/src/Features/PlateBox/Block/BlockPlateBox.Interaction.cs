@@ -14,7 +14,6 @@ namespace Photochemistry.PlateBox
             return HandlePlateBoxInteractionStart(world, byPlayer, blockSel, be);
         }
 
-        // Provides held-help prompts for inserting and taking plates from slots.
         public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
         {
             Item? samplePlate = world.GetItem(_samplePlateCode);
@@ -46,7 +45,6 @@ namespace Photochemistry.PlateBox
             new("photochemistry", "sounds/glass-set3")
         ];
         
-        // Routes shift-pickup, open/close toggles, and per-slot insert/remove interactions.
         private bool HandlePlateBoxInteractionStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityPlateBox be)
         {
             if (IsShiftDown(byPlayer))
@@ -122,7 +120,6 @@ namespace Photochemistry.PlateBox
             return false;
         }
 
-        // Maps a block-selection hit point to the corresponding logical slot index.
         private static int GetSlotIndexFromHit(BlockSelection blockSel, string facing)
         {
             if (blockSel?.HitPosition == null) return -1;
@@ -149,7 +146,6 @@ namespace Photochemistry.PlateBox
             return -1;
         }
 
-        // Converts hit coordinates into south-facing model space for slot hitbox checks.
         private static (double, double) InverseFacingTransform(double x, double z, string facing)
         {
             return facing switch
@@ -161,7 +157,6 @@ namespace Photochemistry.PlateBox
             };
         }
 
-        // Normalizes both Shift and Sneak into one interaction modifier check.
         private static bool IsShiftDown(IPlayer player)
         {
             var controls = player?.Entity?.Controls;

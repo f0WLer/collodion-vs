@@ -41,7 +41,6 @@ namespace Photochemistry.PlateBox
             }
         }
 
-        // Drops a serialized closed-box stack so stored plates persist through breakage.
         public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
         {
             ItemStack? stack = CreateDropStack(world, pos);
@@ -53,7 +52,6 @@ namespace Photochemistry.PlateBox
             return base.GetDrops(world, pos, byPlayer, dropQuantityMultiplier);
         }
 
-        // Returns a serialized closed-box stack for creative pick-block.
         public override ItemStack OnPickBlock(IWorldAccessor world, BlockPos pos)
         {
             ItemStack? stack = CreateDropStack(world, pos);
@@ -61,7 +59,6 @@ namespace Photochemistry.PlateBox
             return base.OnPickBlock(world, pos);
         }
 
-        // Builds the drop stack and copies BlockEntity slot data into item attributes.
         private ItemStack? CreateDropStack(IWorldAccessor world, BlockPos pos)
         {
             Block? closedBlock = world?.GetBlock(_closedBoxCode);
@@ -74,7 +71,6 @@ namespace Photochemistry.PlateBox
             return stack;
         }
 
-        // Spawns a serialized server-side drop and removes both block and BlockEntity state.
         public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
         {
             if (world == null || pos == null)
@@ -98,7 +94,6 @@ namespace Photochemistry.PlateBox
             world.BlockAccessor.RemoveBlockEntity(pos);
         }
 
-        // Restores slot data from placed stack and forces the runtime block state closed.
         public override void OnBlockPlaced(IWorldAccessor world, BlockPos blockPos, ItemStack byItemStack = null!)
         {
             base.OnBlockPlaced(world, blockPos, byItemStack);
@@ -118,10 +113,8 @@ namespace Photochemistry.PlateBox
             }
         }
 
-        // Redirects placement to the facing variant whose open side points toward the player.
         public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
         {
-            // Choose a facing so the box's open side faces toward the player.
             string? currentFacing = Variant?["facing"];
             BlockFacing playerFacing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.Pos?.Yaw ?? 0f);
             string desiredFacing = playerFacing.Opposite.Code;

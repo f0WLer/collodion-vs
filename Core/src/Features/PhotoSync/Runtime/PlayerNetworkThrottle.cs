@@ -1,8 +1,5 @@
 namespace Photochemistry.PhotoSync.Runtime
 {
-    // Per-player token-bucket rate limiter for server packet handlers.
-    // Allocates one bucket per (key, playerUid). Caller decides the key (e.g. "seen", "request").
-    // Idle entries are pruned by the next TryConsume call after the prune interval elapses.
     internal sealed class PlayerNetworkThrottle
     {
         private readonly object _lock = new();
@@ -23,8 +20,6 @@ namespace Photochemistry.PhotoSync.Runtime
             _capacityTokens = burstCapacity;
         }
 
-        // Attempts to consume one permit for the given player+scope key.
-        // Returns true if the request is within budget, false if it should be dropped.
         public bool TryConsume(string playerUid, string scopeKey, long nowMs)
         {
             if (string.IsNullOrEmpty(playerUid)) return false;

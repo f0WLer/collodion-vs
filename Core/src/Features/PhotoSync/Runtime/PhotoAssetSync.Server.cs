@@ -5,13 +5,10 @@ using Photochemistry.PhotoSync.Storage;
 
 namespace Photochemistry.PhotoSync.Runtime
 {
-    // Server-side photo request/upload handling and incoming-assembly cleanup.
-    // Reassembles chunks, validates png payloads, and persists synced photo bytes.
     public sealed partial class PhotoAssetSyncCore
     {
         internal PlayerNetworkThrottle ServerRequestThrottle
             => _serverRequestThrottle ??= new PlayerNetworkThrottle(RequestPermitsPerMinute, RequestBurstCapacity);
-        // server-side: in-progress uploads by (playerUid|photoId)
         private readonly Dictionary<string, IncomingAssembly> _serverIncoming = new(StringComparer.OrdinalIgnoreCase);
         private readonly object _serverIncomingLock = new();
         private readonly object _writeLock = new();
@@ -28,8 +25,6 @@ namespace Photochemistry.PhotoSync.Runtime
         internal ServerExpectedUploads ExpectedUploads
             => _serverExpectedUploads ??= new ServerExpectedUploads(ExpectedUploadTtlMs);
 
-        // Called by the camera authority after a PhotoTakenPacket has been authoritatively accepted.
-        // Marks this (player, photoId) pair as eligible to upload bytes within the configured TTL.
         public void RegisterExpectedUpload(string playerUid, string photoId)
         {
             ExpectedUploads.Register(playerUid, photoId, Environment.TickCount64);
@@ -38,7 +33,6 @@ namespace Photochemistry.PhotoSync.Runtime
         private const int DefaultChunkSize = 24 * 1024;
         private const int DefaultMaxBytes = 2 * 1024 * 1024; // plenty for configured capture sizes
 
-        // Gets chunk size.
         private int GetChunkSizeBytes()
         {
             int size = SyncCfg?.ChunkSizeBytes ?? DefaultChunkSize;
@@ -46,7 +40,6 @@ namespace Photochemistry.PhotoSync.Runtime
             return size;
         }
 
-        // Reads the maximum allowed upload/download size so sync logic can reject oversized transfers early.
         private int GetMaxTransferBytes()
         {
             int max = SyncCfg?.MaxTransferBytes ?? DefaultMaxBytes;
@@ -54,13 +47,10 @@ namespace Photochemistry.PhotoSync.Runtime
             return max;
         }
 
-        // Minimal cleanup so abandoned uploads (disconnects mid-transfer) don't accumulate.
         private long _serverLastPruneMs;
 
-        // Small server tick hook that lets the mod system periodically prune abandoned upload assemblies.
         public void ServerPruneTick(long nowMs) => ServerMaybePruneIncoming(nowMs);
 
-        // Sends one normalized transfer acknowledgement back to the requesting player.
         private void SendServerTransferAck(IServerPlayer toPlayer, string photoId, bool ok, string? error = null)
         {
             if (_mod.ServerChannel == null) return;
@@ -73,7 +63,6 @@ namespace Photochemistry.PhotoSync.Runtime
             }, toPlayer);
         }
 
-        // Loads one persisted photo for download and validates transfer-size constraints.
         private bool TryLoadPhotoBytesForDownload(string photoId, out byte[]? bytes, out string? error)
         {
             bytes = null;
@@ -144,7 +133,6 @@ namespace Photochemistry.PhotoSync.Runtime
             }, "photochemistry:UploadWrite");
         }
 
-        // Removes stale in-progress uploads so disconnects or failed transfers do not leak memory indefinitely.
         private void ServerMaybePruneIncoming(long nowMs)
         {
             int pruneIntervalMs = SyncCfg?.ServerPruneIntervalMs ?? 30_000;
@@ -196,7 +184,6 @@ namespace Photochemistry.PhotoSync.Runtime
             }, "photochemistry:DownloadRead");
         }
 
-        // Reassembles uploaded chunks from one client, validates the png, and persists it to the server photo store.
         public void ServerHandleChunk(IServerPlayer fromPlayer, PhotoBlobChunkPacket packet)
         {
             if (_mod.ModApi == null || _mod.ServerChannel == null) return;
@@ -220,7 +207,6 @@ namespace Photochemistry.PhotoSync.Runtime
             // Isolate uploads per player so equal photo ids from different clients cannot collide in assembly state.
             string key = playerUid + "|" + photoId;
 
-            // First-chunk gating: enforce per-player concurrent upload cap.
             bool isNewAssembly;
             lock (_serverIncomingLock)
             {

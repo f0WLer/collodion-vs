@@ -1,4 +1,5 @@
-﻿using Vintagestory.API.MathTools;
+﻿using System.Collections.Concurrent;
+using Vintagestory.API.MathTools;
 using Photocore.Plates.Rendering;
 using Photocore.PhotoSync.Contracts;
 using Photocore.PhotoSync.Storage;
@@ -15,6 +16,17 @@ namespace Photocore.PhotoSync.Runtime
 
         private readonly object _clientWaitLock = new object();
         private readonly Dictionary<string, HashSet<BlockPos>> _clientBlocksWaitingForPhoto = new Dictionary<string, HashSet<BlockPos>>(StringComparer.OrdinalIgnoreCase);
+
+        // Photo ids the server has confirmed it cannot serve (a download NACK), so the render funnels show
+        // the medium-specific missing-photo placeholder instead of waiting forever. Used as a set (value
+        // ignored). Concurrent because block tesselation may query it off the main thread.
+        private readonly ConcurrentDictionary<string, byte> _clientConfirmedMissing = new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
+
+        public bool ClientIsConfirmedMissing(string photoId)
+        {
+            if (!TryNormalizePhotoId(photoId, out string normalizedPhotoId)) return false;
+            return _clientConfirmedMissing.ContainsKey(normalizedPhotoId);
+        }
 
         private long _clientLastStateCleanupMs;
 
@@ -130,6 +142,10 @@ namespace Photocore.PhotoSync.Runtime
                 return;
             }
 
+            // A photo that previously NACK'd may have been restored/re-uploaded; clear its missing mark
+            // so the render funnels stop drawing the placeholder and pull the real image.
+            _clientConfirmedMissing.TryRemove(photoId, out _);
+
             // Kick plate render cache so the next render pulls from disk.
             // (After framed-display removal in prep for the kos-pm merge there is no separate per-item photo cache;
             // the new frame BE is expected to register its own invalidation if it adds caching.)
@@ -203,9 +219,21 @@ namespace Photocore.PhotoSync.Runtime
             if (_mod.ClientApi == null) return;
             if (packet == null) return;
 
-            if (!packet.Ok)
+            if (packet.Ok) return;
+
+            Log.Warn(_mod.ClientApi.Logger, $"photo transfer ack failed for {packet.PhotoId}: {packet.Error}");
+
+            // Only download NACKs mean "this photo is unavailable" — an upload NACK is about bytes we still
+            // hold locally and is often transient, so it must not flag the photo as missing.
+            if (packet.IsUpload) return;
+            if (!TryNormalizePhotoId(packet.PhotoId, out string normalizedPhotoId)) return;
+
+            // First time we learn a photo is gone: remember it and force a re-render so placed plates
+            // (frames, trays) and held items switch to the placeholder. (Held items re-render every frame.)
+            if (_clientConfirmedMissing.TryAdd(normalizedPhotoId, 0))
             {
-                Log.Warn(_mod.ClientApi.Logger, $"photo transfer ack failed for {packet.PhotoId}: {packet.Error}");
+                PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
+                ClientMarkWaitingBlocksDirty(normalizedPhotoId);
             }
         }
     }

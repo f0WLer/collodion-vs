@@ -14,6 +14,12 @@ namespace Photocore.PhotoSync.Contracts
 
         [ProtoMember(3)]
         public string Error = string.Empty;
+
+        // Direction this ack refers to: true = client->server upload result, false = server->client
+        // download request result. Lets the client tell "my upload failed" (transient, bytes exist
+        // locally) apart from "the photo I asked to download is not available" (show the placeholder).
+        [ProtoMember(4)]
+        public bool IsUpload;
     }
 
     [ProtoContract]

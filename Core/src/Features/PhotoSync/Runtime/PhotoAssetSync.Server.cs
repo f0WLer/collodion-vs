@@ -51,7 +51,7 @@ namespace Photocore.PhotoSync.Runtime
 
         public void ServerPruneTick(long nowMs) => ServerMaybePruneIncoming(nowMs);
 
-        private void SendServerTransferAck(IServerPlayer toPlayer, string photoId, bool ok, string? error = null)
+        private void SendServerTransferAck(IServerPlayer toPlayer, string photoId, bool ok, bool isUpload, string? error = null)
         {
             if (_mod.ServerChannel == null) return;
 
@@ -59,6 +59,7 @@ namespace Photocore.PhotoSync.Runtime
             {
                 PhotoId = photoId,
                 Ok = ok,
+                IsUpload = isUpload,
                 Error = ok ? string.Empty : (error ?? "Photo transfer failed")
             }, toPlayer);
         }
@@ -102,7 +103,7 @@ namespace Photocore.PhotoSync.Runtime
         {
             if (!LooksLikePng(completed.Buffer, completed.TotalSize))
             {
-                SendServerTransferAck(fromPlayer, photoId, ok: false, "Invalid PNG");
+                SendServerTransferAck(fromPlayer, photoId, ok: false, isUpload: true, "Invalid PNG");
                 return;
             }
 
@@ -122,11 +123,11 @@ namespace Photocore.PhotoSync.Runtime
                         if (ok)
                         {
                             _mod.PhotoSyncModSystemBridge.ServerTouchPhotoSeen(photoId);
-                            SendServerTransferAck(fromPlayer, photoId, ok: true);
+                            SendServerTransferAck(fromPlayer, photoId, ok: true, isUpload: true);
                         }
                         else
                         {
-                            SendServerTransferAck(fromPlayer, photoId, ok: false, error ?? "Photo write failed");
+                            SendServerTransferAck(fromPlayer, photoId, ok: false, isUpload: true, error ?? "Photo write failed");
                         }
                     }, "photocore:UploadAck");
                 }
@@ -173,7 +174,10 @@ namespace Photocore.PhotoSync.Runtime
                 {
                     if (!ok || bytes == null)
                     {
-                        SendServerTransferAck(fromPlayer, photoId, ok: false, error);
+                        // Download request failed (most commonly the source photo is gone from the
+                        // server's disk). isUpload:false marks this as a download NACK so the client
+                        // can show the medium-specific missing-photo placeholder.
+                        SendServerTransferAck(fromPlayer, photoId, ok: false, isUpload: false, error);
                         return;
                     }
 
@@ -200,7 +204,7 @@ namespace Photocore.PhotoSync.Runtime
             // Photo-id authorization: client must have legitimately captured this photo to upload bytes for it.
             if (!ExpectedUploads.IsExpected(playerUid, photoId, nowMs))
             {
-                SendServerTransferAck(fromPlayer, photoId, ok: false, "Upload not authorized for this photo id");
+                SendServerTransferAck(fromPlayer, photoId, ok: false, isUpload: true, "Upload not authorized for this photo id");
                 return;
             }
 
@@ -217,7 +221,7 @@ namespace Photocore.PhotoSync.Runtime
                 int maxOpen = SyncCfg?.ServerMaxOpenUploadsPerPlayer ?? 2;
                 if (!ExpectedUploads.TryBeginUpload(playerUid, maxOpen))
                 {
-                    SendServerTransferAck(fromPlayer, photoId, ok: false, "Too many concurrent uploads");
+                    SendServerTransferAck(fromPlayer, photoId, ok: false, isUpload: true, "Too many concurrent uploads");
                     return;
                 }
             }

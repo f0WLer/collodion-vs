@@ -21,7 +21,13 @@ namespace Photocore.Plates.Rendering
 
             if (!File.Exists(inputs.SourcePath))
             {
-                // Ask PhotoSync for missing assets and remember waiting blocks for refresh.
+                // A missing file is either permanently gone or still syncing: only a server-confirmed miss
+                // shows the placeholder, otherwise we request the photo and keep the block waiting for it.
+                if (ClientPhotoSyncIntegration.IsPhotoConfirmedMissing(capi, inputs.PhotoFileName))
+                {
+                    return TryGetMissingBlockTexture(capi, ResolveMissingPhotoTexture(itemstack), versionSnapshot, out texPos, out photoAspect);
+                }
+
                 try
                 {
                     ClientPhotoSyncIntegration.RequestPhotoIfMissing(capi, inputs.PhotoFileName);

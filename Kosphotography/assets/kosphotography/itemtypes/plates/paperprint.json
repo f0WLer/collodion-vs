@@ -10,7 +10,8 @@
     "photoOverlayFace": "up",
     "photoUvRotation": 180,
     "plateStage": "developed",
-    "plateMedium": "paperprint"
+    "plateMedium": "paperprint",
+    "missingPhotoTexture": "kosphotography:textures/block/photos/missing-paper.png"
   },
   "transitionableProps": [
     {

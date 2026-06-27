@@ -31,6 +31,14 @@ namespace Photocore.PhotoSync.Integration
             ResolveClientPhotoSync(capi)?.ClientRequestPhotoIfMissing(photoId);
         }
 
+        // True once the server has confirmed (via a download NACK) that it cannot serve this photo, so the
+        // render funnels should draw the missing-photo placeholder rather than keep waiting for a sync.
+        internal static bool IsPhotoConfirmedMissing(ICoreClientAPI capi, string photoId)
+        {
+            if (capi == null || string.IsNullOrEmpty(photoId)) return false;
+            return ResolveClientPhotoSync(capi)?.ClientIsConfirmedMissing(photoId) ?? false;
+        }
+
         internal static void NoteBlockWaitingForPhoto(ICoreClientAPI capi, string photoId, BlockPos pos)
         {
             if (capi == null || string.IsNullOrEmpty(photoId) || pos == null) return;

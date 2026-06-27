@@ -7,7 +7,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.Client;
 using Vintagestory.Client.NoObf;
 
-namespace Photochemistry.CameraCapture
+namespace Photocore.CameraCapture
 {
     internal readonly struct VirtualCameraState
     {
@@ -177,7 +177,7 @@ namespace Photochemistry.CameraCapture
 
             }
 
-            fbo = _platform.CreateFramebuffer(new FramebufferAttrs("photochemistry-virtual-camera", width, height)
+            fbo = _platform.CreateFramebuffer(new FramebufferAttrs("photocore-virtual-camera", width, height)
             {
                 Attachments = attachments.ToArray()
             });

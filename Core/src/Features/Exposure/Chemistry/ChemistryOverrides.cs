@@ -1,4 +1,4 @@
-namespace Photochemistry.Exposure
+﻿namespace Photocore.Exposure
 {
     // NaN = inherit the process-profile default. One instance per chemistry. Public so Json.NET can persist it.
     internal sealed class ChemistryOverrides

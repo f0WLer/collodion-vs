@@ -1,10 +1,10 @@
-﻿using Photochemistry.Plates;
+﻿using Photocore.Plates;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     internal sealed partial class FieldCameraModSystemBridge
     {
@@ -39,7 +39,7 @@ namespace Photochemistry.FieldCamera
             // recover the camera (Shift+Ctrl+RMB) — see the gates below.
             if (isOtherPhotographer && lockedStage == PlateStage.Exposing)
             {
-                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photochemistry:msg-mounted-other-active"), EnumChatType.Notification);
+                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photocore:msg-mounted-other-active"), EnumChatType.Notification);
                 return true;
             }
 
@@ -80,14 +80,14 @@ namespace Photochemistry.FieldCamera
             {
                 if (!CameraHasLoadedPlate(cameraStack))
                 {
-                    serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photochemistry:msg-mounted-no-plate"), EnumChatType.Notification);
+                    serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photocore:msg-mounted-no-plate"), EnumChatType.Notification);
                     return true;
                 }
 
                 if (CameraItemHelper.TryGetLoadedPlateStack(cameraStack, Api.World, out ItemStack? stagePlate) && stagePlate != null
                     && PlateAttributes.GetStage(stagePlate) == PlateStage.Exposing)
                 {
-                    serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photochemistry:msg-mounted-pause-first"), EnumChatType.Notification);
+                    serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photocore:msg-mounted-pause-first"), EnumChatType.Notification);
                     return true;
                 }
 
@@ -107,7 +107,7 @@ namespace Photochemistry.FieldCamera
             // Plain RMB drives load / pause / resume — require ownership of any loaded exposure.
             if (isOtherPhotographer)
             {
-                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photochemistry:msg-mounted-other-paused"), EnumChatType.Notification);
+                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photocore:msg-mounted-other-paused"), EnumChatType.Notification);
                 return true;
             }
 
@@ -120,7 +120,7 @@ namespace Photochemistry.FieldCamera
                     SendMountedCameraControl(serverPlayer, false, true, cameraStack);
                     return true;
                 }
-                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photochemistry:msg-mounted-load-hint"), EnumChatType.Notification);
+                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photocore:msg-mounted-load-hint"), EnumChatType.Notification);
                 return true;
             }
 
@@ -136,7 +136,7 @@ namespace Photochemistry.FieldCamera
             if (CameraItemHelper.TryGetLoadedPlateStack(cameraStack, Api.World, out ItemStack? exposePlate) && exposePlate != null
                 && PlateDryingTransition.IsDry(Api.World, exposePlate))
             {
-                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photochemistry:msg-plate-dried-no-expose"), EnumChatType.Notification);
+                serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photocore:msg-plate-dried-no-expose"), EnumChatType.Notification);
                 return true;
             }
 
@@ -169,7 +169,7 @@ namespace Photochemistry.FieldCamera
 
             // Loading a dried plate is allowed, but it can no longer be exposed — let the player know.
             if (PlateDryingTransition.IsDry(Api.World, loadedPlate))
-                player.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photochemistry:msg-plate-dried-reclaim"), EnumChatType.Notification);
+                player.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photocore:msg-plate-dried-reclaim"), EnumChatType.Notification);
 
             AudioUtils.FireAndForgetEntitySound(Api?.World, _cameraPlateLoadSound, player.Entity, AudioUtils.NextRandomPitch(Api?.World));
             return true;

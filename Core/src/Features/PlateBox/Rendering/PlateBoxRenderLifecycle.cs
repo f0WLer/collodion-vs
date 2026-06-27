@@ -2,7 +2,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Photochemistry.PlateBox
+namespace Photocore.PlateBox
 {
     internal static class PlateBoxRenderLifecycle
     {
@@ -13,7 +13,7 @@ namespace Photochemistry.PlateBox
 
             ICoreClientAPI capi = (ICoreClientAPI)api;
             renderer = new PlateBoxSlotRenderer(capi, owner);
-            capi.Event.RegisterRenderer(renderer, EnumRenderStage.Opaque, "photochemistry-platebox-slotrender");
+            capi.Event.RegisterRenderer(renderer, EnumRenderStage.Opaque, "photocore-platebox-slotrender");
             return renderer;
         }
 

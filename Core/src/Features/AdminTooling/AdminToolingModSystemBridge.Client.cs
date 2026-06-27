@@ -1,8 +1,8 @@
-﻿using Photochemistry.CameraCapture;
+﻿using Photocore.CameraCapture;
 using Vintagestory.API.Client;
-using Photochemistry.Configuration;
+using Photocore.Configuration;
 
-namespace Photochemistry.AdminTooling
+namespace Photocore.AdminTooling
 {
     // Client-side operator-tooling startup composition.
     // Keeps config bootstrap and startup diagnostics out of ModSystem callback bodies.
@@ -20,18 +20,18 @@ namespace Photochemistry.AdminTooling
         private void ConfigureClientOperatorToolingCore(ICoreClientAPI api)
         {
             _owner.ClientApi = api;
-            PhotochemistryModSystem.ClientInstance = _owner;
-            _owner.ClientChannel = api.Network.GetChannel("photochemistry");
+            PhotocoreModSystem.ClientInstance = _owner;
+            _owner.ClientChannel = api.Network.GetChannel("photocore");
         }
 
         private void ConfigureClientOperatorToolingConfig(ICoreClientAPI api)
         {
-            _owner.ApplyConfig(ConfigLifecycle.LoadOrCreate(api, PhotochemistryModSystem.ConfigFileName));
+            _owner.ApplyConfig(ConfigLifecycle.LoadOrCreate(api, PhotocoreModSystem.ConfigFileName));
         }
 
         private void TryReportClientOperatorToolingStartupInfo()
         {
-            var asm = typeof(PhotochemistryModSystem).Assembly;
+            var asm = typeof(PhotocoreModSystem).Assembly;
             string ver = asm.GetName().Version?.ToString() ?? "<nover>";
             string loc = asm.Location;
             string stamp = string.IsNullOrEmpty(loc)
@@ -45,7 +45,7 @@ namespace Photochemistry.AdminTooling
             {
                 BestEffort.Try(_owner.BestEffortLogger,
                     "report client startup version info",
-                    () => _owner.ClientApi?.ShowChatMessage($"photochemistry: loaded mod dll (ver={ver}, build={stamp})"));
+                    () => _owner.ClientApi?.ShowChatMessage($"photocore: loaded mod dll (ver={ver}, build={stamp})"));
             }
         }
 
@@ -55,25 +55,25 @@ namespace Photochemistry.AdminTooling
         {
             #pragma warning disable CS0618 // Keep legacy command registration for compatibility
             api.RegisterCommand(
-                "photochemistry",
-                "Photochemistry mod commands",
+                "photocore",
+                "photocore mod commands",
                 SubcommandList,
                 OnModClientCommand
             );
             #pragma warning restore CS0618
 
             api.Input.RegisterHotKey(
-                "photochemistry-exposuregui",
-                "photochemistry: Open Exposure Physics GUI",
+                "photocore-exposuregui",
+                "photocore: Open Exposure Physics GUI",
                 GlKeys.Unknown,
                 HotkeyType.GUIOrOtherControls);
-            api.Input.SetHotKeyHandler("photochemistry-exposuregui", _ =>
+            api.Input.SetHotKeyHandler("photocore-exposuregui", _ =>
             {
                 // Operator-only debug tooling. Gate on the server-operator privilege ("/op" grants it;
                 // single-player and LAN hosts have it by default).
                 if (api.World.Player?.Privileges?.Contains("controlserver") != true)
                 {
-                    api.ShowChatMessage("photochemistry: the exposure physics tuner requires operator privileges.");
+                    api.ShowChatMessage("photocore: the exposure physics tuner requires operator privileges.");
                     return false;
                 }
 

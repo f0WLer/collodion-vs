@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-namespace Photochemistry.Tray
+namespace Photocore.Tray
 {
     public sealed partial class BlockEntityDevelopmentTray
     {
@@ -52,8 +52,8 @@ namespace Photochemistry.Tray
                     {
                         bodyShape.IgnoreElements = ["plate"];
                         capiInit.Tesselator.TesselateShape(
-                            "photochemistry-devtray-body-fallback",
-                            Block?.Code ?? new AssetLocation("photochemistry", "developmenttray-red"),
+                            "photocore-devtray-body-fallback",
+                            Block?.Code ?? new AssetLocation("photocore", "developmenttray-red"),
                             bodyShape,
                             out MeshData? fallbackMesh,
                             bodySource

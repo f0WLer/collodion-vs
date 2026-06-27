@@ -1,10 +1,10 @@
-namespace Photochemistry.Configuration
+﻿namespace Photocore.Configuration
 {
     // Root persisted config tree for collodion systems.
     // Aggregates subsystem configs and enforces safe ranges through ClampInPlace.
-    public sealed class PhotochemistryConfig
+    public sealed class PhotocoreConfig
     {
-        public PhotochemistryClientConfig Client = new();
+        public PhotocoreClientConfig Client = new();
         public PlateProcessingConfig PlateProcessing = new();
         public PhotoSyncConfig PhotoSync = new();
 
@@ -17,7 +17,7 @@ namespace Photochemistry.Configuration
         // Clamps and initializes nested config branches so runtime access stays null-safe and bounded.
         internal void ClampInPlace()
         {
-            Client ??= new PhotochemistryClientConfig();
+            Client ??= new PhotocoreClientConfig();
             Client.ClampInPlace();
 
             PlateProcessing ??= new PlateProcessingConfig();

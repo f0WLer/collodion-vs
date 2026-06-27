@@ -1,6 +1,6 @@
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 
-namespace Photochemistry.Exposure
+namespace Photocore.Exposure
 {
     internal readonly record struct ExposureAccumulationBlobHeader(int Width, int Height, int ChannelCount, int FrameCount, int BackendTag);
 

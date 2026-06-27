@@ -1,6 +1,6 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 
-namespace Photochemistry.Plates.Rendering
+namespace Photocore.Plates.Rendering
 {
     internal sealed class PhotoMeshRenderCache
     {

@@ -1,4 +1,4 @@
-namespace Photochemistry.Exposure
+﻿namespace Photocore.Exposure
 {
     // Static instances are the hardcoded defaults that ChemistryProfileSeeder seeds a fresh profile from.
     internal readonly struct EmulsionProfile

@@ -1,11 +1,12 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using Vintagestory.API.Client;
 using Vintagestory.Client.NoObf;
-using Photochemistry.ImageEffects;
-using Photochemistry.Exposure;
-using Photochemistry.Configuration;
 
-namespace Photochemistry.CameraCapture
+using Photocore.ImageEffects;
+using Photocore.Exposure;
+using Photocore.Configuration;
+
+namespace Photocore.CameraCapture
 {
     internal sealed class VirtualExposureRenderer : IRenderer, IDisposable
     {
@@ -29,7 +30,7 @@ namespace Photochemistry.CameraCapture
         private bool _diagFirstTick;
         private bool _diagFirstAccum;
         private static void Diag(string msg) =>
-            PhotochemistryModSystem.ClientInstance?.BestEffortLogger?.Notification("photochemistry[diag]: " + msg);
+            PhotocoreModSystem.ClientInstance?.BestEffortLogger?.Notification("photocore[diag]: " + msg);
 
         internal IExposurePreviewSink? ExposurePreviewSink { get; set; }
         internal EmulsionProfile ActiveProcess => _process;
@@ -144,7 +145,7 @@ namespace Photochemistry.CameraCapture
             State = ExposureState.Done;
             PushPreviewFrame();
             _clientApi.Logger.Notification(
-                $"photochemistry: {_process.Name} exposure complete — " +
+                $"photocore: {_process.Name} exposure complete — " +
                 $"{_buffer?.FramesAccumulated ?? 0}/{_process.SampleCount} samples over {(nowMs - _shutterStartMs) / 1000f:F2}s. " +
                 $"Use '.collodion exposure export' to save.");
         }
@@ -236,7 +237,7 @@ namespace Photochemistry.CameraCapture
             long nowMs = _clientApi.ElapsedMilliseconds;
             float elapsed = _shutterStartMs == 0 ? 0f : (nowMs - _shutterStartMs) / 1000f;
             _clientApi.Logger.Notification(
-                $"photochemistry: {_process.Name} exposure stopped — " +
+                $"photocore: {_process.Name} exposure stopped — " +
                 $"{frames}/{_process.SampleCount} samples over {elapsed:F2}s. " +
                 $"Use '.collodion exposure export' to save.");
         }
@@ -258,7 +259,7 @@ namespace Photochemistry.CameraCapture
             if (_buffer == null || _buffer.FramesAccumulated == 0)
                 throw new InvalidOperationException("No frames accumulated.");
 
-            int maxDimension = PhotochemistryConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.PhotoCaptureMaxDimension
+            int maxDimension = PhotocoreConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.PhotoCaptureMaxDimension
                 ?? ViewfinderConfig.DefaultPhotoCaptureMaxDimension;
 
             return ExposureSeal.ToPhoto(_buffer, maxDimension, "exposure-export", effectsOverride ?? PreviewEffects, ApplyFinishing);
@@ -294,7 +295,7 @@ namespace Photochemistry.CameraCapture
             if (_clientApi.Render.FrameWidth != _camera.fbo.Width || _clientApi.Render.FrameHeight != _camera.fbo.Height)
             {
                 ReinitializeCameraAndBufferForResize();
-                _clientApi.Logger.Warning("photochemistry: window resized during exposure — accumulated frames discarded.");
+                _clientApi.Logger.Warning("photocore: window resized during exposure — accumulated frames discarded.");
             }
 
             if (_elapsedSinceLastSample < _process.SampleInterval) return;
@@ -312,14 +313,14 @@ namespace Photochemistry.CameraCapture
             }
             catch (Exception ex)
             {
-                _clientApi.Logger.Error($"photochemistry: exposure frame {_buffer.FramesAccumulated} render failed: {ex}");
+                _clientApi.Logger.Error($"photocore: exposure frame {_buffer.FramesAccumulated} render failed: {ex}");
                 LastFaultMessage = ex.Message;
                 _shutterFrozenMs = _clientApi.ElapsedMilliseconds;
                 State = ExposureState.Faulted;
                 return;
             }
 
-            int maxFrames = PhotochemistryConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.MaxAccumulatedFrames
+            int maxFrames = PhotocoreConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.MaxAccumulatedFrames
                 ?? ViewfinderConfig.DefaultMaxAccumulatedFrames;
             if (_buffer.FramesAccumulated >= maxFrames)
             {
@@ -346,7 +347,7 @@ namespace Photochemistry.CameraCapture
         {
             int sourceW = _clientApi.Render.FrameWidth;
             int sourceH = _clientApi.Render.FrameHeight;
-            int maxDim  = PhotochemistryConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.ExposureReadbackMaxDimension
+            int maxDim  = PhotocoreConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.ExposureReadbackMaxDimension
                           ?? ViewfinderConfig.DefaultExposureReadbackMaxDimension;
 
             GpuExposureAccumulator.ComputeTargetDimensions(sourceW, sourceH, maxDim, out int w, out int h);

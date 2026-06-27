@@ -1,8 +1,8 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Photochemistry.Plates;
+using Photocore.Plates;
 
-namespace Photochemistry.PlateBox
+namespace Photocore.PlateBox
 {
     public sealed partial class BlockEntityPlateBox
     {

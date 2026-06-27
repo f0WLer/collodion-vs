@@ -1,9 +1,9 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace Photochemistry.Plates
+namespace Photocore.Plates
 {
     public sealed partial class BlockGlassPlate
     {
@@ -147,7 +147,7 @@ namespace Photochemistry.Plates
             PlateAttributes.SetChemistry(sensitizedPlate, chemistryId);
             // Pin the glass-plate name; other substrates fall back to their own itemtype name.
             if (Substrate == "glass")
-                PlateAttributes.SetNameLangCode(sensitizedPlate, "photochemistry:plate-name-sensitized");
+                PlateAttributes.SetNameLangCode(sensitizedPlate, "photocore:plate-name-sensitized");
             PlateDryingTransition.ResetTimer(world, sensitizedPlate, PlateDryingTransition.ResolveWetDurationHours(world.Api, sensitizedPlate));
 
             if (!sp.InventoryManager.TryGiveItemstack(sensitizedPlate))
@@ -215,7 +215,7 @@ namespace Photochemistry.Plates
             [
                 new WorldInteraction
                 {
-                    ActionLangCode = "photochemistry:heldhelp-cleanroughglass",
+                    ActionLangCode = "photocore:heldhelp-cleanroughglass",
                     MouseButton = EnumMouseButton.Right,
                     Itemstacks = [new ItemStack(clothItem)]
                 }

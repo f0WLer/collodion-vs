@@ -1,11 +1,11 @@
-using Vintagestory.API.Client;
-using Photochemistry.Configuration;
+﻿using Vintagestory.API.Client;
+using Photocore.Configuration;
 
-namespace Photochemistry
+namespace Photocore
 {
     // Client startup wiring for channels, renderers, commands, and tick listeners.
     // Keeps client-only bootstrap and config persistence separate from server startup.
-    public partial class PhotochemistryModSystem
+    public partial class PhotocoreModSystem
     {
         // Client startup wires networking, renderers, hotkeys, config, and the viewfinder polling loop.
         public override void StartClientSide(ICoreClientAPI api)
@@ -18,7 +18,7 @@ namespace Photochemistry
         }
 
         // Lazily ensures the full client config tree is available before UI or render code reads from it.
-        internal PhotochemistryConfig GetOrLoadClientConfig(ICoreClientAPI capi)
+        internal PhotocoreConfig GetOrLoadClientConfig(ICoreClientAPI capi)
         {
             if (Config == null)
             {

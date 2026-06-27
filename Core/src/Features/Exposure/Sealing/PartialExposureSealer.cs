@@ -1,7 +1,8 @@
-using Vintagestory.API.Client;
-using Photochemistry.ImageEffects;
+﻿using Vintagestory.API.Client;
 
-namespace Photochemistry.Exposure
+using Photocore.ImageEffects;
+
+namespace Photocore.Exposure
 {
     // .pex is deleted only after a successful render — corrupt/incompatible partials survive a failed tray-seal attempt.
     internal static class PartialExposureSealer

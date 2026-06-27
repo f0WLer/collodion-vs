@@ -1,6 +1,6 @@
-using ProtoBuf;
+﻿using ProtoBuf;
 
-namespace Photochemistry.CameraCapture.Contracts
+namespace Photocore.CameraCapture.Contracts
 {
     // Protobuf packet DTOs for camera capture messaging.
     // Keep these classes data-only and preserve ProtoMember ids for compatibility.

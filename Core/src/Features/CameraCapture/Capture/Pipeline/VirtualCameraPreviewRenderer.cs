@@ -3,11 +3,12 @@ using OpenTK.Graphics.OpenGL;
 using SkiaSharp;
 using Vintagestory.API.Client;
 using Vintagestory.Client.NoObf;
-using Photochemistry.Exposure;
-using Photochemistry.ImageEffects;
-using Photochemistry.Configuration;
 
-namespace Photochemistry.CameraCapture
+using Photocore.Exposure;
+using Photocore.ImageEffects;
+using Photocore.Configuration;
+
+namespace Photocore.CameraCapture
 {
     // Registered at EnumRenderStage.Before so it can call TriggerRenderStage(Opaque) safely.
     internal sealed class VirtualCameraPreviewRenderer : IRenderer, IDisposable, IExposurePreviewSink
@@ -15,7 +16,7 @@ namespace Photochemistry.CameraCapture
         private readonly ICoreClientAPI _capi;
         private readonly ClientPlatformWindows _platform;
         private readonly ClientMain _main;
-        private readonly PhotochemistryModSystem? _modSystem;
+        private readonly PhotocoreModSystem? _modSystem;
         private int[]? _latestPreviewPixels;
         private int _latestPreviewWidth;
         private int _latestPreviewHeight;
@@ -66,7 +67,7 @@ namespace Photochemistry.CameraCapture
             _capi = capi;
             _main = (ClientMain)capi.World;
             _platform = (ClientPlatformWindows)_main.Platform;
-            _modSystem = PhotochemistryConfigAccess.ResolveModSystem(capi);
+            _modSystem = PhotocoreConfigAccess.ResolveModSystem(capi);
         }
 
         internal bool TryConsumeLatestFrame(out int[] bgraPixels, out int width, out int height)
@@ -152,7 +153,7 @@ namespace Photochemistry.CameraCapture
             }
             catch (Exception ex)
             {
-                _capi.Logger.Warning($"photochemistry: virtual camera preview render failed: {ex.Message}");
+                _capi.Logger.Warning($"photocore: virtual camera preview render failed: {ex.Message}");
             }
         }
 

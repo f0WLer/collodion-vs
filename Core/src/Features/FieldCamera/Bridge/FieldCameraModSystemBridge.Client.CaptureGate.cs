@@ -1,8 +1,9 @@
-﻿using Photochemistry.Plates;
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 
-namespace Photochemistry.FieldCamera
+using Photocore.Plates;
+
+namespace Photocore.FieldCamera
 {
     internal sealed partial class FieldCameraModSystemBridge
     {
@@ -27,7 +28,7 @@ namespace Photochemistry.FieldCamera
 
                     if (!CameraEligibility.IsLoadedCodeSensitized(camStack.Attributes.GetString(ItemFieldcamera.AttrLoadedPlate, string.Empty)))
                     {
-                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("photochemistry:msg-load-sensitized-plate"));
+                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("photocore:msg-load-sensitized-plate"));
                         return false;
                     }
 
@@ -40,13 +41,13 @@ namespace Photochemistry.FieldCamera
                     // Keep capture gate permissive when only the lightweight loaded-code attribute exists.
                     if (loadedPlateStack != null && !CameraEligibility.IsPlateExposable(loadedPlateStack))
                     {
-                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("photochemistry:msg-plate-not-exposable"));
+                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("photocore:msg-plate-not-exposable"));
                         return false;
                     }
 
                     if (loadedPlateStack != null && PlateDryingTransition.IsDry(owner.ClientApi.World, loadedPlateStack))
                     {
-                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("photochemistry:msg-plate-dried-no-expose"));
+                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("photocore:msg-plate-dried-no-expose"));
                         return false;
                     }
 
@@ -63,7 +64,7 @@ namespace Photochemistry.FieldCamera
                             if (!string.IsNullOrEmpty(uid)
                                 && !string.Equals(uid, owner.ClientApi.World.Player.PlayerUID, StringComparison.Ordinal))
                             {
-                                owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("photochemistry:msg-plate-other-photographer"));
+                                owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("photocore:msg-plate-other-photographer"));
                                 return false;
                             }
                         }

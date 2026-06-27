@@ -1,6 +1,6 @@
-using Vintagestory.API.Server;
+﻿using Vintagestory.API.Server;
 
-namespace Photochemistry.AdminTooling.Whitelist
+namespace Photocore.AdminTooling.Whitelist
 {
     // Server-side owner of the develop-whitelist: in-memory state + immediate persistence. Admin
     // mutations are rare, so each change writes the small JSON file synchronously (no dirty/flush tick,
@@ -92,7 +92,7 @@ namespace Photochemistry.AdminTooling.Whitelist
             try { _sapi.StoreModConfig(_state, _fileName); }
             catch (Exception ex)
             {
-                _sapi.Logger.Warning($"photochemistry: failed to persist develop whitelist '{_fileName}': {ex.Message}");
+                _sapi.Logger.Warning($"photocore: failed to persist develop whitelist '{_fileName}': {ex.Message}");
             }
         }
     }

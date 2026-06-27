@@ -7,9 +7,9 @@
   ],
   "maxstacksize": 64,
   "creativeinventory": { "general": ["*"], "photography": ["*"] },
-  "shape": { "base": "photochemistry:item/chemistry/collodionmix" },
+  "shape": { "base": "photocore:item/chemistry/collodionmix" },
   "textures": {
-    "collodion": { "base": "photochemistry:item/chemistry/collodionmix" }
+    "collodion": { "base": "photocore:item/chemistry/collodionmix" }
   },
   "guiTransform": {
     "translation": { "x": 0, "y": -26, "z": -25 },

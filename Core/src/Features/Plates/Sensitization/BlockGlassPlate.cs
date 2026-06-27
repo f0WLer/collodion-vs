@@ -1,8 +1,8 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Photochemistry.Plates
+namespace Photocore.Plates
 {
     public sealed partial class BlockGlassPlate : Block
     {

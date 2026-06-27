@@ -2,9 +2,9 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Config;
-using Photochemistry.Configuration;
+using Photocore.Configuration;
 
-namespace Photochemistry.Plates
+namespace Photocore.Plates
 {
     public abstract class ItemPlateBase : Item
     {
@@ -110,25 +110,25 @@ namespace Photochemistry.Plates
 
             if (codePath.Equals("glassplate", StringComparison.OrdinalIgnoreCase))
             {
-                if (stage == PlateStage.Clean) return Lang.Get("photochemistry:plate-name-glass-clean");
-                if (stage == PlateStage.Sensitizing) return Lang.Get("photochemistry:plate-name-glass-sensitizing");
-                return Lang.Get("photochemistry:plate-name-glass");
+                if (stage == PlateStage.Clean) return Lang.Get("photocore:plate-name-glass-clean");
+                if (stage == PlateStage.Sensitizing) return Lang.Get("photocore:plate-name-glass-sensitizing");
+                return Lang.Get("photocore:plate-name-glass");
             }
 
             if (codePath.Equals("sensitizedplate", StringComparison.OrdinalIgnoreCase))
             {
                 // "Exposed" from the moment the exposure starts — the latent image is committed.
                 if (stage == PlateStage.Exposing || stage == PlateStage.ExposurePaused || stage == PlateStage.Exposed)
-                    return Lang.Get("photochemistry:plate-name-exposed");
-                return Lang.Get("photochemistry:plate-name-sensitized");
+                    return Lang.Get("photocore:plate-name-exposed");
+                return Lang.Get("photocore:plate-name-sensitized");
             }
 
             if (codePath.Equals("photoplate", StringComparison.OrdinalIgnoreCase))
             {
-                if (stage == PlateStage.Developing) return Lang.Get("photochemistry:plate-name-developing");
-                if (stage == PlateStage.Developed) return Lang.Get("photochemistry:plate-name-developed");
-                if (stage == PlateStage.Finished) return Lang.Get("photochemistry:plate-name-photo-finished");
-                return Lang.Get("photochemistry:plate-name-photo");
+                if (stage == PlateStage.Developing) return Lang.Get("photocore:plate-name-developing");
+                if (stage == PlateStage.Developed) return Lang.Get("photocore:plate-name-developed");
+                if (stage == PlateStage.Finished) return Lang.Get("photocore:plate-name-photo-finished");
+                return Lang.Get("photocore:plate-name-photo");
             }
 
             return fallback;
@@ -156,7 +156,7 @@ namespace Photochemistry.Plates
                 PlateStage stage = PlateAttributes.GetStage(inSlot?.Itemstack);
                 if (stage == PlateStage.Exposing)
                 {
-                    if (PhotochemistryConfigAccess.ResolveConfig(api)?.Viewfinder?.PauseDryingDuringExposure ?? true)
+                    if (PhotocoreConfigAccess.ResolveConfig(api)?.Viewfinder?.PauseDryingDuringExposure ?? true)
                         return 0f;
                 }
             }

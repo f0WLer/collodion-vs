@@ -1,9 +1,10 @@
-﻿using Photochemistry.Exposure;
-using Photochemistry.Plates;
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace Photochemistry.AdminTooling
+using Photocore.Exposure;
+using Photocore.Plates;
+
+namespace Photocore.AdminTooling
 {
     internal sealed partial class AdminToolingModSystemBridge
     {
@@ -17,7 +18,7 @@ namespace Photochemistry.AdminTooling
             IReadOnlyList<string> allIds = ExposureAccumulationStore.EnumerateIds();
             if (allIds.Count == 0)
             {
-                capi.ShowChatMessage("photochemistry: no partial exposure files found.");
+                capi.ShowChatMessage("photocore: no partial exposure files found.");
                 return;
             }
 
@@ -33,25 +34,25 @@ namespace Photochemistry.AdminTooling
             {
                 if (toDelete.Count == 0)
                 {
-                    capi.ShowChatMessage($"photochemistry: {allIds.Count} partial exposure file(s) found, all protected by plates in your inventory.");
+                    capi.ShowChatMessage($"photocore: {allIds.Count} partial exposure file(s) found, all protected by plates in your inventory.");
                     return;
                 }
                 capi.ShowChatMessage(
-                    $"photochemistry: {allIds.Count} partial exposure file(s) — {protectedCount} protected by plates in your inventory, {toDelete.Count} orphaned. "
-                    + "Run '.photochemistry clearpex confirm' to delete orphaned files.");
+                    $"photocore: {allIds.Count} partial exposure file(s) — {protectedCount} protected by plates in your inventory, {toDelete.Count} orphaned. "
+                    + "Run '.photocore clearpex confirm' to delete orphaned files.");
                 return;
             }
 
             if (toDelete.Count == 0)
             {
-                capi.ShowChatMessage("photochemistry: nothing to delete — all partial exposure files are protected by plates in your inventory.");
+                capi.ShowChatMessage("photocore: nothing to delete — all partial exposure files are protected by plates in your inventory.");
                 return;
             }
 
             foreach (string id in toDelete)
                 ExposureAccumulationStore.Delete(id);
 
-            capi.ShowChatMessage($"photochemistry: deleted {toDelete.Count} orphaned partial exposure file(s). {protectedCount} kept.");
+            capi.ShowChatMessage($"photocore: deleted {toDelete.Count} orphaned partial exposure file(s). {protectedCount} kept.");
         }
 
         private HashSet<string> CollectInventoryExposureIds(ICoreClientAPI capi)

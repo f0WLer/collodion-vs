@@ -1,4 +1,4 @@
-namespace Photochemistry.Exposure
+﻿namespace Photocore.Exposure
 {
     // Chem is swapped by the owner when the active chemistry changes; NaN parameters inherit the process-profile default.
     internal sealed class ExposurePhysicsConfig

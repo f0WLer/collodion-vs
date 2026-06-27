@@ -1,12 +1,12 @@
-﻿using Photochemistry.CameraCapture;
-using Photochemistry.CameraCapture.Contracts;
-using Photochemistry.Plates;
+﻿using Photocore.CameraCapture;
+using Photocore.CameraCapture.Contracts;
+using Photocore.Plates;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     internal sealed partial class FieldCameraModSystemBridge
     {
@@ -37,7 +37,7 @@ namespace Photochemistry.FieldCamera
 
             // Loading a dried plate is allowed, but it can no longer be exposed — let the player know.
             if (PlateDryingTransition.IsDry(Api.World, loadedPlate))
-                player.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photochemistry:msg-plate-dried-reclaim"), EnumChatType.Notification);
+                player.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photocore:msg-plate-dried-reclaim"), EnumChatType.Notification);
 
             AudioUtils.FireAndForgetEntitySound(Api?.World, _cameraPlateLoadSound, player.Entity, AudioUtils.NextRandomPitch(Api?.World));
             return true;
@@ -156,7 +156,7 @@ namespace Photochemistry.FieldCamera
                 if (current.Replaceable < 6000) return false;
             }
 
-            Block? mountedBlock = Api.World.GetBlock(new AssetLocation("photochemistry", "fieldcamera-tripod"));
+            Block? mountedBlock = Api.World.GetBlock(new AssetLocation("photocore", "fieldcamera-tripod"));
             if (mountedBlock == null) return false;
 
             Api.World.BlockAccessor.SetBlock(mountedBlock.BlockId, pos);
@@ -241,7 +241,7 @@ namespace Photochemistry.FieldCamera
             }
 
             BlockFacing facing = BlockFacing.HorizontalFromYaw(player.Entity.Pos.Yaw);
-            Block? restingBlock = Api.World.GetBlock(new AssetLocation("photochemistry", $"fieldcamera-resting-{facing.Code}"));
+            Block? restingBlock = Api.World.GetBlock(new AssetLocation("photocore", $"fieldcamera-resting-{facing.Code}"));
             if (restingBlock == null) return;
 
             Api.World.BlockAccessor.SetBlock(restingBlock.BlockId, pos);

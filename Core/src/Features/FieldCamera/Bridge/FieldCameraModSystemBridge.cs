@@ -1,18 +1,19 @@
-using Photochemistry.Configuration;
-using Photochemistry.CameraCapture;
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
-namespace Photochemistry.FieldCamera
+using Photocore.Configuration;
+using Photocore.CameraCapture;
+
+namespace Photocore.FieldCamera
 {
     // Owner handle + ambient API/config/logger accessors shared by all partials.
     // Capture is the seam handle for reaching CameraCapture pipeline members.
     internal sealed partial class FieldCameraModSystemBridge
     {
-        private readonly PhotochemistryModSystem _owner;
+        private readonly PhotocoreModSystem _owner;
 
-        internal FieldCameraModSystemBridge(PhotochemistryModSystem owner)
+        internal FieldCameraModSystemBridge(PhotocoreModSystem owner)
         {
             _owner = owner;
         }
@@ -28,7 +29,7 @@ namespace Photochemistry.FieldCamera
             set => _owner.ServerChannel = value;
         }
 
-        internal PhotochemistryConfig Config
+        internal PhotocoreConfig Config
         {
             get => _owner.Config;
             set
@@ -38,7 +39,7 @@ namespace Photochemistry.FieldCamera
             }
         }
 
-        internal PhotochemistryClientConfig ClientConfig => _owner.ClientConfig;
+        internal PhotocoreClientConfig ClientConfig => _owner.ClientConfig;
         internal ILogger? BestEffortLogger => _owner.BestEffortLogger;
         internal bool IsBestEffortDebugLoggingEnabled => _owner.IsBestEffortDebugLoggingEnabled;
     }

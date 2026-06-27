@@ -1,9 +1,9 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Photochemistry.PhotoSync.Integration;
+using Photocore.PhotoSync.Integration;
 
-namespace Photochemistry.Plates.Rendering
+namespace Photocore.Plates.Rendering
 {
     public static partial class PhotoPlateRenderUtil
     {
@@ -70,7 +70,7 @@ namespace Photochemistry.Plates.Rendering
                 }
 
                 string photoKey = Path.GetFileNameWithoutExtension(renderFileName);
-                AssetLocation texLoc = new AssetLocation("photochemistry", $"photo-block-{photoKey}-v{versionSnapshot}");
+                AssetLocation texLoc = new AssetLocation("photocore", $"photo-block-{photoKey}-v{versionSnapshot}");
                 
                 // Lazily create atlas bitmap payload only when cache lookup misses.
                 capi.BlockTextureAtlas.GetOrInsertTexture(

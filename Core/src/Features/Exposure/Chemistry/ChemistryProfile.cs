@@ -1,6 +1,6 @@
-using Photochemistry.ImageEffects;
+﻿using Photocore.ImageEffects;
 
-namespace Photochemistry.Exposure
+namespace Photocore.Exposure
 {
     // Every section is non-null — ChemistryProfileSeeder fills any gaps before the registry is used.
     internal sealed class ChemistryProfile

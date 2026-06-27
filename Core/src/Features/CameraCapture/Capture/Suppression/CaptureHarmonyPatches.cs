@@ -1,11 +1,11 @@
-#pragma warning disable IDE1006 // Harmony magic parameters require __ prefix
+﻿#pragma warning disable IDE1006 // Harmony magic parameters require __ prefix
 using System.Reflection;
 using HarmonyLib;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
 
-namespace Photochemistry.CameraCapture
+namespace Photocore.CameraCapture
 {
     // During self-portrait virtual renders, the game builds the local player's model matrix
     // relative to EntityPlayer.CameraPos. VirtualCamera temporarily moves CameraPos to the

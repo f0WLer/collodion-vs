@@ -1,4 +1,4 @@
-namespace Photochemistry.CameraCapture
+﻿namespace Photocore.CameraCapture
 {
     // Shared with EntityPlayerSelfPortraitPatch for one virtual render pass.
     internal static class VirtualCameraSelfPortraitContext

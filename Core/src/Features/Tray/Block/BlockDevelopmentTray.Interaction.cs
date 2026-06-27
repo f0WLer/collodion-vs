@@ -1,11 +1,12 @@
-﻿using Photochemistry.Plates;
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
-using Photochemistry.Configuration;
+using Photocore.Configuration;
+using Photocore.Plates;
 
-namespace Photochemistry.Tray
+
+namespace Photocore.Tray
 {
     public sealed partial class BlockDevelopmentTray
     {
@@ -107,7 +108,7 @@ namespace Photochemistry.Tray
                     if (currentPours >= RequiredDeveloperPours) return false;
                     if (PlateDryingTransition.IsDry(world, clientDevPlate))
                     {
-                        (world.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("photochemistry:msg-tray-plate-dried"));
+                        (world.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("photocore:msg-tray-plate-dried"));
                         return false;
                     }
                     if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _developerPortionCode, GetChemicalUnitsPerUse())) return false;
@@ -123,12 +124,12 @@ namespace Photochemistry.Tray
                             // Develop whitelist: sealing is the act that creates server data. If this client
                             // isn't allowed, refuse the pour now so the exposure (.pex) is kept rather than
                             // sealed-then-rejected server-side. The server gate is the real enforcement.
-                            if (!(PhotochemistryConfigAccess.ResolveClientModSystem(capiSeal)?.AdminToolingBridge.ClientDevelopAllowed ?? true))
+                            if (!(PhotocoreConfigAccess.ResolveClientModSystem(capiSeal)?.AdminToolingBridge.ClientDevelopAllowed ?? true))
                             {
-                                capiSeal.ShowChatMessage(Lang.Get("photochemistry:msg-develop-not-whitelisted"));
+                                capiSeal.ShowChatMessage(Lang.Get("photocore:msg-develop-not-whitelisted"));
                                 return false;
                             }
-                            PhotochemistryConfigAccess.ResolveModSystem(capiSeal)?.FieldCameraBridge.TrySendSealForTray(capiSeal, blockSel.Position, clientDevPlate);
+                            PhotocoreConfigAccess.ResolveModSystem(capiSeal)?.FieldCameraBridge.TrySendSealForTray(capiSeal, blockSel.Position, clientDevPlate);
                         }
 
                     TrayTimedInteractionState.Begin(byPlayer, blockSel.Position, ActionDeveloper, GetDeveloperPourSeconds());
@@ -140,7 +141,7 @@ namespace Photochemistry.Tray
                     if (!TryGetFixerPourContext(be, out ItemStack clientFixPlate, out _)) return false;
                     if (PlateDryingTransition.IsDry(world, clientFixPlate))
                     {
-                        (world.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("photochemistry:msg-tray-plate-dried"));
+                        (world.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("photocore:msg-tray-plate-dried"));
                         return false;
                     }
                     if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _fixerPortionCode, GetChemicalUnitsPerUse())) return false;
@@ -223,13 +224,13 @@ namespace Photochemistry.Tray
                     if (currentPours >= RequiredDeveloperPours) return false;
                     if (PlateDryingTransition.IsDry(world, devPlate))
                     {
-                        Tell(byPlayer, Lang.Get("photochemistry:msg-tray-plate-dried"), pos);
+                        Tell(byPlayer, Lang.Get("photocore:msg-tray-plate-dried"), pos);
                         return false;
                     }
                     string? devPhotographer = devPlate.Attributes?.GetString(PlateAttributes.PhotographerUid);
                     if (!string.IsNullOrEmpty(devPhotographer) && !string.Equals(devPhotographer, byPlayer.PlayerUID, StringComparison.OrdinalIgnoreCase))
                     {
-                        Tell(byPlayer, Lang.Get("photochemistry:msg-tray-other-photographer"), pos);
+                        Tell(byPlayer, Lang.Get("photocore:msg-tray-other-photographer"), pos);
                         return false;
                     }
                     break;
@@ -237,20 +238,20 @@ namespace Photochemistry.Tray
                     if (!TryGetFixerPourContext(be, out ItemStack fixPlate, out int pours)) return false;
                     if (PlateDryingTransition.IsDry(world, fixPlate))
                     {
-                        Tell(byPlayer, Lang.Get("photochemistry:msg-tray-plate-dried"), pos);
+                        Tell(byPlayer, Lang.Get("photocore:msg-tray-plate-dried"), pos);
                         return false;
                     }
 
                     if (pours < RequiredDeveloperPours)
                     {
-                        Tell(byPlayer, Lang.Get("photochemistry:msg-tray-underdeveloped", pours, RequiredDeveloperPours), pos);
+                        Tell(byPlayer, Lang.Get("photocore:msg-tray-underdeveloped", pours, RequiredDeveloperPours), pos);
                         return false;
                     }
 
                     string? fixPhotographer = fixPlate.Attributes?.GetString(PlateAttributes.PhotographerUid);
                     if (!string.IsNullOrEmpty(fixPhotographer) && !string.Equals(fixPhotographer, byPlayer.PlayerUID, StringComparison.OrdinalIgnoreCase))
                     {
-                        Tell(byPlayer, Lang.Get("photochemistry:msg-tray-other-photographer"), pos);
+                        Tell(byPlayer, Lang.Get("photocore:msg-tray-other-photographer"), pos);
                         return false;
                     }
                     break;

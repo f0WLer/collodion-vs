@@ -1,9 +1,9 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-using Photochemistry.Plates.Rendering;
+using Photocore.Plates.Rendering;
 
-namespace Photochemistry.Plates
+namespace Photocore.Plates
 {
     public sealed class ItemPhotoPlate : ItemPlateBase
     {

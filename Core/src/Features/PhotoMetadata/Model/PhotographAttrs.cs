@@ -1,4 +1,4 @@
-namespace Photochemistry.PhotoMetadata.Model
+﻿namespace Photocore.PhotoMetadata.Model
 {
     public static class PhotographAttrs
     {

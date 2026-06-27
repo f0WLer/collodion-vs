@@ -1,10 +1,10 @@
-﻿using Photochemistry.Plates.Rendering;
+﻿using Photocore.Plates.Rendering;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-using Photochemistry.Plates;
-namespace Photochemistry.Tray
+using Photocore.Plates;
+namespace Photocore.Tray
 {
     public sealed partial class BlockEntityDevelopmentTray
     {
@@ -28,7 +28,7 @@ namespace Photochemistry.Tray
                 {
                     lock (_clientMeshLock) _clientMeshQueued = false;
                     BuildClientMesh(capi);
-                }, "photochemistry-devtray-rebuild");
+                }, "photocore-devtray-rebuild");
             }
             catch (Exception ex)
             {
@@ -96,8 +96,8 @@ namespace Photochemistry.Tray
 
                 bodyShape.IgnoreElements = ["plate"];
                 capi.Tesselator.TesselateShape(
-                    "photochemistry-devtray-body",
-                    Block?.Code ?? new AssetLocation("photochemistry", "developmenttray-red"),
+                    "photocore-devtray-body",
+                    Block?.Code ?? new AssetLocation("photocore", "developmenttray-red"),
                     bodyShape,
                     out mesh,
                     bodySource
@@ -146,8 +146,8 @@ namespace Photochemistry.Tray
 
                 shape.IgnoreElements = ["base", "wall-n", "wall-s", "wall-e", "wall-w"];
                 capi.Tesselator.TesselateShape(
-                    "photochemistry-devtray-plainplate",
-                    Block?.Code ?? new AssetLocation("photochemistry", "developmenttray-red"),
+                    "photocore-devtray-plainplate",
+                    Block?.Code ?? new AssetLocation("photocore", "developmenttray-red"),
                     shape,
                     out mesh,
                     plateSource
@@ -186,8 +186,8 @@ namespace Photochemistry.Tray
 
                     shape.IgnoreElements = ["base", "wall-n", "wall-s", "wall-e", "wall-w"];
                     capi.Tesselator.TesselateShape(
-                        "photochemistry-devtray-platephoto",
-                        Block?.Code ?? new AssetLocation("photochemistry", "developmenttray-red"),
+                        "photocore-devtray-platephoto",
+                        Block?.Code ?? new AssetLocation("photocore", "developmenttray-red"),
                         shape,
                         out MeshData? photoMesh,
                         texSource
@@ -221,13 +221,13 @@ namespace Photochemistry.Tray
             return true;
         }
 
-        // Glass-plate convenience overload: loads photochemistry:textures/item/<name>.png into the block
+        // Glass-plate convenience overload: loads photocore:textures/item/<name>.png into the block
         // atlas (used for the Developing stage, where the tray block is still "-exposed").
         private static bool TryGetItemPlateTexture(ICoreClientAPI capi, string textureName, out TextureAtlasPosition texPos)
             => TryGetPlateTextureFromAsset(
                 capi,
-                new AssetLocation("photochemistry", "devtray-" + textureName),
-                new AssetLocation("photochemistry", "textures/item/" + textureName + ".png"),
+                new AssetLocation("photocore", "devtray-" + textureName),
+                new AssetLocation("photocore", "textures/item/" + textureName + ".png"),
                 out texPos);
 
         // Resolves the plate item's own "plate" texture (e.g. kosphotography:item/paper-sensitized or

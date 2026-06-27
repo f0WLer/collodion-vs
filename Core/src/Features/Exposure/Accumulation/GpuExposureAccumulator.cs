@@ -4,7 +4,7 @@ using SkiaSharp;
 using Vintagestory.API.Client;
 using Vintagestory.Client.NoObf;
 
-namespace Photochemistry.Exposure
+namespace Photocore.Exposure
 {
     // GL state is saved and restored around all public operations so VS's render pipeline is unaffected.
     internal sealed class GpuExposureAccumulator : IDisposable
@@ -267,7 +267,7 @@ namespace Photochemistry.Exposure
         private void AllocateGpuResources()
         {
             _sampleFbo = _platform.CreateFramebuffer(
-                new FramebufferAttrs("photochemistry-gpu-accu-sample", Width, Height)
+                new FramebufferAttrs("photocore-gpu-accu-sample", Width, Height)
                 {
                     Attachments =
                     [
@@ -288,7 +288,7 @@ namespace Photochemistry.Exposure
                 });
 
             _resolveFbo = _platform.CreateFramebuffer(
-                new FramebufferAttrs("photochemistry-gpu-accu-resolve", Width, Height)
+                new FramebufferAttrs("photocore-gpu-accu-resolve", Width, Height)
                 {
                     Attachments =
                     [
@@ -332,8 +332,8 @@ namespace Photochemistry.Exposure
             }
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, prevFbo);
 
-            string accumFrag   = LoadShaderSource("Photochemistry.gpu-exposure-accum.frag.glsl");
-            string resolveFrag = LoadShaderSource("Photochemistry.gpu-exposure-develop.frag.glsl");
+            string accumFrag   = LoadShaderSource("Photocore.gpu-exposure-accum.frag.glsl");
+            string resolveFrag = LoadShaderSource("Photocore.gpu-exposure-develop.frag.glsl");
             _accumProgram   = CompileProgram(VertSrc, accumFrag);
             _resolveProgram = CompileProgram(VertSrc, resolveFrag);
 

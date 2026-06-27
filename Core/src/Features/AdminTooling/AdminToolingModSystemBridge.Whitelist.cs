@@ -1,8 +1,9 @@
-using Photochemistry.AdminTooling.Whitelist;
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
-namespace Photochemistry.AdminTooling
+using Photocore.AdminTooling.Whitelist;
+
+namespace Photocore.AdminTooling
 {
     // Develop-whitelist ownership and the thin client-awareness sync. The server owns the authoritative
     // ExposureWhitelistService and pushes each player a DevelopPermissionPacket on join / on change; the
@@ -22,7 +23,7 @@ namespace Photochemistry.AdminTooling
 
         internal void ConfigureServerWhitelistStartup(ICoreServerAPI api)
         {
-            _exposureWhitelist = ExposureWhitelistService.LoadOrCreate(api, PhotochemistryModSystem.ServerDevelopWhitelistFileName);
+            _exposureWhitelist = ExposureWhitelistService.LoadOrCreate(api, PhotocoreModSystem.ServerDevelopWhitelistFileName);
 
             _playerJoinHandler = player => PushDevelopPermission(player);
             api.Event.PlayerJoin += _playerJoinHandler;

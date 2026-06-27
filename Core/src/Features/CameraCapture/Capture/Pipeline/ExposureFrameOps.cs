@@ -1,11 +1,12 @@
-using SkiaSharp;
+﻿using SkiaSharp;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Photochemistry.Exposure;
-using Photochemistry.ImageEffects;
-using Photochemistry.Configuration;
 
-namespace Photochemistry.CameraCapture
+using Photocore.Exposure;
+using Photocore.ImageEffects;
+using Photocore.Configuration;
+
+namespace Photocore.CameraCapture
 {
     /// <summary>
     /// Value-logic shared by the two accumulation-based exposure paths
@@ -24,7 +25,7 @@ namespace Photochemistry.CameraCapture
         {
             if (buffer == null || sink == null || buffer.FramesAccumulated == 0) return;
 
-            ViewfinderConfig? cfg = PhotochemistryConfigAccess.ResolveClientConfig(capi)?.Viewfinder;
+            ViewfinderConfig? cfg = PhotocoreConfigAccess.ResolveClientConfig(capi)?.Viewfinder;
             // Skip the GPU→CPU resolve when no one is displaying the preview (DebugPreviewPeak off).
             if (!(cfg?.DebugPreviewPeak ?? false)) return;
 
@@ -48,11 +49,11 @@ namespace Photochemistry.CameraCapture
 
             if (!buffer.DeserializeAccumulation(data, out int restoredFrames))
             {
-                logger.Warning("photochemistry: partial exposure blob is incompatible with the current buffer dimensions — starting fresh.");
+                logger.Warning("photocore: partial exposure blob is incompatible with the current buffer dimensions — starting fresh.");
                 return;
             }
 
-            logger.Notification($"photochemistry: restored {restoredFrames} accumulated frames from saved partial exposure.");
+            logger.Notification($"photocore: restored {restoredFrames} accumulated frames from saved partial exposure.");
         }
     }
 }

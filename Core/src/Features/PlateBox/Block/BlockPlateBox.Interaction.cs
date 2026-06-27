@@ -2,7 +2,7 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.MathTools;
 
-namespace Photochemistry.PlateBox
+namespace Photocore.PlateBox
 {
     public sealed partial class BlockPlateBox
     {
@@ -26,13 +26,13 @@ namespace Photochemistry.PlateBox
             [
                 new WorldInteraction
                 {
-                    ActionLangCode = "photochemistry:heldhelp-platebox-insert",
+                    ActionLangCode = "photocore:heldhelp-platebox-insert",
                     MouseButton = EnumMouseButton.Right,
                     Itemstacks = [new ItemStack(samplePlate)]
                 },
                 new WorldInteraction
                 {
-                    ActionLangCode = "photochemistry:heldhelp-platebox-take",
+                    ActionLangCode = "photocore:heldhelp-platebox-take",
                     MouseButton = EnumMouseButton.Right
                 }
             ];
@@ -40,9 +40,9 @@ namespace Photochemistry.PlateBox
 
         private static readonly AssetLocation[] _plateSetSounds =
         [
-            new("photochemistry", "sounds/glass-set1"),
-            new("photochemistry", "sounds/glass-set2"),
-            new("photochemistry", "sounds/glass-set3")
+            new("photocore", "sounds/glass-set1"),
+            new("photocore", "sounds/glass-set2"),
+            new("photocore", "sounds/glass-set3")
         ];
         
         private bool HandlePlateBoxInteractionStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityPlateBox be)

@@ -1,8 +1,9 @@
-using SkiaSharp;
-using Photochemistry.ImageEffects;
+﻿using SkiaSharp;
 using Vintagestory.API.Common;
 
-namespace Photochemistry.CameraCapture
+using Photocore.ImageEffects;
+
+namespace Photocore.CameraCapture
 {
     internal enum ExposureState { Idle, Capturing, Paused, Faulted, Done }
 

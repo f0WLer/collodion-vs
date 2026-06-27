@@ -1,10 +1,10 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-using Photochemistry.Plates;
-namespace Photochemistry.Tray
+using Photocore.Plates;
+namespace Photocore.Tray
 {
     public sealed partial class BlockDevelopmentTray
     {

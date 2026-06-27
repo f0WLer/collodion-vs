@@ -1,6 +1,6 @@
-using SkiaSharp;
+﻿using SkiaSharp;
 
-namespace Photochemistry.ImageEffects
+namespace Photocore.ImageEffects
 {
     // Thin seam for capture/render callers: gives them a single, unambiguous entry point into the effects
     // runtime (the runtime class is itself named ImageEffects inside this namespace, so callers in other

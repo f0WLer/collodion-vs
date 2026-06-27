@@ -1,7 +1,7 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 
-namespace Photochemistry.Plates
+namespace Photocore.Plates
 {
     internal static class PlateChemicalUtil
     {

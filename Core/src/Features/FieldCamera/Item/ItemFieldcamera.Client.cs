@@ -1,14 +1,14 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Client;
-using Photochemistry.Configuration;
+using Photocore.Configuration;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     public partial class ItemFieldcamera
     {
         private static bool IsViewfinderActive(ICoreAPI api)
         {
-            PhotochemistryModSystem? modSys = PhotochemistryConfigAccess.ResolveModSystem(api);
+            PhotocoreModSystem? modSys = PhotocoreConfigAccess.ResolveModSystem(api);
             return modSys != null && modSys.CameraCaptureBridge.IsViewfinderActive;
         }
 
@@ -16,7 +16,7 @@ namespace Photochemistry.FieldCamera
         {
             if (api is not ICoreClientAPI capi) return false;
 
-            PhotochemistryModSystem? modSys = PhotochemistryConfigAccess.ResolveModSystem(api);
+            PhotocoreModSystem? modSys = PhotocoreConfigAccess.ResolveModSystem(api);
             if (modSys == null) return false;
 
             ItemStack? cameraStack = CameraItemHelper.GetActiveCameraStack(capi);

@@ -2,12 +2,12 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-using Photochemistry.Plates;
-namespace Photochemistry.Tray
+using Photocore.Plates;
+namespace Photocore.Tray
 {
     public sealed partial class BlockDevelopmentTray
     {
-        private static readonly AssetLocation _sensitizedPlateItemCode = new("photochemistry", "sensitizedplate");
+        private static readonly AssetLocation _sensitizedPlateItemCode = new("photocore", "sensitizedplate");
 
         public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
         {
@@ -60,7 +60,7 @@ namespace Photochemistry.Tray
 
             interactions.Add(new WorldInteraction
             {
-                ActionLangCode = "photochemistry:heldhelp-developmenttray-insertplate",
+                ActionLangCode = "photocore:heldhelp-developmenttray-insertplate",
                 MouseButton = EnumMouseButton.Right,
                 Itemstacks = stacks.ToArray()
             });
@@ -70,7 +70,7 @@ namespace Photochemistry.Tray
         {
             interactions.Add(new WorldInteraction
             {
-                ActionLangCode = "photochemistry:heldhelp-developmenttray-takeplate",
+                ActionLangCode = "photocore:heldhelp-developmenttray-takeplate",
                 MouseButton = EnumMouseButton.Right
             });
 
@@ -94,12 +94,12 @@ namespace Photochemistry.Tray
 
             if (canDevelop)
             {
-                AddChemicalInteraction(world, interactions, "photochemistry:heldhelp-developmenttray-develop", _developerPortionCode, GetChemicalUnitsPerUse());
+                AddChemicalInteraction(world, interactions, "photocore:heldhelp-developmenttray-develop", _developerPortionCode, GetChemicalUnitsPerUse());
             }
 
             if (canFix)
             {
-                AddChemicalInteraction(world, interactions, "photochemistry:heldhelp-developmenttray-fix", _fixerPortionCode, GetChemicalUnitsPerUse());
+                AddChemicalInteraction(world, interactions, "photocore:heldhelp-developmenttray-fix", _fixerPortionCode, GetChemicalUnitsPerUse());
             }
         }
 

@@ -2,9 +2,9 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
-using Photochemistry.Configuration;
+using Photocore.Configuration;
 
-namespace Photochemistry
+namespace Photocore
 {
     // Wraps the vanilla EnumTransitionType.Dry pipeline so plate code can ignore
     // the underlying transitionstate tree and just ask "is this plate dry yet?".
@@ -23,14 +23,14 @@ namespace Photochemistry
         // Resolves how fast (0 = pause, 1 = full rate) plates dry while inside a plate box.
         public static float ResolveStorageDryingRateMul(ICoreAPI? api)
         {
-            return PhotochemistryConfigAccess.ResolveConfig(api)?.PlateProcessing?.PlateBoxDryingMultiplier
+            return PhotocoreConfigAccess.ResolveConfig(api)?.PlateProcessing?.PlateBoxDryingMultiplier
                 ?? 0f;
         }
 
         // Resolves configured wet lifetime with a safe fallback when config is unavailable.
         public static double ResolveWetDurationHours(ICoreAPI? api)
         {
-            return PhotochemistryConfigAccess.ResolveConfig(api)?.PlateProcessing?.WetDurationHours
+            return PhotocoreConfigAccess.ResolveConfig(api)?.PlateProcessing?.WetDurationHours
                 ?? 0.66;
         }
 
@@ -78,7 +78,7 @@ namespace Photochemistry
 
             if (stack.Attributes?.GetBool(AttrNeverDries) == true)
             {
-                dsc.AppendLine(Lang.Get("photochemistry:wetplate-wetness-permanent"));
+                dsc.AppendLine(Lang.Get("photocore:wetplate-wetness-permanent"));
                 return;
             }
 
@@ -86,11 +86,11 @@ namespace Photochemistry
             if (hoursLeft > 0 && !double.IsPositiveInfinity(hoursLeft))
             {
                 int minutesLeft = (int)Math.Ceiling(hoursLeft * 60);
-                dsc.AppendLine(string.Format(Lang.Get("photochemistry:wetplate-wetness"), minutesLeft));
+                dsc.AppendLine(string.Format(Lang.Get("photocore:wetplate-wetness"), minutesLeft));
             }
             else
             {
-                dsc.AppendLine(Lang.Get("photochemistry:wetplate-dry"));
+                dsc.AppendLine(Lang.Get("photocore:wetplate-dry"));
             }
         }
 

@@ -1,14 +1,15 @@
-using Photochemistry.CameraCapture.Contracts;
-using Photochemistry.Exposure;
-using Photochemistry.ImageEffects;
-using Photochemistry.PhotoSync.Integration;
-using Photochemistry.Plates;
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Photochemistry.Configuration;
 
-namespace Photochemistry.FieldCamera
+using Photocore.CameraCapture.Contracts;
+using Photocore.Exposure;
+using Photocore.ImageEffects;
+using Photocore.PhotoSync.Integration;
+using Photocore.Plates;
+using Photocore.Configuration;
+
+namespace Photocore.FieldCamera
 {
     // Split out of the Client wiring partial because this is exposure-finalization logic, not bootstrap.
     internal sealed partial class FieldCameraModSystemBridge
@@ -28,7 +29,7 @@ namespace Photochemistry.FieldCamera
             ExposurePhysicsConfig physics = new() { Chem = ChemistryProfileRegistry.Instance.Get(profile.Name).ExposurePhysics };
 
             // Tray development must match normal export policy: same target exposure, output size, and effects resolution.
-            ViewfinderConfig? viewfinder = PhotochemistryConfigAccess.ResolveClientConfig(capi)?.Viewfinder;
+            ViewfinderConfig? viewfinder = PhotocoreConfigAccess.ResolveClientConfig(capi)?.Viewfinder;
             int targetFrames = Math.Max(1, trayPlate.Attributes?.GetInt(PlateAttributes.ExposureTargetFrames) ?? profile.SampleCount);
             int maxDimension = viewfinder?.PhotoCaptureMaxDimension ?? ViewfinderConfig.DefaultPhotoCaptureMaxDimension;
             // Config gate for finishing on the saved plate photo — independent of the dialog's preview toggle.

@@ -1,7 +1,7 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using SkiaSharp;
 
-namespace Photochemistry.ImageEffects
+namespace Photocore.ImageEffects
 {
     public static partial class ImageEffects
     {

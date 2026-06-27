@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     // Shared camera item surface used by both client and server paths.
     // Keeps loaded-plate attribute keys and tooltip behavior centralized.
@@ -13,10 +13,10 @@ namespace Photochemistry.FieldCamera
 
         // Item code family used when swapping between loaded/unloaded visual variants.
         // Subclasses override these to stay within their own code family.
-        private static readonly AssetLocation _baseCode             = new("photochemistry", "fieldcamera");
+        private static readonly AssetLocation _baseCode             = new("photocore", "fieldcamera");
         // Asset code remains "loaded-silvered" for save-file backward compatibility; gameplay semantics are sensitized.
-        private static readonly AssetLocation _loadedSensitizedCode = new("photochemistry", "fieldcamera-loaded-silvered");
-        private static readonly AssetLocation _loadedExposedCode    = new("photochemistry", "fieldcamera-loaded-exposed");
+        private static readonly AssetLocation _loadedSensitizedCode = new("photocore", "fieldcamera-loaded-silvered");
+        private static readonly AssetLocation _loadedExposedCode    = new("photocore", "fieldcamera-loaded-exposed");
 
         internal virtual AssetLocation CameraBaseCode             => _baseCode;
         internal virtual AssetLocation CameraLoadedSensitizedCode => _loadedSensitizedCode;
@@ -27,7 +27,7 @@ namespace Photochemistry.FieldCamera
         {
             handling = EnumHandHandling.PreventDefault;
 
-            // Viewfinder mode is driven by the client tick polling RMB state in PhotochemistryModSystem.
+            // Viewfinder mode is driven by the client tick polling RMB state in PhotocoreModSystem.
             // We still prevent default use/interact while holding the camera.
         }
 
@@ -35,26 +35,26 @@ namespace Photochemistry.FieldCamera
         public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
-            dsc.AppendLine(Lang.Get("photochemistry:camera-info-controls"));
-            dsc.AppendLine(Lang.Get("photochemistry:camera-info-tripod"));
+            dsc.AppendLine(Lang.Get("photocore:camera-info-controls"));
+            dsc.AppendLine(Lang.Get("photocore:camera-info-tripod"));
 
             string? loadedPlate = inSlot?.Itemstack?.Attributes?.GetString(AttrLoadedPlate, null);
             if (!string.IsNullOrEmpty(loadedPlate))
             {
-                dsc.AppendLine(Lang.Get("photochemistry:camera-info-plate-loaded", loadedPlate));
+                dsc.AppendLine(Lang.Get("photocore:camera-info-plate-loaded", loadedPlate));
             }
             else
             {
-                dsc.AppendLine(Lang.Get("photochemistry:camera-info-plate-none"));
+                dsc.AppendLine(Lang.Get("photocore:camera-info-plate-none"));
             }
 
             if (string.IsNullOrEmpty(loadedPlate))
             {
-                dsc.AppendLine(Lang.Get("photochemistry:camera-info-load-hint"));
+                dsc.AppendLine(Lang.Get("photocore:camera-info-load-hint"));
             }
             else
             {
-                dsc.AppendLine(Lang.Get("photochemistry:camera-info-unload-hint"));
+                dsc.AppendLine(Lang.Get("photocore:camera-info-unload-hint"));
             }
         }
     }

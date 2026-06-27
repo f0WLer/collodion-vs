@@ -1,9 +1,9 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Photochemistry.PhotoSync.Integration;
+using Photocore.PhotoSync.Integration;
 
-namespace Photochemistry.Plates.Rendering
+namespace Photocore.Plates.Rendering
 {
     public static partial class PhotoPlateRenderUtil
     {
@@ -67,7 +67,7 @@ namespace Photochemistry.Plates.Rendering
                     }
 
                     string photoKey = Path.GetFileNameWithoutExtension(renderFileName);
-                    AssetLocation texLoc = new AssetLocation("photochemistry", $"photo-{photoKey}-v{inputs.VersionSnapshot}");
+                    AssetLocation texLoc = new AssetLocation("photocore", $"photo-{photoKey}-v{inputs.VersionSnapshot}");
 
                     TextureAtlasPosition texPos;
                     int texSubId;

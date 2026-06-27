@@ -1,7 +1,7 @@
-using Xunit;
-using Photochemistry.PhotoSync.Storage;
+﻿using Xunit;
+using Photocore.PhotoSync.Storage;
 
-namespace Photochemistry.Tests.PhotoSync;
+namespace Photocore.Tests.PhotoSync;
 
 public class NormalizePhotoIdTests
 {

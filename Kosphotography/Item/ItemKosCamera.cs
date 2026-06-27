@@ -1,6 +1,5 @@
-using System;
-using System.Text;
-using Photochemistry.FieldCamera;
+﻿using System.Text;
+using Photocore.FieldCamera;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 

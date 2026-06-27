@@ -1,9 +1,7 @@
 ﻿using Vintagestory.API.Common;
-using Vintagestory.API.Datastructures;
-using Photochemistry.Plates;
-using Photochemistry.Exposure;
+using Photocore.Exposure;
 
-namespace Photochemistry.Plates.Rendering
+namespace Photocore.Plates.Rendering
 {
     /// <summary>
     /// The physical render model for a developed plate's image: a silver-on-glass density map read as a

@@ -1,13 +1,13 @@
-using Photochemistry.AdminTooling;
-using Photochemistry.CameraCapture;
-using Photochemistry.FieldCamera;
-using Photochemistry.PhotoSync.Integration;
-using Photochemistry.Tray;
-namespace Photochemistry
+﻿using Photocore.AdminTooling;
+using Photocore.CameraCapture;
+using Photocore.FieldCamera;
+using Photocore.PhotoSync.Integration;
+using Photocore.Tray;
+namespace Photocore
 {
     // Lazy feature bridge instances used by the mod-system entrypoints.
     // Callsites use modSys.XxxBridge.Method() directly rather than forwarding each method here.
-    public partial class PhotochemistryModSystem
+    public partial class PhotocoreModSystem
     {
         private AdminToolingModSystemBridge? _adminToolingBridge;
         private CameraCaptureModSystemBridge? _cameraCaptureBridge;

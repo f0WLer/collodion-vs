@@ -10,7 +10,7 @@
       "containable": true,
       "itemsPerLitre": 100,
       "texture": {
-        "base": "photochemistry:block/liquid/silvering",
+        "base": "photocore:block/liquid/silvering",
         "alpha": 170
       },
       "allowSpill": true,
@@ -25,7 +25,7 @@
   },
   "shape": { "base": "game:item/liquid" },
   "texture": {
-    "base": "photochemistry:block/liquid/silvering",
+    "base": "photocore:block/liquid/silvering",
     "alpha": 170
   },
   "creativeinventoryStacks": [

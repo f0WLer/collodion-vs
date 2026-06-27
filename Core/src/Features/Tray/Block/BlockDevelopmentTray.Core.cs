@@ -1,8 +1,8 @@
-﻿using Photochemistry.Configuration;
+﻿using Photocore.Configuration;
 
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-namespace Photochemistry.Tray
+namespace Photocore.Tray
 {
     internal enum TrayActionKind
     {
@@ -19,13 +19,13 @@ namespace Photochemistry.Tray
         internal const int RequiredDeveloperPours = 5;
         private const float DefaultPourSeconds = 1.25f;
 
-        private PhotochemistryConfig? Cfg => PhotochemistryConfigAccess.ResolveConfig(api);
+        private PhotocoreConfig? Cfg => PhotocoreConfigAccess.ResolveConfig(api);
         private int GetChemicalUnitsPerUse() => Cfg?.PlateProcessing?.DevelopmentTrayChemicalUnitsPerUse ?? 40;
 
-        private static readonly AssetLocation _photoPlateItemCode = new("photochemistry", "photoplate");
+        private static readonly AssetLocation _photoPlateItemCode = new("photocore", "photoplate");
 
-        private static readonly AssetLocation _developerPortionCode = new("photochemistry", "developerportion");
-        private static readonly AssetLocation _fixerPortionCode = new("photochemistry", "fixerportion");
+        private static readonly AssetLocation _developerPortionCode = new("photocore", "developerportion");
+        private static readonly AssetLocation _fixerPortionCode = new("photocore", "fixerportion");
         private static readonly AssetLocation _waterPortionCode = new("game", "waterportion");
 
         public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)

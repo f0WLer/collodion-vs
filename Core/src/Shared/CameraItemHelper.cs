@@ -2,18 +2,18 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Photochemistry.CameraCapture;
-using Photochemistry.FieldCamera;
-using Photochemistry.Plates;
+using Photocore.CameraCapture;
+using Photocore.FieldCamera;
+using Photocore.Plates;
 
-namespace Photochemistry
+namespace Photocore
 {
     /// <summary>
     /// Shared camera-item access helpers used by client and server camera flows.
     /// </summary>
     public static class CameraItemHelper
     {
-        public static readonly AssetLocation TripodItemCode = new AssetLocation("photochemistry", "tripod");
+        public static readonly AssetLocation TripodItemCode = new AssetLocation("photocore", "tripod");
 
         public const string MountedAttrKey    = "photochemMounted";
         public const string MountedPosAttrKey = "photochemMountedPos";

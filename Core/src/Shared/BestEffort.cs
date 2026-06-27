@@ -1,6 +1,6 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 
-namespace Photochemistry
+namespace Photocore
 {
     internal readonly struct BestEffortLogPolicy
     {

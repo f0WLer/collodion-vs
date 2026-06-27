@@ -3,9 +3,9 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
-using Photochemistry.Configuration;
-using Photochemistry.Plates.Rendering;
-namespace Photochemistry.Tray
+using Photocore.Configuration;
+using Photocore.Plates.Rendering;
+namespace Photocore.Tray
 {
     
     public sealed partial class BlockEntityDevelopmentTray
@@ -14,12 +14,12 @@ namespace Photochemistry.Tray
         private const float DeveloperOverlayScale = 1.32f;
         private const float DeveloperOverlayAlphaStart = 1.0f;
         private const float DeveloperOverlayAlphaEnd = 0.35f;
-        private static readonly AssetLocation _developerOverlayTextureAsset = new("photochemistry", "textures/block/liquid/developer.png");
-        private static readonly AssetLocation _developerOverlayAtlasKey = new("photochemistry", "devtray-developer-overlay");
-        private static readonly AssetLocation _fixerOverlayTextureAsset = new("photochemistry", "textures/block/liquid/fixer.png");
-        private static readonly AssetLocation _fixerOverlayAtlasKey = new("photochemistry", "devtray-fixer-overlay");
+        private static readonly AssetLocation _developerOverlayTextureAsset = new("photocore", "textures/block/liquid/developer.png");
+        private static readonly AssetLocation _developerOverlayAtlasKey = new("photocore", "devtray-developer-overlay");
+        private static readonly AssetLocation _fixerOverlayTextureAsset = new("photocore", "textures/block/liquid/fixer.png");
+        private static readonly AssetLocation _fixerOverlayAtlasKey = new("photocore", "devtray-fixer-overlay");
         private static readonly AssetLocation _waterOverlayTextureAsset = new("survival", "textures/block/liquid/waterportion.png");
-        private static readonly AssetLocation _waterOverlayAtlasKey = new("photochemistry", "devtray-water-overlay");
+        private static readonly AssetLocation _waterOverlayAtlasKey = new("photocore", "devtray-water-overlay");
         private bool TryBuildPourOverlayMesh(ICoreClientAPI capi, out MeshData? mesh)
         {
             mesh = null;
@@ -36,8 +36,8 @@ namespace Photochemistry.Tray
 
                 shape.IgnoreElements = ["base", "wall-n", "wall-s", "wall-e", "wall-w"];
                 capi.Tesselator.TesselateShape(
-                    "photochemistry-devtray-devoverlay",
-                    Block?.Code ?? new AssetLocation("photochemistry", "developmenttray-red"),
+                    "photocore-devtray-devoverlay",
+                    Block?.Code ?? new AssetLocation("photocore", "developmenttray-red"),
                     shape,
                     out mesh,
                     texSource
@@ -166,7 +166,7 @@ namespace Photochemistry.Tray
         {
             try
             {
-                var modSys = PhotochemistryConfigAccess.ResolveClientModSystem(capi);
+                var modSys = PhotocoreConfigAccess.ResolveClientModSystem(capi);
                 return modSys?.Config?.DevelopmentTrayInteractions;
             }
             catch (Exception ex)
@@ -214,7 +214,7 @@ namespace Photochemistry.Tray
             string atlasPrefix = isWater ? "devtray-water-overlay" : (isFixer ? "devtray-fixer-overlay" : "devtray-developer-overlay");
             AssetLocation atlasKey = alphaStep == alphaSteps
                 ? baseAtlasKey
-                : new AssetLocation("photochemistry", atlasPrefix + $"-a{alphaStep}");
+                : new AssetLocation("photocore", atlasPrefix + $"-a{alphaStep}");
 
             try
             {

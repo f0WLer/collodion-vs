@@ -1,6 +1,6 @@
-using Photochemistry.PhotoSync.Storage;
+﻿using Photocore.PhotoSync.Storage;
 
-namespace Photochemistry.PhotoMetadata.Model
+namespace Photocore.PhotoMetadata.Model
 {
     public sealed class PhotoLastSeenIndex
     {

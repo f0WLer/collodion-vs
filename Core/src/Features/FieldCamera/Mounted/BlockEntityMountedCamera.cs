@@ -1,11 +1,11 @@
-﻿using Photochemistry.CameraCapture;
-using Photochemistry.Plates;
+﻿using Photocore.CameraCapture;
+using Photocore.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     public sealed class BlockEntityMountedCamera : BlockEntity
     {
@@ -76,7 +76,7 @@ namespace Photochemistry.FieldCamera
             MarkDirty(true);
         }
 
-        private static readonly AssetLocation _upperBlockCode = new("photochemistry", "fieldcamera-tripod-upper");
+        private static readonly AssetLocation _upperBlockCode = new("photocore", "fieldcamera-tripod-upper");
 
         private void UpdateUpperBlock()
         {
@@ -120,7 +120,7 @@ namespace Photochemistry.FieldCamera
             if (api is ICoreClientAPI capi)
             {
                 _renderer = new MountedCameraBlockRenderer(capi, Pos, Block, _facingYaw, _subBlockOffsetX, _subBlockOffsetZ, _isExposing);
-                capi.Event.RegisterRenderer(_renderer, EnumRenderStage.Opaque, "photochemistry-mounted-camera");
+                capi.Event.RegisterRenderer(_renderer, EnumRenderStage.Opaque, "photocore-mounted-camera");
                 _renderer.SetHeightOffset(ComputeHeightAboveBlock());
             }
             else if (api.Side == EnumAppSide.Server)

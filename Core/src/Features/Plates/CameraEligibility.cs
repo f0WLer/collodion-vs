@@ -1,6 +1,6 @@
 ﻿using Vintagestory.API.Common;
 
-namespace Photochemistry.Plates
+namespace Photocore.Plates
 {
     /// <summary>
     /// Shared camera load/exposure plate eligibility rules used by both client and server paths.

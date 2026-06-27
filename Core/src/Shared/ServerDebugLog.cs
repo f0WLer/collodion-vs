@@ -1,7 +1,7 @@
-using Vintagestory.API.Common;
-using Photochemistry.Configuration;
+﻿using Vintagestory.API.Common;
+using Photocore.Configuration;
 
-namespace Photochemistry
+namespace Photocore
 {
     // Server-only, config-gated diagnostic logging. Silent unless the host enables
     // Client.ShowDebugLogs in their server collodion.json. Emits at Notification level so
@@ -13,7 +13,7 @@ namespace Photochemistry
         internal static void Notify(ICoreAPI? api, string format, params object[] args)
         {
             if (api == null || api.Side != EnumAppSide.Server) return;
-            if (PhotochemistryConfigAccess.ResolveConfig(api)?.Client?.ShowDebugLogs != true) return;
+            if (PhotocoreConfigAccess.ResolveConfig(api)?.Client?.ShowDebugLogs != true) return;
             Log.Notify(api.Logger, format, args);
         }
     }

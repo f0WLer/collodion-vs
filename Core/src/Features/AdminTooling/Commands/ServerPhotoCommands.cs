@@ -1,10 +1,11 @@
-using System.Text;
+﻿using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
-using Photochemistry.PhotoMetadata;
-using Photochemistry.Configuration;
 
-namespace Photochemistry.AdminTooling
+using Photocore.PhotoMetadata;
+using Photocore.Configuration;
+
+namespace Photocore.AdminTooling
 {
     // Server-side operator commands for auditing and reclaiming the on-disk photo store, driven by the
     // last-seen index (see DESIGN-photo-disk-audit). Registered under /photoadmin, gated on controlserver.
@@ -14,15 +15,15 @@ namespace Photochemistry.AdminTooling
         private const int DryRunIdSampleLimit = 15;
 
         private readonly ICoreServerAPI _sapi;
-        private readonly PhotochemistryModSystem _owner;
+        private readonly PhotocoreModSystem _owner;
 
-        private ServerPhotoCommands(ICoreServerAPI sapi, PhotochemistryModSystem owner)
+        private ServerPhotoCommands(ICoreServerAPI sapi, PhotocoreModSystem owner)
         {
             _sapi = sapi;
             _owner = owner;
         }
 
-        internal static void Register(ICoreServerAPI sapi, PhotochemistryModSystem owner)
+        internal static void Register(ICoreServerAPI sapi, PhotocoreModSystem owner)
             => new ServerPhotoCommands(sapi, owner).RegisterCommands();
 
         private void RegisterCommands()
@@ -104,7 +105,7 @@ namespace Photochemistry.AdminTooling
                 error = "the photo index is not initialised yet (server still starting up).";
                 return null;
             }
-            double grace = PhotochemistryConfigAccess.ResolveConfig(_sapi)?.PhotoSync?.PhotoDeleteGraceHours ?? 24.0;
+            double grace = PhotocoreConfigAccess.ResolveConfig(_sapi)?.PhotoSync?.PhotoDeleteGraceHours ?? 24.0;
             error = string.Empty;
             return new PhotoDiskAuditService(seen, grace);
         }
@@ -190,7 +191,7 @@ namespace Photochemistry.AdminTooling
                     $"photoadmin: DRY RUN — {stale} index row(s) have no backing file. Re-run with 'confirm' to prune.");
 
             int removed = svc.PruneIndex();
-            _sapi.Logger.Notification($"photochemistry: /photoadmin pruned {removed} stale last-seen index row(s).");
+            _sapi.Logger.Notification($"photocore: /photoadmin pruned {removed} stale last-seen index row(s).");
             return TextCommandResult.Success($"photoadmin: pruned {removed} stale index row(s).");
         }
 
@@ -216,7 +217,7 @@ namespace Photochemistry.AdminTooling
 
             DeleteResult res = svc.Execute(plan);
             _sapi.Logger.Notification(
-                $"photochemistry: /photoadmin '{label}' deleted {res.Deleted} photo(s), {res.BytesReclaimed} bytes reclaimed, {res.Failed} failed.");
+                $"photocore: /photoadmin '{label}' deleted {res.Deleted} photo(s), {res.BytesReclaimed} bytes reclaimed, {res.Failed} failed.");
 
             sb.Append($"photoadmin: deleted {res.Deleted} photo(s), reclaimed {FormatBytes(res.BytesReclaimed)}.");
             if (res.Failed > 0) sb.Append($" {res.Failed} could not be deleted (locked or in use).");
@@ -264,7 +265,7 @@ namespace Photochemistry.AdminTooling
 
             bool changed = wl.SetEnabled(true);
             _owner.AdminToolingBridge.BroadcastDevelopPermission(_sapi);
-            _sapi.Logger.Notification("photochemistry: /photoadmin develop whitelist enabled.");
+            _sapi.Logger.Notification("photocore: /photoadmin develop whitelist enabled.");
             return TextCommandResult.Success(
                 $"photoadmin: develop whitelist {(changed ? "enabled" : "already enabled")} — {wl.Count} player(s) allowed (operators always allowed).");
         }
@@ -276,7 +277,7 @@ namespace Photochemistry.AdminTooling
 
             bool changed = wl.SetEnabled(false);
             _owner.AdminToolingBridge.BroadcastDevelopPermission(_sapi);
-            _sapi.Logger.Notification("photochemistry: /photoadmin develop whitelist disabled.");
+            _sapi.Logger.Notification("photocore: /photoadmin develop whitelist disabled.");
             return TextCommandResult.Success($"photoadmin: develop whitelist {(changed ? "disabled" : "already disabled")} — everyone may develop.");
         }
 
@@ -291,7 +292,7 @@ namespace Photochemistry.AdminTooling
 
             bool added = wl.Add(uid, resolvedName);
             _owner.AdminToolingBridge.BroadcastDevelopPermission(_sapi);
-            _sapi.Logger.Notification($"photochemistry: /photoadmin develop whitelist add {resolvedName} ({uid}).");
+            _sapi.Logger.Notification($"photocore: /photoadmin develop whitelist add {resolvedName} ({uid}).");
             return TextCommandResult.Success(
                 added
                     ? $"photoadmin: added {resolvedName} to the develop whitelist ({wl.Count} player(s))."
@@ -321,7 +322,7 @@ namespace Photochemistry.AdminTooling
 
             bool removed = wl.Remove(uid);
             _owner.AdminToolingBridge.BroadcastDevelopPermission(_sapi);
-            if (removed) _sapi.Logger.Notification($"photochemistry: /photoadmin develop whitelist remove {resolvedName} ({uid}).");
+            if (removed) _sapi.Logger.Notification($"photocore: /photoadmin develop whitelist remove {resolvedName} ({uid}).");
             return TextCommandResult.Success(
                 removed
                     ? $"photoadmin: removed {resolvedName} from the develop whitelist ({wl.Count} player(s))."

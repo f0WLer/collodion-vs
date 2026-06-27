@@ -1,9 +1,9 @@
-using Photochemistry.PhotoMetadata;
-using Photochemistry.PhotoSync.Contracts;
-using Photochemistry.PhotoSync.Storage;
+﻿using Photocore.PhotoMetadata;
+using Photocore.PhotoSync.Contracts;
+using Photocore.PhotoSync.Storage;
 
 
-namespace Photochemistry.PhotoSync.Integration
+namespace Photocore.PhotoSync.Integration
 {
     internal sealed partial class PhotoSyncModSystemBridge
     {

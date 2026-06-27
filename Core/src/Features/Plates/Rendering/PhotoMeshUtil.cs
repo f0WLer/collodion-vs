@@ -1,8 +1,8 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Util;
 
-namespace Photochemistry.Plates.Rendering
+namespace Photocore.Plates.Rendering
 {
     internal static class PhotoMeshUtil
     {

@@ -1,4 +1,4 @@
-namespace Photochemistry.CameraCapture
+﻿namespace Photocore.CameraCapture
 {
     // Entries survive viewfinder exit so a paused exposure can be resumed when the player looks through the camera again.
     // Buffers are session-scoped and lost on relog; accumulated frame count persists in plate item attributes.

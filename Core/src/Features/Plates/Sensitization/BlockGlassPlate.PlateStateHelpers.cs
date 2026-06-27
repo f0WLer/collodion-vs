@@ -1,14 +1,14 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Photochemistry.Configuration;
+using Photocore.Configuration;
 
 
-namespace Photochemistry.Plates
+namespace Photocore.Plates
 {
     public sealed partial class BlockGlassPlate
     {
         private const float DefaultPolishSeconds = 2.0f;
-        private PhotochemistryConfig? Cfg => PhotochemistryConfigAccess.ResolveConfig(api);
+        private PhotocoreConfig? Cfg => PhotocoreConfigAccess.ResolveConfig(api);
         private PlateProcessingConfig? PlateCfg => Cfg?.PlateProcessing;
 
         // Substrate-specific knobs, read from block JSON with glass-preserving defaults so this one
@@ -17,12 +17,12 @@ namespace Photochemistry.Plates
         // the item minted when sensitization completes.
         private string Substrate => Attributes?["plateSubstrate"]?.AsString("glass") ?? "glass";
         private AssetLocation SensitizedItemCode => new(
-            Attributes?["sensitizedItemCode"]?.AsString("photochemistry:sensitizedplate") ?? "photochemistry:sensitizedplate");
+            Attributes?["sensitizedItemCode"]?.AsString("photocore:sensitizedplate") ?? "photocore:sensitizedplate");
         // Block-code prefix for this substrate's state blocks ("plate" → plate-rough/clean/coated) and the
         // item minted when the placed block is picked up. Glass defaults; paper overrides via block JSON.
         private string StateBlockPrefix => Attributes?["stateBlockPrefix"]?.AsString("plate") ?? "plate";
         private AssetLocation BaseItemCode => new(
-            Attributes?["baseItemCode"]?.AsString("photochemistry:glassplate") ?? "photochemistry:glassplate");
+            Attributes?["baseItemCode"]?.AsString("photocore:glassplate") ?? "photocore:glassplate");
 
         private float GetPolishSeconds()
         {
@@ -62,7 +62,7 @@ namespace Photochemistry.Plates
 
         private Block? GetBlockForState(IWorldAccessor world, string state)
         {
-            return world?.GetBlock(new AssetLocation(Code?.Domain ?? "photochemistry", $"{StateBlockPrefix}-{state}"));
+            return world?.GetBlock(new AssetLocation(Code?.Domain ?? "photocore", $"{StateBlockPrefix}-{state}"));
         }
 
         private bool TryCreatePlateItemStack(IWorldAccessor world, BlockPos pos, out ItemStack stack)
@@ -96,9 +96,9 @@ namespace Photochemistry.Plates
             if (Substrate == "glass")
             {
                 if (stage == PlateStage.Rough)
-                    PlateAttributes.SetNameLangCode(stack, "photochemistry:plate-name-glass");
+                    PlateAttributes.SetNameLangCode(stack, "photocore:plate-name-glass");
                 else if (stage == PlateStage.Clean)
-                    PlateAttributes.SetNameLangCode(stack, "photochemistry:plate-name-glass-clean");
+                    PlateAttributes.SetNameLangCode(stack, "photocore:plate-name-glass-clean");
             }
 
             return true;

@@ -1,10 +1,11 @@
 ﻿using Vintagestory.API.Client;
-using Photochemistry.CameraCapture;
-using Photochemistry.Exposure;
-using Photochemistry.ImageEffects;
-using Photochemistry.Plates;
 
-namespace Photochemistry.AdminTooling
+using Photocore.CameraCapture;
+using Photocore.Exposure;
+using Photocore.ImageEffects;
+using Photocore.Plates;
+
+namespace Photocore.AdminTooling
 {
     internal sealed class GuiDialogExposurePhysics : GuiDialog
     {
@@ -12,12 +13,12 @@ namespace Photochemistry.AdminTooling
         public override string ToggleKeyCombinationCode => string.Empty;
 
         private readonly VirtualExposureRenderer _renderer;
-        private readonly PhotochemistryModSystem _owner;
+        private readonly PhotocoreModSystem _owner;
 
         internal GuiDialogExposurePhysics(
             ICoreClientAPI capi,
             VirtualExposureRenderer renderer,
-            PhotochemistryModSystem owner)
+            PhotocoreModSystem owner)
             : base(capi)
         {
             _renderer = renderer;

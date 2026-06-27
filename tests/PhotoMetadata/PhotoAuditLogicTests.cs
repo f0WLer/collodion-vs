@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Xunit;
-using Photochemistry.PhotoMetadata;
+﻿using Xunit;
+using Photocore.PhotoMetadata;
 
-namespace Photochemistry.Tests.PhotoMetadata;
+namespace Photocore.Tests.PhotoMetadata;
 
 public class PhotoAuditLogicTests
 {
-    private static readonly DateTime Now = new DateTime(2026, 06, 23, 12, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime _now = new DateTime(2026, 06, 23, 12, 0, 0, DateTimeKind.Utc);
 
     private static PhotoAuditRow Seen(string id, DateTime lastSeen, DateTime? firstSeen = null, long size = 100)
         => new PhotoAuditRow(id, size, lastSeen, firstSeen ?? lastSeen, lastSeen);
@@ -21,31 +18,31 @@ public class PhotoAuditLogicTests
     [Fact]
     public void PassesGraceWhenFirstSeenOlderThanFloor()
     {
-        var row = Seen("a.png", Now.AddDays(-10), firstSeen: Now.AddDays(-30));
-        Assert.True(PhotoAuditLogic.PassesGrace(row, Now, graceHours: 24));
+        var row = Seen("a.png", _now.AddDays(-10), firstSeen: _now.AddDays(-30));
+        Assert.True(PhotoAuditLogic.PassesGrace(row, _now, graceHours: 24));
     }
 
     [Fact]
     public void FailsGraceWhenFirstSeenInsideFloor()
     {
-        var row = Seen("a.png", Now.AddHours(-1), firstSeen: Now.AddHours(-1));
-        Assert.False(PhotoAuditLogic.PassesGrace(row, Now, graceHours: 24));
+        var row = Seen("a.png", _now.AddHours(-1), firstSeen: _now.AddHours(-1));
+        Assert.False(PhotoAuditLogic.PassesGrace(row, _now, graceHours: 24));
     }
 
     [Fact]
     public void NeverSeenUsesMtimeForGraceFallback()
     {
-        var fresh = NeverSeen("a.png", Now.AddHours(-1));
-        var old = NeverSeen("b.png", Now.AddDays(-5));
-        Assert.False(PhotoAuditLogic.PassesGrace(fresh, Now, 24));
-        Assert.True(PhotoAuditLogic.PassesGrace(old, Now, 24));
+        var fresh = NeverSeen("a.png", _now.AddHours(-1));
+        var old = NeverSeen("b.png", _now.AddDays(-5));
+        Assert.False(PhotoAuditLogic.PassesGrace(fresh, _now, 24));
+        Assert.True(PhotoAuditLogic.PassesGrace(old, _now, 24));
     }
 
     [Fact]
     public void IndeterminateAgeFailsGrace()
     {
         var row = new PhotoAuditRow("a.png", 100, lastSeenUtc: null, firstSeenUtc: null, modifiedUtc: null);
-        Assert.False(PhotoAuditLogic.PassesGrace(row, Now, 24));
+        Assert.False(PhotoAuditLogic.PassesGrace(row, _now, 24));
     }
 
     // ---- ordering ----
@@ -55,10 +52,10 @@ public class PhotoAuditLogicTests
     {
         var rows = new List<PhotoAuditRow>
         {
-            Seen("seen-recent.png", Now.AddDays(-1)),
-            Seen("seen-old.png", Now.AddDays(-10)),
-            NeverSeen("never-new.png", Now.AddDays(-2)),
-            NeverSeen("never-old.png", Now.AddDays(-20)),
+            Seen("seen-recent.png", _now.AddDays(-1)),
+            Seen("seen-old.png", _now.AddDays(-10)),
+            NeverSeen("never-new.png", _now.AddDays(-2)),
+            NeverSeen("never-old.png", _now.AddDays(-20)),
         };
 
         var ordered = PhotoAuditLogic.OrderLeastRecentlySeen(rows).Select(r => r.Id).ToList();
@@ -75,12 +72,12 @@ public class PhotoAuditLogicTests
     {
         var rows = new List<PhotoAuditRow>
         {
-            NeverSeen("never-old.png", Now.AddDays(-20), size: 10),
-            Seen("seen-old.png", Now.AddDays(-10), size: 20),
-            Seen("seen-fresh.png", Now.AddHours(-2), firstSeen: Now.AddHours(-2), size: 40), // inside grace
+            NeverSeen("never-old.png", _now.AddDays(-20), size: 10),
+            Seen("seen-old.png", _now.AddDays(-10), size: 20),
+            Seen("seen-fresh.png", _now.AddHours(-2), firstSeen: _now.AddHours(-2), size: 40), // inside grace
         };
 
-        DeletePlan plan = PhotoAuditLogic.PlanOldest(rows, count: 2, Now, graceHours: 24);
+        DeletePlan plan = PhotoAuditLogic.PlanOldest(rows, count: 2, _now, graceHours: 24);
 
         Assert.Equal(new[] { "never-old.png", "seen-old.png" }, plan.Ids.ToArray());
         Assert.Equal(30, plan.TotalBytes);
@@ -90,9 +87,9 @@ public class PhotoAuditLogicTests
     [Fact]
     public void PlanOldestZeroOrNegativeCountIsEmpty()
     {
-        var rows = new List<PhotoAuditRow> { Seen("a.png", Now.AddDays(-10)) };
-        Assert.True(PhotoAuditLogic.PlanOldest(rows, 0, Now, 24).IsEmpty);
-        Assert.True(PhotoAuditLogic.PlanOldest(rows, -3, Now, 24).IsEmpty);
+        var rows = new List<PhotoAuditRow> { Seen("a.png", _now.AddDays(-10)) };
+        Assert.True(PhotoAuditLogic.PlanOldest(rows, 0, _now, 24).IsEmpty);
+        Assert.True(PhotoAuditLogic.PlanOldest(rows, -3, _now, 24).IsEmpty);
     }
 
     // ---- olderthan ----
@@ -102,12 +99,12 @@ public class PhotoAuditLogicTests
     {
         var rows = new List<PhotoAuditRow>
         {
-            Seen("dormant.png", Now.AddDays(-90)),
-            Seen("active.png", Now.AddDays(-3)),
-            NeverSeen("orphan.png", Now.AddDays(-90)),
+            Seen("dormant.png", _now.AddDays(-90)),
+            Seen("active.png", _now.AddDays(-3)),
+            NeverSeen("orphan.png", _now.AddDays(-90)),
         };
 
-        DeletePlan plan = PhotoAuditLogic.PlanOlderThan(rows, days: 30, Now, graceHours: 24);
+        DeletePlan plan = PhotoAuditLogic.PlanOlderThan(rows, days: 30, _now, graceHours: 24);
 
         Assert.Contains("dormant.png", plan.Ids);
         Assert.Contains("orphan.png", plan.Ids);
@@ -119,10 +116,10 @@ public class PhotoAuditLogicTests
     {
         var rows = new List<PhotoAuditRow>
         {
-            NeverSeen("brand-new.png", Now.AddHours(-1)),
+            NeverSeen("brand-new.png", _now.AddHours(-1)),
         };
 
-        DeletePlan plan = PhotoAuditLogic.PlanOlderThan(rows, days: 30, Now, graceHours: 24);
+        DeletePlan plan = PhotoAuditLogic.PlanOlderThan(rows, days: 30, _now, graceHours: 24);
 
         Assert.True(plan.IsEmpty);
     }
@@ -135,7 +132,7 @@ public class PhotoAuditLogicTests
         var rows = new List<PhotoAuditRow>
         {
             // Fresh (would fail grace) but explicitly named, so it must still be selected.
-            Seen("keep.png", Now.AddHours(-1), firstSeen: Now.AddHours(-1), size: 50),
+            Seen("keep.png", _now.AddHours(-1), firstSeen: _now.AddHours(-1), size: 50),
         };
 
         // "keep" normalizes to "keep.png"; "gone.png" is absent; "../bad" normalizes to empty.
@@ -154,9 +151,9 @@ public class PhotoAuditLogicTests
     {
         var rows = new List<PhotoAuditRow>
         {
-            Seen("a.png", Now.AddHours(-1)),     // recent — would fail grace, but audit shows it
-            Seen("b.png", Now.AddDays(-10)),
-            NeverSeen("c.png", Now.AddHours(-1)),
+            Seen("a.png", _now.AddHours(-1)),     // recent — would fail grace, but audit shows it
+            Seen("b.png", _now.AddDays(-10)),
+            NeverSeen("c.png", _now.AddHours(-1)),
         };
 
         var ids = PhotoAuditLogic.BuildAudit(rows, count: 2).Select(r => r.Id).ToList();
@@ -171,9 +168,9 @@ public class PhotoAuditLogicTests
     {
         var rows = new List<PhotoAuditRow>
         {
-            Seen("a.png", Now.AddDays(-1), size: 100),
-            Seen("b.png", Now.AddDays(-2), size: 200),
-            NeverSeen("c.png", Now.AddDays(-3), size: 50),
+            Seen("a.png", _now.AddDays(-1), size: 100),
+            Seen("b.png", _now.AddDays(-2), size: 200),
+            NeverSeen("c.png", _now.AddDays(-3), size: 50),
         };
 
         AuditStats stats = PhotoAuditLogic.ComputeStats(rows, staleIndexCount: 4);

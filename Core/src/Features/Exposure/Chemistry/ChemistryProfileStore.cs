@@ -1,14 +1,14 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 
-namespace Photochemistry.Exposure
+namespace Photocore.Exposure
 {
     // Baseline collodion seeds iodide only — no chloride/bromide data is written into a baseline file.
     internal static class ChemistryProfileStore
     {
         private static string FilePath =>
-            Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "chemistry-profiles.json");
+            Path.Combine(GamePaths.DataPath, "ModData", "photocore", "chemistry-profiles.json");
 
         internal static Dictionary<string, ChemistryProfile> Load(ILogger? log = null)
         {
@@ -22,7 +22,7 @@ namespace Photochemistry.Exposure
             }
             catch (Exception ex)
             {
-                log?.Warning("photochemistry: failed to load chemistry profiles '{0}': {1}", FilePath, ex.Message);
+                log?.Warning("photocore: failed to load chemistry profiles '{0}': {1}", FilePath, ex.Message);
             }
             return new Dictionary<string, ChemistryProfile>(StringComparer.OrdinalIgnoreCase);
         }
@@ -36,7 +36,7 @@ namespace Photochemistry.Exposure
             }
             catch (Exception ex)
             {
-                log?.Warning("photochemistry: failed to save chemistry profiles '{0}': {1}", FilePath, ex.Message);
+                log?.Warning("photocore: failed to save chemistry profiles '{0}': {1}", FilePath, ex.Message);
             }
         }
     }

@@ -1,9 +1,9 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
-using Photochemistry.Plates;
+using Photocore.Plates;
 
-namespace Photochemistry.PlateBox
+namespace Photocore.PlateBox
 {
     public sealed partial class BlockEntityPlateBox : BlockEntity
     {
@@ -162,7 +162,7 @@ namespace Photochemistry.PlateBox
         public override void GetBlockInfo(IPlayer forPlayer, System.Text.StringBuilder dsc)
         {
             base.GetBlockInfo(forPlayer, dsc);
-            dsc.AppendLine(Lang.Get("photochemistry:platebox-info-slots", GetUsedSlotCount(), SlotCount));
+            dsc.AppendLine(Lang.Get("photocore:platebox-info-slots", GetUsedSlotCount(), SlotCount));
         }
 
         public static bool IsInsertablePlate(ItemStack? stack)

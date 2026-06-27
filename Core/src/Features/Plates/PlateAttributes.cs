@@ -1,6 +1,6 @@
 ﻿using Vintagestory.API.Common;
 
-namespace Photochemistry.Plates
+namespace Photocore.Plates
 {
     public enum PlateStage
     {

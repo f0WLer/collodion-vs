@@ -1,6 +1,6 @@
-using SkiaSharp;
+﻿using SkiaSharp;
 
-namespace Photochemistry.ImageEffects
+namespace Photocore.ImageEffects
 {
     public static partial class ImageEffects
     {

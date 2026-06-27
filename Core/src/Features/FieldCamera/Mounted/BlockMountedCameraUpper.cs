@@ -1,9 +1,9 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Photochemistry.Configuration;
+using Photocore.Configuration;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     // Invisible companion block entity for BlockMountedCameraUpper — suppresses default tesselation
     // so the upper block renders nothing on its own (visuals are owned by the lower block's renderer).
@@ -43,7 +43,7 @@ namespace Photochemistry.FieldCamera
             if (byPlayer == null || blockSel == null) return false;
             if (world.Side == EnumAppSide.Client) return true;
 
-            PhotochemistryModSystem? modSys = PhotochemistryConfigAccess.ResolveModSystem(world.Api);
+            PhotocoreModSystem? modSys = PhotocoreConfigAccess.ResolveModSystem(world.Api);
             if (modSys == null) return false;
 
             BlockPos camPos = blockSel.Position.DownCopy();

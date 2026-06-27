@@ -1,22 +1,22 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.MathTools;
-using Photochemistry.PhotoSync.Runtime;
-using Photochemistry.Configuration;
+using Photocore.PhotoSync.Runtime;
+using Photocore.Configuration;
 
-namespace Photochemistry.PhotoSync.Integration
+namespace Photocore.PhotoSync.Integration
 {
     // Feature seam: centralizes client-side photo sync access so non-feature code avoids direct PhotoSync reach-through.
     internal static class ClientPhotoSyncIntegration
     {
         private static PhotoAssetSyncCore? ResolveClientPhotoSync(ICoreClientAPI capi)
         {
-            return PhotochemistryConfigAccess.ResolveClientModSystem(capi)?.PhotoSyncModSystemBridge.Runtime;
+            return PhotocoreConfigAccess.ResolveClientModSystem(capi)?.PhotoSyncModSystemBridge.Runtime;
         }
 
         internal static void MaybeSendPhotoSeen(ICoreClientAPI capi, string photoId)
         {
             if (capi == null || string.IsNullOrEmpty(photoId)) return;
-            PhotochemistryConfigAccess.ResolveClientModSystem(capi)?.PhotoSyncModSystemBridge.ClientMaybeSendPhotoSeen(photoId);
+            PhotocoreConfigAccess.ResolveClientModSystem(capi)?.PhotoSyncModSystemBridge.ClientMaybeSendPhotoSeen(photoId);
         }
 
         internal static void NotifyPhotoCreated(ICoreClientAPI capi, string photoId)

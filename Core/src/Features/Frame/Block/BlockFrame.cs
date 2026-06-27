@@ -3,9 +3,9 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
-using Photochemistry.PhotoMetadata.Model;
+using Photocore.PhotoMetadata.Model;
 
-namespace Photochemistry.Frame
+namespace Photocore.Frame
 {
     // Photo-frame placeable block.
     // Holds a single photo plate (any stack carrying a non-empty PhotoId attribute).
@@ -119,8 +119,8 @@ namespace Photochemistry.Frame
             }
 
             string caption = be.Inventory[0].Itemstack?.Attributes?.GetString(PhotographAttrs.Caption) ?? string.Empty;
-            string label = string.IsNullOrEmpty(caption) ? Lang.Get("photochemistry:frame-info-photograph") : caption;
-            string line = Lang.Get("photochemistry:frame-info-displaying", label);
+            string label = string.IsNullOrEmpty(caption) ? Lang.Get("photocore:frame-info-photograph") : caption;
+            string line = Lang.Get("photocore:frame-info-displaying", label);
             return string.IsNullOrEmpty(baseInfo) ? line : baseInfo + "\n" + line;
         }
 
@@ -128,12 +128,12 @@ namespace Photochemistry.Frame
         {
             var helps = new List<WorldInteraction>();
 
-            Item? photoPlate = world.GetItem(new AssetLocation("photochemistry", "photoplate"));
+            Item? photoPlate = world.GetItem(new AssetLocation("photocore", "photoplate"));
             if (photoPlate != null)
             {
                 helps.Add(new WorldInteraction
                 {
-                    ActionLangCode = "photochemistry:heldhelp-frame-insert",
+                    ActionLangCode = "photocore:heldhelp-frame-insert",
                     MouseButton = EnumMouseButton.Right,
                     Itemstacks = [new ItemStack(photoPlate)]
                 });
@@ -141,7 +141,7 @@ namespace Photochemistry.Frame
 
             helps.Add(new WorldInteraction
             {
-                ActionLangCode = "photochemistry:heldhelp-frame-take",
+                ActionLangCode = "photocore:heldhelp-frame-take",
                 HotKeyCode = "sneak",
                 MouseButton = EnumMouseButton.Right
             });

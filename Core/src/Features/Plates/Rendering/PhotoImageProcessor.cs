@@ -1,7 +1,7 @@
 ﻿using SkiaSharp;
 using Vintagestory.API.Client;
 
-namespace Photochemistry.Plates.Rendering
+namespace Photocore.Plates.Rendering
 {
     internal static class PhotoImageProcessor
     {
@@ -136,7 +136,7 @@ namespace Photochemistry.Plates.Rendering
             }
             catch (Exception ex)
             {
-                capi.Logger.Warning($"photochemistry: failed to build derived photo '{derivedPath}': {ex.Message}");
+                capi.Logger.Warning($"photocore: failed to build derived photo '{derivedPath}': {ex.Message}");
                 return false;
             }
         }

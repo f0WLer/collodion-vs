@@ -1,13 +1,13 @@
-﻿using Photochemistry.CameraCapture.Contracts;
+﻿using Photocore.CameraCapture.Contracts;
 using Vintagestory.API.Server;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     internal sealed partial class FieldCameraModSystemBridge
     {
         internal void ConfigureServerFieldCameraStartup(ICoreServerAPI api)
         {
-            ServerChannel = api.Network.GetChannel("photochemistry");
+            ServerChannel = api.Network.GetChannel("photocore");
             ServerChannel.SetMessageHandler<PhotoTakenPacket>(OnPhotoTakenReceived);
             ServerChannel.SetMessageHandler<CameraLoadPlatePacket>(OnCameraLoadPlateReceived);
             ServerChannel.SetMessageHandler<CameraTripodPacket>(OnCameraTripodReceived);

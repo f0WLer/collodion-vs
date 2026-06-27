@@ -1,9 +1,9 @@
 ﻿using Vintagestory.API.MathTools;
-using Photochemistry.Plates.Rendering;
-using Photochemistry.PhotoSync.Contracts;
-using Photochemistry.PhotoSync.Storage;
+using Photocore.Plates.Rendering;
+using Photocore.PhotoSync.Contracts;
+using Photocore.PhotoSync.Storage;
 
-namespace Photochemistry.PhotoSync.Runtime
+namespace Photocore.PhotoSync.Runtime
 {
     public sealed partial class PhotoAssetSyncCore
     {
@@ -195,7 +195,7 @@ namespace Photochemistry.PhotoSync.Runtime
                     }
                     catch { /* intentional: best-effort non-critical path */ }
                 }
-            }, "photochemistry-photo-arrived-markdirty");
+            }, "photocore-photo-arrived-markdirty");
         }
 
         public void ClientHandleAck(PhotoBlobAckPacket packet)

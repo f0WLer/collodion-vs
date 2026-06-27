@@ -1,13 +1,13 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-namespace Photochemistry.Tray
+namespace Photocore.Tray
 {
     internal sealed class TrayClientEvents
     {
-        private readonly PhotochemistryModSystem _owner;
+        private readonly PhotocoreModSystem _owner;
         private MouseEventDelegate? _mouseUpHandler;
 
-        internal TrayClientEvents(PhotochemistryModSystem owner)
+        internal TrayClientEvents(PhotocoreModSystem owner)
         {
             _owner = owner;
         }

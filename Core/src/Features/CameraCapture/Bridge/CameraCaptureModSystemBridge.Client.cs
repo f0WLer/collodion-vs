@@ -1,9 +1,10 @@
 ﻿using HarmonyLib;
-using Photochemistry.CameraCapture.Contracts;
 using Vintagestory.API.Client;
-using Photochemistry.Configuration;
 
-namespace Photochemistry.CameraCapture
+using Photocore.Configuration;
+using Photocore.CameraCapture.Contracts;
+
+namespace Photocore.CameraCapture
 {
     internal sealed partial class CameraCaptureModSystemBridge
     {
@@ -22,7 +23,7 @@ namespace Photochemistry.CameraCapture
             // EntityPlayerShapeRenderer lives in VSEssentials.dll which is a game content mod,
             // not directly referenceable at compile time — use AccessTools.TypeByName.
             // If the type is unavailable (extreme edge case), self-portrait silently degrades.
-            _selfPortraitHarmony = new Harmony("photochemistry.selfportrait");
+            _selfPortraitHarmony = new Harmony("photocore.selfportrait");
             Type? playerShapeRendererType =
                 AccessTools.TypeByName("Vintagestory.GameContent.EntityPlayerShapeRenderer");
             if (playerShapeRendererType != null)
@@ -60,17 +61,17 @@ namespace Photochemistry.CameraCapture
         private void ConfigureClientCameraCaptureRenderers(ICoreClientAPI api)
         {
             _virtualCameraPreviewRenderer = new VirtualCameraPreviewRenderer(api);
-            api.Event.RegisterRenderer(_virtualCameraPreviewRenderer, EnumRenderStage.Before, "photochemistry-virtualcamera-preview");
+            api.Event.RegisterRenderer(_virtualCameraPreviewRenderer, EnumRenderStage.Before, "photocore-virtualcamera-preview");
 
             _virtualExposureRenderer = new VirtualExposureRenderer(api)
             {
                 ExposurePreviewSink = _virtualCameraPreviewRenderer
             };
             _virtualCameraPreviewRenderer.ExposureRenderer = _virtualExposureRenderer;
-            api.Event.RegisterRenderer(_virtualExposureRenderer, EnumRenderStage.Before, "photochemistry-virtualexposure");
+            api.Event.RegisterRenderer(_virtualExposureRenderer, EnumRenderStage.Before, "photocore-virtualexposure");
 
             _handheldPreviewRenderer = new HandheldPreviewRenderer(api, _virtualCameraPreviewRenderer);
-            api.Event.RegisterRenderer(_handheldPreviewRenderer, EnumRenderStage.Ortho, "photochemistry-viewfinder-preview");
+            api.Event.RegisterRenderer(_handheldPreviewRenderer, EnumRenderStage.Ortho, "photocore-viewfinder-preview");
 
             // Some load orders/world joins invoke StartClientSide before the channel reports connected.
             // Defer send until connected so startup never aborts.
@@ -166,7 +167,7 @@ namespace Photochemistry.CameraCapture
             // Remove the self-portrait Harmony patch so it doesn't linger across hot-reloads or mod unloads.
             BestEffort.Try(BestEffortLogger, "unpatch self-portrait harmony", () =>
             {
-                _selfPortraitHarmony?.UnpatchAll("photochemistry.selfportrait");
+                _selfPortraitHarmony?.UnpatchAll("photocore.selfportrait");
                 _selfPortraitHarmony = null;
             });
         }

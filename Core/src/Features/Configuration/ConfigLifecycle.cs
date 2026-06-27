@@ -1,6 +1,6 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 
-namespace Photochemistry.Configuration
+namespace Photocore.Configuration
 {
     // Feature-owned config lifecycle policy used by client/server startup and runtime persistence paths.
     // Normalizes config trees consistently and keeps load/store error handling in one place.
@@ -8,12 +8,12 @@ namespace Photochemistry.Configuration
     {
         // Loads persisted config, falling back to defaults when missing/invalid.
         // Newly created defaults are persisted best-effort.
-        internal static PhotochemistryConfig LoadOrCreate(ICoreAPICommon api, string fileName)
+        internal static PhotocoreConfig LoadOrCreate(ICoreAPICommon api, string fileName)
         {
-            PhotochemistryConfig? cfg;
+            PhotocoreConfig? cfg;
             try
             {
-                cfg = api.LoadModConfig<PhotochemistryConfig>(fileName);
+                cfg = api.LoadModConfig<PhotocoreConfig>(fileName);
             }
             catch
             {
@@ -32,15 +32,15 @@ namespace Photochemistry.Configuration
         }
 
         // Ensures a non-null, clamped config tree suitable for runtime reads.
-        internal static PhotochemistryConfig EnsureNormalized(PhotochemistryConfig? cfg)
+        internal static PhotocoreConfig EnsureNormalized(PhotocoreConfig? cfg)
         {
-            cfg ??= new PhotochemistryConfig();
+            cfg ??= new PhotocoreConfig();
             cfg.ClampInPlace();
             return cfg;
         }
 
         // Stores config best-effort without throwing into gameplay paths.
-        internal static void TryStore(ICoreAPICommon api, string fileName, PhotochemistryConfig cfg)
+        internal static void TryStore(ICoreAPICommon api, string fileName, PhotocoreConfig cfg)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace Photochemistry.Configuration
         }
 
         // Normalizes config and stores it best-effort.
-        internal static void TryStoreNormalized(ICoreAPICommon api, string fileName, PhotochemistryConfig? cfg)
+        internal static void TryStoreNormalized(ICoreAPICommon api, string fileName, PhotocoreConfig? cfg)
         {
             if (cfg == null) return;
             TryStore(api, fileName, EnsureNormalized(cfg));

@@ -2,13 +2,13 @@
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
-using Photochemistry.Plates;
-namespace Photochemistry.Tray
+using Photocore.Plates;
+namespace Photocore.Tray
 {
     public sealed partial class BlockDevelopmentTray
     {
-        private static readonly AssetLocation _glassPlateItemCode = new("photochemistry", "glassplate");
-        private static readonly AssetLocation _fizzSound = new("photochemistry", "sounds/fizz");
+        private static readonly AssetLocation _glassPlateItemCode = new("photocore", "glassplate");
+        private static readonly AssetLocation _fizzSound = new("photocore", "sounds/fizz");
 
 
         public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -149,7 +149,7 @@ namespace Photochemistry.Tray
                     {
                         if (world.Side == EnumAppSide.Server)
                         {
-                            Tell(byPlayer, Lang.Get("photochemistry:msg-tray-underdeveloped", currentApplications, RequiredDeveloperPours), pos);
+                            Tell(byPlayer, Lang.Get("photocore:msg-tray-underdeveloped", currentApplications, RequiredDeveloperPours), pos);
                         }
 
                         return false;
@@ -250,7 +250,7 @@ namespace Photochemistry.Tray
 
             ItemStack roughPlate = new ItemStack(glassPlateItem);
             PlateAttributes.SetStage(roughPlate, PlateStage.Rough);
-            PlateAttributes.SetNameLangCode(roughPlate, "photochemistry:plate-name-glass");
+            PlateAttributes.SetNameLangCode(roughPlate, "photocore:plate-name-glass");
             roughPlate.Attributes.SetString("plateBlockState", "rough");
 
             SwapTrayBlockForPlateStage(world, pos, null, null);
@@ -279,9 +279,9 @@ namespace Photochemistry.Tray
         {
             return actionKind switch
             {
-                TrayActionKind.Developer => Lang.Get("photochemistry:msg-tray-need-developer"),
-                TrayActionKind.Fixer => Lang.Get("photochemistry:msg-tray-need-fixer"),
-                _ => Lang.Get("photochemistry:msg-tray-need-water")
+                TrayActionKind.Developer => Lang.Get("photocore:msg-tray-need-developer"),
+                TrayActionKind.Fixer => Lang.Get("photocore:msg-tray-need-fixer"),
+                _ => Lang.Get("photocore:msg-tray-need-water")
             };
         }
     }

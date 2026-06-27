@@ -1,7 +1,7 @@
-using Xunit;
-using Photochemistry.PhotoSync.Runtime;
+﻿using Xunit;
+using Photocore.PhotoSync.Runtime;
 
-namespace Photochemistry.Tests.PhotoSync;
+namespace Photocore.Tests.PhotoSync;
 
 public class ServerExpectedUploadsTests
 {

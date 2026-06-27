@@ -1,10 +1,11 @@
-﻿using Photochemistry.CameraCapture.Contracts;
-using Photochemistry.Plates;
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 
-namespace Photochemistry.FieldCamera
+using Photocore.CameraCapture.Contracts;
+using Photocore.Plates;
+
+namespace Photocore.FieldCamera
 {
     internal sealed partial class FieldCameraModSystemBridge
     {
@@ -46,7 +47,7 @@ namespace Photochemistry.FieldCamera
                         if (!string.IsNullOrEmpty(uid)
                             && !string.Equals(uid, capi.World.Player.PlayerUID, StringComparison.Ordinal))
                         {
-                            capi.ShowChatMessage(Lang.Get("photochemistry:msg-plate-other-photographer"));
+                            capi.ShowChatMessage(Lang.Get("photocore:msg-plate-other-photographer"));
                             return false;
                         }
                     }

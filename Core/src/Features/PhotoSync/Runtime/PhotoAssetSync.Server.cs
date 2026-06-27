@@ -1,9 +1,9 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Server;
-using Photochemistry.PhotoSync.Contracts;
-using Photochemistry.PhotoSync.Storage;
+using Photocore.PhotoSync.Contracts;
+using Photocore.PhotoSync.Storage;
 
-namespace Photochemistry.PhotoSync.Runtime
+namespace Photocore.PhotoSync.Runtime
 {
     public sealed partial class PhotoAssetSyncCore
     {
@@ -128,9 +128,9 @@ namespace Photochemistry.PhotoSync.Runtime
                         {
                             SendServerTransferAck(fromPlayer, photoId, ok: false, error ?? "Photo write failed");
                         }
-                    }, "photochemistry:UploadAck");
+                    }, "photocore:UploadAck");
                 }
-            }, "photochemistry:UploadWrite");
+            }, "photocore:UploadWrite");
         }
 
         private void ServerMaybePruneIncoming(long nowMs)
@@ -180,8 +180,8 @@ namespace Photochemistry.PhotoSync.Runtime
                     if (_mod.ServerChannel == null) return;
                     _mod.PhotoSyncModSystemBridge.ServerTouchPhotoSeen(photoId);
                     SendChunksConfigured(_mod.ServerChannel, fromPlayer, photoId, bytes, isUpload: false);
-                }, "photochemistry:DownloadDispatch");
-            }, "photochemistry:DownloadRead");
+                }, "photocore:DownloadDispatch");
+            }, "photocore:DownloadRead");
         }
 
         public void ServerHandleChunk(IServerPlayer fromPlayer, PhotoBlobChunkPacket packet)

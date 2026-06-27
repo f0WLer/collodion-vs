@@ -1,0 +1,176 @@
+{
+    "item-fieldcamera":      "Field Camera",
+    "itemdesc-fieldcamera":  "A heavy wooden box used to capture moments in time on glass plates.",
+    "item-fieldcamera-loaded-silvered":      "Field Camera (Loaded)",
+    "itemdesc-fieldcamera-loaded-silvered":  "A field camera loaded with a sensitized plate.",
+    "item-fieldcamera-loaded-exposed":      "Field Camera (Loaded)",
+    "itemdesc-fieldcamera-loaded-exposed":  "A field camera loaded with an exposed plate.",
+
+    "block-fieldcamera-tripod":       "Field Camera (Deployed)",
+    "block-fieldcamera-tripod-upper": "Field Camera (Deployed)",
+    "block-fieldcamera-resting-north":     "Field Camera",
+    "block-fieldcamera-resting-east":      "Field Camera",
+    "block-fieldcamera-resting-south":     "Field Camera",
+    "block-fieldcamera-resting-west":      "Field Camera",
+
+
+    "block-platebox":       "Plate Box",
+    "block-platebox-north": "Plate Box",
+    "block-platebox-open":  "Plate Box",
+    "blockdesc-platebox":   "Stores and protects prepared plates. Use <icon>rightmousebutton</icon> on slots with a plate to store. <icon>rightmousebutton</icon> on a stored plate to retrieve it.",
+    "photocore:heldhelp-platebox-insert":   "Store plate in slot",
+    "photocore:heldhelp-platebox-take":     "Take plate from slot",
+
+
+    "photocore:heldhelp-frame-insert": "Insert photo into frame",
+    "photocore:heldhelp-frame-take":   "Take photo from frame",
+
+    "block-framedphotographwall-north":  "Framed Photograph",
+    "block-framedphotographwall-east":   "Framed Photograph",
+    "block-framedphotographwall-south":  "Framed Photograph",
+    "block-framedphotographwall-west":   "Framed Photograph",
+    "blockdesc-framedphotographwall":    "A wall-mounted oak frame for displaying photographs. Hold a finished photo plate and <icon>rightmousebutton</icon> to insert; <icon>rightmousebutton</icon> with empty hand to remove.",
+
+    "block-framedphotographground-north": "Framed Photograph",
+    "block-framedphotographground-east":  "Framed Photograph",
+    "block-framedphotographground-south": "Framed Photograph",
+    "block-framedphotographground-west":  "Framed Photograph",
+    "blockdesc-framedphotographground":   "A free-standing easel frame for displaying photographs. Hold a finished photo plate and <icon>rightmousebutton</icon> to insert; <icon>rightmousebutton</icon> with empty hand to remove.",
+
+
+    "item-drycollodionmix":     "Dry Collodion Mix",
+    "itemdesc-drycollodionmix": "A dry mix that can be sealed with water in a barrel to make collodion.",
+
+    "item-collodionportion":                    "Collodion",
+    "incontainer-item-collodionportion":        "Collodion",
+    "game:incontainer-item-collodionportion":   "Collodion",
+    "itemdesc-collodionportion":                "A syrupy chemical used to coat plates.",
+
+    "item-silversolutionportion":                   "Silvering Solution",
+    "incontainer-item-silversolutionportion":       "Silvering Solution",
+    "game:incontainer-item-silversolutionportion":  "Silvering Solution",
+    "itemdesc-silversolutionportion":               "A sensitizing solution for collodion-coated plates.",
+
+    "item-developerportion":                    "Developer",
+    "incontainer-item-developerportion":        "Developer",
+    "game:incontainer-item-developerportion":   "Developer",
+    "itemdesc-developerportion":                "Begins to reveal the latent image on an exposed plate.",
+
+    "item-fixerportion":                    "Fixer",
+    "incontainer-item-fixerportion":        "Fixer",
+    "game:incontainer-item-fixerportion":   "Fixer",
+    "itemdesc-fixerportion":                "Stabilizes a developed plate so it can be handled in light.",
+
+
+    "block-plate-rough":        "Rough Glass Plate",
+    "block-plate-clean":        "Clean Glass Plate",
+
+    "item-glassplate": "Glass Plate",
+    "itemdesc-glassplate": "Rough/Clean/Coated glass plate.",
+    "item-sensitizedplate": "Sensitized Plate",
+    "itemdesc-sensitizedplate": "Sensitized/(Partially) Exposed plate.",
+    "item-photoplate": "Photo Plate",
+    "itemdesc-photoplate": "Developed/Fixed plate.",
+
+    "photocore:plate-name-glass": "Rough Glass Plate",
+    "photocore:plate-name-glass-clean": "Clean Glass Plate",
+    "photocore:plate-name-glass-sensitizing": "Coated Glass Plate",
+    "photocore:plate-name-coated": "Collodion Coated Plate",
+    "photocore:plate-name-dried-coated": "Dried Coated Plate",
+    "photocore:plate-name-sensitized": "Sensitized Plate",
+    "photocore:plate-name-exposed": "Exposed Plate",
+    "photocore:plate-name-developing": "Developing Plate",
+    "photocore:plate-name-developed": "Developed Plate",
+    "photocore:plate-name-photo": "Photo Plate",
+    "photocore:plate-name-photo-finished": "Photograph Plate",
+
+    "photocore:heldhelp-cleanroughglass":     "Polish rough glass plate",
+    "photocore:heldhelp-coatglassplate":      "Start sensitization with matching solution",
+    "photocore:heldhelp-plate-sensitize-dry": "Pick up to speed up drying",
+    "photocore:heldhelp-plate-drying-wait": "Drying… leave the plate to finish",
+    "photocore:heldhelp-plate-sensitize-next": "Continue sensitization process",
+
+    "wetplate-wetness": "Still wet: {0} min",
+    "wetplate-wetness-permanent": "Stays wet (sealed emulsion).",
+    "wetplate-dry":     "The plate has dried.",
+
+
+    "item-framedphotograph":    "Framed Photograph",
+    "itemdesc-framedphotograph":"A photograph mounted in a simple wooden frame.",
+    "block-framedphotographwall":   "Framed Photograph",
+    "photocore:heldhelp-framedphoto-add":   "Add framed photo",
+    "photocore:heldhelp-framedphoto-remove":"Remove framed photo",
+
+
+    "block-developmenttray-red":    "Development Tray (Red Clay)",
+    "block-developmenttray-blue":   "Development Tray (Blue Clay)",
+    "block-developmenttray-fire":   "Development Tray (Fire Clay)",
+    "blockdesc-developmenttray-blue":"A shallow tray for developing and fixing wet plates.",
+    "blockdesc-developmenttray-red": "A shallow tray for developing and fixing wet plates.",
+    "blockdesc-developmenttray-fire":"A shallow tray for developing and fixing wet plates.",
+
+    "block-developmenttray-red-exposed":    "Development Tray (Needs Developer)",
+    "block-developmenttray-blue-exposed":   "Development Tray (Needs Developer)",
+    "block-developmenttray-fire-exposed":   "Development Tray (Needs Developer)",
+
+    "block-developmenttray-red-developed":  "Development Tray (Needs Fixer)",
+    "block-developmenttray-blue-developed": "Development Tray (Needs Fixer)",
+    "block-developmenttray-fire-developed": "Development Tray (Needs Fixer)",
+
+    "block-developmenttray-red-finished":   "Development Tray (Finished)",
+    "block-developmenttray-blue-finished":  "Development Tray (Finished)",
+    "block-developmenttray-fire-finished":  "Development Tray (Finished)",
+
+    "item-developmenttray-raw-red":     "Unfired Development Tray (Red Clay)",
+    "item-developmenttray-raw-blue":    "Unfired Development Tray (Blue Clay)",
+    "item-developmenttray-raw-fire":    "Unfired Development Tray (Fire Clay)",
+    "itemdesc-developmenttray-raw-blue":"A clay tray that must be fired before use.",
+    "itemdesc-developmenttray-raw-red": "A clay tray that must be fired before use.",
+    "itemdesc-developmenttray-raw-fire":"A clay tray that must be fired before use.",
+
+    "photocore:heldhelp-developmenttray-insertplate":   "Place plate in tray",
+    "photocore:heldhelp-developmenttray-takeplate":     "Take plate from tray",
+    "photocore:heldhelp-developmenttray-develop":       "Develop exposed plate",
+    "photocore:heldhelp-developmenttray-fix":           "Fix developed plate",
+
+    "photocore:camera-info-controls":    "RMB to look through the viewfinder. LMB to start/pause exposure.",
+    "photocore:camera-info-tripod":      "Shift+RMB with a tripod in offhand mounts it; Shift+RMB with empty offhand removes it after unloading the plate.",
+    "photocore:camera-info-plate-loaded":"Loaded plate: {0}",
+    "photocore:camera-info-plate-none":  "Loaded plate: (none)",
+    "photocore:camera-info-load-hint":   "Shift+Right click with a Sensitized Plate in offhand to load.",
+    "photocore:camera-info-unload-hint": "Shift+Right click with empty offhand to unload.",
+
+    "photocore:tray-info-plate":         "Plate: {0}",
+    "photocore:tray-info-plate-none":    "Plate: (none)",
+
+    "photocore:platebox-info-slots":     "Plate slots: {0}/{1}",
+
+    "photocore:frame-info-photograph":   "Photograph",
+    "photocore:frame-info-displaying":   "Displaying: {0}",
+
+
+    "photocore:shuttergate-maxframes-message":  "photocore: this plate cannot be exposed any further (maximum {0} frames reached).",
+    "photocore:shuttergate-target-message":     "photocore: this exposure has reached its target and can't be resumed.",
+    "photocore:msg-exposure-save-failed":       "photocore: could not save exposure data to disk — partial exposures may not persist across sessions.",
+    "photocore:msg-exposure-already-active":    "photocore: another exposure is already in progress.",
+    "photocore:msg-plate-max-frames":           "photocore: this plate cannot be exposed any further.",
+    "photocore:msg-load-sensitized-plate":      "photocore: load a sensitized plate to take a photo.",
+    "photocore:msg-plate-not-exposable":        "photocore: only fresh or paused exposure plates can be exposed.",
+    "photocore:msg-plate-dried-no-expose":      "photocore: this plate has dried out and can no longer be exposed.",
+    "photocore:msg-plate-other-photographer":   "photocore: this plate belongs to another photographer.",
+    "photocore:msg-tip-f4-guiless":             "photocore: Tip - press F4 to toggle gui-less mode (hide HUD) while using the viewfinder.",
+    "photocore:msg-mounted-other-active":       "photocore: someone else's exposure is in progress.",
+    "photocore:msg-mounted-no-plate":           "photocore: no plate is loaded.",
+    "photocore:msg-mounted-pause-first":        "photocore: pause the exposure first (RMB) before unloading.",
+    "photocore:msg-mounted-other-paused":       "photocore: someone else's paused exposure — Shift+RMB to unload the plate, or Shift+Ctrl+RMB to recover the camera.",
+    "photocore:msg-mounted-load-hint":          "photocore: hold a sensitized plate and right-click to load.",
+    "photocore:msg-plate-dried-reclaim":        "photocore: this plate has dried out — wash it in a development tray to reclaim the glass.",
+    "photocore:msg-tray-plate-dried":           "photocore: the plate has dried and can no longer be used.",
+    "photocore:msg-tray-other-photographer":    "photocore: only the original photographer can develop this plate.",
+    "photocore:msg-tray-underdeveloped":        "photocore: plate not fully developed ({0}/{1}).",
+    "photocore:msg-tray-need-developer":        "photocore: need developer (at least 1 portion).",
+    "photocore:msg-tray-need-fixer":            "photocore: need fixer (at least 1 portion).",
+    "photocore:msg-tray-need-water":            "photocore: need water (at least 1 portion).",
+    "photocore:msg-develop-not-whitelisted":    "photocore: you aren't on this server's develop whitelist — you can expose plates, but only whitelisted players can develop them. Your exposure has been kept."
+}
+

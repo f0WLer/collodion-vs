@@ -1,7 +1,7 @@
 ﻿using System.IO.Compression;
 using Vintagestory.API.Config;
 
-namespace Photochemistry.Exposure
+namespace Photocore.Exposure
 {
     // Files survive server restarts and relaunches; each blob is GZip-compressed.
     internal static class ExposureAccumulationStore
@@ -12,7 +12,7 @@ namespace Photochemistry.Exposure
         internal static string GetStorePath(string exposureId)
         {
             string safeId = Path.GetFileName(exposureId.Trim());
-            return Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", FolderName, safeId + Extension);
+            return Path.Combine(GamePaths.DataPath, "ModData", "photocore", FolderName, safeId + Extension);
         }
 
         // Returns false on failure — caller should warn the player.
@@ -31,7 +31,7 @@ namespace Photochemistry.Exposure
             }
             catch (Exception e)
             {
-                Log.Warn(null, $"photochemistry: failed to save partial exposure '{exposureId}': {e.Message}");
+                Log.Warn(null, $"photocore: failed to save partial exposure '{exposureId}': {e.Message}");
                 return false;
             }
         }
@@ -55,14 +55,14 @@ namespace Photochemistry.Exposure
             }
             catch (Exception e)
             {
-                Log.Warn(null, $"photochemistry: partial exposure '{exposureId}' is corrupt or unreadable — starting fresh: {e.Message}");
+                Log.Warn(null, $"photocore: partial exposure '{exposureId}' is corrupt or unreadable — starting fresh: {e.Message}");
                 return false;
             }
         }
 
         internal static IReadOnlyList<string> EnumerateIds()
         {
-            string folder = Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", FolderName);
+            string folder = Path.Combine(GamePaths.DataPath, "ModData", "photocore", FolderName);
             if (!Directory.Exists(folder)) return Array.Empty<string>();
 
             string[] files = Directory.GetFiles(folder, "*" + Extension);
@@ -79,7 +79,7 @@ namespace Photochemistry.Exposure
         {
             if (string.IsNullOrEmpty(exposureId)) return;
             try { File.Delete(GetStorePath(exposureId)); }
-            catch (Exception e) { Log.Warn(null, $"photochemistry: could not delete partial exposure '{exposureId}': {e.Message}"); }
+            catch (Exception e) { Log.Warn(null, $"photocore: could not delete partial exposure '{exposureId}': {e.Message}"); }
         }
     }
 }

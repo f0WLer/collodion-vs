@@ -1,10 +1,10 @@
-using Photochemistry.CameraCapture;
-using Photochemistry.CameraCapture.Contracts;
-using Photochemistry.Plates;
+﻿using Photocore.CameraCapture;
+using Photocore.CameraCapture.Contracts;
+using Photocore.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     // Kept off the bridge so the bridge stays pure wiring and this holds the mutable per-tick state.
     internal sealed partial class FieldCameraClientRuntime

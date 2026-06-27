@@ -1,7 +1,7 @@
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using Vintagestory.API.Client;
 
-namespace Photochemistry.Exposure
+namespace Photocore.Exposure
 {
     internal static class ExposureBlit
     {

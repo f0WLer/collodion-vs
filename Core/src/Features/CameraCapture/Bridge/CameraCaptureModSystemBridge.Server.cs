@@ -1,10 +1,10 @@
-﻿using Photochemistry.CameraCapture.Contracts;
-using Photochemistry.CameraCapture.Integration;
+﻿using Vintagestory.API.Server;
 
-using Vintagestory.API.Server;
-using Photochemistry.Configuration;
+using Photocore.Configuration;
+using Photocore.CameraCapture.Contracts;
+using Photocore.CameraCapture.Integration;
 
-namespace Photochemistry.CameraCapture
+namespace Photocore.CameraCapture
 {
     internal sealed partial class CameraCaptureModSystemBridge
     {
@@ -18,7 +18,7 @@ namespace Photochemistry.CameraCapture
 
         private void ConfigureServerCameraCaptureCore(ICoreServerAPI api)
         {
-            ServerChannel = api.Network.GetChannel("photochemistry");
+            ServerChannel = api.Network.GetChannel("photocore");
             _owner.PhotoSyncModSystemBridge.ConfigureServerPhotoSyncRuntime(api);
         }
 

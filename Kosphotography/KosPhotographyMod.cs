@@ -1,7 +1,6 @@
-using System;
-using Photochemistry;
-using Photochemistry.CameraCapture;
-using Photochemistry.Plates;
+﻿using Photocore;
+using Photocore.CameraCapture;
+using Photocore.Plates;
 using ProtoBuf;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -10,11 +9,11 @@ using Vintagestory.API.Server;
 namespace Kosphotography
 {
     // The kosphotography head: a superset of collodion. It inherits all baseline registration from
-    // PhotochemistryModSystem (via base.Start/StartClientSide/StartServerSide) and adds the timed/automatic
+    // PhotocoreModSystem (via base.Start/StartClientSide/StartServerSide) and adds the timed/automatic
     // camera item class plus the shutter stop-policy provider, config UI, and duration packet. Install
-    // instead of collodion, not alongside it — PhotochemistryModSystem.ShouldLoad stands the baseline head down
+    // instead of collodion, not alongside it — PhotocoreModSystem.ShouldLoad stands the baseline head down
     // when this derived head is present, so exactly one head registers.
-    public class KosPhotographyMod : PhotochemistryModSystem
+    public class KosPhotographyMod : PhotocoreModSystem
     {
         public const string KosChannelName = "kosphotography";
 
@@ -39,7 +38,7 @@ namespace Kosphotography
             {
                 ChemistryId = "bromide",
                 Substrate = "glass",
-                SensitizedItemCode = new AssetLocation("photochemistry", "sensitizedplate"),
+                SensitizedItemCode = new AssetLocation("photocore", "sensitizedplate"),
                 Steps = new[]
                 {
                     new SensitizationStep
@@ -77,7 +76,7 @@ namespace Kosphotography
                     new SensitizationStep
                     {
                         Type = SensitizationInteractionType.PourLiquid,
-                        Ingredient = new AssetLocation("photochemistry", "silversolutionportion"),
+                        Ingredient = new AssetLocation("photocore", "silversolutionportion"),
                         Amount = 40,
                         Sound = pourSound,
                         ActionLangCode = "kosphotography:heldhelp-paper-silver"

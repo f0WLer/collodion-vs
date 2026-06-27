@@ -1,9 +1,9 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Server;
-using Photochemistry.PhotoMetadata.Model;
-using Photochemistry.PhotoSync.Storage;
+using Photocore.PhotoMetadata.Model;
+using Photocore.PhotoSync.Storage;
 
-namespace Photochemistry.PhotoMetadata
+namespace Photocore.PhotoMetadata
 {
     // Owns the server-side photo-seen index: in-memory state, dirty tracking, and persistence.
     // TryFlush is single-flight (Interlocked guard) and dispatches the actual file write through
@@ -158,7 +158,7 @@ namespace Photochemistry.PhotoMetadata
                 {
                     Interlocked.Exchange(ref _flushInFlight, 0);
                 }
-            }, "photochemistry:SeenIndexFlush");
+            }, "photocore:SeenIndexFlush");
         }
     }
 }

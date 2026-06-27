@@ -1,11 +1,11 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
-using Photochemistry.PhotoMetadata.Model;
-using Photochemistry.PhotoSync.Integration;
-using Photochemistry.PhotoSync.Storage;
+using Photocore.PhotoMetadata.Model;
+using Photocore.PhotoSync.Integration;
+using Photocore.PhotoSync.Storage;
 
-namespace Photochemistry.Plates.Rendering
+namespace Photocore.Plates.Rendering
 {
     public static partial class PhotoPlateRenderUtil
     {
@@ -141,7 +141,7 @@ namespace Photochemistry.Plates.Rendering
             // Clear derived photo cache (best effort)
             try
             {
-                string derivedDir = Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos", "derived");
+                string derivedDir = Path.Combine(GamePaths.DataPath, "ModData", "photocore", "photos", "derived");
                 if (Directory.Exists(derivedDir))
                 {
                     Directory.Delete(derivedDir, true);
@@ -164,7 +164,7 @@ namespace Photochemistry.Plates.Rendering
         private static string GetDerivedPhotoPath(string photoFileName, string profile)
         {
             string derivedFileName = GetDerivedPhotoFileName(photoFileName, profile);
-            return Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos", "derived", derivedFileName);
+            return Path.Combine(GamePaths.DataPath, "ModData", "photocore", "photos", "derived", derivedFileName);
         }
 
         private static void MaybePruneObsoleteDevelopedDerived(ICoreClientAPI capi, string photoFileName, ItemStack? itemstack, int developPours, int maxDeveloperPours, bool useDevelopedStage)
@@ -186,7 +186,7 @@ namespace Photochemistry.Plates.Rendering
             // Pruning is intentionally soft-fail to avoid breaking render paths on IO races.
             try
             {
-                string derivedDir = Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos", "derived");
+                string derivedDir = Path.Combine(GamePaths.DataPath, "ModData", "photocore", "photos", "derived");
                 if (!Directory.Exists(derivedDir)) return;
 
                 string baseName = Path.GetFileNameWithoutExtension(photoFileName);
@@ -209,7 +209,7 @@ namespace Photochemistry.Plates.Rendering
             }
             catch (Exception ex)
             {
-                capi?.Logger?.VerboseDebug($"photochemistry: derived prune skipped for '{photoFileName}': {ex.Message}");
+                capi?.Logger?.VerboseDebug($"photocore: derived prune skipped for '{photoFileName}': {ex.Message}");
             }
         }
 

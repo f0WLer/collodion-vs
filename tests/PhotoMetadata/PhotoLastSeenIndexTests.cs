@@ -1,7 +1,7 @@
-using Xunit;
-using Photochemistry.PhotoMetadata.Model;
+﻿using Xunit;
+using Photocore.PhotoMetadata.Model;
 
-namespace Photochemistry.Tests.PhotoMetadata;
+namespace Photocore.Tests.PhotoMetadata;
 
 public class PhotoLastSeenIndexTests
 {

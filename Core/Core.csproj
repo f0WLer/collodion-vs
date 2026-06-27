@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,17 +8,17 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-    <AssemblyName>Photochemistry.Core</AssemblyName>
+    <AssemblyName>Photocore</AssemblyName>
     <VINTAGE_STORY_PATH Condition=" '$(VINTAGE_STORY_PATH)' == '' "></VINTAGE_STORY_PATH>
   </PropertyGroup>
 
   <!-- Embed GPU exposure shaders. LogicalName matches what GpuExposureAccumulator.LoadShaderSource expects. -->
   <ItemGroup>
     <EmbeddedResource Include="src\Features\Exposure\Accumulation\Shaders\gpu-exposure-accum.frag.glsl">
-      <LogicalName>Photochemistry.gpu-exposure-accum.frag.glsl</LogicalName>
+      <LogicalName>Photocore.gpu-exposure-accum.frag.glsl</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Features\Exposure\Accumulation\Shaders\gpu-exposure-develop.frag.glsl">
-      <LogicalName>Photochemistry.gpu-exposure-develop.frag.glsl</LogicalName>
+      <LogicalName>Photocore.gpu-exposure-develop.frag.glsl</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 

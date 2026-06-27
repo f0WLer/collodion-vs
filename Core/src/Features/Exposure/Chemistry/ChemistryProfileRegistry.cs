@@ -1,7 +1,8 @@
-using Photochemistry.Plates;
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 
-namespace Photochemistry.Exposure
+using Photocore.Plates;
+
+namespace Photocore.Exposure
 {
     // Lazily initialised — any handler can access Instance without a lifecycle dependency.
     internal sealed class ChemistryProfileRegistry

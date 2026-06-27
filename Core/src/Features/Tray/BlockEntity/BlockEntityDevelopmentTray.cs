@@ -1,10 +1,10 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
-using Photochemistry.PhotoMetadata.Model;
+using Photocore.PhotoMetadata.Model;
 
-using Photochemistry.Plates;
-namespace Photochemistry.Tray
+using Photocore.Plates;
+namespace Photocore.Tray
 {
     // Development-tray block entity. Holds the placed plate stack + facing,
     // mediates client-side mesh refresh through partial hooks (ClientInitialize/ClientPlateChanged),
@@ -179,11 +179,11 @@ namespace Photochemistry.Tray
 
             if (plate?.Collectible?.Code != null)
             {
-                dsc.AppendLine(Lang.Get("photochemistry:tray-info-plate", plate.Collectible.Code));
+                dsc.AppendLine(Lang.Get("photocore:tray-info-plate", plate.Collectible.Code));
             }
             else
             {
-                dsc.AppendLine(Lang.Get("photochemistry:tray-info-plate-none"));
+                dsc.AppendLine(Lang.Get("photocore:tray-info-plate-none"));
             }
         }
 

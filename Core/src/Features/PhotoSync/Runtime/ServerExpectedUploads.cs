@@ -1,4 +1,4 @@
-namespace Photochemistry.PhotoSync.Runtime
+﻿namespace Photocore.PhotoSync.Runtime
 {
     internal sealed class ServerExpectedUploads
     {

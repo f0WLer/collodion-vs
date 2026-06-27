@@ -2,12 +2,12 @@
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
-namespace Photochemistry.PlateBox
+namespace Photocore.PlateBox
 {
     public sealed partial class BlockPlateBox
     {
         private static readonly AssetLocation _padlockSound = new("game", "sounds/tool/padlock");
-        private static readonly AssetLocation _hingeSound = new("photochemistry", "sounds/hinge");
+        private static readonly AssetLocation _hingeSound = new("photocore", "sounds/hinge");
         private const int OpenCloseSoundDelayMs = 35;
 
         private bool TryPickupBoxAndGiveDrop(IWorldAccessor world, IPlayer byPlayer, BlockPos pos)
@@ -42,8 +42,8 @@ namespace Photochemistry.PlateBox
 
             string facing = world.BlockAccessor.GetBlock(pos)?.Variant?["facing"] ?? "south";
             AssetLocation targetCode = open
-                ? new AssetLocation("photochemistry", "platebox-open-" + facing)
-                : new AssetLocation("photochemistry", "platebox-" + facing);
+                ? new AssetLocation("photocore", "platebox-open-" + facing)
+                : new AssetLocation("photocore", "platebox-" + facing);
             Block? target = world.GetBlock(targetCode);
             if (target == null)
             {

@@ -1,9 +1,9 @@
-﻿using Photochemistry.CameraCapture;
+﻿using Photocore.CameraCapture;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     // Renders the mounted camera block entity mesh during EnumRenderStage.Opaque using the
     // standard block shader.  Unlike chunk-tessellated geometry this renderer can check
@@ -145,7 +145,7 @@ namespace Photochemistry.FieldCamera
             }
             catch (Exception ex)
             {
-                _capi.Logger.Warning("photochemistry: MountedCameraBlockRenderer mesh build failed at {0}: {1}", _pos, ex.Message);
+                _capi.Logger.Warning("photocore: MountedCameraBlockRenderer mesh build failed at {0}: {1}", _pos, ex.Message);
             }
         }
 
@@ -169,7 +169,7 @@ namespace Photochemistry.FieldCamera
             {
                 var meta = new TesselationMetaData
                 {
-                    TypeForLogging = "photochemistry-mounted-camera",
+                    TypeForLogging = "photocore-mounted-camera",
                     TexSource = texSource,
                     IgnoreElements = ignore
                 };
@@ -181,7 +181,7 @@ namespace Photochemistry.FieldCamera
             {
                 var meta = new TesselationMetaData
                 {
-                    TypeForLogging = "photochemistry-mounted-camera",
+                    TypeForLogging = "photocore-mounted-camera",
                     TexSource = texSource,
                     SelectiveElements = select
                 };

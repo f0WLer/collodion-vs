@@ -1,10 +1,10 @@
 ﻿using Vintagestory.API.Client;
-using Photochemistry.AdminTooling;
-using Photochemistry.ImageEffects;
-using Photochemistry.Exposure;
-using Photochemistry.Configuration;
 
-namespace Photochemistry.CameraCapture
+using Photocore.ImageEffects;
+using Photocore.Exposure;
+using Photocore.Configuration;
+
+namespace Photocore.CameraCapture
 {
     internal sealed class ViewportExposureAccumulator : IGameplayExposureAccumulator, IRenderer
     {
@@ -86,7 +86,7 @@ namespace Photochemistry.CameraCapture
             ViewportExposureSuppressContext.ExposureCapturing = true;
             ExposurePreviewSink?.BeginExposurePassthrough();
 
-            _maxFrames = PhotochemistryConfigAccess.ResolveClientConfig(_capi)?.Viewfinder?.MaxAccumulatedFrames
+            _maxFrames = PhotocoreConfigAccess.ResolveClientConfig(_capi)?.Viewfinder?.MaxAccumulatedFrames
                 ?? ViewfinderConfig.DefaultMaxAccumulatedFrames;
         }
 
@@ -129,7 +129,7 @@ namespace Photochemistry.CameraCapture
             if (_buffer == null || _buffer.FramesAccumulated == 0)
                 throw new InvalidOperationException("ViewportExposureAccumulator: no frames accumulated.");
 
-            int maxDim = PhotochemistryConfigAccess.ResolveClientConfig(_capi)?.Viewfinder?.PhotoCaptureMaxDimension
+            int maxDim = PhotocoreConfigAccess.ResolveClientConfig(_capi)?.Viewfinder?.PhotoCaptureMaxDimension
                 ?? ViewfinderConfig.DefaultPhotoCaptureMaxDimension;
 
             return ExposureSeal.ToPhoto(_buffer, maxDim, "viewport-exposure", effectsOverride ?? Effects);
@@ -196,7 +196,7 @@ namespace Photochemistry.CameraCapture
             _rendererRegistered = false;
             _capi.Event.EnqueueMainThreadTask(
                 () => _capi.Event.UnregisterRenderer(this, EnumRenderStage.AfterBlit),
-                "photochemistry-unregister-exposure");
+                "photocore-unregister-exposure");
             OnAutoHalt?.Invoke();
         }
 
@@ -217,7 +217,7 @@ namespace Photochemistry.CameraCapture
 
         private void EnsureGpuAccumulator(int sourceWidth, int sourceHeight, int sampleCount)
         {
-            int maxDimension = PhotochemistryConfigAccess.ResolveClientConfig(_capi)?.Viewfinder?.ExposureReadbackMaxDimension
+            int maxDimension = PhotocoreConfigAccess.ResolveClientConfig(_capi)?.Viewfinder?.ExposureReadbackMaxDimension
                 ?? ViewfinderConfig.DefaultExposureReadbackMaxDimension;
             GpuExposureAccumulator.ComputeTargetDimensions(sourceWidth, sourceHeight, maxDimension, out int w, out int h);
             // Recreate not only on resize but also when the requested sample count differs from the existing
@@ -234,7 +234,7 @@ namespace Photochemistry.CameraCapture
         private void RegisterRenderer()
         {
             if (_rendererRegistered) return;
-            _capi.Event.RegisterRenderer(this, EnumRenderStage.AfterBlit, "photochemistry-viewport-exposure");
+            _capi.Event.RegisterRenderer(this, EnumRenderStage.AfterBlit, "photocore-viewport-exposure");
             _rendererRegistered = true;
         }
 

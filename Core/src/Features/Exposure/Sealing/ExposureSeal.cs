@@ -1,8 +1,9 @@
-using SkiaSharp;
-using Photochemistry.ImageEffects;
-using Photochemistry.PhotoSync.Storage;
+﻿using SkiaSharp;
 
-namespace Photochemistry.Exposure
+using Photocore.ImageEffects;
+using Photocore.PhotoSync.Storage;
+
+namespace Photocore.Exposure
 {
     // The caller supplies finishing effects so the seal has no plate/player knowledge.
     internal static class ExposureSeal

@@ -1,7 +1,7 @@
 ﻿using SkiaSharp;
 using Vintagestory.API.Config;
 
-namespace Photochemistry.PhotoSync.Storage
+namespace Photocore.PhotoSync.Storage
 {
     internal static class PhotoAssetStoragePaths
     {
@@ -43,7 +43,7 @@ namespace Photochemistry.PhotoSync.Storage
         // Root directory holding the ground-truth source photos. Derived silver-density masks and
         // human-viewable exports live in the derived/ and exports/ subdirectories beneath it.
         internal static string GetPhotosDirectory()
-            => Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos");
+            => Path.Combine(GamePaths.DataPath, "ModData", "photocore", "photos");
 
         internal static string GetDerivedDirectory()
             => Path.Combine(GetPhotosDirectory(), "derived");
@@ -149,7 +149,7 @@ namespace Photochemistry.PhotoSync.Storage
         internal static string GetExportPath(string fileName)
         {
             string safe = SanitizeExportFileName(fileName);
-            return Path.Combine(GamePaths.DataPath, "ModData", "photochemistry", "photos", "exports", safe);
+            return Path.Combine(GamePaths.DataPath, "ModData", "photocore", "photos", "exports", safe);
         }
 
         // Strips path separators and invalid filename characters, caps length, and guarantees a

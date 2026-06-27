@@ -1,7 +1,7 @@
-using Photochemistry.ImageEffects;
-using Photochemistry.Plates.Rendering;
+﻿using Photocore.ImageEffects;
+using Photocore.Plates.Rendering;
 
-namespace Photochemistry.Exposure
+namespace Photocore.Exposure
 {
     // The single place that seeds default values — nothing else hardcodes per-chemistry parameters.
     internal static class ChemistryProfileSeeder

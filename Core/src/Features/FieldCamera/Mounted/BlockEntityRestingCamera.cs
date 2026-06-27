@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     public sealed class BlockEntityRestingCamera : BlockEntity
     {

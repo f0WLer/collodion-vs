@@ -1,4 +1,4 @@
-namespace Photochemistry.Exposure
+﻿namespace Photocore.Exposure
 {
     // Silver/print tone per chemistry — data, not hardcoded. Physical render model (glass vs paper) is decided by plateMedium.
     internal sealed class PresentationSettings

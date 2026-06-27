@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
-namespace Photochemistry.Tray
+namespace Photocore.Tray
 {
     internal static class TrayTimedInteractionState
     {

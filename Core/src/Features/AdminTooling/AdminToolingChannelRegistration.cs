@@ -1,7 +1,7 @@
-using ProtoBuf;
+﻿using ProtoBuf;
 using Vintagestory.API.Client;
 
-namespace Photochemistry.AdminTooling
+namespace Photocore.AdminTooling
 {
     internal static class AdminToolingChannelRegistration
     {

@@ -3,13 +3,13 @@
     "class": "KosCamera",
     "heldTpIdleAnimation": "holdbothhands",
     "heldRightReadyAnimation": "holdbothhands",
-    "shape": { "base": "photochemistry:item/fieldcamera/fieldcamera-loaded" },
+    "shape": { "base": "photocore:item/fieldcamera/fieldcamera-loaded" },
     "textures": {
         "oak": { "base": "game:block/wood/debarked/oak" },
         "tinbronze": { "base": "game:block/metal/sheet-plain/tinbronze1" },
         "blackleather": { "base": "game:block/leather/black" },
         "clearquartz": { "base": "game:item/resource/ungraded/clearquartz" },
-        "loadedplate": { "base": "photochemistry:item/plate-silvered" }
+        "loadedplate": { "base": "photocore:item/plate-silvered" }
     },
     "attributes": {
         "shutterMode": "automatic",

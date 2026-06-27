@@ -1,7 +1,7 @@
-using SkiaSharp;
+﻿using SkiaSharp;
 using Vintagestory.API.MathTools;
 
-namespace Photochemistry
+namespace Photocore
 {
     // Generic image-geometry helper shared by the exposure seal, the live previews, and plate
     // mesh rendering — center-crops/scales a bitmap to the 10:11 plate aspect.

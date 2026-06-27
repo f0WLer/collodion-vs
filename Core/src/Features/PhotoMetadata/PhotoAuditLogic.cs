@@ -1,6 +1,6 @@
-using Photochemistry.PhotoSync.Storage;
+﻿using Photocore.PhotoSync.Storage;
 
-namespace Photochemistry.PhotoMetadata
+namespace Photocore.PhotoMetadata
 {
     // A single on-disk source photo joined with its last-seen index data, for audit and selection.
     // Pure data — no filesystem access — so the selection logic below is unit-testable.

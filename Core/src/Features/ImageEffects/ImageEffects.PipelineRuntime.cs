@@ -1,6 +1,6 @@
-using Vintagestory.API.MathTools;
+﻿using Vintagestory.API.MathTools;
 
-namespace Photochemistry.ImageEffects
+namespace Photocore.ImageEffects
 {
     public static partial class ImageEffects
     {

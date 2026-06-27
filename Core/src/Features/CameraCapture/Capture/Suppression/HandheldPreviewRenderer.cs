@@ -1,14 +1,15 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.MathTools;
-using Photochemistry.Configuration;
 
-namespace Photochemistry.CameraCapture
+using Photocore.Configuration;
+
+namespace Photocore.CameraCapture
 {
     internal sealed class HandheldPreviewRenderer : IRenderer
     {
         private readonly ICoreClientAPI _capi;
         private readonly VirtualCameraPreviewRenderer? _virtualPreviewRenderer;
-        private readonly PhotochemistryModSystem? _modSystem;
+        private readonly PhotocoreModSystem? _modSystem;
 
         private LoadedTexture? _previewTexture;
 
@@ -16,7 +17,7 @@ namespace Photochemistry.CameraCapture
         {
             _capi = capi;
             _virtualPreviewRenderer = virtualPreviewRenderer;
-            _modSystem = PhotochemistryConfigAccess.ResolveModSystem(capi);
+            _modSystem = PhotocoreConfigAccess.ResolveModSystem(capi);
         }
 
         public double RenderOrder => 0.97;

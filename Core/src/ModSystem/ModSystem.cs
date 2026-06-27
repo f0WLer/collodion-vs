@@ -1,38 +1,38 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
-using Photochemistry.AdminTooling;
-using Photochemistry.Configuration;
-using Photochemistry.CameraCapture.Integration;
-using Photochemistry.FieldCamera;
-using Photochemistry.PhotoSync.Integration;
-using Photochemistry.PlateBox;
-using Photochemistry.Plates;
-using Photochemistry.Tray;
-using Photochemistry.Frame;
+using Photocore.AdminTooling;
+using Photocore.Configuration;
+using Photocore.CameraCapture.Integration;
+using Photocore.FieldCamera;
+using Photocore.PhotoSync.Integration;
+using Photocore.PlateBox;
+using Photocore.Plates;
+using Photocore.Tray;
+using Photocore.Frame;
 
-namespace Photochemistry
+namespace Photocore
 {
     // Shared mod bootstrap, registration, and lifecycle cleanup for both sides. Holds config, channels,
     // and runtime references shared by the client/server partials.
     //
-    // Abstract so Photochemistry.Core.dll carries NO instantiable ModSystem: VintageStory refuses to load a
-    // mod whose zip contains more than one DLL with a ModSystem, and every head zip bundles this Core.dll.
+    // Abstract so Photocore.dll carries NO instantiable ModSystem: VintageStory refuses to load a
+    // mod whose zip contains more than one DLL with a ModSystem, and every head zip bundles this Photocore.dll.
     // Each head supplies its own thin concrete subclass (CollodionMod, KosPhotographyMod) in its own DLL,
     // so each head zip has exactly one ModSystem DLL (the head's). The heads are mutually-exclusive installs.
-    public abstract partial class PhotochemistryModSystem : ModSystem
+    public abstract partial class PhotocoreModSystem : ModSystem
     {
-        public static PhotochemistryModSystem? ClientInstance { get; internal set; }
+        public static PhotocoreModSystem? ClientInstance { get; internal set; }
 
-        public const string ConfigFileName = "photochemistry.json";
-        public const string ServerPhotoIndexFileName = "photochemistry-photoindex.json";
-        public const string ServerDevelopWhitelistFileName = "photochemistry-develop-whitelist.json";
-        public PhotochemistryConfig Config { get; internal set; } = new PhotochemistryConfig();
-        public PhotochemistryClientConfig ClientConfig { get; internal set; } = new PhotochemistryClientConfig();
+        public const string ConfigFileName = "photocore.json";
+        public const string ServerPhotoIndexFileName = "photocore-photoindex.json";
+        public const string ServerDevelopWhitelistFileName = "photocore-develop-whitelist.json";
+        public PhotocoreConfig Config { get; internal set; } = new PhotocoreConfig();
+        public PhotocoreClientConfig ClientConfig { get; internal set; } = new PhotocoreClientConfig();
 
 
         // Applies a freshly loaded/normalized config tree, keeping ClientConfig in sync.
-        internal void ApplyConfig(PhotochemistryConfig cfg)
+        internal void ApplyConfig(PhotocoreConfig cfg)
         {
             Config = cfg;
             ClientConfig = cfg.Client;
@@ -71,7 +71,7 @@ namespace Photochemistry
             RegisterBuiltInSensitizationRecipes();
 
             // Register Network Channel
-            var channel = CameraCaptureChannelRegistration.RegisterCameraCaptureMessageTypes(api.Network.RegisterChannel("photochemistry"));
+            var channel = CameraCaptureChannelRegistration.RegisterCameraCaptureMessageTypes(api.Network.RegisterChannel("photocore"));
 
             CameraCaptureChannelRegistration.RegisterCameraCaptureConfigMessageTypes(PhotoSyncModSystemBridge.RegisterPhotoSyncMessageTypes(channel));
             AdminToolingChannelRegistration.RegisterAdminToolingMessageTypes(channel);
@@ -85,24 +85,24 @@ namespace Photochemistry
             SensitizationRegistry.Register(new SensitizationRecipe
             {
                 ChemistryId = PlateAttributes.ChemistryCollodion, // "iodide"
-                SensitizedItemCode = new AssetLocation("photochemistry", "sensitizedplate"),
+                SensitizedItemCode = new AssetLocation("photocore", "sensitizedplate"),
                 Steps = new[]
                 {
                     new SensitizationStep
                     {
                         Type = SensitizationInteractionType.PourLiquid,
-                        Ingredient = new AssetLocation("photochemistry", "collodionportion"),
+                        Ingredient = new AssetLocation("photocore", "collodionportion"),
                         Amount = 40,
                         Sound = pourSound,
-                        ActionLangCode = "photochemistry:heldhelp-coatglassplate"
+                        ActionLangCode = "photocore:heldhelp-coatglassplate"
                     },
                     new SensitizationStep
                     {
                         Type = SensitizationInteractionType.PourLiquid,
-                        Ingredient = new AssetLocation("photochemistry", "silversolutionportion"),
+                        Ingredient = new AssetLocation("photocore", "silversolutionportion"),
                         Amount = 40,
                         Sound = pourSound,
-                        ActionLangCode = "photochemistry:heldhelp-plate-sensitize-next"
+                        ActionLangCode = "photocore:heldhelp-plate-sensitize-next"
                     }
                 }
             });

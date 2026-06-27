@@ -1,9 +1,9 @@
-using Photochemistry.Exposure;
-using Photochemistry.Plates;
+﻿using Photocore.Exposure;
+using Photocore.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace Photochemistry.ImageEffects
+namespace Photocore.ImageEffects
 {
     // .collodion effects command. Post-effects are now per-chemistry and live in the unified chemistry
     // profile, edited in the exposure-physics dialog (Save Profile persists them). This command is therefore

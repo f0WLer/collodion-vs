@@ -1,17 +1,17 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Server;
-using Photochemistry.PhotoMetadata;
-using Photochemistry.PhotoSync.Contracts;
-using Photochemistry.PhotoSync.Runtime;
+using Photocore.PhotoMetadata;
+using Photocore.PhotoSync.Contracts;
+using Photocore.PhotoSync.Runtime;
 
-namespace Photochemistry.PhotoSync.Integration
+namespace Photocore.PhotoSync.Integration
 {
     internal sealed partial class PhotoSyncModSystemBridge
     {
-        private readonly PhotochemistryModSystem _owner;
+        private readonly PhotocoreModSystem _owner;
         internal PhotoAssetSyncCore? Runtime;
 
-        internal PhotoSyncModSystemBridge(PhotochemistryModSystem owner)
+        internal PhotoSyncModSystemBridge(PhotocoreModSystem owner)
         {
             _owner = owner;
         }
@@ -64,7 +64,7 @@ namespace Photochemistry.PhotoSync.Integration
             PhotoAssetSyncCore runtime = GetOrCreatePhotoSyncRuntime();
             _serverPhotoSyncPruneListenerId = api.Event.RegisterGameTickListener(_ => runtime.ServerPruneTick(Environment.TickCount64), 10_000);
 
-            _serverPhotoSeenService = ServerPhotoSeenService.LoadOrCreate(api, PhotochemistryModSystem.ServerPhotoIndexFileName);
+            _serverPhotoSeenService = ServerPhotoSeenService.LoadOrCreate(api, PhotocoreModSystem.ServerPhotoIndexFileName);
             _serverPhotoLastSeenFlushListenerId = api.Event.RegisterGameTickListener(_ => _serverPhotoSeenService?.TryFlush(api), 10_000);
         }
 

@@ -1,8 +1,8 @@
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Photochemistry.Configuration;
+using Photocore.Configuration;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     public sealed class BlockRestingCamera : Block
     {
@@ -16,7 +16,7 @@ namespace Photochemistry.FieldCamera
             if (byPlayer == null || blockSel == null) return false;
             if (world.Side == EnumAppSide.Client) return true;
 
-            PhotochemistryModSystem? modSys = PhotochemistryConfigAccess.ResolveModSystem(world.Api);
+            PhotocoreModSystem? modSys = PhotocoreConfigAccess.ResolveModSystem(world.Api);
             if (modSys == null) return false;
 
             return modSys.FieldCameraBridge.TryHandleRestingCameraPickup(world, blockSel.Position, byPlayer);
@@ -26,7 +26,7 @@ namespace Photochemistry.FieldCamera
         {
             if (world.Side == EnumAppSide.Server)
             {
-                PhotochemistryModSystem? modSys = PhotochemistryConfigAccess.ResolveModSystem(world.Api);
+                PhotocoreModSystem? modSys = PhotocoreConfigAccess.ResolveModSystem(world.Api);
                 modSys?.FieldCameraBridge.HandleRestingCameraBlockBroken(world, pos);
             }
 

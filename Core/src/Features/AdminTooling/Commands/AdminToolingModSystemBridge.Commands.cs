@@ -1,16 +1,17 @@
 ﻿using System.Globalization;
-using Photochemistry.ImageEffects;
-using Photochemistry.Plates.Rendering;
-using Photochemistry.Configuration;
 
-namespace Photochemistry.AdminTooling
+using Photocore.ImageEffects;
+using Photocore.Plates.Rendering;
+using Photocore.Configuration;
+
+namespace Photocore.AdminTooling
 {
     internal sealed partial class AdminToolingModSystemBridge
     {
         private const string PhotoplatePreviewCommandArgs = "show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]|quality <px>";
         private const string SubcommandList = "clearcache | clearpex [confirm] | export | preview (" + PhotoplatePreviewCommandArgs + ") | effects | effect <FieldName> <value> | effect save | effect load";
-        private const string AvailableCommandsLine = "photochemistry: available commands: " + SubcommandList;
-        private const string UnknownCommandTryLine = "Try: .photochemistry " + SubcommandList;
+        private const string AvailableCommandsLine = "photocore: available commands: " + SubcommandList;
+        private const string UnknownCommandTryLine = "Try: .photocore " + SubcommandList;
 
         internal void OnModClientCommand(int groupId, Vintagestory.API.Common.CmdArgs args)
         {
@@ -53,7 +54,7 @@ namespace Photochemistry.AdminTooling
                 return;
             }
 
-            _owner.ClientApi.ShowChatMessage($"photochemistry: unknown subcommand '{sub}'. {UnknownCommandTryLine}");
+            _owner.ClientApi.ShowChatMessage($"photocore: unknown subcommand '{sub}'. {UnknownCommandTryLine}");
         }
 
         internal void HandleModClearCacheCommand()
@@ -61,7 +62,7 @@ namespace Photochemistry.AdminTooling
             if (_owner.ClientApi == null) return;
 
             int clearedPlates = PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
-            _owner.ClientApi.ShowChatMessage($"photochemistry: cleared {clearedPlates} plate renders (new photos will re-load from disk).");
+            _owner.ClientApi.ShowChatMessage($"photocore: cleared {clearedPlates} plate renders (new photos will re-load from disk).");
         }
 
         internal void HandlePhotoplatePreviewCommand(Vintagestory.API.Common.CmdArgs args)
@@ -104,7 +105,7 @@ namespace Photochemistry.AdminTooling
                             break;
 
                         default:
-                            _owner.ClientApi.ShowChatMessage("usage: .photochemistry preview peak [show|on|off|toggle]");
+                            _owner.ClientApi.ShowChatMessage("usage: .photocore preview peak [show|on|off|toggle]");
                             return;
                     }
                     break;
@@ -133,7 +134,7 @@ namespace Photochemistry.AdminTooling
                         if (!int.TryParse(wStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int w)
                             || !int.TryParse(hStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int h))
                         {
-                            _owner.ClientApi.ShowChatMessage("usage: .photochemistry preview size <width> <height>");
+                            _owner.ClientApi.ShowChatMessage("usage: .photocore preview size <width> <height>");
                             return;
                         }
 
@@ -148,7 +149,7 @@ namespace Photochemistry.AdminTooling
                         string msStr = args.PopWord();
                         if (!int.TryParse(msStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int ms))
                         {
-                            _owner.ClientApi.ShowChatMessage("usage: .photochemistry preview refresh <milliseconds>");
+                            _owner.ClientApi.ShowChatMessage("usage: .photocore preview refresh <milliseconds>");
                             return;
                         }
 
@@ -162,7 +163,7 @@ namespace Photochemistry.AdminTooling
                         string anchor = args.PopWord();
                         if (string.IsNullOrWhiteSpace(anchor))
                         {
-                            _owner.ClientApi.ShowChatMessage("usage: .photochemistry preview anchor <topleft|topright|bottomleft|bottomright>");
+                            _owner.ClientApi.ShowChatMessage("usage: .photocore preview anchor <topleft|topright|bottomleft|bottomright>");
                             return;
                         }
 
@@ -176,7 +177,7 @@ namespace Photochemistry.AdminTooling
                         string dimStr = args.PopWord();
                         if (!int.TryParse(dimStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out int dim))
                         {
-                            _owner.ClientApi.ShowChatMessage($"usage: .photochemistry preview quality <pixels> (current: {cfg.Viewfinder.DebugPreviewMaxDimension}, plate capture: {cfg.Viewfinder.PhotoCaptureMaxDimension})");
+                            _owner.ClientApi.ShowChatMessage($"usage: .photocore preview quality <pixels> (current: {cfg.Viewfinder.DebugPreviewMaxDimension}, plate capture: {cfg.Viewfinder.PhotoCaptureMaxDimension})");
                             return;
                         }
 
@@ -186,7 +187,7 @@ namespace Photochemistry.AdminTooling
                     }
 
                 default:
-                    _owner.ClientApi.ShowChatMessage("usage: .photochemistry preview <show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]|quality <pixels>>");
+                    _owner.ClientApi.ShowChatMessage("usage: .photocore preview <show|on|off|toggle|size <w> <h>|refresh <ms>|anchor <pos>|peak [show|on|off|toggle]|quality <pixels>>");
                     return;
             }
 
@@ -198,7 +199,7 @@ namespace Photochemistry.AdminTooling
             }
 
             _owner.ClientApi.ShowChatMessage(
-                $"photochemistry: preview {cfg.Viewfinder.DebugPreviewWidth}x{cfg.Viewfinder.DebugPreviewHeight}, "
+                $"photocore: preview {cfg.Viewfinder.DebugPreviewWidth}x{cfg.Viewfinder.DebugPreviewHeight}, "
                 + $"refresh={cfg.Viewfinder.DebugPreviewRefreshMs}ms, anchor={cfg.Viewfinder.DebugPreviewAnchor}, "
                 + $"peak={(cfg.Viewfinder.DebugPreviewPeak ? "on" : "off")}, "
                 + $"quality={cfg.Viewfinder.DebugPreviewMaxDimension}px (plate={cfg.Viewfinder.PhotoCaptureMaxDimension}px)");

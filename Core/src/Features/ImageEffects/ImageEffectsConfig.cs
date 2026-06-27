@@ -1,6 +1,6 @@
-using Vintagestory.API.MathTools;
+﻿using Vintagestory.API.MathTools;
 
-namespace Photochemistry.ImageEffects
+namespace Photocore.ImageEffects
 {
     // Post-processing applied to a developed photo AFTER the per-frame exposure physics has resolved it.
     // Scope is deliberately narrow: only spatial/optical/material effects the per-pixel exposure simulation

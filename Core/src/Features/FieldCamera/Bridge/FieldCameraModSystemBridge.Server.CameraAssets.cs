@@ -1,16 +1,17 @@
-﻿using Photochemistry.Plates;
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 
-namespace Photochemistry.FieldCamera
+using Photocore.Plates;
+
+namespace Photocore.FieldCamera
 {
     internal sealed partial class FieldCameraModSystemBridge
     {
-        private static readonly AssetLocation _fieldcameraBaseCode = new AssetLocation("photochemistry", "fieldcamera");
+        private static readonly AssetLocation _fieldcameraBaseCode = new AssetLocation("photocore", "fieldcamera");
         // Asset path remains "loaded-silvered" for backward compatibility; gameplay semantics are sensitized.
-        private static readonly AssetLocation _fieldcameraLoadedSensitizedCode = new AssetLocation("photochemistry", "fieldcamera-loaded-silvered");
-        private static readonly AssetLocation _fieldcameraLoadedExposedCode = new AssetLocation("photochemistry", "fieldcamera-loaded-exposed");
-        private static readonly AssetLocation _cameraPlateLoadSound = new AssetLocation("photochemistry", "sounds/glass-slide1");
-        private static readonly AssetLocation _cameraPlateUnloadSound = new AssetLocation("photochemistry", "sounds/glass-slide2");
+        private static readonly AssetLocation _fieldcameraLoadedSensitizedCode = new AssetLocation("photocore", "fieldcamera-loaded-silvered");
+        private static readonly AssetLocation _fieldcameraLoadedExposedCode = new AssetLocation("photocore", "fieldcamera-loaded-exposed");
+        private static readonly AssetLocation _cameraPlateLoadSound = new AssetLocation("photocore", "sounds/glass-slide1");
+        private static readonly AssetLocation _cameraPlateUnloadSound = new AssetLocation("photocore", "sounds/glass-slide2");
 
         private static AssetLocation GetBaseCode(ItemStack? cameraStack)
             => cameraStack?.Item is ItemFieldcamera cam ? cam.CameraBaseCode : _fieldcameraBaseCode;

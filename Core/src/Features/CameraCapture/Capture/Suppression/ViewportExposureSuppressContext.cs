@@ -1,6 +1,6 @@
-using Vintagestory.API.MathTools;
+﻿using Vintagestory.API.MathTools;
 
-namespace Photochemistry.CameraCapture
+namespace Photocore.CameraCapture
 {
     // Consulted by EntityPlayerShapeRenderer Harmony patches; main-thread only.
     internal static class ViewportExposureSuppressContext

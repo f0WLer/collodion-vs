@@ -1,8 +1,8 @@
-namespace Photochemistry.AdminTooling.Whitelist
+﻿namespace Photocore.AdminTooling.Whitelist
 {
     // Persisted develop-whitelist state: whether the gate is active, and the allowed players keyed by
     // UID (value = last-known name, for human-readable command output). Round-tripped via StoreModConfig
-    // to photochemistry-develop-whitelist.json. Disabled with no members is the default (no behaviour change).
+    // to photocore-develop-whitelist.json. Disabled with no members is the default (no behaviour change).
     internal sealed class ExposureWhitelistState
     {
         public bool Enabled { get; set; }

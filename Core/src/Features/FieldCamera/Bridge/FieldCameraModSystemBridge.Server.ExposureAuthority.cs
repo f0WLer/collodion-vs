@@ -1,15 +1,15 @@
-using Photochemistry.CameraCapture.Contracts;
-using Photochemistry.PhotoMetadata.Model;
-using Photochemistry.PhotoSync.Storage;
-using Photochemistry.Plates;
-using Photochemistry.Tray;
+﻿using Photocore.CameraCapture.Contracts;
+using Photocore.PhotoMetadata.Model;
+using Photocore.PhotoSync.Storage;
+using Photocore.Plates;
+using Photocore.Tray;
 
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     // Server-authoritative capture finalization: the bridge's authority over plate-stage transitions
     // as exposures start, pause, finalize, and seal into the tray. Split out of Server.cs so that file
@@ -75,7 +75,7 @@ namespace Photochemistry.FieldCamera
             if (player == null || packet == null) return;
 
             BestEffortLogger?.Notification(
-                $"photochemistry[diag]: server recv ExposureState: isExposing={packet.IsExposing} " +
+                $"photocore[diag]: server recv ExposureState: isExposing={packet.IsExposing} " +
                 $"exposedFrames={packet.ExposedFrames} targetFrames={packet.TargetFrames}");
 
             if (!TryResolveCameraStorage(player, out ItemSlot? cameraSlot, out ItemStack? cameraStack, out BlockEntityMountedCamera? mountedBe)) return;
@@ -122,7 +122,7 @@ namespace Photochemistry.FieldCamera
                 PlateDryingTransition.TickNow(Api.World, loadedPlate);
                 PlateAttributes.SetStage(loadedPlate, PlateStage.ExposurePaused);
                 loadedPlate.Attributes.SetInt(PlateAttributes.ExposedFrames, packet.ExposedFrames);
-                BestEffortLogger?.Notification($"photochemistry[diag]: server wrote ExposedFrames={packet.ExposedFrames} to plate");
+                BestEffortLogger?.Notification($"photocore[diag]: server wrote ExposedFrames={packet.ExposedFrames} to plate");
             }
 
             SetLoadedPlateAttributes(cameraStack, loadedPlate);
@@ -185,6 +185,6 @@ namespace Photochemistry.FieldCamera
 
         private static void TellNotWhitelisted(IServerPlayer player)
             => player.SendMessage(GlobalConstants.GeneralChatGroup,
-                Lang.Get("photochemistry:msg-develop-not-whitelisted"), EnumChatType.Notification);
+                Lang.Get("photocore:msg-develop-not-whitelisted"), EnumChatType.Notification);
     }
 }

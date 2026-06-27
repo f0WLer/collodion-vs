@@ -1,11 +1,12 @@
-using Photochemistry.CameraCapture;
-using Photochemistry.CameraCapture.Contracts;
-using Photochemistry.Plates;
-using Vintagestory.API.Common;
+﻿using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace Photochemistry.FieldCamera
+using Photocore.CameraCapture;
+using Photocore.CameraCapture.Contracts;
+using Photocore.Plates;
+
+namespace Photocore.FieldCamera
 {
     internal sealed partial class FieldCameraModSystemBridge
     {
@@ -192,7 +193,7 @@ namespace Photochemistry.FieldCamera
             }
 
             BestEffortLogger?.Notification(
-                $"photochemistry[diag]: server send MountedCameraControl: isExposing={packet.IsExposing} " +
+                $"photocore[diag]: server send MountedCameraControl: isExposing={packet.IsExposing} " +
                 $"hasCamState={packet.HasCameraState} prepIdle={packet.PrepareIdlePreview} hasMount={packet.HasMountBlock} " +
                 $"chan={(ServerChannel == null ? "null" : "ok")}");
             ServerChannel?.SendPacket(packet, player);

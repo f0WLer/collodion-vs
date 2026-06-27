@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Photochemistry.PlateBox
+namespace Photocore.PlateBox
 {
     // Plate-box block identity, placement, drop serialization, and partial-family routing.
     // Starts from block lifecycle callbacks and delegates rendering/help and slot interaction to sibling partials.
@@ -10,8 +10,8 @@ namespace Photochemistry.PlateBox
     // Related files: BlockPlateBox.Interaction.cs, BlockPlateBox.WorldMutationSeam.cs, BlockEntityPlateBox.cs.
     public sealed partial class BlockPlateBox : Block
     {
-        private static readonly AssetLocation _samplePlateCode = new("photochemistry", "sensitizedplate");
-        private static readonly AssetLocation _closedBoxCode = new("photochemistry", "platebox-north");
+        private static readonly AssetLocation _samplePlateCode = new("photocore", "sensitizedplate");
+        private static readonly AssetLocation _closedBoxCode = new("photocore", "platebox-north");
         private static readonly Cuboidf[] _slotHitBoxes =
         [
             // Matches platehb1..platehb8 in assets/collodion/shapes/block/platebox-open.json
@@ -25,7 +25,7 @@ namespace Photochemistry.PlateBox
             new(14.0f / 16f, 0.5f / 16f, 4.5f / 16f, 14.5f / 16f, 8.2f / 16f, 11.5f / 16f)
         ];
         
-        private static readonly AssetLocation _woodThudSound = new("photochemistry", "sounds/wood-thud");
+        private static readonly AssetLocation _woodThudSound = new("photocore", "sounds/wood-thud");
         
         // Hides rotated variants in creative tabs so only the canonical north item appears.
         public override void OnLoaded(ICoreAPI api)
@@ -123,7 +123,7 @@ namespace Photochemistry.PlateBox
             if (string.IsNullOrEmpty(currentFacing) || currentFacing == desiredFacing)
                 return base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);
 
-            Block? facingBlock = world.GetBlock(new AssetLocation("photochemistry", "platebox-" + desiredFacing));
+            Block? facingBlock = world.GetBlock(new AssetLocation("photocore", "platebox-" + desiredFacing));
             if (facingBlock == null || facingBlock.Id == 0)
                 return base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);
 

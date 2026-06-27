@@ -1,15 +1,15 @@
-﻿using Photochemistry.CameraCapture;
-using Photochemistry.CameraCapture.Contracts;
-using Photochemistry.Exposure;
-using Photochemistry.PhotoSync.Integration;
-using Photochemistry.Plates;
+﻿using Photocore.CameraCapture;
+using Photocore.CameraCapture.Contracts;
+using Photocore.Exposure;
+using Photocore.PhotoSync.Integration;
+using Photocore.Plates;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using Vintagestory.API.Config;
-using Photochemistry.Configuration;
+using Photocore.Configuration;
 
-namespace Photochemistry.FieldCamera
+namespace Photocore.FieldCamera
 {
     internal sealed partial class FieldCameraClientRuntime
     {
@@ -19,7 +19,7 @@ namespace Photochemistry.FieldCamera
         private int _maxFrames = ViewfinderConfig.DefaultMaxAccumulatedFrames;
 
         // Temporary startup-race diagnostics (gated on ShowDebugLogs). See the exposure-flakiness plan.
-        private void Diag(string msg) => _owner.BestEffortLogger?.Notification("photochemistry[diag]: " + msg);
+        private void Diag(string msg) => _owner.BestEffortLogger?.Notification("photocore[diag]: " + msg);
 
         internal bool TryToggleViewfinderExposure(EntityAgent byEntity, bool silentIfBusy)
         {
@@ -61,14 +61,14 @@ namespace Photochemistry.FieldCamera
                 if (!(resumeCondition?.CanResume(existingAcc.FramesAccumulated, existingAcc.TargetFrames) ?? true))
                 {
                     if (!silentIfBusy)
-                        ShowShutterGateMessageThrottled(Lang.Get("photochemistry:shuttergate-target-message"));
+                        ShowShutterGateMessageThrottled(Lang.Get("photocore:shuttergate-target-message"));
                     return false;
                 }
 
                 if (existingAcc.FramesAccumulated >= _maxFrames)
                 {
                     if (!silentIfBusy)
-                        ShowShutterGateMessageThrottled(Lang.Get("photochemistry:shuttergate-maxframes-message", _maxFrames));
+                        ShowShutterGateMessageThrottled(Lang.Get("photocore:shuttergate-maxframes-message", _maxFrames));
                     return false;
                 }
 
@@ -168,7 +168,7 @@ namespace Photochemistry.FieldCamera
             {
                 byte[]? blob = viewportAcc.ExportPartial();
                 if (blob != null && !ExposureAccumulationStore.Save(exposureId, blob))
-                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photochemistry:msg-exposure-save-failed"));
+                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photocore:msg-exposure-save-failed"));
             }
 
             SendExposureStatePacket(isExposing: false, acc.FramesAccumulated, exposureId, acc.TargetFrames);
@@ -177,7 +177,7 @@ namespace Photochemistry.FieldCamera
         // Client-side develop-whitelist verdict (server-pushed; defaults allowed). UX guard only —
         // the server independently enforces the gate at upload-authorization time.
         private bool IsDevelopAllowedClient()
-            => PhotochemistryConfigAccess.ResolveClientModSystem(_owner.ClientApi)?.AdminToolingBridge.ClientDevelopAllowed ?? true;
+            => PhotocoreConfigAccess.ResolveClientModSystem(_owner.ClientApi)?.AdminToolingBridge.ClientDevelopAllowed ?? true;
 
         private void ExportAndSealExposure(EntityAgent? byEntity, string? knownExposureId = null)
         {
@@ -206,7 +206,7 @@ namespace Photochemistry.FieldCamera
                 // gate is authoritative. Resolve exposureId first so the partial saves under its key.
                 if (!IsDevelopAllowedClient())
                 {
-                    clientApi.ShowChatMessage(Lang.Get("photochemistry:msg-develop-not-whitelisted"));
+                    clientApi.ShowChatMessage(Lang.Get("photocore:msg-develop-not-whitelisted"));
                     HandleExposurePaused(acc, exposureId);
                     return;
                 }
@@ -229,7 +229,7 @@ namespace Photochemistry.FieldCamera
             }
             catch (Exception ex)
             {
-                _owner.ClientApi?.Logger.Error("photochemistry: accumulation export failed — " + ex);
+                _owner.ClientApi?.Logger.Error("photocore: accumulation export failed — " + ex);
             }
             finally
             {
@@ -353,7 +353,7 @@ namespace Photochemistry.FieldCamera
             {
                 if (renderer.State == ExposureState.Capturing)
                 {
-                    ShowShutterGateMessageThrottled(Lang.Get("photochemistry:msg-exposure-already-active"));
+                    ShowShutterGateMessageThrottled(Lang.Get("photocore:msg-exposure-already-active"));
                     return;
                 }
 
@@ -370,7 +370,7 @@ namespace Photochemistry.FieldCamera
                     renderer.ExposurePreviewSink = _owner.Capture._virtualCameraPreviewRenderer;
                     renderer.Start(cameraState, profile);
                     Diag($"mounted start: renderer.Start called, state={renderer.State} profile={profile.Name}");
-                    _maxFrames = PhotochemistryConfigAccess.ResolveClientConfig(clientApi)?.Viewfinder?.MaxAccumulatedFrames
+                    _maxFrames = PhotocoreConfigAccess.ResolveClientConfig(clientApi)?.Viewfinder?.MaxAccumulatedFrames
                         ?? ViewfinderConfig.DefaultMaxAccumulatedFrames;
 
                     if (!string.IsNullOrEmpty(_mountedExposureId) &&
@@ -384,7 +384,7 @@ namespace Photochemistry.FieldCamera
                         // would otherwise accumulate one extra frame before stopping again).
                         if (renderer.FramesAccumulated >= _maxFrames)
                         {
-                            ShowShutterGateMessageThrottled(Lang.Get("photochemistry:msg-plate-max-frames"));
+                            ShowShutterGateMessageThrottled(Lang.Get("photocore:msg-plate-max-frames"));
                             renderer.Discard();
                             return;
                         }
@@ -408,7 +408,7 @@ namespace Photochemistry.FieldCamera
             {
                 byte[]? blob = renderer.ExportPartial();
                 if (blob != null && !ExposureAccumulationStore.Save(_mountedExposureId, blob))
-                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photochemistry:msg-exposure-save-failed"));
+                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photocore:msg-exposure-save-failed"));
             }
 
             renderer.Discard();
@@ -425,7 +425,7 @@ namespace Photochemistry.FieldCamera
             {
                 byte[]? blob = renderer.ExportPartial();
                 if (blob != null && !ExposureAccumulationStore.Save(_mountedExposureId, blob))
-                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photochemistry:msg-exposure-save-failed"));
+                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photocore:msg-exposure-save-failed"));
             }
 
             // Tell the server to set the plate to ExposurePaused with the current frame count.

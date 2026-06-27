@@ -1,14 +1,14 @@
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Server;
-using Photochemistry.Configuration;
-using Photochemistry.PhotoSync.Contracts;
-using Photochemistry.PhotoSync.Storage;
+using Photocore.Configuration;
+using Photocore.PhotoSync.Contracts;
+using Photocore.PhotoSync.Storage;
 
-namespace Photochemistry.PhotoSync.Runtime
+namespace Photocore.PhotoSync.Runtime
 {
     public sealed partial class PhotoAssetSyncCore
     {
-        private readonly PhotochemistryModSystem _mod;
+        private readonly PhotocoreModSystem _mod;
 
         private sealed class IncomingAssembly
         {
@@ -33,7 +33,7 @@ namespace Photochemistry.PhotoSync.Runtime
             }
         }
 
-        public PhotoAssetSyncCore(PhotochemistryModSystem mod)
+        public PhotoAssetSyncCore(PhotocoreModSystem mod)
         {
             _mod = mod;
         }

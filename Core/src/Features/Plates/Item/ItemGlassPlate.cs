@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace Photochemistry.Plates
+namespace Photocore.Plates
 {
     public sealed partial class ItemGlassPlate : ItemPlateBase
     {
@@ -32,7 +32,7 @@ namespace Photochemistry.Plates
 
             // Block code template for the placed substrate, JSON-driven so paper (kosphotography:paper-*)
             // reuses this item class. Defaults to the glass plate blocks.
-            string placedPrefix = Attributes?["placedBlockPrefix"]?.AsString("photochemistry:plate") ?? "photochemistry:plate";
+            string placedPrefix = Attributes?["placedBlockPrefix"]?.AsString("photocore:plate") ?? "photocore:plate";
             Block? plateBlock = world.GetBlock(new AssetLocation($"{placedPrefix}-{plateBlockState}"));
             if (plateBlock == null)
             {

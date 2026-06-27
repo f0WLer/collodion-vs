@@ -1,4 +1,4 @@
-namespace Photochemistry.Configuration
+﻿namespace Photocore.Configuration
 {
     public sealed class PlateProcessingConfig
     {

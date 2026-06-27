@@ -1,8 +1,8 @@
-using System.Globalization;
-using Photochemistry.PhotoMetadata.Model;
-using Photochemistry.PhotoSync.Storage;
+﻿using System.Globalization;
+using Photocore.PhotoMetadata.Model;
+using Photocore.PhotoSync.Storage;
 
-namespace Photochemistry.PhotoMetadata
+namespace Photocore.PhotoMetadata
 {
     internal readonly struct DeleteResult
     {

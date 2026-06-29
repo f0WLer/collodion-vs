@@ -1,3 +1,54 @@
+# Collodion -- v2.0.2 Changelog
+
+## Migration
+
+The mod domain was renamed as part of a Core library split in anticipation of starting work on a separate, more in-depth photography mod. Two things have changed for existing players:
+
+- **Commands are now `.photocore ...` instead of `.collodion ...`.**.
+- The ModData folder has moved from `collodion/` to `photocore/`. **If you have photos from a previous version that you want to keep visible in-game, rename the `collodion` folder inside your game's `ModData` directory to `photocore` before launching.**
+
+Players starting fresh do not need to do anything.
+
+## Photo Exposure
+
+- **Finishing effects are now baked into developed photos.** Grain, vignette, halation, lens softness, coating unevenness, dust and scratch textures, and edge toning are composited onto the final plate image by default. These can be disabled via `Viewfinder.ApplyFinishingEffects` in the config to revert to a clean, unprocessed output.
+- **Handheld camera no longer overexposes when reusing a primed buffer.** Starting a new exposure on a plate that had already been primed in the same camera session could produce a blown-out result. The primed state is now cleared correctly before each capture.
+- **Shutter timing is now applied correctly from the mounted camera and the plate-removal button.** Both paths were falling through to defaults instead of using the configured chemistry values.
+
+## Server Administration
+
+New `/photoadmin` commands for server operators to inspect and manage the server's on-disk photo storage. All destructive commands are dry-run by default and require `confirm` to execute.
+
+- `/photoadmin stats` -- total photo count, disk usage, and a breakdown of seen / never-seen / stale-index rows.
+- `/photoadmin audit [count]` -- lists the N least-recently-seen photos with age, first-seen timestamp, and size. Default 20.
+- `/photoadmin delete oldest <n> [confirm]` -- removes the N least-recently-seen photos (grace period applies).
+- `/photoadmin delete olderthan <days> [confirm]` -- removes every photo not seen within the last N days, including never-seen files.
+- `/photoadmin delete id <ids> [confirm]` -- removes specific photos by id (comma-separated). Bypasses the grace period.
+- `/photoadmin prune-index [confirm]` -- drops index rows whose backing file no longer exists.
+
+Deletion cascades to derived mask files. Photos still referenced by placed plates render blank after deletion.
+
+**Develop whitelist.** When enabled, only players on the whitelist (and operators) may develop exposed plates. Players not on the list cannot enter the development step but they remain able to expose plates.
+
+- `/photoadmin whitelist enable` / `disable` -- toggle the whitelist on or off.
+- `/photoadmin whitelist add <player>` / `remove <player>` -- grant or revoke develop permission by name.
+- `/photoadmin whitelist list` -- show all current entries.
+- `/photoadmin whitelist status` -- show whether the whitelist is active and how many players it holds.
+
+The whitelist is off by default. Turning it on does not affect server ops.
+
+## Misc.
+- Added a photography guide back to the Handbook.
+
+## Under the hood
+
+- The mod was split into a shared Core library with the Collodion head layered on top. This is transparent to players but is the foundation for the separate Kosphotography companion mod.
+- Sensitization is now data-driven through `SensitizationRecipe` attributes on `BlockEntityGlassPlate` rather than hardcoded per-block values.
+- Declined-interaction events on the server now emit a diagnostic log entry (rate-limited, gated on a debug flag) to help diagnose cases where plates or cameras silently refuse interaction.
+- Significant internal cleanup: flattened over-split namespaces, removed dead code, consolidated duplicated helpers, and stripped noisy comments across all feature systems.
+
+---
+
 # Collodion -- v2.0.1 Changelog
 
 ## Mounted Camera

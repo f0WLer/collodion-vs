@@ -1,0 +1,148 @@
+{
+  "version": 0,
+  "file": "photocore.json",
+  "patches": {},
+  "settings": [
+    {
+      "type": "separator",
+      "title": "photocore:configlib-section-clientonly"
+    },
+    {
+      "code": "Client/ShowDebugLogs",
+      "ingui": "photocore:configlib-showdebuglogs-name",
+      "comment": "photocore:configlib-showdebuglogs-comment",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "code": "Viewfinder/MaxAccumulatedFrames",
+      "ingui": "photocore:configlib-maxaccumulatedframes-name",
+      "comment": "photocore:configlib-maxaccumulatedframes-comment",
+      "type": "integer",
+      "default": 400,
+      "range": { "min": 256, "max": 600 }
+    },
+    {
+      "type": "separator",
+      "title": "photocore:configlib-section-serverauth"
+    },
+    {
+      "type": "separator",
+      "title": "photocore:configlib-section-photosync"
+    },
+    {
+      "code": "PhotoSync/PhotoSeenPingIntervalSeconds",
+      "ingui": "photocore:configlib-photoseenpinginterval-name",
+      "comment": "photocore:configlib-photoseenpinginterval-comment",
+      "type": "integer",
+      "default": 300,
+      "range": { "min": 10, "max": 86400 }
+    },
+    {
+      "type": "separator",
+      "title": "photocore:configlib-section-plateprocessing"
+    },
+    {
+      "code": "PlateProcessing/DevelopmentTrayChemicalUnitsPerUse",
+      "ingui": "photocore:configlib-chemicalunitsperuse-name",
+      "comment": "photocore:configlib-chemicalunitsperuse-comment",
+      "type": "integer",
+      "default": 40,
+      "range": { "min": 1, "max": 5000 }
+    },
+    {
+      "code": "PlateProcessing/PolishSeconds",
+      "ingui": "photocore:configlib-polishseconds-name",
+      "comment": "photocore:configlib-polishseconds-comment",
+      "type": "float",
+      "default": 2.0,
+      "range": { "min": 0.0, "max": 30.0 }
+    },
+    {
+      "code": "PlateProcessing/SensitizationPourSeconds",
+      "ingui": "photocore:configlib-sensitizationpourseconds-name",
+      "comment": "photocore:configlib-sensitizationpourseconds-comment",
+      "type": "float",
+      "default": 1.5,
+      "range": { "min": 0.0, "max": 30.0 }
+    },
+    {
+      "code": "PlateProcessing/ClothConsumedPerPolish",
+      "ingui": "photocore:configlib-clothconsumedperpolish-name",
+      "comment": "photocore:configlib-clothconsumedperpolish-comment",
+      "type": "integer",
+      "default": 0,
+      "range": { "min": 0, "max": 64 }
+    },
+    {
+      "code": "PlateProcessing/WetDurationHours",
+      "ingui": "photocore:configlib-wetdurationhours-name",
+      "comment": "photocore:configlib-wetdurationhours-comment",
+      "type": "float",
+      "default": 0.75,
+      "range": { "min": 0.5, "max": 720.0 }
+    },
+    {
+      "code": "PlateProcessing/PlateBoxDryingMultiplier",
+      "ingui": "photocore:configlib-plateboxdryingmultiplier-name",
+      "comment": "photocore:configlib-plateboxdryingmultiplier-comment",
+      "type": "float",
+      "default": 0.0,
+      "range": { "min": 0.0, "max": 1.0 }
+    },
+    {
+      "type": "separator",
+      "title": "photocore:configlib-section-developmenttray"
+    },
+    {
+      "code": "DevelopmentTrayInteractions/Developer/DurationSeconds",
+      "ingui": "photocore:configlib-developerpourduration-name",
+      "comment": "photocore:configlib-developerpourduration-comment",
+      "type": "float",
+      "default": 1.25,
+      "range": { "min": 0.05, "max": 30.0 }
+    },
+    {
+      "code": "DevelopmentTrayInteractions/Fixer/DurationSeconds",
+      "ingui": "photocore:configlib-fixerpourduration-name",
+      "comment": "photocore:configlib-fixerpourduration-comment",
+      "type": "float",
+      "default": 1.25,
+      "range": { "min": 0.05, "max": 30.0 }
+    },
+    {
+      "code": "DevelopmentTrayInteractions/Water/DurationSeconds",
+      "ingui": "photocore:configlib-waterpourduration-name",
+      "comment": "photocore:configlib-waterpourduration-comment",
+      "type": "float",
+      "default": 1.25,
+      "range": { "min": 0.05, "max": 30.0 }
+    },
+    {
+      "type": "separator",
+      "title": "photocore:configlib-section-viewfinder"
+    },
+    {
+      "code": "Viewfinder/PauseDryingDuringExposure",
+      "ingui": "photocore:configlib-pausedryingduringexposure-name",
+      "comment": "photocore:configlib-pausedryingduringexposure-comment",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "code": "Viewfinder/ApplyFinishingEffects",
+      "ingui": "photocore:configlib-applyfinishingeffects-name",
+      "comment": "photocore:configlib-applyfinishingeffects-comment",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "code": "Viewfinder/PhotoCaptureMaxDimension",
+      "ingui": "photocore:configlib-photocapturemaxdimension-name",
+      "comment": "photocore:configlib-photocapturemaxdimension-comment",
+      "type": "integer",
+      "default": 640,
+      "range": { "min": 128, "max": 2048 }
+    }
+  ]
+}

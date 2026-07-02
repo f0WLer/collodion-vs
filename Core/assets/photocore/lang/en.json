@@ -171,6 +171,48 @@
     "photocore:msg-tray-need-developer":        "photocore: need developer (at least 1 portion).",
     "photocore:msg-tray-need-fixer":            "photocore: need fixer (at least 1 portion).",
     "photocore:msg-tray-need-water":            "photocore: need water (at least 1 portion).",
-    "photocore:msg-develop-not-whitelisted":    "photocore: you aren't on this server's develop whitelist — you can expose plates, but only whitelisted players can develop them. Your exposure has been kept."
+    "photocore:msg-develop-not-whitelisted":    "photocore: you aren't on this server's develop whitelist — you can expose plates, but only whitelisted players can develop them. Your exposure has been kept.",
+
+    "photocore:configlib-section-clientonly":           "Client-Only Settings",
+    "photocore:configlib-showdebuglogs-name":               "Show debug logs",
+    "photocore:configlib-showdebuglogs-comment":              "Turns on verbose debug/dev logging. Leave it off unless troubleshooting or reporting a bug.",
+    "photocore:configlib-maxaccumulatedframes-name":        "Max accumulated frames",
+    "photocore:configlib-maxaccumulatedframes-comment":       "Caps how many frames a single exposure can accumulate. Push it higher for longer exposures, at the cost of more memory. Yours alone to set -- in multiplayer it only affects exposures you personally take.",
+
+    "photocore:configlib-section-serverauth":           "Server-Authoritative Settings (only take effect in singleplayer or while hosting)",
+
+    "photocore:configlib-section-photosync":                "Photo Sync",
+    "photocore:configlib-photoseenpinginterval-name":         "Photo-seen ping interval",
+    "photocore:configlib-photoseenpinginterval-comment":        "How often, in seconds, a client pings the server to confirm they're still viewing a photo (keeps /photoadmin's last-seen tracking accurate). 0 disables just the ping -- uploads/downloads still count as seen.",
+
+    "photocore:configlib-section-plateprocessing":          "Plate Processing",
+    "photocore:configlib-chemicalunitsperuse-name":           "Chemical units per use",
+    "photocore:configlib-chemicalunitsperuse-comment":          "How many developer/fixer/water units one tray pour uses up. Lower means cheaper processing. The host's value decides what actually gets consumed.",
+    "photocore:configlib-polishseconds-name":                 "Polish duration",
+    "photocore:configlib-polishseconds-comment":                "How long players need to hold to polish a rough plate, in seconds. 0 makes it instant. The host's value decides when polishing actually finishes.",
+    "photocore:configlib-sensitizationpourseconds-name":      "Sensitization pour duration",
+    "photocore:configlib-sensitizationpourseconds-comment":     "How long one sensitization pour takes to hold, in seconds. 0 makes it instant. The host's value decides when the pour actually finishes.",
+    "photocore:configlib-clothconsumedperpolish-name":        "Cloth consumed per polish",
+    "photocore:configlib-clothconsumedperpolish-comment":       "How much cloth gets used up per polish. Set to 0 to turn cloth consumption off entirely. The host's value decides what actually gets consumed.",
+    "photocore:configlib-wetdurationhours-name":              "Wet duration (hours)",
+    "photocore:configlib-wetdurationhours-comment":             "How long a freshly-sensitized plate stays wet, in in-game hours (runs faster or slower with the world's time speed). The host's value decides the real drying window.",
+    "photocore:configlib-plateboxdryingmultiplier-name":      "Plate box drying rate",
+    "photocore:configlib-plateboxdryingmultiplier-comment":     "How fast plates dry inside a plate box. 0 pauses drying entirely (the default), 1 dries at the same rate as open air. The host's value decides the real rate.",
+
+    "photocore:configlib-section-developmenttray":          "Development Tray",
+    "photocore:configlib-developerpourduration-name":         "Developer pour duration",
+    "photocore:configlib-developerpourduration-comment":        "How long a developer pour takes, in seconds. The host's value decides when it actually finishes.",
+    "photocore:configlib-fixerpourduration-name":             "Fixer pour duration",
+    "photocore:configlib-fixerpourduration-comment":            "How long a fixer pour takes, in seconds. The host's value decides when it actually finishes.",
+    "photocore:configlib-waterpourduration-name":             "Water pour duration",
+    "photocore:configlib-waterpourduration-comment":            "How long a water (reclaim) pour takes, in seconds. The host's value decides when it actually finishes.",
+
+    "photocore:configlib-section-viewfinder":                "Viewfinder",
+    "photocore:configlib-pausedryingduringexposure-name":      "Pause drying while exposing",
+    "photocore:configlib-pausedryingduringexposure-comment":     "When a plate is exposing (or paused mid-exposure), its drying clock stops ticking. The host's value decides whether drying actually pauses.",
+    "photocore:configlib-applyfinishingeffects-name":          "Apply finishing effects",
+    "photocore:configlib-applyfinishingeffects-comment":         "When on, film-look effects (grain, vignette, halation, dust, and the rest) get baked developed photos. The host's value decides whether effects are applied.",
+    "photocore:configlib-photocapturemaxdimension-name":       "Max photo resolution",
+    "photocore:configlib-photocapturemaxdimension-comment":      "The longest side, in pixels, of a captured photo. Higher means sharper photos, but bigger files and more sync traffic for everyone downloading them. The host's value decides the actual maximum dimension."
 }
 

@@ -15,6 +15,10 @@ namespace Photocore
             CameraCaptureBridge.ConfigureClientCameraCaptureStartup(api);
             FieldCameraBridge.ConfigureClientFieldCameraStartup(api);
             TrayClientEvents.ConfigureClientDevelopmentTrayInputListeners(api);
+
+            #if CONFIGLIB_ENABLED
+                if (ConfigLibIntegration.IsPresent(api)) ConfigLibIntegration.Register(api, this);
+            #endif
         }
 
         // Lazily ensures the full client config tree is available before UI or render code reads from it.

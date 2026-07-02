@@ -28,4 +28,22 @@
     <EmbeddedResource Remove="obj\**\*" />
   </ItemGroup>
 
+  <!-- Optional ConfigLib GUI integration (soft dependency - github.com/maltiez2/vsmod_configlib).
+       Only compiled/referenced when CONFIGLIB_PATH points at a real ConfigLib.dll; otherwise the
+       integration file is excluded and the CONFIGLIB_ENABLED constant is undefined, so the rest of
+       Core (including the single call site in ModSystem.Client.cs, guarded by #if CONFIGLIB_ENABLED)
+       builds identically to before this existed. -->
+  <PropertyGroup Condition=" '$(CONFIGLIB_PATH)' != '' AND Exists('$(CONFIGLIB_PATH)') ">
+    <DefineConstants>$(DefineConstants);CONFIGLIB_ENABLED</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(CONFIGLIB_PATH)' == '' OR !Exists('$(CONFIGLIB_PATH)') ">
+    <Compile Remove="src\Features\Configuration\ConfigLibIntegration.cs" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(CONFIGLIB_PATH)' != '' AND Exists('$(CONFIGLIB_PATH)') ">
+    <Reference Include="ConfigLib">
+      <HintPath>$(CONFIGLIB_PATH)</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
 </Project>

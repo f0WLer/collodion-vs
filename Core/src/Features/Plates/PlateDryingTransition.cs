@@ -4,7 +4,7 @@ using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Photocore.Configuration;
 
-namespace Photocore
+namespace Photocore.Plates
 {
     // Wraps the vanilla EnumTransitionType.Dry pipeline so plate code can ignore
     // the underlying transitionstate tree and just ask "is this plate dry yet?".

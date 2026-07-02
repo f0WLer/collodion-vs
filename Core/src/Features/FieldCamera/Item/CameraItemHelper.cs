@@ -3,10 +3,9 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Photocore.CameraCapture;
-using Photocore.FieldCamera;
 using Photocore.Plates;
 
-namespace Photocore
+namespace Photocore.FieldCamera
 {
     /// <summary>
     /// Shared camera-item access helpers used by client and server camera flows.

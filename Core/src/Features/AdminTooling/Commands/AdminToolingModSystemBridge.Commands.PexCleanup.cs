@@ -2,6 +2,7 @@
 using Vintagestory.API.Common;
 
 using Photocore.Exposure;
+using Photocore.FieldCamera;
 using Photocore.Plates;
 
 namespace Photocore.AdminTooling

@@ -1,7 +1,6 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
-using Photocore.AdminTooling.Whitelist;
 
 namespace Photocore.AdminTooling
 {

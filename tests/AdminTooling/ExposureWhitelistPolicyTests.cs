@@ -1,5 +1,5 @@
 using Xunit;
-using Photocore.AdminTooling.Whitelist;
+using Photocore.AdminTooling;
 
 namespace Photocore.Tests.AdminTooling;
 

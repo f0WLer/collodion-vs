@@ -236,9 +236,9 @@ namespace Photocore.AdminTooling
 
         // ---- develop whitelist ----
 
-        private Whitelist.ExposureWhitelistService? TryGetWhitelist(out string error)
+        private ExposureWhitelistService? TryGetWhitelist(out string error)
         {
-            Whitelist.ExposureWhitelistService? wl = _owner.AdminToolingBridge.ExposureWhitelist;
+            ExposureWhitelistService? wl = _owner.AdminToolingBridge.ExposureWhitelist;
             if (wl == null)
             {
                 error = "the develop whitelist is not initialised yet (server still starting up).";
@@ -250,7 +250,7 @@ namespace Photocore.AdminTooling
 
         private TextCommandResult OnWhitelistStatus(TextCommandCallingArgs args)
         {
-            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            ExposureWhitelistService? wl = TryGetWhitelist(out string err);
             if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
 
             return TextCommandResult.Success(
@@ -260,7 +260,7 @@ namespace Photocore.AdminTooling
 
         private TextCommandResult OnWhitelistEnable(TextCommandCallingArgs args)
         {
-            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            ExposureWhitelistService? wl = TryGetWhitelist(out string err);
             if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
 
             bool changed = wl.SetEnabled(true);
@@ -272,7 +272,7 @@ namespace Photocore.AdminTooling
 
         private TextCommandResult OnWhitelistDisable(TextCommandCallingArgs args)
         {
-            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            ExposureWhitelistService? wl = TryGetWhitelist(out string err);
             if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
 
             bool changed = wl.SetEnabled(false);
@@ -283,7 +283,7 @@ namespace Photocore.AdminTooling
 
         private TextCommandResult OnWhitelistAdd(TextCommandCallingArgs args)
         {
-            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            ExposureWhitelistService? wl = TryGetWhitelist(out string err);
             if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
 
             string name = (string)args[0];
@@ -301,7 +301,7 @@ namespace Photocore.AdminTooling
 
         private TextCommandResult OnWhitelistRemove(TextCommandCallingArgs args)
         {
-            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            ExposureWhitelistService? wl = TryGetWhitelist(out string err);
             if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
 
             string arg = (string)args[0];
@@ -331,7 +331,7 @@ namespace Photocore.AdminTooling
 
         private TextCommandResult OnWhitelistList(TextCommandCallingArgs args)
         {
-            Whitelist.ExposureWhitelistService? wl = TryGetWhitelist(out string err);
+            ExposureWhitelistService? wl = TryGetWhitelist(out string err);
             if (wl == null) return TextCommandResult.Error("photoadmin: " + err);
 
             IReadOnlyDictionary<string, string> players = wl.Snapshot();

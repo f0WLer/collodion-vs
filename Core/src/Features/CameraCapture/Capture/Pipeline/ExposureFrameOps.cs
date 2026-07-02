@@ -34,7 +34,7 @@ namespace Photocore.CameraCapture
             try
             {
                 if (applyFinishing)
-                    ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", effects);
+                    EffectsPipeline.ApplyInPlace(cropped, "exposure-preview", effects);
                 sink.StoreExposureFrame(cropped);
             }
             finally

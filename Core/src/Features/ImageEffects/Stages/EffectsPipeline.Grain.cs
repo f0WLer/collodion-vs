@@ -2,7 +2,7 @@
 
 namespace Photocore.ImageEffects
 {
-    public static partial class ImageEffects
+    public static partial class EffectsPipeline
     {
         // Applies blurred monochrome noise as silver-clump style grain weighted toward brighter tones.
         private static void ApplySilverClumpGrain(SKBitmap bmp, Random rng, ImageEffectsConfig cfg)

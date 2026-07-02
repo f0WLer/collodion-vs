@@ -22,7 +22,7 @@ namespace Photocore.Exposure
             {
                 if (applyFinishing)
                 {
-                    ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, seedKey, effects);
+                    EffectsPipeline.ApplyInPlace(cropped, seedKey, effects);
                 }
 
                 return PhotoAssetStoragePaths.SaveExposurePng(cropped);

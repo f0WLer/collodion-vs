@@ -4,7 +4,7 @@ using SkiaSharp;
 
 namespace Photocore.ImageEffects
 {
-    public static partial class ImageEffects
+    public static partial class EffectsPipeline
     {
         // Simulates halation: light scatter back through the glass base re-exposes the emulsion,
         // creating a soft glow around bright areas. The intensity is tuned for the collodion wet-plate look.

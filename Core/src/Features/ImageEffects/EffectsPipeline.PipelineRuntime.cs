@@ -2,7 +2,7 @@
 
 namespace Photocore.ImageEffects
 {
-    public static partial class ImageEffects
+    public static partial class EffectsPipeline
     {
         // Applies deterministic per-photo variance to selected parameters when dynamic mode is enabled.
         private static void ApplyDynamicVariance(ImageEffectsConfig cfg, string seedKey)

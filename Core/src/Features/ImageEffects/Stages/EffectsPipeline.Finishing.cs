@@ -2,7 +2,7 @@
 
 namespace Photocore.ImageEffects
 {
-    public static partial class ImageEffects
+    public static partial class EffectsPipeline
     {
         // Adds a warm sepia-toned border that fades toward the centre, mimicking uneven toning / edge
         // oxidation on an aging plate. This is a spatial aging artifact only — the uniform image colour is

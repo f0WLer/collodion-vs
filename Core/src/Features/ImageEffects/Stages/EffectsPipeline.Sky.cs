@@ -2,7 +2,7 @@
 
 namespace Photocore.ImageEffects
 {
-    public static partial class ImageEffects
+    public static partial class EffectsPipeline
     {
         // Applies top-of-frame bloom and streak modulation to mimic sky overexposure.
         private static void ApplySkyBlowout(SKBitmap bmp, Random rng, ImageEffectsConfig cfg)

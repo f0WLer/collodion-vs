@@ -3,7 +3,7 @@ using SkiaSharp;
 
 namespace Photocore.ImageEffects
 {
-    public static partial class ImageEffects
+    public static partial class EffectsPipeline
     {
         // Simulates radial lens aberration (spherical aberration / field curvature).
         // Historical lenses were poorly corrected: the image is sharp at centre, progressively

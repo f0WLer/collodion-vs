@@ -2,7 +2,7 @@
 
 namespace Photocore.ImageEffects
 {
-    public static partial class ImageEffects
+    public static partial class EffectsPipeline
     {
         // Pipeline owner: orchestrates stage order for post-exposure image effects.
         // The input bitmap is already a developed silver image (resolved by the exposure accumulation physics),

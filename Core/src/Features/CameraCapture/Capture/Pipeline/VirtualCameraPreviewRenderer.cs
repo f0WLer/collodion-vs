@@ -140,7 +140,7 @@ namespace Photocore.CameraCapture
                 SKBitmap cropped = PhotoCropMath.CenterCropToPlateAspect(developed);
 
                 if (er.ApplyFinishing)
-                    ImageEffectsPipelineBridge.ApplyCaptureEffects(cropped, "exposure-preview", er.PreviewEffects);
+                    EffectsPipeline.ApplyInPlace(cropped, "exposure-preview", er.PreviewEffects);
 
                 int count = cropped.Width * cropped.Height;
                 if (_previewPixelScratch == null || _previewPixelScratch.Length < count)

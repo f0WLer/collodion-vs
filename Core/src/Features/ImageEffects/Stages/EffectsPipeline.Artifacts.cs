@@ -2,7 +2,7 @@
 
 namespace Photocore.ImageEffects
 {
-    public static partial class ImageEffects
+    public static partial class EffectsPipeline
     {
         // Draws subtle dust specks with optional edge bias for plate-imperfection realism.
         private static void DrawDust(SKCanvas canvas, int w, int h, Random rng, ImageEffectsConfig cfg)

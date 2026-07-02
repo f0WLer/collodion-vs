@@ -1,3 +1,15 @@
+# Collodion -- v2.0.3 Changelog
+
+## Migration
+
+No action needed coming from v2.0.2. One clarification missing from the v2.0.2 notes: the config file was renamed to `photocore.json` (from `collodion.json`, in the game's `ModConfig` folder) as part of that release's domain rename. **If you have tuned settings from v2.0.1 or earlier that you want to keep, copy them into `photocore.json` -- a fresh file with defaults is generated otherwise.**
+
+## Fixes
+- Installing collodion alongside a superset photography mod built on the same core no longer double-registers the shared items and network channel; the baseline mod now stands down and logs a warning so exactly one runs.
+
+## Under the hood
+- Internal restructuring passes (naming, file organization, and architecture conformance tests) with no gameplay changes.
+
 # Collodion -- v2.0.2 Changelog
 
 ## Migration

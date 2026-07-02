@@ -12,8 +12,8 @@ This project references game DLLs directly. Set the install path either by:
 - Passing it at build time: `dotnet build -c Debug /p:VINTAGE_STORY_PATH=F:\\Path\\To\\Vintagestory`
 
 ## Configuration
-- Main config file: `collodion.json`
-- Configuration guide: `docs/CONFIGURATION.md`
+- Main config file: `photocore.json` (generated in the game's `ModConfig` folder on first run)
+- Most values can be edited live in-game via the `.photocore` admin commands
 
 ## License
 MIT License. See LICENSE.

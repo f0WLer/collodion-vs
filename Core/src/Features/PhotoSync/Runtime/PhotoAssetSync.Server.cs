@@ -26,7 +26,10 @@ namespace Photocore.PhotoSync.Runtime
 
         public void RegisterExpectedUpload(string playerUid, string photoId)
         {
-            ExpectedUploads.Register(playerUid, photoId, Environment.TickCount64);
+            // Normalize before keying: the chunk handler checks IsExpected against the normalized id,
+            // and clients may legitimately claim ids with or without the .png extension.
+            if (!TryNormalizePhotoId(photoId, out string normalizedPhotoId)) return;
+            ExpectedUploads.Register(playerUid, normalizedPhotoId, Environment.TickCount64);
         }
 
         private const int DefaultChunkSize = 24 * 1024;
@@ -112,7 +115,7 @@ namespace Photocore.PhotoSync.Runtime
 
             TyronThreadPool.QueueTask(() =>
             {
-                bool ok = TryWritePhotoBytes(photoId, buffer, writeLock, out string? error);
+                bool ok = TryWritePhotoBytes(photoId, buffer, writeLock, skipIfExists: true, out string? error);
 
                 // Hop back to the main server thread so SendPacket / SeenTouch run on the expected thread.
                 if (sapi != null)

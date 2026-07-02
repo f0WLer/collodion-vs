@@ -25,7 +25,15 @@ namespace Photocore.PhotoSync
             if (fileName == "." || fileName == "..") return string.Empty;
             if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return string.Empty;
 
-            if (!fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+            // "__" is reserved as the derived-file separator (derived/<base>__*.png); an id containing
+            // it could cross-match another photo's derived masks in the delete/prune globs.
+            if (fileName.Contains("__")) return string.Empty;
+
+            // Lowercase is the canonical form: the seen index compares OrdinalIgnoreCase, so two ids
+            // differing only in case must resolve to one file on Linux just as they do on Windows.
+            fileName = fileName.ToLowerInvariant();
+
+            if (!fileName.EndsWith(".png", StringComparison.Ordinal))
                 fileName += ".png";
 
             // Final length check after extension is appended — filesystem limit is 255 chars.
@@ -176,19 +184,50 @@ namespace Photocore.PhotoSync
             return baseName + ".png";
         }
 
-        // Generates a timestamped unique filename, encodes bitmap as PNG, writes it to the photo store, and returns the file name.
+        // Crockford base32 (no i, l, o, u): every character survives being read aloud, screenshotted,
+        // or typed back by an admin without 0/O and 1/l confusion.
+        private const string MintAlphabet = "0123456789abcdefghjkmnpqrstvwxyz";
+
+        // The id is deliberately opaque — capture time is metadata (seen index, file mtime), never
+        // identity. The tag and fixed tail length keep new ids structurally disjoint from legacy
+        // timestamped ids, so the two eras can never collide. Legacy ids stay valid forever;
+        // nothing outside minting may know this shape (resolution must accept both eras).
+        internal static string MintExposurePhotoIdCandidate()
+        {
+            byte[] random = System.Security.Cryptography.RandomNumberGenerator.GetBytes(8);
+            Span<char> chars = stackalloc char[8];
+            for (int i = 0; i < 8; i++) chars[i] = MintAlphabet[random[i] & 31];
+            return "exposure_" + new string(chars);
+        }
+
+        // The returned id is extensionless — the .png is storage, not identity. Ids are minted
+        // client-side without sight of the server's full store, so CreateNew atomically claims the
+        // name and any pre-existing file triggers a re-mint instead of an overwrite.
         internal static string SaveExposurePng(SKBitmap bitmap)
         {
-            string now = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-            string rnd = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(4)).ToLowerInvariant();
-            string fileName = $"exposure_{now}_{rnd}.png";
-            string fullPath = GetPhotoPath(fileName);
-            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
             using var finalImage = SKImage.FromBitmap(bitmap);
             using var pngData = finalImage.Encode(SKEncodedImageFormat.Png, 90);
-            using var output = File.Open(fullPath, FileMode.Create, FileAccess.Write, FileShare.None);
-            pngData.SaveTo(output);
-            return fileName;
+            Directory.CreateDirectory(GetPhotosDirectory());
+
+            for (int attempt = 0; ; attempt++)
+            {
+                string photoId = MintExposurePhotoIdCandidate();
+                FileStream output;
+                try
+                {
+                    output = File.Open(GetPhotoPath(photoId), FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                }
+                catch (IOException) when (attempt < 4)
+                {
+                    continue;
+                }
+
+                using (output)
+                {
+                    pngData.SaveTo(output);
+                }
+                return photoId;
+            }
         }
     }
 }

@@ -181,7 +181,7 @@ namespace Photocore.PhotoSync.Runtime
             }
         }
 
-        private static bool TryWritePhotoBytes(string photoId, byte[] bytes, object? writeLock, out string? error)
+        private static bool TryWritePhotoBytes(string photoId, byte[] bytes, object? writeLock, bool skipIfExists, out string? error)
         {
             error = null;
 
@@ -192,13 +192,13 @@ namespace Photocore.PhotoSync.Runtime
 
                 if (writeLock == null)
                 {
-                    File.WriteAllBytes(outPath, bytes);
+                    WritePhotoBytesCore(outPath, bytes, skipIfExists);
                 }
                 else
                 {
                     lock (writeLock)
                     {
-                        File.WriteAllBytes(outPath, bytes);
+                        WritePhotoBytesCore(outPath, bytes, skipIfExists);
                     }
                 }
 
@@ -209,6 +209,16 @@ namespace Photocore.PhotoSync.Runtime
                 error = ex.Message;
                 return false;
             }
+        }
+
+        // Photos are immutable: once an id exists on the authoritative store it is never overwritten,
+        // so neither a random id collision between two clients nor a malicious client claiming an
+        // existing id can destroy another player's photo. Skipping counts as success, which keeps
+        // lost-ack upload retries idempotent (the bytes the retry would write are already there).
+        private static void WritePhotoBytesCore(string outPath, byte[] bytes, bool skipIfExists)
+        {
+            if (skipIfExists && File.Exists(outPath)) return;
+            File.WriteAllBytes(outPath, bytes);
         }
 
         internal static bool LooksLikePng(byte[] buffer, int totalSize)

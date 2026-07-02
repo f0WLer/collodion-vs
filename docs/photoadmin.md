@@ -30,6 +30,9 @@ space, e.g. `/photoadmin delete olderthan 90`.
 
 **`/photoadmin delete id <id[,id,...]> [confirm]`**
 Deletes specific photos by id, comma-separated with no spaces. Ignores the grace period.
+Each entry can be a full id or any unique fragment of one (at least 4 characters), so
+`delete id g8x4m2kd` finds `exposure_g8x4m2kd` on its own. A fragment matching more than one
+photo is skipped and reported rather than guessing.
 
 **`/photoadmin prune-index [confirm]`**
 Drops last-seen records whose photo file is already gone. Tidies the index; frees no image disk.

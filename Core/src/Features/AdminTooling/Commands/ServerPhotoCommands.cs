@@ -173,8 +173,8 @@ namespace Photocore.AdminTooling
             bool confirm = IsConfirm(args[1]);
             string[] ids = idsArg.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-            DeletePlan plan = svc.PlanByIds(ids, out List<string> missing);
-            return RunPlan(svc, plan, confirm, "by id", missing);
+            DeletePlan plan = svc.PlanByIds(ids, out List<string> missing, out List<string> ambiguous);
+            return RunPlan(svc, plan, confirm, "by id", missing, ambiguous);
         }
 
         private TextCommandResult OnPruneIndex(TextCommandCallingArgs args)
@@ -195,11 +195,13 @@ namespace Photocore.AdminTooling
             return TextCommandResult.Success($"photoadmin: pruned {removed} stale index row(s).");
         }
 
-        private TextCommandResult RunPlan(PhotoDiskAuditService svc, DeletePlan plan, bool confirm, string label, IReadOnlyList<string>? missing = null)
+        private TextCommandResult RunPlan(PhotoDiskAuditService svc, DeletePlan plan, bool confirm, string label, IReadOnlyList<string>? missing = null, IReadOnlyList<string>? ambiguous = null)
         {
             var sb = new StringBuilder();
             if (missing != null && missing.Count > 0)
                 sb.Append($"photoadmin: {missing.Count} id(s) not found and skipped: {string.Join(", ", missing)}\n");
+            if (ambiguous != null && ambiguous.Count > 0)
+                sb.Append($"photoadmin: {ambiguous.Count} fragment(s) matched multiple photos and were skipped (be more specific): {string.Join(", ", ambiguous)}\n");
 
             if (plan.IsEmpty)
             {

@@ -125,20 +125,44 @@ namespace Photocore.PhotoMetadata
             return DeletePlan.From(selected);
         }
 
-        // Specific ids (already normalized by the caller's parse). Explicit admin selection, so grace is
-        // intentionally bypassed. Ids with no matching on-disk file are reported via [missing].
-        internal static DeletePlan PlanByIds(IReadOnlyList<PhotoAuditRow> rows, IEnumerable<string> requestedIds, out List<string> missing)
+        // Below this length only exact matches count, so a stray short token can't select a photo
+        // by accident.
+        private const int MinSubstringFragmentLength = 4;
+
+        // Exact match is tried before substring resolution so a full id can never come back
+        // ambiguous. The substring fallback exists so an admin can type just the random tail of an
+        // id (git-style). Grace is intentionally bypassed — this is explicit admin selection. An
+        // ambiguous fragment is reported, never resolved to an arbitrary hit.
+        internal static DeletePlan PlanByIds(IReadOnlyList<PhotoAuditRow> rows, IEnumerable<string> requestedIds, out List<string> missing, out List<string> ambiguous)
         {
             var byId = rows.ToDictionary(r => r.Id, r => r, StringComparer.OrdinalIgnoreCase);
             var matched = new List<PhotoAuditRow>();
             missing = new List<string>();
+            ambiguous = new List<string>();
 
             foreach (string raw in requestedIds)
             {
                 string id = PhotoAssetStoragePaths.NormalizePhotoId(raw);
-                if (string.IsNullOrEmpty(id)) { missing.Add(raw); continue; }
-                if (byId.TryGetValue(id, out PhotoAuditRow row)) matched.Add(row);
-                else missing.Add(id);
+                if (!string.IsNullOrEmpty(id) && byId.TryGetValue(id, out PhotoAuditRow row))
+                {
+                    matched.Add(row);
+                    continue;
+                }
+
+                string fragment = (raw ?? string.Empty).Trim();
+                if (fragment.Length < MinSubstringFragmentLength)
+                {
+                    missing.Add(string.IsNullOrEmpty(id) ? fragment : id);
+                    continue;
+                }
+
+                List<PhotoAuditRow> hits = rows
+                    .Where(r => r.Id.Contains(fragment, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (hits.Count == 1) matched.Add(hits[0]);
+                else if (hits.Count > 1) ambiguous.Add(fragment);
+                else missing.Add(string.IsNullOrEmpty(id) ? fragment : id);
             }
             return DeletePlan.From(matched);
         }

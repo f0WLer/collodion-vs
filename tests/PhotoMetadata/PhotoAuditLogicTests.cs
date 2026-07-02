@@ -136,12 +136,79 @@ public class PhotoAuditLogicTests
         };
 
         // "keep" normalizes to "keep.png"; "gone.png" is absent; "../bad" normalizes to empty.
-        DeletePlan plan = PhotoAuditLogic.PlanByIds(rows, new[] { "keep", "gone.png", "../bad" }, out List<string> missing);
+        DeletePlan plan = PhotoAuditLogic.PlanByIds(rows, new[] { "keep", "gone.png", "../bad" }, out List<string> missing, out List<string> ambiguous);
 
         Assert.Equal(new[] { "keep.png" }, plan.Ids.ToArray());
         Assert.Equal(50, plan.TotalBytes);
         Assert.Contains("gone.png", missing);
         Assert.Contains("../bad", missing);
+        Assert.Empty(ambiguous);
+    }
+
+    [Fact]
+    public void PlanByIdsResolvesUniqueSubstringFragment()
+    {
+        var rows = new List<PhotoAuditRow>
+        {
+            Seen("exposure_g8x4m2kd.png", _now.AddDays(-1), size: 10),
+            Seen("exposure_2026-06-23_15-58-58_d9372891.png", _now.AddDays(-2), size: 20),
+        };
+
+        // Just the random tail — the git-style short form an admin actually types.
+        DeletePlan plan = PhotoAuditLogic.PlanByIds(rows, new[] { "g8x4m2kd", "d9372891" }, out List<string> missing, out List<string> ambiguous);
+
+        Assert.Equal(new[] { "exposure_g8x4m2kd.png", "exposure_2026-06-23_15-58-58_d9372891.png" }, plan.Ids.ToArray());
+        Assert.Empty(missing);
+        Assert.Empty(ambiguous);
+    }
+
+    [Fact]
+    public void PlanByIdsReportsAmbiguousFragmentInsteadOfPickingOne()
+    {
+        var rows = new List<PhotoAuditRow>
+        {
+            Seen("exposure_abcd1111.png", _now.AddDays(-1)),
+            Seen("exposure_abcd2222.png", _now.AddDays(-2)),
+        };
+
+        DeletePlan plan = PhotoAuditLogic.PlanByIds(rows, new[] { "abcd" }, out List<string> missing, out List<string> ambiguous);
+
+        Assert.True(plan.IsEmpty);
+        Assert.Empty(missing);
+        Assert.Equal(new[] { "abcd" }, ambiguous.ToArray());
+    }
+
+    [Fact]
+    public void PlanByIdsShortFragmentOnlyMatchesExactly()
+    {
+        var rows = new List<PhotoAuditRow>
+        {
+            Seen("exposure_abcd1111.png", _now.AddDays(-1)),
+        };
+
+        // 3 chars is below the substring floor: reported missing, never substring-matched.
+        DeletePlan plan = PhotoAuditLogic.PlanByIds(rows, new[] { "abc" }, out List<string> missing, out List<string> ambiguous);
+
+        Assert.True(plan.IsEmpty);
+        Assert.Single(missing);
+        Assert.Empty(ambiguous);
+    }
+
+    [Fact]
+    public void PlanByIdsExactMatchWinsOverSubstring()
+    {
+        var rows = new List<PhotoAuditRow>
+        {
+            Seen("exposure_abcd.png", _now.AddDays(-1), size: 10),
+            Seen("exposure_abcd1111.png", _now.AddDays(-2), size: 20),
+        };
+
+        // "exposure_abcd" is a full id AND a substring of the other row — exact must win, no ambiguity.
+        DeletePlan plan = PhotoAuditLogic.PlanByIds(rows, new[] { "exposure_abcd" }, out List<string> missing, out List<string> ambiguous);
+
+        Assert.Equal(new[] { "exposure_abcd.png" }, plan.Ids.ToArray());
+        Assert.Empty(missing);
+        Assert.Empty(ambiguous);
     }
 
     // ---- audit + stats ----

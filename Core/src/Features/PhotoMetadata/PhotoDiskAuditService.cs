@@ -95,10 +95,10 @@ namespace Photocore.PhotoMetadata
             return PhotoAuditLogic.PlanOlderThan(rows, days, nowUtc, _graceHours);
         }
 
-        internal DeletePlan PlanByIds(IEnumerable<string> ids, out List<string> missing)
+        internal DeletePlan PlanByIds(IEnumerable<string> ids, out List<string> missing, out List<string> ambiguous)
         {
             List<PhotoAuditRow> rows = BuildRows(out _);
-            return PhotoAuditLogic.PlanByIds(rows, ids, out missing);
+            return PhotoAuditLogic.PlanByIds(rows, ids, out missing, out ambiguous);
         }
 
         // Executes a delete plan: removes each source photo + its derived masks, and drops the index row.

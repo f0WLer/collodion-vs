@@ -1,5 +1,10 @@
 # Collodion -- v2.0.3 Changelog
 
+## Photo ids
+- **New photos get short ids** like `exposure_g8x4m2kd` instead of the old timestamped names. Existing photos keep their old ids and filenames -- everything already taken keeps working with no migration.
+- **`/photoadmin delete id` now accepts any unique part of an id**, so `delete id g8x4m2kd` (or the tail of an old-style id) works without typing the whole thing. If a fragment matches more than one photo, it's skipped and reported instead of guessing.
+- **The server no longer overwrites an existing photo file on upload.** Uploads for an id that already exists are acknowledged and ignored, so no upload -- accidental or malicious -- can replace another player's photo.
+
 ## Configuration
 - **Added optional support for the [ConfigLib](https://mods.vintagestory.at/configlib) mod.** If you have it installed, a chunk of `photocore.json`'s settings show up in its in-game GUI with tooltips and proper range validation, and changes apply immediately -- no relog needed. Nothing changes if it's not installed, just edit `photocore.json` by hand.
 - **Finishing effects (`Viewfinder.ApplyFinishingEffects`) are now the host's call in multiplayer**, not whichever client happens to be holding the camera.

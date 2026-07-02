@@ -135,7 +135,7 @@ namespace Photocore.PhotoSync.Runtime
                 return;
             }
 
-            if (!TryWritePhotoBytes(photoId, completed.Buffer, writeLock: null, out string? error))
+            if (!TryWritePhotoBytes(photoId, completed.Buffer, writeLock: null, skipIfExists: false, out string? error))
             {
                 Log.Warn(_mod.ClientApi.Logger, $"failed writing downloaded photo {photoId}: {error ?? "Unknown write error"}");
                 return;

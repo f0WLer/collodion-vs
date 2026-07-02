@@ -5,18 +5,11 @@ using Vintagestory.API.Config;
 
 namespace Kosphotography
 {
-    // Camera item backing the kosphotography timed/automatic cameras. Keeps the loaded/unloaded visual
-    // swap within its own code family (via the "cameraFamily" itemtype attribute) so a timed/automatic
-    // camera doesn't revert to the baseline manual camera when a plate is loaded, and adds a shutter-mode
-    // line to the tooltip.
+    // Camera item backing the kosphotography timed/automatic cameras: adds the shutter-mode line to
+    // the tooltip. The loaded/unloaded visual swap stays within the item's own code family via the
+    // "cameraFamily" itemtype attribute, which the base item resolves.
     public class ItemKosCamera : ItemFieldcamera
     {
-        private string FamilyStem => Attributes?["cameraFamily"].AsString("fieldcamera") ?? "fieldcamera";
-
-        internal override AssetLocation CameraBaseCode             => new AssetLocation(Code.Domain, FamilyStem);
-        internal override AssetLocation CameraLoadedSensitizedCode => new AssetLocation(Code.Domain, FamilyStem + "-loaded-silvered");
-        internal override AssetLocation CameraLoadedExposedCode    => new AssetLocation(Code.Domain, FamilyStem + "-loaded-exposed");
-
         public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);

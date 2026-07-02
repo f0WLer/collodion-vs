@@ -39,6 +39,14 @@
       "range": { "min": 10, "max": 86400 }
     },
     {
+      "code": "PhotoSync/PhotoDeleteGraceHours",
+      "ingui": "photocore:configlib-photodeletegracehours-name",
+      "comment": "photocore:configlib-photodeletegracehours-comment",
+      "type": "float",
+      "default": 24.0,
+      "range": { "min": 0.0, "max": 8760.0 }
+    },
+    {
       "type": "separator",
       "title": "photocore:configlib-section-plateprocessing"
     },

@@ -1,4 +1,6 @@
-﻿namespace Photocore.Configuration
+﻿using Newtonsoft.Json;
+
+namespace Photocore.Configuration
 {
     // Tunables for viewfinder zoom, hold-still scoring, and debug preview behavior.
     // Values are clamped in-place to keep runtime behavior stable.
@@ -19,11 +21,15 @@
         public const int MinMaxAccumulatedFrames = 256;
         public const int MaxMaxAccumulatedFrames = 600;
 
+        // Not persisted to photocore.json: no in-game way to change it, so it's a code-level tunable only.
+        [JsonIgnore]
         public float ZoomMultiplier = 0.65f;
         public int PhotoCaptureMaxDimension = DefaultPhotoCaptureMaxDimension;
 
         /// <summary>Max pixel size (longest side) of the downsampled readback buffer used during virtual exposure accumulation.
         /// Lower values reduce per-sample readback cost at the expense of slight softness in exported plates.</summary>
+        // Not persisted to photocore.json: no in-game way to change it, so it's a code-level tunable only.
+        [JsonIgnore]
         public int ExposureReadbackMaxDimension = DefaultExposureReadbackMaxDimension;
 
         /// <summary>
@@ -32,19 +38,29 @@
         /// it only lets an exposure run longer before auto-stopping.</summary>
         public int MaxAccumulatedFrames = DefaultMaxAccumulatedFrames;
 
+        // The 7 DebugPreview* fields below are dev-only (driven live by the ".photocore preview" chat
+        // command) and are intentionally not persisted to photocore.json -- that command's changes are
+        // session-only now, which is fine since it's not a player/server-op-facing feature.
         /// <summary>If true, keeps the debug preview visible when DebugPreviewPeak mode is active (dev-only).</summary>
+        [JsonIgnore]
         public bool DebugPreviewPeak = false;
         /// <summary>Refresh interval in milliseconds for the live viewfinder debug preview (lower = more CPU/GPU use).</summary>
+        [JsonIgnore]
         public int DebugPreviewRefreshMs = 500;
         /// <summary>Max pixel size of the source capture used for the debug preview (higher = sharper but slower).</summary>
+        [JsonIgnore]
         public int DebugPreviewMaxDimension = 480;
         /// <summary>Preview window width in screen pixels.</summary>
+        [JsonIgnore]
         public int DebugPreviewWidth = 360;
         /// <summary>Preview window height in screen pixels.</summary>
+        [JsonIgnore]
         public int DebugPreviewHeight = 360;
         /// <summary>Preview anchor position: topleft | topright | bottomleft | bottomright.</summary>
+        [JsonIgnore]
         public string DebugPreviewAnchor = "topleft";
         /// <summary>Margin in pixels from the selected anchor edge.</summary>
+        [JsonIgnore]
         public int DebugPreviewMargin = 16;
 
         /// <summary>

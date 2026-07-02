@@ -1,4 +1,4 @@
-﻿namespace Photocore.Configuration
+namespace Photocore.Configuration
 {
     public sealed class PhotoSyncConfig
     {
@@ -7,50 +7,26 @@
         /// any other value is floored at 10s so pings can't be configured into constant network chatter.</summary>
         public int PhotoSeenPingIntervalSeconds = 300;
 
-        /// <summary>Per-packet payload size for image sync. Lower = smaller packet bursts but more packets; higher = fewer packets but larger bursts.</summary>
-        public int ChunkSizeBytes = 24 * 1024;
-
-        /// <summary>Maximum allowed image transfer size for upload/download.</summary>
-        public int MaxTransferBytes = 2 * 1024 * 1024;
-
-        /// <summary>How often client prunes request/download bookkeeping state.</summary>
-        public int ClientStateCleanupIntervalMs = 15_000;
-
-        /// <summary>How long client request-dedupe entries are retained.</summary>
-        public float ClientRequestRetainSeconds = 300f;
-
-        /// <summary>Client timeout for incomplete incoming image assemblies.</summary>
-        public int ClientIncomingStaleMs = 120_000;
-
-        /// <summary>How often server checks in-progress uploads for stale assemblies.</summary>
-        public int ServerPruneIntervalMs = 30_000;
-
-        /// <summary>Server timeout for incomplete upload assemblies.</summary>
-        public int ServerUploadStaleMs = 120_000;
-
-        /// <summary>Maximum concurrent in-flight uploads accepted from one player. Excess uploads are dropped.</summary>
-        public int ServerMaxOpenUploadsPerPlayer = 2;
-
         /// <summary>Grace period, in real-world hours, before a source photo becomes eligible for /photoadmin
         /// age/count deletion. Photos whose first-seen (or file mtime, for never-seen files) is younger than
         /// this are never auto-selected, so a freshly-taken photo that no client has rendered yet is protected.
         /// Explicit "delete id" selection bypasses this. Default 24h.</summary>
         public double PhotoDeleteGraceHours = 24.0;
 
+        /// <summary>Network-tuning internals -- chunk/transfer sizing, cleanup intervals, per-player upload
+        /// limits. Most servers never need to touch these; kept separate from the settings above so the
+        /// difference is obvious at a glance.</summary>
+        public PhotoSyncAdvancedConfig Advanced = new();
+
         internal void ClampInPlace()
         {
             PhotoSeenPingIntervalSeconds = PhotoSeenPingIntervalSeconds <= 0
                 ? 0
                 : Math.Clamp(PhotoSeenPingIntervalSeconds, 10, 24 * 60 * 60);
-            ChunkSizeBytes = Math.Clamp(ChunkSizeBytes, 1024, 256 * 1024);
-            MaxTransferBytes = Math.Clamp(MaxTransferBytes, 16 * 1024, 32 * 1024 * 1024);
-            ClientStateCleanupIntervalMs = Math.Clamp(ClientStateCleanupIntervalMs, 250, 10 * 60 * 1000);
-            ClientRequestRetainSeconds = Math.Clamp(ClientRequestRetainSeconds, 0f, 24f * 60f * 60f);
-            ClientIncomingStaleMs = Math.Clamp(ClientIncomingStaleMs, 1000, 30 * 60 * 1000);
-            ServerPruneIntervalMs = Math.Clamp(ServerPruneIntervalMs, 250, 10 * 60 * 1000);
-            ServerUploadStaleMs = Math.Clamp(ServerUploadStaleMs, 1000, 30 * 60 * 1000);
-            ServerMaxOpenUploadsPerPlayer = Math.Clamp(ServerMaxOpenUploadsPerPlayer, 1, 32);
             PhotoDeleteGraceHours = Math.Clamp(PhotoDeleteGraceHours, 0.0, 8760.0); // cap at 1 year
+
+            Advanced ??= new PhotoSyncAdvancedConfig();
+            Advanced.ClampInPlace();
         }
     }
 }

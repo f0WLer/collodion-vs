@@ -184,7 +184,17 @@
     "photocore:configlib-section-photosync":                "Photo Sync",
     "photocore:configlib-photoseenpinginterval-name":         "Photo-seen ping interval",
     "photocore:configlib-photoseenpinginterval-comment":        "How often, in seconds, a client pings the server to confirm they're still viewing a photo (keeps /photoadmin's last-seen tracking accurate). 0 disables just the ping -- uploads/downloads still count as seen.",
+    "photocore:configlib-photodeletegracehours-name":         "Photo delete grace period (hours)",
+    "photocore:configlib-photodeletegracehours-comment":        "How many real-world hours a photo is protected from /photoadmin's age/count-based auto-deletion after it's first seen (or, for never-seen photos, after its file was created). 0 removes the grace period entirely.",
 
+    "photocore:configlib-section-viewfinder":                "Viewfinder",
+    "photocore:configlib-pausedryingduringexposure-name":      "Pause drying while exposing",
+    "photocore:configlib-pausedryingduringexposure-comment":     "When a plate is exposing (or paused mid-exposure), its drying clock stops ticking. The host's value decides whether drying actually pauses.",
+    "photocore:configlib-applyfinishingeffects-name":          "Apply finishing effects",
+    "photocore:configlib-applyfinishingeffects-comment":         "When on, film-look effects (grain, vignette, halation, dust, and the rest) get baked developed photos. The host's value decides whether effects are applied.",
+    "photocore:configlib-photocapturemaxdimension-name":       "Max photo resolution",
+    "photocore:configlib-photocapturemaxdimension-comment":      "The longest side, in pixels, of a captured photo. Higher means sharper photos, but bigger files and more sync traffic for everyone downloading them. The host's value decides the actual maximum dimension.",
+    
     "photocore:configlib-section-plateprocessing":          "Plate Processing",
     "photocore:configlib-chemicalunitsperuse-name":           "Chemical units per use",
     "photocore:configlib-chemicalunitsperuse-comment":          "How many developer/fixer/water units one tray pour uses up. Lower means cheaper processing. The host's value decides what actually gets consumed.",
@@ -205,14 +215,6 @@
     "photocore:configlib-fixerpourduration-name":             "Fixer pour duration",
     "photocore:configlib-fixerpourduration-comment":            "How long a fixer pour takes, in seconds. The host's value decides when it actually finishes.",
     "photocore:configlib-waterpourduration-name":             "Water pour duration",
-    "photocore:configlib-waterpourduration-comment":            "How long a water (reclaim) pour takes, in seconds. The host's value decides when it actually finishes.",
-
-    "photocore:configlib-section-viewfinder":                "Viewfinder",
-    "photocore:configlib-pausedryingduringexposure-name":      "Pause drying while exposing",
-    "photocore:configlib-pausedryingduringexposure-comment":     "When a plate is exposing (or paused mid-exposure), its drying clock stops ticking. The host's value decides whether drying actually pauses.",
-    "photocore:configlib-applyfinishingeffects-name":          "Apply finishing effects",
-    "photocore:configlib-applyfinishingeffects-comment":         "When on, film-look effects (grain, vignette, halation, dust, and the rest) get baked developed photos. The host's value decides whether effects are applied.",
-    "photocore:configlib-photocapturemaxdimension-name":       "Max photo resolution",
-    "photocore:configlib-photocapturemaxdimension-comment":      "The longest side, in pixels, of a captured photo. Higher means sharper photos, but bigger files and more sync traffic for everyone downloading them. The host's value decides the actual maximum dimension."
+    "photocore:configlib-waterpourduration-comment":            "How long a water (reclaim) pour takes, in seconds. The host's value decides when it actually finishes."
 }
 

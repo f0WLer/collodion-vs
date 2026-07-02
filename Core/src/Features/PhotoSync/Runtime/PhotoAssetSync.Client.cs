@@ -155,9 +155,9 @@ namespace Photocore.PhotoSync.Runtime
 
         private void ClientMaybeCleanupState(long nowMs, double nowSeconds)
         {
-            long cleanupIntervalMs = SyncCfg?.ClientStateCleanupIntervalMs ?? 15_000;
-            float requestRetainSeconds = SyncCfg?.ClientRequestRetainSeconds ?? 300f;
-            long incomingStaleMs = SyncCfg?.ClientIncomingStaleMs ?? 120_000;
+            long cleanupIntervalMs = SyncCfg?.Advanced?.ClientStateCleanupIntervalMs ?? 15_000;
+            float requestRetainSeconds = SyncCfg?.Advanced?.ClientRequestRetainSeconds ?? 300f;
+            long incomingStaleMs = SyncCfg?.Advanced?.ClientIncomingStaleMs ?? 120_000;
 
             if (nowMs - _clientLastStateCleanupMs < cleanupIntervalMs) return;
             _clientLastStateCleanupMs = nowMs;

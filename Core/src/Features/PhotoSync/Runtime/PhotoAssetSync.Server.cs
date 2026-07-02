@@ -34,14 +34,14 @@ namespace Photocore.PhotoSync.Runtime
 
         private int GetChunkSizeBytes()
         {
-            int size = SyncCfg?.ChunkSizeBytes ?? DefaultChunkSize;
+            int size = SyncCfg?.Advanced?.ChunkSizeBytes ?? DefaultChunkSize;
             if (size < 1024) size = 1024;
             return size;
         }
 
         private int GetMaxTransferBytes()
         {
-            int max = SyncCfg?.MaxTransferBytes ?? DefaultMaxBytes;
+            int max = SyncCfg?.Advanced?.MaxTransferBytes ?? DefaultMaxBytes;
             if (max < 16 * 1024) max = 16 * 1024;
             return max;
         }
@@ -135,8 +135,8 @@ namespace Photocore.PhotoSync.Runtime
 
         private void ServerMaybePruneIncoming(long nowMs)
         {
-            int pruneIntervalMs = SyncCfg?.ServerPruneIntervalMs ?? 30_000;
-            int uploadStaleMs = SyncCfg?.ServerUploadStaleMs ?? 120_000;
+            int pruneIntervalMs = SyncCfg?.Advanced?.ServerPruneIntervalMs ?? 30_000;
+            int uploadStaleMs = SyncCfg?.Advanced?.ServerUploadStaleMs ?? 120_000;
 
             lock (_serverIncomingLock)
             {
@@ -217,7 +217,7 @@ namespace Photocore.PhotoSync.Runtime
             }
             if (isNewAssembly)
             {
-                int maxOpen = SyncCfg?.ServerMaxOpenUploadsPerPlayer ?? 2;
+                int maxOpen = SyncCfg?.Advanced?.ServerMaxOpenUploadsPerPlayer ?? 2;
                 if (!ExpectedUploads.TryBeginUpload(playerUid, maxOpen))
                 {
                     SendServerTransferAck(fromPlayer, photoId, ok: false, isUpload: true, "Too many concurrent uploads");

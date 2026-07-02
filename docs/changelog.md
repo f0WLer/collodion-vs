@@ -1,14 +1,15 @@
 # Collodion -- v2.0.3 Changelog
 
-## Migration
+## Configuration
+- **Added optional support for the [ConfigLib](https://mods.vintagestory.at/configlib) mod.** If you have it installed, a chunk of `photocore.json`'s settings show up in its in-game GUI with tooltips and proper range validation, and changes apply immediately -- no relog needed. Nothing changes if it's not installed, just edit `photocore.json` by hand.
+- **Finishing effects (`Viewfinder.ApplyFinishingEffects`) are now the host's call in multiplayer**, not whichever client happens to be holding the camera.
+- **`PhotoSeenPingIntervalSeconds` moved from `Client` to `PhotoSync`** in `photocore.json`, since it's really about photo-sync traffic rather than a general client preference -- and the server now sets this interval itself instead of trusting whatever the client says. If you had it tuned away from the 300s default, you'll need to re-set it under `PhotoSync`; it won't carry over on its own.
+- **`ConsumePlainClothOnPolish` and `PlainClothConsumedPerPolish` are now just one setting, `ClothConsumedPerPolish`.** Set it to 0 to turn cloth consumption off (still the default), or to whatever amount you want consumed per polish. If you'd enabled the old pair, re-set the amount under the new name.
 
-No action needed coming from v2.0.2. One clarification missing from the v2.0.2 notes: the config file was renamed to `photocore.json` (from `collodion.json`, in the game's `ModConfig` folder) as part of that release's domain rename. **If you have tuned settings from v2.0.1 or earlier that you want to keep, copy them into `photocore.json` -- a fresh file with defaults is generated otherwise.**
-
-## Fixes
-- Installing collodion alongside a superset photography mod built on the same core no longer double-registers the shared items and network channel; the baseline mod now stands down and logs a warning so exactly one runs.
-
+## Misc
+- Default drying duration for plates was bumped to a 0.75 (45 minutes in-game).
 ## Under the hood
-- Internal restructuring passes (naming, file organization, and architecture conformance tests) with no gameplay changes.
+- Some internal restructuring (naming, file organization) -- no gameplay changes.
 
 # Collodion -- v2.0.2 Changelog
 

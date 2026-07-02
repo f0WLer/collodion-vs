@@ -1,8 +1,6 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Server;
 
-using Photocore.CameraCapture;
-
 namespace Photocore.CameraCapture
 {
     internal static class CameraCaptureChannelRegistration
@@ -21,21 +19,21 @@ namespace Photocore.CameraCapture
                 .RegisterMessageType(typeof(CameraRestPacket));
         }
 
-        // Registers CameraCapture config packet DTOs after sync packet DTOs to preserve existing wire order.
-        internal static INetworkChannel RegisterCameraCaptureConfigMessageTypes(INetworkChannel channel)
+        // Registers server config override packet DTOs after sync packet DTOs to preserve existing wire order.
+        internal static INetworkChannel RegisterServerConfigOverrideMessageTypes(INetworkChannel channel)
         {
             return channel
-                .RegisterMessageType(typeof(PhotoCaptureConfigRequestPacket))
-                .RegisterMessageType(typeof(PhotoCaptureConfigPacket));
+                .RegisterMessageType(typeof(ServerConfigOverrideRequestPacket))
+                .RegisterMessageType(typeof(ServerConfigOverridePacket));
         }
 
         internal static void ConfigureServerSyncHandlers(
             IServerNetworkChannel channel,
-            NetworkClientMessageHandler<PhotoCaptureConfigRequestPacket> onPhotoCaptureConfigRequested)
+            NetworkClientMessageHandler<ServerConfigOverrideRequestPacket> onServerConfigOverrideRequested)
         {
-            if (channel == null || onPhotoCaptureConfigRequested == null) return;
+            if (channel == null || onServerConfigOverrideRequested == null) return;
 
-            channel.SetMessageHandler<PhotoCaptureConfigRequestPacket>(onPhotoCaptureConfigRequested);
+            channel.SetMessageHandler<ServerConfigOverrideRequestPacket>(onServerConfigOverrideRequested);
         }
     }
 }

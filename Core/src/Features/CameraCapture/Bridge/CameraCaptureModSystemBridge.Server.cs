@@ -1,7 +1,6 @@
 ﻿using Vintagestory.API.Server;
 
 using Photocore.Configuration;
-using Photocore.CameraCapture;
 
 namespace Photocore.CameraCapture
 {
@@ -12,7 +11,7 @@ namespace Photocore.CameraCapture
         {
             ConfigureServerCameraCaptureCore(api);
             ConfigureServerCameraCaptureSyncHandlers();
-            BroadcastServerCameraCaptureConfig(api);
+            BroadcastServerConfigOverride(api);
         }
 
         private void ConfigureServerCameraCaptureCore(ICoreServerAPI api)
@@ -29,33 +28,29 @@ namespace Photocore.CameraCapture
             _owner.PhotoSyncModSystemBridge.ConfigureServerPhotoSeenChannelHandler();
             CameraCaptureChannelRegistration.ConfigureServerSyncHandlers(
                 ServerChannel,
-                (player, p) => OnPhotoCaptureConfigRequested(player));
+                (player, p) => OnServerConfigOverrideRequested(player));
         }
-        private void BroadcastServerCameraCaptureConfig(ICoreServerAPI api)
+        private void BroadcastServerConfigOverride(ICoreServerAPI api)
         {
             // Send once on startup for currently connected players (mainly relevant on hot-reload).
             foreach (IServerPlayer player in api.World.AllOnlinePlayers)
             {
-                OnPhotoCaptureConfigRequested(player);
+                OnServerConfigOverrideRequested(player);
             }
         }
 
-        private void OnPhotoCaptureConfigRequested(IServerPlayer? player)
+        private void OnServerConfigOverrideRequested(IServerPlayer? player)
         {
             if (player == null || ServerChannel == null) return;
 
-            int maxDimension = GetServerPhotoCaptureMaxDimension();
-            ServerChannel.SendPacket(new PhotoCaptureConfigPacket
-            {
-                MaxDimension = maxDimension
-            }, player);
-        }
-
-        private int GetServerPhotoCaptureMaxDimension()
-        {
             Config = ConfigLifecycle.EnsureNormalized(Config);
             Config.Viewfinder.ClampInPlace();
-            return Config.Viewfinder.PhotoCaptureMaxDimension;
+            ServerChannel.SendPacket(new ServerConfigOverridePacket
+            {
+                MaxDimension = Config.Viewfinder.PhotoCaptureMaxDimension,
+                ApplyFinishingEffects = Config.Viewfinder.ApplyFinishingEffects,
+                PhotoSeenPingIntervalSeconds = Config.PhotoSync.PhotoSeenPingIntervalSeconds
+            }, player);
         }
     }
 }

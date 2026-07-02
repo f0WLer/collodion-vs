@@ -9,7 +9,7 @@
         public PhotoSyncConfig PhotoSync = new();
 
         // Viewfinder capture behavior (capture runs client-side; server provides authoritative limits in multiplayer).
-        internal ViewfinderConfig Viewfinder = new();
+        public ViewfinderConfig Viewfinder = new();
 
         // Timed interaction configuration (shared by client/server).
         public DevelopmentTrayInteractionConfig DevelopmentTrayInteractions = new();
@@ -18,7 +18,6 @@
         internal void ClampInPlace()
         {
             Client ??= new PhotocoreClientConfig();
-            Client.ClampInPlace();
 
             PlateProcessing ??= new PlateProcessingConfig();
             PlateProcessing.ClampInPlace();

@@ -1,6 +1,4 @@
 ﻿using Photocore.PhotoMetadata;
-using Photocore.PhotoSync;
-
 
 namespace Photocore.PhotoSync.Integration
 {
@@ -27,7 +25,7 @@ namespace Photocore.PhotoSync.Integration
         {
             if (_owner.ClientApi == null || _owner.ClientChannel == null) return;
 
-            int intervalSeconds = _owner.ClientConfig?.PhotoSeenPingIntervalSeconds ?? 0;
+            int intervalSeconds = _owner.Config?.PhotoSync?.PhotoSeenPingIntervalSeconds ?? 0;
             if (intervalSeconds <= 0) return;
 
             photoId = PhotoAssetStoragePaths.NormalizePhotoId(photoId);

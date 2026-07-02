@@ -13,7 +13,11 @@
         public const int DefaultExposureReadbackMaxDimension = 640;
 
         public const int DefaultMaxAccumulatedFrames = 400;
-        public const int MaxMaxAccumulatedFrames = 800;
+        // 256 = double Chloride's 128-sample exposure (the highest SampleCount among EmulsionProfile
+        // entries) — keeps the floor from ever locking a chemistry profile out of completing a normal
+        // exposure, including profiles not yet exposed by the baseline head.
+        public const int MinMaxAccumulatedFrames = 256;
+        public const int MaxMaxAccumulatedFrames = 600;
 
         public float ZoomMultiplier = 0.65f;
         public int PhotoCaptureMaxDimension = DefaultPhotoCaptureMaxDimension;
@@ -23,8 +27,9 @@
         public int ExposureReadbackMaxDimension = DefaultExposureReadbackMaxDimension;
 
         /// <summary>
-        /// Max number of accumulated frames allowed during a single exposure. Higher values allow longer exposures and more
-        /// gradual transitions, but increase memory usage and risk of OOM crashes on lower-end hardware.</summary>
+        /// Max number of accumulated frames allowed during a single exposure. The accumulation buffer is a
+        /// fixed Width x Height GPU target regardless of this value, so raising it doesn't cost extra memory —
+        /// it only lets an exposure run longer before auto-stopping.</summary>
         public int MaxAccumulatedFrames = DefaultMaxAccumulatedFrames;
 
         /// <summary>If true, keeps the debug preview visible when DebugPreviewPeak mode is active (dev-only).</summary>
@@ -62,7 +67,7 @@
             ZoomMultiplier = Math.Clamp(ZoomMultiplier, 0.2f, 1f);
             PhotoCaptureMaxDimension = Math.Clamp(PhotoCaptureMaxDimension, MinPhotoCaptureMaxDimension, MaxPhotoCaptureMaxDimension);
             ExposureReadbackMaxDimension = Math.Clamp(ExposureReadbackMaxDimension, MinExposureReadbackMaxDimension, MaxExposureReadbackMaxDimension);
-            MaxAccumulatedFrames = Math.Clamp(MaxAccumulatedFrames, 1, MaxMaxAccumulatedFrames);
+            MaxAccumulatedFrames = Math.Clamp(MaxAccumulatedFrames, MinMaxAccumulatedFrames, MaxMaxAccumulatedFrames);
             DebugPreviewRefreshMs = Math.Clamp(DebugPreviewRefreshMs, 50, 5000);
             DebugPreviewMaxDimension = Math.Clamp(DebugPreviewMaxDimension, MinPhotoCaptureMaxDimension, MaxPhotoCaptureMaxDimension);
             DebugPreviewWidth = Math.Clamp(DebugPreviewWidth, 64, 1024);

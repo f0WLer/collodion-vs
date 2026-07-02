@@ -6,8 +6,10 @@ namespace Photocore.Configuration
     // Normalizes config trees consistently and keeps load/store error handling in one place.
     internal static class ConfigLifecycle
     {
-        // Loads persisted config, falling back to defaults when missing/invalid.
-        // Newly created defaults are persisted best-effort.
+        // Loads persisted config, falling back to defaults when missing/invalid. Always rewrites the
+        // file after normalizing so its on-disk shape stays complete (e.g. a newly added field appears
+        // for existing players too) — needed for external tools like ConfigLib that bind directly to
+        // this file's paths rather than going through EnsureNormalized/ClampInPlace themselves.
         internal static PhotocoreConfig LoadOrCreate(ICoreAPICommon api, string fileName)
         {
             PhotocoreConfig? cfg;
@@ -20,13 +22,8 @@ namespace Photocore.Configuration
                 cfg = null;
             }
 
-            bool createdDefault = cfg == null;
             cfg = EnsureNormalized(cfg);
-
-            if (createdDefault)
-            {
-                TryStore(api, fileName, cfg);
-            }
+            TryStore(api, fileName, cfg);
 
             return cfg;
         }

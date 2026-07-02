@@ -2,7 +2,6 @@
 using Vintagestory.API.Client;
 
 using Photocore.Configuration;
-using Photocore.CameraCapture;
 
 namespace Photocore.CameraCapture
 {
@@ -55,7 +54,7 @@ namespace Photocore.CameraCapture
 
             _owner.PhotoSyncModSystemBridge.ConfigureClientPhotoSyncTransferChannelHandlers();
             _owner.AdminToolingBridge.ConfigureClientDevelopPermissionChannelHandler();
-            ClientChannel.SetMessageHandler<PhotoCaptureConfigPacket>(OnPhotoCaptureConfigReceived);
+            ClientChannel.SetMessageHandler<ServerConfigOverridePacket>(OnServerConfigOverrideReceived);
         }
 
         private void ConfigureClientCameraCaptureRenderers(ICoreClientAPI api)
@@ -75,38 +74,53 @@ namespace Photocore.CameraCapture
 
             // Some load orders/world joins invoke StartClientSide before the channel reports connected.
             // Defer send until connected so startup never aborts.
-            TrySendPhotoCaptureConfigRequest(api);
+            TrySendServerConfigOverrideRequest(api);
         }
 
-        private long? _clientCaptureConfigRetryTickListenerId;
+        private long? _clientConfigOverrideRetryTickListenerId;
 
-        private void OnPhotoCaptureConfigReceived(PhotoCaptureConfigPacket packet)
+        // Cached so a later local reload (e.g. a ConfigLib edit) can re-pin these to the server's value
+        // in multiplayer instead of letting a joining player's own local file value leak back in —
+        // see ConfigLibIntegration.ReapplyConfig.
+        internal int? ServerPhotoCaptureMaxDimensionOverride { get; private set; }
+        internal bool? ServerApplyFinishingEffectsOverride { get; private set; }
+        internal int? ServerPhotoSeenPingIntervalSecondsOverride { get; private set; }
+
+        private void OnServerConfigOverrideReceived(ServerConfigOverridePacket packet)
         {
             if (packet == null) return;
 
             Config = ConfigLifecycle.EnsureNormalized(Config);
             Config.Viewfinder.PhotoCaptureMaxDimension = packet.MaxDimension;
+            Config.Viewfinder.ApplyFinishingEffects = packet.ApplyFinishingEffects;
             Config.Viewfinder.ClampInPlace();
+
+            Config.PhotoSync.PhotoSeenPingIntervalSeconds = packet.PhotoSeenPingIntervalSeconds;
+            Config.PhotoSync.ClampInPlace();
+
+            ServerPhotoCaptureMaxDimensionOverride = packet.MaxDimension;
+            ServerApplyFinishingEffectsOverride = packet.ApplyFinishingEffects;
+            ServerPhotoSeenPingIntervalSecondsOverride = packet.PhotoSeenPingIntervalSeconds;
         }
 
-        private void TrySendPhotoCaptureConfigRequest(ICoreClientAPI capi)
+        private void TrySendServerConfigOverrideRequest(ICoreClientAPI capi)
         {
-            if (TrySendPhotoCaptureConfigRequestNow())
+            if (TrySendServerConfigOverrideRequestNow())
             {
-                UnregisterClientCaptureConfigRetry(capi, "unregister immediate capture config retry listener");
+                UnregisterClientConfigOverrideRetry(capi, "unregister immediate config override retry listener");
                 return;
             }
 
-            EnsureClientCaptureConfigRetry(capi);
+            EnsureClientConfigOverrideRetry(capi);
         }
 
-        private bool TrySendPhotoCaptureConfigRequestNow()
+        private bool TrySendServerConfigOverrideRequestNow()
         {
             if (ClientChannel == null || !ClientChannel.Connected) return false;
 
             try
             {
-                ClientChannel.SendPacket(new PhotoCaptureConfigRequestPacket());
+                ClientChannel.SendPacket(new ServerConfigOverrideRequestPacket());
                 return true;
             }
             catch
@@ -115,25 +129,25 @@ namespace Photocore.CameraCapture
             }
         }
 
-        private void EnsureClientCaptureConfigRetry(ICoreClientAPI capi)
+        private void EnsureClientConfigOverrideRetry(ICoreClientAPI capi)
         {
-            if (_clientCaptureConfigRetryTickListenerId.HasValue && _clientCaptureConfigRetryTickListenerId.Value > 0) return;
+            if (_clientConfigOverrideRetryTickListenerId.HasValue && _clientConfigOverrideRetryTickListenerId.Value > 0) return;
 
-            _clientCaptureConfigRetryTickListenerId = capi.Event.RegisterGameTickListener(_ =>
+            _clientConfigOverrideRetryTickListenerId = capi.Event.RegisterGameTickListener(_ =>
             {
-                if (!TrySendPhotoCaptureConfigRequestNow()) return;
+                if (!TrySendServerConfigOverrideRequestNow()) return;
 
-                UnregisterClientCaptureConfigRetry(capi, "unregister delayed capture config retry listener");
+                UnregisterClientConfigOverrideRetry(capi, "unregister delayed config override retry listener");
             }, 200, 200);
         }
 
-        private void UnregisterClientCaptureConfigRetry(ICoreClientAPI capi, string operation)
+        private void UnregisterClientConfigOverrideRetry(ICoreClientAPI capi, string operation)
         {
-            if (!_clientCaptureConfigRetryTickListenerId.HasValue || _clientCaptureConfigRetryTickListenerId.Value <= 0) return;
+            if (!_clientConfigOverrideRetryTickListenerId.HasValue || _clientConfigOverrideRetryTickListenerId.Value <= 0) return;
 
-            long id = _clientCaptureConfigRetryTickListenerId.Value;
+            long id = _clientConfigOverrideRetryTickListenerId.Value;
             BestEffort.Try(BestEffortLogger, operation, () => capi.Event.UnregisterGameTickListener(id));
-            _clientCaptureConfigRetryTickListenerId = null;
+            _clientConfigOverrideRetryTickListenerId = null;
         }
         internal void DisposeClientCameraCaptureRenderers()
         {
@@ -175,7 +189,7 @@ namespace Photocore.CameraCapture
         internal void DisposeClientCameraCaptureTickListeners()
         {
             if (ClientApi == null) return;
-            UnregisterClientCaptureConfigRetry(ClientApi, "unregister capture config retry tick listener");
+            UnregisterClientConfigOverrideRetry(ClientApi, "unregister config override retry tick listener");
         }
 
         internal void ClearClientCameraCaptureRuntimeReferences()

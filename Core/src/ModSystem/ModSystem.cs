@@ -106,7 +106,7 @@ namespace Photocore
             // Register Network Channel
             var channel = CameraCaptureChannelRegistration.RegisterCameraCaptureMessageTypes(api.Network.RegisterChannel("photocore"));
 
-            CameraCaptureChannelRegistration.RegisterCameraCaptureConfigMessageTypes(PhotoSyncModSystemBridge.RegisterPhotoSyncMessageTypes(channel));
+            CameraCaptureChannelRegistration.RegisterServerConfigOverrideMessageTypes(PhotoSyncModSystemBridge.RegisterPhotoSyncMessageTypes(channel));
             AdminToolingChannelRegistration.RegisterAdminToolingMessageTypes(channel);
         }
 

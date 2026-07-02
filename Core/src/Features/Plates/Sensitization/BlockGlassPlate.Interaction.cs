@@ -184,7 +184,7 @@ namespace Photocore.Plates
             if (cleanBlock == null) return false;
 
             bool isCreative = byPlayer.WorldData?.CurrentGameMode == EnumGameMode.Creative;
-            int consumeCount = GetPlainClothConsumeCount();
+            int consumeCount = GetClothConsumeCount();
             ItemSlot? activeSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
             if (!isCreative && consumeCount > 0)
             {

@@ -11,13 +11,10 @@
         /// <summary>Hold duration for one clean-plate sensitization pour interaction. 0 = instant.</summary>
         public float SensitizationPourSeconds = 1.5f;
 
-        /// <summary>If true, polishing consumes plain cloth per action.</summary>
-        public bool ConsumePlainClothOnPolish = false;
+        /// <summary>Cloth consumed per polish action. 0 disables cloth consumption entirely.</summary>
+        public int ClothConsumedPerPolish = 0;
 
-        /// <summary>Plain cloth consumed per polish when ConsumePlainClothOnPolish is true.</summary>
-        public int PlainClothConsumedPerPolish = 1;
-
-        /// <summary>How long a freshly-sensitized plate stays wet, in in-game hours. This is affected by the world's time speed. Default 0.66 (40 minutes). Server-authoritative.</summary>
+        /// <summary>How long a freshly-sensitized plate stays wet, in in-game hours. This is affected by the world's time speed. Default 0.66 (40 minutes). Floored at 0.5 (30 minutes) so plates can't be configured into drying out almost instantly. Server-authoritative.</summary>
         public double WetDurationHours = 0.66;
 
         /// <summary>How fast plates dry while inside a plate box. 0 = paused (default), 1 = full open-air rate.</summary>
@@ -28,8 +25,8 @@
             DevelopmentTrayChemicalUnitsPerUse = Math.Clamp(DevelopmentTrayChemicalUnitsPerUse, 1, 5000);
             PolishSeconds = Math.Clamp(PolishSeconds, 0f, 30f);
             SensitizationPourSeconds = Math.Clamp(SensitizationPourSeconds, 0f, 30f);
-            PlainClothConsumedPerPolish = Math.Clamp(PlainClothConsumedPerPolish, 0, 64);
-            WetDurationHours = Math.Clamp(WetDurationHours, 0.01, 720.0);
+            ClothConsumedPerPolish = Math.Clamp(ClothConsumedPerPolish, 0, 64);
+            WetDurationHours = Math.Clamp(WetDurationHours, 0.5, 720.0);
             PlateBoxDryingMultiplier = Math.Clamp(PlateBoxDryingMultiplier, 0f, 1f);
         }
     }

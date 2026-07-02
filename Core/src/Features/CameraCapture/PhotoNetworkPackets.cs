@@ -12,14 +12,25 @@ namespace Photocore.CameraCapture
     }
 
     [ProtoContract]
-    public class PhotoCaptureConfigPacket
+    public class ServerConfigOverridePacket
     {
         [ProtoMember(1)]
         public int MaxDimension { get; set; }
+        // Whether finishing effects (grain, vignette, halation, etc.) get baked into developed photos.
+        // Photos are permanent and visible to every player, so this is server-authoritative in
+        // multiplayer rather than left to whichever client happens to capture — see
+        // CameraCaptureModSystemBridge.Server.cs / .Client.cs.
+        [ProtoMember(2)]
+        public bool ApplyFinishingEffects { get; set; }
+        // How often the client should ping the server that it has seen a photo. A malicious/modified
+        // client could ignore its own local value and spam pings, so the server dictates this rather
+        // than trusting whatever the client claims — see CameraCaptureModSystemBridge.Server.cs / .Client.cs.
+        [ProtoMember(3)]
+        public int PhotoSeenPingIntervalSeconds { get; set; }
     }
 
     [ProtoContract]
-    public class PhotoCaptureConfigRequestPacket { }
+    public class ServerConfigOverrideRequestPacket { }
 
     [ProtoContract]
     public class CameraTripodPacket

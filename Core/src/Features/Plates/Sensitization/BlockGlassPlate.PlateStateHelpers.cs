@@ -40,11 +40,9 @@ namespace Photocore.Plates
             return seconds;
         }
 
-        private int GetPlainClothConsumeCount()
+        private int GetClothConsumeCount()
         {
-            if (PlateCfg?.ConsumePlainClothOnPolish != true) return 0;
-
-            int amount = PlateCfg.PlainClothConsumedPerPolish;
+            int amount = PlateCfg?.ClothConsumedPerPolish ?? 0;
             if (amount < 0) amount = 0;
             return amount;
         }

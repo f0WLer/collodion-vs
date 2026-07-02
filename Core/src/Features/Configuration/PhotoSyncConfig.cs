@@ -2,6 +2,11 @@
 {
     public sealed class PhotoSyncConfig
     {
+        /// <summary>How often the client sends a "photo seen" ping to the server for the currently
+        /// viewed photo (keeps the server's last-seen index fresh for /photoadmin). 0 disables pings;
+        /// any other value is floored at 10s so pings can't be configured into constant network chatter.</summary>
+        public int PhotoSeenPingIntervalSeconds = 300;
+
         /// <summary>Per-packet payload size for image sync. Lower = smaller packet bursts but more packets; higher = fewer packets but larger bursts.</summary>
         public int ChunkSizeBytes = 24 * 1024;
 
@@ -34,6 +39,9 @@
 
         internal void ClampInPlace()
         {
+            PhotoSeenPingIntervalSeconds = PhotoSeenPingIntervalSeconds <= 0
+                ? 0
+                : Math.Clamp(PhotoSeenPingIntervalSeconds, 10, 24 * 60 * 60);
             ChunkSizeBytes = Math.Clamp(ChunkSizeBytes, 1024, 256 * 1024);
             MaxTransferBytes = Math.Clamp(MaxTransferBytes, 16 * 1024, 32 * 1024 * 1024);
             ClientStateCleanupIntervalMs = Math.Clamp(ClientStateCleanupIntervalMs, 250, 10 * 60 * 1000);

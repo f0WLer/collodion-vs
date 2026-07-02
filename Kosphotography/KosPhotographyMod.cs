@@ -12,10 +12,13 @@ namespace Kosphotography
     // PhotocoreModSystem (via base.Start/StartClientSide/StartServerSide) and adds the timed/automatic
     // camera item class plus the shutter stop-policy provider, config UI, and duration packet. Install
     // instead of collodion, not alongside it — PhotocoreModSystem.ShouldLoad stands the baseline head down
-    // when this derived head is present, so exactly one head registers.
+    // when this derived head is present (via HeadPrecedence), so exactly one head registers.
     public class KosPhotographyMod : PhotocoreModSystem
     {
         public const string KosChannelName = "kosphotography";
+
+        // Wins over the precedence-0 baseline head on a dual install (see PhotocoreModSystem.ShouldLoad).
+        protected override int HeadPrecedence => 1;
 
         private IClientNetworkChannel? _kosClientChannel;
 

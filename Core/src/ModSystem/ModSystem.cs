@@ -43,6 +43,39 @@ namespace Photocore
         public IServerNetworkChannel? ServerChannel;
         internal ICoreClientAPI? ClientApi;
 
+        // Precedence among photocore heads when more than one is installed. Superset heads override
+        // with a higher value so a dual install degrades to the superset running alone instead of both
+        // heads double-registering the shared item/block classes and the "photocore" network channel.
+        protected virtual int HeadPrecedence => 0;
+
+        private bool _loggedStandDown;
+
+        // Stands this head down when a higher-precedence photocore head is also installed. Ties are
+        // broken by modid so at most one head ever runs. Core stays head-agnostic: it only compares
+        // precedence values and modids read at runtime, never a hardcoded head identity.
+        public override bool ShouldLoad(ICoreAPI api)
+        {
+            foreach (ModSystem system in api.ModLoader.Systems)
+            {
+                if (system is not PhotocoreModSystem other || ReferenceEquals(other, this)) continue;
+
+                bool otherWins = other.HeadPrecedence > HeadPrecedence
+                    || (other.HeadPrecedence == HeadPrecedence
+                        && string.CompareOrdinal(other.Mod?.Info?.ModID, Mod?.Info?.ModID) < 0);
+                if (!otherWins) continue;
+
+                if (!_loggedStandDown)
+                {
+                    _loggedStandDown = true;
+                    api.Logger.Warning(
+                        "Standing down photography head '{0}': head '{1}' is also installed and takes precedence. Remove one of the two mods.",
+                        Mod?.Info?.ModID, other.Mod?.Info?.ModID);
+                }
+                return false;
+            }
+            return base.ShouldLoad(api);
+        }
+
         // Registers shared item/block classes and packet types used by both client and server startup paths.
         public override void Start(ICoreAPI api)
         {

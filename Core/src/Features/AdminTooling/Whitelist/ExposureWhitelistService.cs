@@ -4,7 +4,7 @@ namespace Photocore.AdminTooling.Whitelist
 {
     // Server-side owner of the develop-whitelist: in-memory state + immediate persistence. Admin
     // mutations are rare, so each change writes the small JSON file synchronously (no dirty/flush tick,
-    // unlike the high-churn last-seen index). The actual allow decision is the pure ExposureWhitelistLogic.
+    // unlike the high-churn last-seen index). The allow decision itself is the pure ComputeAllowed.
     internal sealed class ExposureWhitelistService
     {
         private readonly ICoreServerAPI _sapi;
@@ -45,12 +45,17 @@ namespace Photocore.AdminTooling.Whitelist
 
         internal int Count => _state.Players.Count;
 
-        // Authoritative per-player develop permission. When the whitelist is off everyone develops;
+        // Authoritative develop-permission policy. When the whitelist is off everyone develops;
         // when on, operators (always — so they can't lock themselves out) and explicit members do.
+        internal static bool ComputeAllowed(bool enabled, bool isOperator, bool isListed)
+            => !enabled || isOperator || isListed;
+
         internal bool IsAllowed(IServerPlayer player)
         {
-            if (player == null || !_state.Enabled) return true;
-            return player.HasPrivilege(Privilege.controlserver) || _state.Players.ContainsKey(player.PlayerUID);
+            if (player == null) return true;
+            return ComputeAllowed(_state.Enabled,
+                player.HasPrivilege(Privilege.controlserver),
+                _state.Players.ContainsKey(player.PlayerUID));
         }
 
         internal bool Contains(string playerUid)

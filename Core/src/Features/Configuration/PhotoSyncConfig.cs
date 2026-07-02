@@ -34,32 +34,15 @@
 
         internal void ClampInPlace()
         {
-            if (ChunkSizeBytes < 1024) ChunkSizeBytes = 1024;
-            if (ChunkSizeBytes > 256 * 1024) ChunkSizeBytes = 256 * 1024;
-
-            if (MaxTransferBytes < 16 * 1024) MaxTransferBytes = 16 * 1024;
-            if (MaxTransferBytes > 32 * 1024 * 1024) MaxTransferBytes = 32 * 1024 * 1024;
-
-            if (ClientStateCleanupIntervalMs < 250) ClientStateCleanupIntervalMs = 250;
-            if (ClientStateCleanupIntervalMs > 10 * 60 * 1000) ClientStateCleanupIntervalMs = 10 * 60 * 1000;
-
-            if (ClientRequestRetainSeconds < 0f) ClientRequestRetainSeconds = 0f;
-            if (ClientRequestRetainSeconds > 24f * 60f * 60f) ClientRequestRetainSeconds = 24f * 60f * 60f;
-
-            if (ClientIncomingStaleMs < 1000) ClientIncomingStaleMs = 1000;
-            if (ClientIncomingStaleMs > 30 * 60 * 1000) ClientIncomingStaleMs = 30 * 60 * 1000;
-
-            if (ServerPruneIntervalMs < 250) ServerPruneIntervalMs = 250;
-            if (ServerPruneIntervalMs > 10 * 60 * 1000) ServerPruneIntervalMs = 10 * 60 * 1000;
-
-            if (ServerUploadStaleMs < 1000) ServerUploadStaleMs = 1000;
-            if (ServerUploadStaleMs > 30 * 60 * 1000) ServerUploadStaleMs = 30 * 60 * 1000;
-
-            if (ServerMaxOpenUploadsPerPlayer < 1) ServerMaxOpenUploadsPerPlayer = 1;
-            if (ServerMaxOpenUploadsPerPlayer > 32) ServerMaxOpenUploadsPerPlayer = 32;
-
-            if (PhotoDeleteGraceHours < 0.0) PhotoDeleteGraceHours = 0.0;
-            if (PhotoDeleteGraceHours > 8760.0) PhotoDeleteGraceHours = 8760.0; // cap at 1 year
+            ChunkSizeBytes = Math.Clamp(ChunkSizeBytes, 1024, 256 * 1024);
+            MaxTransferBytes = Math.Clamp(MaxTransferBytes, 16 * 1024, 32 * 1024 * 1024);
+            ClientStateCleanupIntervalMs = Math.Clamp(ClientStateCleanupIntervalMs, 250, 10 * 60 * 1000);
+            ClientRequestRetainSeconds = Math.Clamp(ClientRequestRetainSeconds, 0f, 24f * 60f * 60f);
+            ClientIncomingStaleMs = Math.Clamp(ClientIncomingStaleMs, 1000, 30 * 60 * 1000);
+            ServerPruneIntervalMs = Math.Clamp(ServerPruneIntervalMs, 250, 10 * 60 * 1000);
+            ServerUploadStaleMs = Math.Clamp(ServerUploadStaleMs, 1000, 30 * 60 * 1000);
+            ServerMaxOpenUploadsPerPlayer = Math.Clamp(ServerMaxOpenUploadsPerPlayer, 1, 32);
+            PhotoDeleteGraceHours = Math.Clamp(PhotoDeleteGraceHours, 0.0, 8760.0); // cap at 1 year
         }
     }
 }

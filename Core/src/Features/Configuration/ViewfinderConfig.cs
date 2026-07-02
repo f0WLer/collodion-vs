@@ -59,32 +59,15 @@
         // Clamps all viewfinder and preview tuning values to safe runtime ranges.
         internal void ClampInPlace()
         {
-            if (ZoomMultiplier < 0.2f) ZoomMultiplier = 0.2f;
-            if (ZoomMultiplier > 1f) ZoomMultiplier = 1f;
-
-            if (PhotoCaptureMaxDimension < MinPhotoCaptureMaxDimension) PhotoCaptureMaxDimension = MinPhotoCaptureMaxDimension;
-            if (PhotoCaptureMaxDimension > MaxPhotoCaptureMaxDimension) PhotoCaptureMaxDimension = MaxPhotoCaptureMaxDimension;
-
-            if (ExposureReadbackMaxDimension < MinExposureReadbackMaxDimension) ExposureReadbackMaxDimension = MinExposureReadbackMaxDimension;
-            if (ExposureReadbackMaxDimension > MaxExposureReadbackMaxDimension) ExposureReadbackMaxDimension = MaxExposureReadbackMaxDimension;
-
-            if (MaxAccumulatedFrames < 1) MaxAccumulatedFrames = 1;
-            if (MaxAccumulatedFrames > MaxMaxAccumulatedFrames) MaxAccumulatedFrames = MaxMaxAccumulatedFrames;
-            
-            if (DebugPreviewRefreshMs < 50) DebugPreviewRefreshMs = 50;
-            if (DebugPreviewRefreshMs > 5000) DebugPreviewRefreshMs = 5000;
-
-            if (DebugPreviewMaxDimension < MinPhotoCaptureMaxDimension) DebugPreviewMaxDimension = MinPhotoCaptureMaxDimension;
-            if (DebugPreviewMaxDimension > MaxPhotoCaptureMaxDimension) DebugPreviewMaxDimension = MaxPhotoCaptureMaxDimension;
-
-            if (DebugPreviewWidth < 64) DebugPreviewWidth = 64;
-            if (DebugPreviewWidth > 1024) DebugPreviewWidth = 1024;
-
-            if (DebugPreviewHeight < 64) DebugPreviewHeight = 64;
-            if (DebugPreviewHeight > 1024) DebugPreviewHeight = 1024;
-
-            if (DebugPreviewMargin < 0) DebugPreviewMargin = 0;
-            if (DebugPreviewMargin > 256) DebugPreviewMargin = 256;
+            ZoomMultiplier = Math.Clamp(ZoomMultiplier, 0.2f, 1f);
+            PhotoCaptureMaxDimension = Math.Clamp(PhotoCaptureMaxDimension, MinPhotoCaptureMaxDimension, MaxPhotoCaptureMaxDimension);
+            ExposureReadbackMaxDimension = Math.Clamp(ExposureReadbackMaxDimension, MinExposureReadbackMaxDimension, MaxExposureReadbackMaxDimension);
+            MaxAccumulatedFrames = Math.Clamp(MaxAccumulatedFrames, 1, MaxMaxAccumulatedFrames);
+            DebugPreviewRefreshMs = Math.Clamp(DebugPreviewRefreshMs, 50, 5000);
+            DebugPreviewMaxDimension = Math.Clamp(DebugPreviewMaxDimension, MinPhotoCaptureMaxDimension, MaxPhotoCaptureMaxDimension);
+            DebugPreviewWidth = Math.Clamp(DebugPreviewWidth, 64, 1024);
+            DebugPreviewHeight = Math.Clamp(DebugPreviewHeight, 64, 1024);
+            DebugPreviewMargin = Math.Clamp(DebugPreviewMargin, 0, 256);
 
             DebugPreviewAnchor = (DebugPreviewAnchor ?? "topleft").Trim().ToLowerInvariant();
             if (DebugPreviewAnchor != "topleft"

@@ -81,7 +81,7 @@ namespace Photocore.Plates.Rendering
         {
             inputs = default;
 
-            string photoId = itemstack.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
+            string photoId = itemstack.ResolvePhotoId();
             if (string.IsNullOrEmpty(photoId)) return false;
 
             // Keep server-side last-seen metadata fresh while the photo is being rendered.

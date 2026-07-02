@@ -72,7 +72,7 @@ namespace Photocore.Frame
             if (_photoPrefetchRequested) return; // already requested this photo; FromTreeAttributes fires on every sync
             if (Api is not ICoreClientAPI capi || _inventory[0].Empty) return;
 
-            string photoId = _inventory[0].Itemstack?.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
+            string photoId = _inventory[0].Itemstack.ResolvePhotoId();
             if (string.IsNullOrEmpty(photoId)) return;
 
             _photoPrefetchRequested = true;

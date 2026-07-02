@@ -15,7 +15,7 @@ namespace Photocore.AdminTooling
             if (capi == null) return;
 
             ItemStack? held = capi.World?.Player?.InventoryManager?.ActiveHotbarSlot?.Itemstack;
-            string photoId = held?.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
+            string photoId = held.ResolvePhotoId();
             if (held == null || string.IsNullOrEmpty(photoId))
             {
                 capi.ShowChatMessage("photocore: hold a developed photo plate to export.");
@@ -37,7 +37,7 @@ namespace Photocore.AdminTooling
             }
 
             // Friendly export name: caption (if any) + the raw id (already timestamp-encoded).
-            string caption = held.Attributes.GetString(PhotographAttrs.Caption) ?? string.Empty;
+            string caption = held.ResolveCaption();
             string baseId = Path.GetFileNameWithoutExtension(photoId);
             string friendly = string.IsNullOrWhiteSpace(caption) ? baseId : $"{caption}_{baseId}";
             string outPath = PhotoAssetStoragePaths.GetExportPath(friendly);

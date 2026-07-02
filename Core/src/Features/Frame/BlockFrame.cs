@@ -64,7 +64,7 @@ namespace Photocore.Frame
             ItemStack? held = heldSlot?.Itemstack;
             if (held == null) return false;
 
-            string photoId = held.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
+            string photoId = held.ResolvePhotoId();
             if (string.IsNullOrEmpty(photoId)) return false;
 
             if (be.Inventory == null || !be.Inventory[0].Empty) return false;
@@ -118,7 +118,7 @@ namespace Photocore.Frame
                 return baseInfo;
             }
 
-            string caption = be.Inventory[0].Itemstack?.Attributes?.GetString(PhotographAttrs.Caption) ?? string.Empty;
+            string caption = be.Inventory[0].Itemstack.ResolveCaption();
             string label = string.IsNullOrEmpty(caption) ? Lang.Get("photocore:frame-info-photograph") : caption;
             string line = Lang.Get("photocore:frame-info-displaying", label);
             return string.IsNullOrEmpty(baseInfo) ? line : baseInfo + "\n" + line;

@@ -205,7 +205,7 @@ namespace Photocore.Tray
             if (stack?.Collectible?.Code == null) return null;
 
             string code = stack.Collectible.Code.ToString();
-            string photoId = stack.Attributes?.GetString(PhotographAttrs.PhotoId) ?? string.Empty;
+            string photoId = stack.ResolvePhotoId();
             string stage = PlateAttributes.ToAttributeString(PlateAttributes.GetStage(stack));
             int pours = PlateAttributes.GetDevelopmentApplications(stack);
 

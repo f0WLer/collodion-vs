@@ -25,23 +25,12 @@
 
         internal void ClampInPlace()
         {
-            if (DevelopmentTrayChemicalUnitsPerUse < 1) DevelopmentTrayChemicalUnitsPerUse = 1;
-            if (DevelopmentTrayChemicalUnitsPerUse > 5000) DevelopmentTrayChemicalUnitsPerUse = 5000;
-
-            if (PolishSeconds < 0f) PolishSeconds = 0f;
-            if (PolishSeconds > 30f) PolishSeconds = 30f;
-
-            if (SensitizationPourSeconds < 0f) SensitizationPourSeconds = 0f;
-            if (SensitizationPourSeconds > 30f) SensitizationPourSeconds = 30f;
-
-            if (PlainClothConsumedPerPolish < 0) PlainClothConsumedPerPolish = 0;
-            if (PlainClothConsumedPerPolish > 64) PlainClothConsumedPerPolish = 64;
-
-            if (WetDurationHours < 0.01) WetDurationHours = 0.01;
-            if (WetDurationHours > 720.0) WetDurationHours = 720.0;
-
-            if (PlateBoxDryingMultiplier < 0f) PlateBoxDryingMultiplier = 0f;
-            if (PlateBoxDryingMultiplier > 1f) PlateBoxDryingMultiplier = 1f;
+            DevelopmentTrayChemicalUnitsPerUse = Math.Clamp(DevelopmentTrayChemicalUnitsPerUse, 1, 5000);
+            PolishSeconds = Math.Clamp(PolishSeconds, 0f, 30f);
+            SensitizationPourSeconds = Math.Clamp(SensitizationPourSeconds, 0f, 30f);
+            PlainClothConsumedPerPolish = Math.Clamp(PlainClothConsumedPerPolish, 0, 64);
+            WetDurationHours = Math.Clamp(WetDurationHours, 0.01, 720.0);
+            PlateBoxDryingMultiplier = Math.Clamp(PlateBoxDryingMultiplier, 0f, 1f);
         }
     }
 }

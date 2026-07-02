@@ -7,8 +7,7 @@
 
         internal void ClampInPlace()
         {
-            if (DurationSeconds < 0.05f) DurationSeconds = 0.05f;
-            if (DurationSeconds > 30f) DurationSeconds = 30f;
+            DurationSeconds = Math.Clamp(DurationSeconds, 0.05f, 30f);
         }
     }
 }

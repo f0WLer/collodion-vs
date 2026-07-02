@@ -1,7 +1,7 @@
 ﻿using SkiaSharp;
 
 using Photocore.ImageEffects;
-using Photocore.PhotoSync.Storage;
+using Photocore.PhotoSync;
 
 namespace Photocore.Exposure
 {

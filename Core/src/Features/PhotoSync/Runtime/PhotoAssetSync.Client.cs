@@ -1,8 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Vintagestory.API.MathTools;
 using Photocore.Plates.Rendering;
-using Photocore.PhotoSync.Contracts;
-using Photocore.PhotoSync.Storage;
+using Photocore.PhotoSync;
 
 namespace Photocore.PhotoSync.Runtime
 {

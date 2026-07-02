@@ -3,7 +3,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Photocore.PhotoMetadata.Model;
 using Photocore.PhotoSync.Integration;
-using Photocore.PhotoSync.Storage;
+using Photocore.PhotoSync;
 
 namespace Photocore.Plates.Rendering
 {

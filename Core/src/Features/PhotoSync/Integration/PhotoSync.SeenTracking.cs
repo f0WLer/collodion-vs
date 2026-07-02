@@ -1,6 +1,5 @@
 ﻿using Photocore.PhotoMetadata;
-using Photocore.PhotoSync.Contracts;
-using Photocore.PhotoSync.Storage;
+using Photocore.PhotoSync;
 
 
 namespace Photocore.PhotoSync.Integration

@@ -1,5 +1,4 @@
 ﻿using Photocore.CameraCapture;
-using Photocore.CameraCapture.Contracts;
 using Photocore.Exposure;
 using Photocore.PhotoSync.Integration;
 using Photocore.Plates;

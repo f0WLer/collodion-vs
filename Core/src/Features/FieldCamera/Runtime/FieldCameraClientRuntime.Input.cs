@@ -1,5 +1,4 @@
 ﻿using Photocore.CameraCapture;
-using Photocore.CameraCapture.Contracts;
 using Photocore.Plates;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;

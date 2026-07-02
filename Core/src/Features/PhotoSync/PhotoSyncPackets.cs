@@ -1,6 +1,6 @@
 ﻿using ProtoBuf;
 
-namespace Photocore.PhotoSync.Contracts
+namespace Photocore.PhotoSync
 {
     // Keep these classes data-only and preserve ProtoMember ids for compatibility.
     [ProtoContract]

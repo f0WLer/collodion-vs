@@ -1,4 +1,4 @@
-﻿using Photocore.PhotoSync.Storage;
+﻿using Photocore.PhotoSync;
 
 namespace Photocore.PhotoMetadata.Model
 {

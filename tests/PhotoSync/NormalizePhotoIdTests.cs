@@ -1,5 +1,5 @@
 ﻿using Xunit;
-using Photocore.PhotoSync.Storage;
+using Photocore.PhotoSync;
 
 namespace Photocore.Tests.PhotoSync;
 

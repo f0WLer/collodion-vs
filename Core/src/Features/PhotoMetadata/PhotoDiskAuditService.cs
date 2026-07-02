@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 using Photocore.PhotoMetadata.Model;
-using Photocore.PhotoSync.Storage;
+using Photocore.PhotoSync;
 
 namespace Photocore.PhotoMetadata
 {

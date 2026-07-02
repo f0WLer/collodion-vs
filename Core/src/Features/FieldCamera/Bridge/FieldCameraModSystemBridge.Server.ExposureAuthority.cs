@@ -1,6 +1,6 @@
-﻿using Photocore.CameraCapture.Contracts;
+﻿using Photocore.CameraCapture;
 using Photocore.PhotoMetadata.Model;
-using Photocore.PhotoSync.Storage;
+using Photocore.PhotoSync;
 using Photocore.Plates;
 using Photocore.Tray;
 

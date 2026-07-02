@@ -1,7 +1,7 @@
 ﻿using SkiaSharp;
 using Vintagestory.API.Config;
 
-namespace Photocore.PhotoSync.Storage
+namespace Photocore.PhotoSync
 {
     internal static class PhotoAssetStoragePaths
     {

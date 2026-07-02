@@ -1,4 +1,4 @@
-﻿using Photocore.CameraCapture.Contracts;
+﻿using Photocore.CameraCapture;
 using Vintagestory.API.Server;
 
 namespace Photocore.FieldCamera

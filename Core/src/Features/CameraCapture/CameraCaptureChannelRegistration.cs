@@ -1,9 +1,9 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Server;
 
-using Photocore.CameraCapture.Contracts;
+using Photocore.CameraCapture;
 
-namespace Photocore.CameraCapture.Integration
+namespace Photocore.CameraCapture
 {
     internal static class CameraCaptureChannelRegistration
     {

@@ -3,7 +3,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Photocore.AdminTooling;
 using Photocore.Configuration;
-using Photocore.CameraCapture.Integration;
+using Photocore.CameraCapture;
 using Photocore.FieldCamera;
 using Photocore.PhotoSync.Integration;
 using Photocore.PlateBox;

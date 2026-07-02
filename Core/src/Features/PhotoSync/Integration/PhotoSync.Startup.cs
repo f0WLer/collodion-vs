@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Server;
 using Photocore.PhotoMetadata;
-using Photocore.PhotoSync.Contracts;
+using Photocore.PhotoSync;
 using Photocore.PhotoSync.Runtime;
 
 namespace Photocore.PhotoSync.Integration

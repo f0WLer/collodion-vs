@@ -2,7 +2,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-using Photocore.CameraCapture.Contracts;
+using Photocore.CameraCapture;
 using Photocore.Exposure;
 using Photocore.ImageEffects;
 using Photocore.PhotoSync.Integration;

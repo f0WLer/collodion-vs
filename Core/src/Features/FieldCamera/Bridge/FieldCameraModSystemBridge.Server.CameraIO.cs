@@ -3,7 +3,6 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
 using Photocore.CameraCapture;
-using Photocore.CameraCapture.Contracts;
 using Photocore.Plates;
 
 namespace Photocore.FieldCamera

@@ -2,7 +2,7 @@
 using Vintagestory.API.Client;
 
 using Photocore.Configuration;
-using Photocore.CameraCapture.Contracts;
+using Photocore.CameraCapture;
 
 namespace Photocore.CameraCapture
 {

@@ -1,8 +1,7 @@
 ﻿using Vintagestory.API.Server;
 
 using Photocore.Configuration;
-using Photocore.CameraCapture.Contracts;
-using Photocore.CameraCapture.Integration;
+using Photocore.CameraCapture;
 
 namespace Photocore.CameraCapture
 {

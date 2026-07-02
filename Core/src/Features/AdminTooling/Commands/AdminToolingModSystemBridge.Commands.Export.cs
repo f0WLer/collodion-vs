@@ -3,7 +3,7 @@
 using Photocore.PhotoMetadata.Model;
 using Photocore.Plates;
 using Photocore.Plates.Rendering;
-using Photocore.PhotoSync.Storage;
+using Photocore.PhotoSync;
 
 namespace Photocore.AdminTooling
 {

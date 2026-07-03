@@ -19,8 +19,8 @@
       "ingui": "photocore:configlib-maxaccumulatedframes-name",
       "comment": "photocore:configlib-maxaccumulatedframes-comment",
       "type": "integer",
-      "default": 400,
-      "range": { "min": 256, "max": 600 }
+      "default": 600,
+      "range": { "min": 256, "max": 1000 }
     },
     {
       "type": "separator",

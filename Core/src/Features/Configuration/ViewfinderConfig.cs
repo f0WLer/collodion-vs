@@ -14,12 +14,12 @@ namespace Photocore.Configuration
         public const int MaxExposureReadbackMaxDimension     = 2048;
         public const int DefaultExposureReadbackMaxDimension = 640;
 
-        public const int DefaultMaxAccumulatedFrames = 400;
+        public const int DefaultMaxAccumulatedFrames = 600;
         // 256 = double Chloride's 128-sample exposure (the highest SampleCount among EmulsionProfile
         // entries) — keeps the floor from ever locking a chemistry profile out of completing a normal
         // exposure, including profiles not yet exposed by the baseline head.
         public const int MinMaxAccumulatedFrames = 256;
-        public const int MaxMaxAccumulatedFrames = 600;
+        public const int MaxMaxAccumulatedFrames = 1000;
 
         // Not persisted to photocore.json: no in-game way to change it, so it's a code-level tunable only.
         [JsonIgnore]

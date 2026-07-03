@@ -10,14 +10,25 @@ namespace Photocore.Exposure
         private static string FilePath =>
             Path.Combine(GamePaths.DataPath, "ModData", "photocore", "chemistry-profiles.json");
 
+        // Shared with the server-authoritative wire path (ChemistryProfileRegistry.SerializeCurrent/
+        // ApplyServerProfiles) so disk and network use one round-trip format.
+        internal static string Serialize(Dictionary<string, ChemistryProfile> data) =>
+            JsonConvert.SerializeObject(data, Formatting.Indented);
+
+        internal static Dictionary<string, ChemistryProfile>? Deserialize(string json)
+        {
+            var data = JsonConvert.DeserializeObject<Dictionary<string, ChemistryProfile>>(json);
+            return data == null ? null : new Dictionary<string, ChemistryProfile>(data, StringComparer.OrdinalIgnoreCase);
+        }
+
         internal static Dictionary<string, ChemistryProfile> Load(ILogger? log = null)
         {
             try
             {
                 if (File.Exists(FilePath))
                 {
-                    var data = JsonConvert.DeserializeObject<Dictionary<string, ChemistryProfile>>(File.ReadAllText(FilePath));
-                    if (data != null) return new Dictionary<string, ChemistryProfile>(data, StringComparer.OrdinalIgnoreCase);
+                    Dictionary<string, ChemistryProfile>? data = Deserialize(File.ReadAllText(FilePath));
+                    if (data != null) return data;
                 }
             }
             catch (Exception ex)
@@ -32,7 +43,7 @@ namespace Photocore.Exposure
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-                File.WriteAllText(FilePath, JsonConvert.SerializeObject(data, Formatting.Indented));
+                File.WriteAllText(FilePath, Serialize(data));
             }
             catch (Exception ex)
             {

@@ -359,7 +359,12 @@ namespace Photocore.AdminTooling
 
         private bool OnSaveChemistry()
         {
-            _renderer.SaveChemistryTuning();
+            if (!_renderer.SaveChemistryTuning())
+            {
+                capi.ShowChatMessage("Chemistry profiles are server-authoritative on this connection — local tuning isn't saved.");
+                return true;
+            }
+
             capi.ShowChatMessage($"Saved {_renderer.ActiveProcess.Name} exposure profile to ModData.");
             return true;
         }

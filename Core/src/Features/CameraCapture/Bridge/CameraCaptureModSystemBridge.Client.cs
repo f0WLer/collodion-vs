@@ -2,6 +2,7 @@
 using Vintagestory.API.Client;
 
 using Photocore.Configuration;
+using Photocore.Exposure;
 
 namespace Photocore.CameraCapture
 {
@@ -101,6 +102,11 @@ namespace Photocore.CameraCapture
             ServerPhotoCaptureMaxDimensionOverride = packet.MaxDimension;
             ServerApplyFinishingEffectsOverride = packet.ApplyFinishingEffects;
             ServerPhotoSeenPingIntervalSecondsOverride = packet.PhotoSeenPingIntervalSeconds;
+
+            // Singleplayer/hosting: client and server share one process and one chemistry-profiles.json
+            // already, so there's no divergence to guard against and the tuning GUI should stay saveable.
+            if (ClientApi?.IsSinglePlayer == false)
+                ChemistryProfileRegistry.ApplyServerProfiles(packet.ChemistryProfilesJson, ClientApi?.Logger);
         }
 
         private void TrySendServerConfigOverrideRequest(ICoreClientAPI capi)

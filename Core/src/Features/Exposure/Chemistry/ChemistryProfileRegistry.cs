@@ -26,7 +26,16 @@ namespace Photocore.Exposure
             return _instance;
         }
 
-        internal static void Clear() => _instance = null;
+        internal static void Clear()
+        {
+            _instance = null;
+            ServerAuthoritative = false;
+        }
+
+        // True once a real multiplayer server has pushed its profiles onto this client (see
+        // CameraCaptureModSystemBridge.Client.OnServerConfigOverrideReceived). Locks out local
+        // GuiDialogExposurePhysics saves so a client can't quietly re-diverge from the server's look.
+        internal static bool ServerAuthoritative { get; private set; }
 
         // Returns a default (unpersisted) profile for unknown tags — never returns null. Falls back to iodide for null/empty.
         internal ChemistryProfile Get(string? chemistry)
@@ -40,6 +49,26 @@ namespace Photocore.Exposure
         }
 
         internal void Save(ILogger? log) => ChemistryProfileStore.Save(_profiles, log);
+
+        // Server side: snapshot to hand to a joining/requesting client (ServerConfigOverridePacket).
+        internal string SerializeCurrent() => ChemistryProfileStore.Serialize(_profiles);
+
+        // Client side: replace the local registry with the server's snapshot. Kept in-memory only —
+        // never written to this client's own chemistry-profiles.json, so a later singleplayer session
+        // isn't contaminated by whatever server was last joined. A malformed/empty packet is ignored
+        // rather than wiping out whatever profiles the client already had.
+        internal static void ApplyServerProfiles(string? json, ILogger? log)
+        {
+            if (string.IsNullOrEmpty(json)) return;
+
+            Dictionary<string, ChemistryProfile>? profiles = ChemistryProfileStore.Deserialize(json);
+            if (profiles == null) return;
+
+            ClampAll(profiles);
+            ChemistryProfileSeeder.EnsureComplete(profiles, SensitizationRegistry.RegisteredChemistries());
+            _instance = new ChemistryProfileRegistry(profiles);
+            ServerAuthoritative = true;
+        }
 
         private static void ClampAll(Dictionary<string, ChemistryProfile> profiles)
         {

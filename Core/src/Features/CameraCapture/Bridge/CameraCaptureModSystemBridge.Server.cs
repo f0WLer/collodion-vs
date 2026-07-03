@@ -1,6 +1,7 @@
 ﻿using Vintagestory.API.Server;
 
 using Photocore.Configuration;
+using Photocore.Exposure;
 
 namespace Photocore.CameraCapture
 {
@@ -49,7 +50,8 @@ namespace Photocore.CameraCapture
             {
                 MaxDimension = Config.Viewfinder.PhotoCaptureMaxDimension,
                 ApplyFinishingEffects = Config.Viewfinder.ApplyFinishingEffects,
-                PhotoSeenPingIntervalSeconds = Config.PhotoSync.PhotoSeenPingIntervalSeconds
+                PhotoSeenPingIntervalSeconds = Config.PhotoSync.PhotoSeenPingIntervalSeconds,
+                ChemistryProfilesJson = ChemistryProfileRegistry.Instance.SerializeCurrent()
             }, player);
         }
     }

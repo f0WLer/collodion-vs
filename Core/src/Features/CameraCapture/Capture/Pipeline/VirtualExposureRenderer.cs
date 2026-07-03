@@ -110,12 +110,18 @@ namespace Photocore.CameraCapture
             RequestPreviewRefresh();
         }
 
-        internal void SaveChemistryTuning()
+        // False when the server owns chemistry profiles for this session (see ChemistryProfileRegistry.
+        // ServerAuthoritative) — the dialog's edits stay preview-only rather than silently re-diverging
+        // this client's look from the rest of the server.
+        internal bool SaveChemistryTuning()
         {
+            if (ChemistryProfileRegistry.ServerAuthoritative) return false;
+
             ChemistryProfile prof = ChemistryProfileRegistry.Instance.Get(_process.Name);
             prof.ExposurePhysics.CopyFrom(Physics.Chem);
             prof.PostEffects = _previewEffects.Clone();
             ChemistryProfileRegistry.Instance.Save(_clientApi.Logger);
+            return true;
         }
 
         internal void RequestPreviewRefresh()

@@ -27,6 +27,13 @@ namespace Photocore.CameraCapture
         // than trusting whatever the client claims — see CameraCaptureModSystemBridge.Server.cs / .Client.cs.
         [ProtoMember(3)]
         public int PhotoSeenPingIntervalSeconds { get; set; }
+        // Every chemistry profile (exposure physics, post-effects, presentation tone), JSON-serialized
+        // with the same format as chemistry-profiles.json. A photo's look is baked in at capture time
+        // on whichever client captured it, then synced to every other player — so a client running a
+        // locally-tuned profile would silently produce different-looking photos than the rest of the
+        // server. See ChemistryProfileRegistry.ApplyServerProfiles / .SerializeCurrent.
+        [ProtoMember(4)]
+        public string ChemistryProfilesJson { get; set; } = string.Empty;
     }
 
     [ProtoContract]

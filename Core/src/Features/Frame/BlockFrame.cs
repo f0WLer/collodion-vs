@@ -23,7 +23,7 @@ namespace Photocore.Frame
         {
             if (Code.Path.StartsWith("framedphotographground"))
             {
-                BlockFacing facing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.Pos?.Yaw ?? 0f).Opposite;
+                BlockFacing facing = BlockFacing.HorizontalFromYaw(byPlayer?.Entity?.Pos?.Yaw ?? 0f).Opposite.GetCCW();
                 string desiredPath = $"framedphotographground-{facing.Code}";
                 if (!Code.Path.Equals(desiredPath, StringComparison.Ordinal))
                 {

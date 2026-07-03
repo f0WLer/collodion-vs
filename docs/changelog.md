@@ -13,6 +13,7 @@
 
 ## Camera
 - **Fixed mounted-camera exposures silently failing to capture anything during dusk, dawn, a moonless or low-phase night, or heavy fog.** The virtual camera re-renders shadows every exposure tick to match its own heading, but didn't check whether shadows were worth drawing at all in that lighting -- so it crashed when they weren't, permanently ending the exposure with zero frames captured and no error shown. It now skips that work under the same conditions the game itself would, which also avoids some wasted rendering during those same moments.
+- **Handheld cameras no longer create a photo the moment an exposure finishes.** Finishing a handheld exposure used to write the photo file and hand it to the server right there in the field -- with no tray involved at all, so the develop whitelist never actually gated it the way it gates every other camera. A finished handheld exposure now becomes a plate that's ready to develop, same as a mounted camera's; only pouring developer on it in a tray creates the photo. Trying to re-expose an already-finished plate now shows the same clear message ("this plate has been fully exposed and cannot be exposed further") on both handheld and mounted cameras, instead of mounted cameras silently doing nothing.
 
 ## Misc
 - Default drying duration for plates was bumped to a 0.75 (45 minutes in-game).

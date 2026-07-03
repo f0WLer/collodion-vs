@@ -16,59 +16,6 @@ namespace Photocore.FieldCamera
     // stays declarative startup wiring; this is the gameplay authority half of capture.
     internal sealed partial class FieldCameraModSystemBridge
     {
-        private void OnPhotoTakenReceived(IServerPlayer player, PhotoTakenPacket packet)
-        {
-            if (Api?.Side != EnumAppSide.Server || Api.World == null) return;
-            if (player == null || packet == null) return;
-
-            string photoId = PhotoAssetStoragePaths.NormalizePhotoId(packet.PhotoId);
-            if (string.IsNullOrWhiteSpace(photoId)) return;
-
-            if (!TryResolveCameraStorage(player, out ItemSlot? cameraSlot, out ItemStack? cameraStack, out BlockEntityMountedCamera? mountedBe)) return;
-            if (cameraStack == null || !CameraHasLoadedPlate(cameraStack)) return;
-
-            if (!CameraItemHelper.TryGetLoadedPlateStack(cameraStack, Api.World, out ItemStack? loadedPlate) || loadedPlate == null) return;
-
-            PlateStage stage = PlateAttributes.GetStage(loadedPlate);
-            if (stage != PlateStage.Sensitized && stage != PlateStage.Exposing && stage != PlateStage.ExposurePaused) return;
-
-            if (PlateDryingTransition.IsDry(Api.World, loadedPlate)) return;
-
-            // Develop whitelist: finalizing the exposure into a photo is the act that creates a
-            // server-housed image. Deny before any mutation so a blocked player keeps the exposure.
-            if (!DevelopAllowed(player))
-            {
-                TellNotWhitelisted(player);
-                return;
-            }
-
-            PlateAttributes.SetStage(loadedPlate, PlateStage.Exposed);
-            loadedPlate.Attributes.SetString(PhotographAttrs.PhotoId, photoId);
-            loadedPlate.Attributes.RemoveAttribute(PlateAttributes.ExposureId);
-            loadedPlate.Attributes.RemoveAttribute(PlateAttributes.ExposedFrames);
-            loadedPlate.Attributes.RemoveAttribute(PlateAttributes.ExposureTargetFrames);
-            loadedPlate.Attributes.RemoveAttribute(PlateAttributes.PhotographerUid);
-            CameraItemHelper.ClearMountedCaptureState(cameraStack);
-
-            SetLoadedPlateAttributes(cameraStack, loadedPlate);
-            if (mountedBe != null)
-            {
-                ItemStack? updatedCamera = ReplaceCameraCode(cameraStack, GetLoadedCameraCodeForPlate(cameraStack, loadedPlate));
-                if (updatedCamera == null) return;
-                mountedBe.SetStoredCameraStack(updatedCamera, mountedBe.OwnerPlayerUid, Api.World);
-            }
-            else if (cameraSlot != null)
-            {
-                SetCameraCode(cameraSlot, GetLoadedCameraCodeForPlate(cameraStack, loadedPlate));
-                cameraSlot.MarkDirty();
-            }
-
-            _owner.PhotoSyncModSystemBridge.ServerTouchPhotoSeen(photoId);
-
-            // Authorize the matching upload so the client's chunk packets are not rejected as unsolicited.
-            _owner.PhotoSyncModSystemBridge.Runtime?.RegisterExpectedUpload(player.PlayerUID, photoId);
-        }
-
         private void OnExposureStateReceived(IServerPlayer player, ExposureStatePacket packet)
         {
             if (Api?.Side != EnumAppSide.Server || Api.World == null) return;
@@ -120,9 +67,15 @@ namespace Photocore.FieldCamera
                 if (stage != PlateStage.Exposing && stage != PlateStage.ExposurePaused) return;
 
                 PlateDryingTransition.TickNow(Api.World, loadedPlate);
-                PlateAttributes.SetStage(loadedPlate, PlateStage.ExposurePaused);
+
+                // Every eligibility check downstream (CameraEligibility, tray insertion) trusts this
+                // stage rather than re-deriving "are we done" from frame counts itself -- this is the
+                // only place that comparison is made. Setting Exposed here does not seal a photo;
+                // only developing it in a tray does.
+                bool reachedTarget = packet.TargetFrames > 0 && packet.ExposedFrames >= packet.TargetFrames;
+                PlateAttributes.SetStage(loadedPlate, reachedTarget ? PlateStage.Exposed : PlateStage.ExposurePaused);
                 loadedPlate.Attributes.SetInt(PlateAttributes.ExposedFrames, packet.ExposedFrames);
-                BestEffortLogger?.Notification($"photocore[diag]: server wrote ExposedFrames={packet.ExposedFrames} to plate");
+                BestEffortLogger?.Notification($"photocore[diag]: server wrote ExposedFrames={packet.ExposedFrames} to plate (reachedTarget={reachedTarget})");
             }
 
             SetLoadedPlateAttributes(cameraStack, loadedPlate);
@@ -149,7 +102,8 @@ namespace Photocore.FieldCamera
             if (trayPlate == null) return;
 
             PlateStage trayStage = PlateAttributes.GetStage(trayPlate);
-            if (trayStage != PlateStage.ExposurePaused
+            if (trayStage != PlateStage.Exposed
+                && trayStage != PlateStage.ExposurePaused
                 && trayStage != PlateStage.Developing
                 && trayStage != PlateStage.Developed
                 && trayStage != PlateStage.Finished) return;
@@ -169,8 +123,8 @@ namespace Photocore.FieldCamera
             trayPlate.Attributes.RemoveAttribute(PlateAttributes.ExposureId);
             trayPlate.Attributes.RemoveAttribute(PlateAttributes.ExposedFrames);
             trayPlate.Attributes.RemoveAttribute(PlateAttributes.ExposureTargetFrames);
-            // Only change stage for ExposurePaused; if the tray already advanced to Developing/Developed/Finished,
-            // just set the photoId and clean up exposure attrs without rewinding the stage.
+            // Only ExposurePaused needs promoting -- rewinding an already-Developing/Developed/
+            // Finished plate back to Exposed would erase real tray progress.
             if (trayStage == PlateStage.ExposurePaused)
                 PlateAttributes.SetStage(trayPlate, PlateStage.Exposed);
             be.TrySetPlate(trayPlate);

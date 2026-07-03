@@ -1,6 +1,5 @@
 ﻿using Photocore.CameraCapture;
 using Photocore.Exposure;
-using Photocore.PhotoSync.Integration;
 using Photocore.Plates;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -28,10 +27,9 @@ namespace Photocore.FieldCamera
             {
                 acc.Pause();
 
-                if (acc.FramesAccumulated >= acc.TargetFrames)
-                    ExportAndSealExposure(byEntity);
-                else
-                    HandleExposurePaused(acc, _owner.Capture.ActiveExposureId);
+                // Reaching target frames no longer seals here -- only developing a plate in a tray
+                // creates a photo.
+                HandleExposurePaused(acc, _owner.Capture.ActiveExposureId);
 
                 // Exit viewfinder immediately when pausing if RMB is not held.
                 if (!GetRightMouseDown() && _owner.Capture.IsViewfinderActive)
@@ -141,9 +139,10 @@ namespace Photocore.FieldCamera
         // Called by the accumulator's auto-halt callback once target frames are reached.
         private void OnAccumulatorAutoHalt(EntityAgent byEntity, ViewportExposureAccumulator acc, string exposureId)
         {
-            // Auto-halt exits the viewfinder and seals the exposure.
+            // Auto-halt no longer seals -- only developing the resulting Exposed plate in a tray
+            // creates a photo.
             _suppressViewfinderUntilRmbReleased = true;
-            ExportAndSealExposure(byEntity, exposureId);
+            HandleExposurePaused(acc, exposureId);
             if (_owner.Capture.IsViewfinderActive) _owner.Capture.EndViewfinderMode();
         }
 
@@ -171,70 +170,6 @@ namespace Photocore.FieldCamera
             }
 
             SendExposureStatePacket(isExposing: false, acc.FramesAccumulated, exposureId, acc.TargetFrames);
-        }
-
-        // Client-side develop-whitelist verdict (server-pushed; defaults allowed). UX guard only —
-        // the server independently enforces the gate at upload-authorization time.
-        private bool IsDevelopAllowedClient()
-            => PhotocoreConfigAccess.ResolveClientModSystem(_owner.ClientApi)?.AdminToolingBridge.ClientDevelopAllowed ?? true;
-
-        private void ExportAndSealExposure(EntityAgent? byEntity, string? knownExposureId = null)
-        {
-            var acc = _owner.Capture.ActiveAccumulator;
-            if (acc == null || acc.FramesAccumulated == 0)
-            {
-                _owner.Capture.ActiveAccumulator = null;
-                return;
-            }
-
-            try
-            {
-                var clientApi = _owner.ClientApi;
-                if (clientApi == null) return;
-
-                ItemStack? camStack = CameraItemHelper.GetActiveCameraStack(clientApi);
-                CameraItemHelper.TryGetLoadedPlateStack(camStack, clientApi.World, out ItemStack? loadedPlate);
-
-                string exposureId = knownExposureId
-                    ?? _owner.Capture.ActiveExposureId
-                    ?? loadedPlate?.Attributes?.GetString(PlateAttributes.ExposureId)
-                    ?? string.Empty;
-
-                // Develop whitelist: finalizing into a photo is the data-creating act. A blocked client
-                // keeps the exposure as a resumable partial (pause-save) instead of losing it; the server
-                // gate is authoritative. Resolve exposureId first so the partial saves under its key.
-                if (!IsDevelopAllowedClient())
-                {
-                    clientApi.ShowChatMessage(Lang.Get("photocore:msg-develop-not-whitelisted"));
-                    HandleExposurePaused(acc, exposureId);
-                    return;
-                }
-
-                acc.Stop();
-                // Effects come from the accumulator's active chemistry profile (set at Start).
-                string fileName = acc.Export();
-
-                _owner.ClientChannel?.SendPacket(new PhotoTakenPacket { PhotoId = fileName });
-                ClientPhotoSyncIntegration.NotifyPhotoCreated(clientApi, fileName);
-
-                if (byEntity != null)
-                    clientApi.World.PlaySoundAt(new AssetLocation("game:sounds/effect/woodclick"), byEntity, null, true, 32, 1f);
-
-                if (!string.IsNullOrEmpty(exposureId))
-                {
-                    ExposureAccumulationStore.Delete(exposureId);
-                    ViewfinderExposureRegistry.Remove(exposureId);
-                }
-            }
-            catch (Exception ex)
-            {
-                _owner.ClientApi?.Logger.Error("photocore: accumulation export failed — " + ex);
-            }
-            finally
-            {
-                _owner.Capture.ActiveAccumulator = null;
-                _owner.Capture.ActiveExposureId = string.Empty;
-            }
         }
 
         private void SendExposureStatePacket(bool isExposing, int exposedFrames, string exposureId, int targetFrames)

@@ -156,6 +156,7 @@
     "photocore:msg-plate-max-frames":           "photocore: this plate cannot be exposed any further.",
     "photocore:msg-load-sensitized-plate":      "photocore: load a sensitized plate to take a photo.",
     "photocore:msg-plate-not-exposable":        "photocore: only fresh or paused exposure plates can be exposed.",
+    "photocore:msg-plate-fully-exposed":        "photocore: this plate has been fully exposed and cannot be exposed further.",
     "photocore:msg-plate-dried-no-expose":      "photocore: this plate has dried out and can no longer be exposed.",
     "photocore:msg-plate-other-photographer":   "photocore: this plate belongs to another photographer.",
     "photocore:msg-tip-f4-guiless":             "photocore: Tip - press F4 to toggle gui-less mode (hide HUD) while using the viewfinder.",

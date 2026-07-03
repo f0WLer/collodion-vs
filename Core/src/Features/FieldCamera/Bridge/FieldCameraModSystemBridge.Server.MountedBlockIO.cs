@@ -147,6 +147,11 @@ namespace Photocore.FieldCamera
                 return true;
             }
 
+            // By CanLoadIntoCamera's stage set, failing both the pause and resume checks above only
+            // leaves Exposed as a possibility. Mirrors the handheld capture gate's
+            // msg-plate-fully-exposed so both camera types alert the same way instead of silently
+            // doing nothing.
+            serverPlayer.SendMessage(GlobalConstants.InfoLogChatGroup, Lang.Get("photocore:msg-plate-fully-exposed"), EnumChatType.Notification);
             return true;
         }
 

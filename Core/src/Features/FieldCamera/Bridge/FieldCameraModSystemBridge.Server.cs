@@ -8,7 +8,6 @@ namespace Photocore.FieldCamera
         internal void ConfigureServerFieldCameraStartup(ICoreServerAPI api)
         {
             ServerChannel = api.Network.GetChannel("photocore");
-            ServerChannel.SetMessageHandler<PhotoTakenPacket>(OnPhotoTakenReceived);
             ServerChannel.SetMessageHandler<CameraLoadPlatePacket>(OnCameraLoadPlateReceived);
             ServerChannel.SetMessageHandler<CameraTripodPacket>(OnCameraTripodReceived);
             ServerChannel.SetMessageHandler<ExposureStatePacket>(OnExposureStateReceived);

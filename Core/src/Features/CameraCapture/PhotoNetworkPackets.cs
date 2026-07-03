@@ -77,13 +77,6 @@ namespace Photocore.CameraCapture
     }
 
     [ProtoContract]
-    public class PhotoTakenPacket
-    {
-        [ProtoMember(1)]
-        public string PhotoId { get; set; } = string.Empty;
-    }
-
-    [ProtoContract]
     public class ExposureStatePacket
     {
         [ProtoMember(1)] public bool IsExposing { get; set; }

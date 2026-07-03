@@ -113,12 +113,12 @@ namespace Photocore.Tray
                     }
                     if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _developerPortionCode, GetChemicalUnitsPerUse())) return false;
 
-                    // Seal the partial exposure before the first developer pour transitions it away from ExposurePaused.
-                    // Must happen client-side at RMB-press time: tick ordering means the server transitions the stage
-                    // (ExposurePaused → Developing) before the client's step handler runs, so completion-side logic
-                    // would never see the ExposurePaused stage.
-                    // TrySendSealForTray is idempotent: SealToPng deletes the .pex file on success.
-                    if (clientIsExposed && PlateAttributes.GetStage(clientDevPlate) == PlateStage.ExposurePaused)
+                    // Must happen client-side at RMB-press: the server advances the stage before the
+                    // client's step handler runs, so this would never see the pre-Developing stage otherwise.
+                    // Covers Exposed as well as ExposurePaused -- a cap-terminated exposure reaches Exposed
+                    // without ever being sealed. Safe to call redundantly: TrySendSealForTray no-ops once
+                    // ExposureId is cleared by a prior successful seal.
+                    if (clientIsExposed)
                         if (world.Api is ICoreClientAPI capiSeal)
                         {
                             // Develop whitelist: sealing is the act that creates server data. If this client

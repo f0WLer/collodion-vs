@@ -10,7 +10,6 @@ namespace Photocore.CameraCapture
         {
             return channel
                 .RegisterMessageType(typeof(MountedCameraControlPacket))
-                .RegisterMessageType(typeof(PhotoTakenPacket))
                 .RegisterMessageType(typeof(CameraLoadPlatePacket))
                 .RegisterMessageType(typeof(CameraTripodPacket))
                 .RegisterMessageType(typeof(ExposureStatePacket))

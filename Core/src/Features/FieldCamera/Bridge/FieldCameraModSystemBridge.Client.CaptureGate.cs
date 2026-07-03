@@ -41,7 +41,13 @@ namespace Photocore.FieldCamera
                     // Keep capture gate permissive when only the lightweight loaded-code attribute exists.
                     if (loadedPlateStack != null && !CameraEligibility.IsPlateExposable(loadedPlateStack))
                     {
-                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get("photocore:msg-plate-not-exposable"));
+                        // Exposed specifically means "reached target frames, awaiting tray development" —
+                        // a more useful message than the generic not-exposable one covering every other
+                        // disqualifying stage (never sensitized, already developing, etc.).
+                        string msgKey = PlateAttributes.GetStage(loadedPlateStack) == PlateStage.Exposed
+                            ? "photocore:msg-plate-fully-exposed"
+                            : "photocore:msg-plate-not-exposable";
+                        owner.CaptureClientRuntime.ShowShutterGateMessageThrottled(Lang.Get(msgKey));
                         return false;
                     }
 

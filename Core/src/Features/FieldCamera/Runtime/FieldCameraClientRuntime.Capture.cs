@@ -27,9 +27,9 @@ namespace Photocore.FieldCamera
             {
                 acc.Pause();
 
-                // Reaching target frames no longer seals here -- only developing a plate in a tray
-                // creates a photo.
-                HandleExposurePaused(acc, _owner.Capture.ActiveExposureId);
+                // A manual pause never reaches the hard cap by definition -- only developing a
+                // plate in a tray creates a photo, regardless of how the exposure stopped.
+                HandleExposurePaused(acc, _owner.Capture.ActiveExposureId, reachedCap: false);
 
                 // Exit viewfinder immediately when pausing if RMB is not held.
                 if (!GetRightMouseDown() && _owner.Capture.IsViewfinderActive)
@@ -136,29 +136,30 @@ namespace Photocore.FieldCamera
             return true;
         }
 
-        // Called by the accumulator's auto-halt callback once target frames are reached.
+        // Called by the accumulator's auto-halt callback -- the hard accumulation cap was reached.
+        // This is the one condition, across every camera type, that seals the plate as terminally
+        // Exposed; only developing it in a tray afterward creates a photo.
         private void OnAccumulatorAutoHalt(EntityAgent byEntity, ViewportExposureAccumulator acc, string exposureId)
         {
-            // Auto-halt no longer seals -- only developing the resulting Exposed plate in a tray
-            // creates a photo.
             _suppressViewfinderUntilRmbReleased = true;
-            HandleExposurePaused(acc, exposureId);
+            HandleExposurePaused(acc, exposureId, reachedCap: true);
             if (_owner.Capture.IsViewfinderActive) _owner.Capture.EndViewfinderMode();
         }
 
         // Called by the accumulator's auto-pause callback (e.g. a timed-shutter burst elapsed). The
         // accumulator has already transitioned to Paused; this persists the partial and notifies the
-        // server, mirroring the tail of a manual pause. The exposure stays resumable.
+        // server, mirroring the tail of a manual pause. The exposure stays resumable -- an automatic
+        // shutter's own timed close is not the hard cap and must not seal the plate.
         private void OnAccumulatorAutoPause(ViewportExposureAccumulator acc, string exposureId)
         {
-            HandleExposurePaused(acc, exposureId);
+            HandleExposurePaused(acc, exposureId, reachedCap: false);
             if (!GetRightMouseDown() && _owner.Capture.IsViewfinderActive)
                 _owner.Capture.EndViewfinderMode();
         }
 
         // Persists a paused accumulator's partial blob and notifies the server it is no longer exposing.
         // Shared by the manual LMB-pause path and the auto-pause (timed shutter) callback.
-        private void HandleExposurePaused(IGameplayExposureAccumulator acc, string exposureId)
+        private void HandleExposurePaused(IGameplayExposureAccumulator acc, string exposureId, bool reachedCap)
         {
             if (acc is ViewportExposureAccumulator viewportAcc
                 && acc.FramesAccumulated > 0
@@ -169,17 +170,18 @@ namespace Photocore.FieldCamera
                     _owner.ClientApi?.ShowChatMessage(Lang.Get("photocore:msg-exposure-save-failed"));
             }
 
-            SendExposureStatePacket(isExposing: false, acc.FramesAccumulated, exposureId, acc.TargetFrames);
+            SendExposureStatePacket(isExposing: false, acc.FramesAccumulated, exposureId, acc.TargetFrames, reachedCap);
         }
 
-        private void SendExposureStatePacket(bool isExposing, int exposedFrames, string exposureId, int targetFrames)
+        private void SendExposureStatePacket(bool isExposing, int exposedFrames, string exposureId, int targetFrames, bool reachedCap = false)
         {
             _owner.ClientChannel?.SendPacket(new ExposureStatePacket
             {
                 IsExposing = isExposing,
                 ExposureId = exposureId,
                 ExposedFrames = exposedFrames,
-                TargetFrames = targetFrames
+                TargetFrames = targetFrames,
+                ReachedCap = reachedCap
             });
         }
 
@@ -350,6 +352,9 @@ namespace Photocore.FieldCamera
             SendExposureStatePacket(false, framesAtPause, _mountedExposureId, renderer.CapFrameCount);
         }
 
+        // Only reached via OnClientViewfinderTick's Done-state check, which for the mounted renderer
+        // is only ever set by its own cap-halt (VirtualExposureRenderer.CompleteAutoStop) -- so this
+        // is always the hard-cap path, not a resumable pause.
         private void PersistPartialMountedExposure()
         {
             var renderer = _owner.Capture._virtualExposureRenderer;
@@ -362,8 +367,7 @@ namespace Photocore.FieldCamera
                     _owner.ClientApi?.ShowChatMessage(Lang.Get("photocore:msg-exposure-save-failed"));
             }
 
-            // Tell the server to set the plate to ExposurePaused with the current frame count.
-            SendExposureStatePacket(false, renderer.FramesAccumulated, _mountedExposureId, renderer.CapFrameCount);
+            SendExposureStatePacket(false, renderer.FramesAccumulated, _mountedExposureId, renderer.CapFrameCount, reachedCap: true);
 
             renderer.Discard();
             // Intentionally keep _mountedExposureId and _pendingMountedCameraState so the

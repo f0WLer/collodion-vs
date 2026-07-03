@@ -163,15 +163,18 @@ namespace Photocore.CameraCapture
             // GPU blit scales into the fixed-size staging FBO, so viewport resize needs no special handling.
             _buffer.Accumulate(0, w, h);
 
-            ExposureStopAction action = StopCondition?.Evaluate(_buffer.FramesAccumulated, _elapsedSinceResume, _maxFrames, TargetFrames)
-                ?? (_buffer.FramesAccumulated >= _maxFrames ? ExposureStopAction.AutoSeal : ExposureStopAction.Continue);
-
-            if (action == ExposureStopAction.AutoSeal)
+            // The hard cap is the one condition that applies to every camera type and takes priority
+            // over any policy — an automatic shutter's own timed close must not bypass it.
+            if (_buffer.FramesAccumulated >= _maxFrames)
             {
                 CompleteAutoStop();
                 return;
             }
-            if (action == ExposureStopAction.AutoPause)
+
+            ExposureStopAction action = StopCondition?.Evaluate(_buffer.FramesAccumulated, _elapsedSinceResume, _maxFrames, TargetFrames)
+                ?? ExposureStopAction.Continue;
+
+            if (action is ExposureStopAction.AutoSeal or ExposureStopAction.AutoPause)
             {
                 CompleteAutoPause();
                 return;

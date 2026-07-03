@@ -69,13 +69,14 @@ namespace Photocore.FieldCamera
                 PlateDryingTransition.TickNow(Api.World, loadedPlate);
 
                 // Every eligibility check downstream (CameraEligibility, tray insertion) trusts this
-                // stage rather than re-deriving "are we done" from frame counts itself -- this is the
-                // only place that comparison is made. Setting Exposed here does not seal a photo;
-                // only developing it in a tray does.
-                bool reachedTarget = packet.TargetFrames > 0 && packet.ExposedFrames >= packet.TargetFrames;
-                PlateAttributes.SetStage(loadedPlate, reachedTarget ? PlateStage.Exposed : PlateStage.ExposurePaused);
+                // stage rather than re-deriving "are we done" itself -- this is the only place that
+                // decision is made. Terminal Exposed happens only when the client's hard accumulation
+                // cap halted the exposure, the same condition for every camera type; anything else
+                // (manual pause, an automatic shutter's timed close) stays resumable. Setting Exposed
+                // here does not seal a photo; only developing it in a tray does.
+                PlateAttributes.SetStage(loadedPlate, packet.ReachedCap ? PlateStage.Exposed : PlateStage.ExposurePaused);
                 loadedPlate.Attributes.SetInt(PlateAttributes.ExposedFrames, packet.ExposedFrames);
-                BestEffortLogger?.Notification($"photocore[diag]: server wrote ExposedFrames={packet.ExposedFrames} to plate (reachedTarget={reachedTarget})");
+                BestEffortLogger?.Notification($"photocore[diag]: server wrote ExposedFrames={packet.ExposedFrames} to plate (reachedCap={packet.ReachedCap})");
             }
 
             SetLoadedPlateAttributes(cameraStack, loadedPlate);

@@ -83,6 +83,10 @@ namespace Photocore.CameraCapture
         [ProtoMember(2)] public string ExposureId { get; set; } = string.Empty;
         [ProtoMember(3)] public int ExposedFrames { get; set; }
         [ProtoMember(4)] public int TargetFrames { get; set; }
+        // True only when the client's hard accumulation cap (MaxAccumulatedFrames) halted the exposure —
+        // the sole condition, across every camera type, that seals the plate as terminally Exposed rather
+        // than resumable ExposurePaused.
+        [ProtoMember(5)] public bool ReachedCap { get; set; }
     }
 
     [ProtoContract]

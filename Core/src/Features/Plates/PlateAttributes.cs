@@ -148,6 +148,36 @@ namespace Photocore.Plates
         {
             stack.Attributes.RemoveAttribute(AttrDevelopmentStepApplications);
         }
+
+        private const string AttrCapturedYear  = "photochemCapturedYear";
+        private const string AttrCapturedMonth = "photochemCapturedMonth";
+        private const string AttrCapturedDay   = "photochemCapturedDay";
+
+        // Stamped once at shutter-open (first Sensitized → Exposing, not a resume) and carried
+        // forward untouched through develop/fix via the existing attribute MergeTree — never
+        // reset or overwritten downstream. Absent on plates exposed before this existed.
+        public static void SetCaptureDate(ItemStack stack, IGameCalendar calendar)
+        {
+            CaptureDate date = CaptureDate.From(calendar);
+            stack.Attributes.SetInt(AttrCapturedYear, date.Year);
+            stack.Attributes.SetInt(AttrCapturedMonth, date.Month);
+            stack.Attributes.SetInt(AttrCapturedDay, date.Day);
+        }
+
+        public static bool TryGetCaptureDate(ItemStack? stack, out CaptureDate date)
+        {
+            if (stack?.Attributes?.HasAttribute(AttrCapturedYear) != true)
+            {
+                date = default;
+                return false;
+            }
+
+            date = new CaptureDate(
+                stack.Attributes.GetInt(AttrCapturedYear),
+                stack.Attributes.GetInt(AttrCapturedMonth),
+                stack.Attributes.GetInt(AttrCapturedDay));
+            return true;
+        }
     }
 }
 

@@ -148,6 +148,8 @@
     "photocore:frame-info-photograph":   "Photograph",
     "photocore:frame-info-displaying":   "Displaying: {0}",
 
+    "photocore:plate-taken-on":          "Taken on {0} {1}, Year {2}",
+
 
     "photocore:shuttergate-maxframes-message":  "photocore: this plate cannot be exposed any further (maximum {0} frames reached).",
     "photocore:shuttergate-target-message":     "photocore: this exposure has reached its target and can't be resumed.",

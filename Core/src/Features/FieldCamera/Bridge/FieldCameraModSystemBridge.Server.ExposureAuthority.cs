@@ -54,9 +54,13 @@ namespace Photocore.FieldCamera
 
                 PlateDryingTransition.TickNow(Api.World, loadedPlate);
                 PlateAttributes.SetStage(loadedPlate, PlateStage.Exposing);
-                // Stamp photographer on first exposure start (Sensitized → Exposing only; not a resume from ExposurePaused).
+                // Stamp photographer + capture date on first exposure start (Sensitized → Exposing
+                // only; not a resume from ExposurePaused) — shutter-open is "taken", not seal time.
                 if (stage == PlateStage.Sensitized)
+                {
                     loadedPlate.Attributes.SetString(PlateAttributes.PhotographerUid, player.PlayerUID);
+                    PlateAttributes.SetCaptureDate(loadedPlate, Api.World.Calendar);
+                }
                 if (!string.IsNullOrEmpty(packet.ExposureId))
                     loadedPlate.Attributes.SetString(PlateAttributes.ExposureId, packet.ExposureId);
                 if (packet.TargetFrames > 0)

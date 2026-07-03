@@ -134,13 +134,15 @@ namespace Photocore.FieldCamera
             PlateStage stage = PlateAttributes.GetStage(loadedPlate);
             if (stage != PlateStage.ExposurePaused && stage != PlateStage.Sensitized) return false;
 
-            // On first exposure (Sensitized → Exposing): assign exposure ID and stamp photographer.
-            // This mirrors OnExposureStateReceived so the mounted-block path is equally guarded.
+            // On first exposure (Sensitized → Exposing): assign exposure ID, stamp photographer, and
+            // stamp capture date. This mirrors OnExposureStateReceived so the mounted-block path is
+            // equally guarded.
             if (stage == PlateStage.Sensitized)
             {
                 if (string.IsNullOrEmpty(loadedPlate.Attributes.GetString(PlateAttributes.ExposureId, string.Empty)))
                     loadedPlate.Attributes.SetString(PlateAttributes.ExposureId, Guid.NewGuid().ToString("N"));
                 loadedPlate.Attributes.SetString(PlateAttributes.PhotographerUid, playerUid);
+                PlateAttributes.SetCaptureDate(loadedPlate, Api.World.Calendar);
             }
 
             PlateDryingTransition.TickNow(Api.World, loadedPlate);

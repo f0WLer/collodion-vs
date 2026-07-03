@@ -36,6 +36,11 @@ namespace Photocore.Plates
             {
                 PlateDryingTransition.AppendInfo(world, stack, dsc);
             }
+
+            if (PlateAttributes.TryGetCaptureDate(stack, out CaptureDate captured))
+            {
+                dsc.AppendLine(captured.ToDisplayString());
+            }
         }
 
         protected override bool ShouldTrackDryness(ItemStack stack)

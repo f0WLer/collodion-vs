@@ -4,6 +4,7 @@ using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
 using Photocore.PhotoMetadata.Model;
+using Photocore.Plates;
 
 namespace Photocore.Frame
 {
@@ -121,6 +122,10 @@ namespace Photocore.Frame
             string caption = be.Inventory[0].Itemstack.ResolveCaption();
             string label = string.IsNullOrEmpty(caption) ? Lang.Get("photocore:frame-info-photograph") : caption;
             string line = Lang.Get("photocore:frame-info-displaying", label);
+
+            if (PlateAttributes.TryGetCaptureDate(be.Inventory[0].Itemstack, out CaptureDate captured))
+                line += "\n" + captured.ToDisplayString();
+
             return string.IsNullOrEmpty(baseInfo) ? line : baseInfo + "\n" + line;
         }
 

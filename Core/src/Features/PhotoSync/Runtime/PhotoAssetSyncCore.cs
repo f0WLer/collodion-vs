@@ -1,7 +1,6 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Server;
 using Photocore.Configuration;
-using Photocore.PhotoSync;
 
 namespace Photocore.PhotoSync.Runtime
 {

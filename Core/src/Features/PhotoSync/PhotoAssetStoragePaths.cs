@@ -58,7 +58,8 @@ namespace Photocore.PhotoSync
 
         // Enumerates the normalized ids (file names) of every ground-truth source photo on disk.
         // Top-level only — the derived/ and exports/ subdirectories are intentionally excluded.
-        internal static IReadOnlyList<string> EnumeratePhotoIds()
+        // Optional typeTag filters to ids whose GetTypeTag matches (ordinal-insensitive).
+        internal static IReadOnlyList<string> EnumeratePhotoIds(string? typeTag = null)
         {
             string dir = GetPhotosDirectory();
             if (!Directory.Exists(dir)) return Array.Empty<string>();
@@ -67,13 +68,29 @@ namespace Photocore.PhotoSync
             try
             {
                 foreach (string path in Directory.EnumerateFiles(dir, "*.png", SearchOption.TopDirectoryOnly))
-                    ids.Add(Path.GetFileName(path));
+                {
+                    string id = Path.GetFileName(path);
+                    if (typeTag != null && !string.Equals(GetTypeTag(id), typeTag, StringComparison.OrdinalIgnoreCase)) continue;
+                    ids.Add(id);
+                }
             }
             catch
             {
                 // Best-effort: a transient IO error yields whatever was enumerated so far.
             }
             return ids;
+        }
+
+        // The type tag is the substring before the id's first '_' (e.g. "exposure"). Same rule for
+        // both id eras. Returns empty for a malformed/untagged id rather than throwing.
+        internal static string GetTypeTag(string photoId)
+        {
+            string normalized = NormalizePhotoId(photoId);
+            if (string.IsNullOrEmpty(normalized)) return string.Empty;
+
+            string baseName = Path.GetFileNameWithoutExtension(normalized);
+            int underscoreIdx = baseName.IndexOf('_');
+            return underscoreIdx > 0 ? baseName.Substring(0, underscoreIdx) : string.Empty;
         }
 
         internal static long GetPhotoSizeBytes(string photoId)

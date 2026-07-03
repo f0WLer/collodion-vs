@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Vintagestory.API.MathTools;
 using Photocore.Plates.Rendering;
-using Photocore.PhotoSync;
+using Photocore.PhotoSync.Store;
 
 namespace Photocore.PhotoSync.Runtime
 {
@@ -132,12 +132,18 @@ namespace Photocore.PhotoSync.Runtime
             if (!LooksLikePng(completed.Buffer, completed.TotalSize))
             {
                 Log.Warn(_mod.ClientApi.Logger, $"downloaded bytes for {photoId} do not look like PNG; ignoring");
+                // Terminal for this transfer and nothing re-requests on a store waiter's behalf —
+                // resolve as missing rather than parking waiters until their tokens fire.
+                ClientResolvePhotoWaiters(photoId, PhotoFetchResult.Missing);
                 return;
             }
 
             if (!TryWritePhotoBytes(photoId, completed.Buffer, writeLock: null, skipIfExists: false, out string? error))
             {
                 Log.Warn(_mod.ClientApi.Logger, $"failed writing downloaded photo {photoId}: {error ?? "Unknown write error"}");
+                // The transfer itself succeeded — hand waiters the in-memory bytes even though the
+                // disk cache write failed; the render funnels retry the disk read on their own cadence.
+                ClientResolvePhotoWaiters(photoId, PhotoFetchResult.Found(completed.Buffer));
                 return;
             }
 
@@ -151,6 +157,7 @@ namespace Photocore.PhotoSync.Runtime
             PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
 
             ClientMarkWaitingBlocksDirty(photoId);
+            ClientResolvePhotoWaiters(photoId, PhotoFetchResult.Found(completed.Buffer));
         }
 
         private void ClientMaybeCleanupState(long nowMs, double nowSeconds)
@@ -234,6 +241,10 @@ namespace Photocore.PhotoSync.Runtime
                 PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
                 ClientMarkWaitingBlocksDirty(normalizedPhotoId);
             }
+
+            // Resolve regardless of TryAdd outcome — a waiter registered after the first NACK still
+            // needs to learn the id is missing rather than hang until its token times out.
+            ClientResolvePhotoWaiters(normalizedPhotoId, PhotoFetchResult.Missing);
         }
     }
 }

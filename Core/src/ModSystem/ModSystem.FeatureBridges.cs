@@ -2,6 +2,7 @@
 using Photocore.CameraCapture;
 using Photocore.FieldCamera;
 using Photocore.PhotoSync.Integration;
+using Photocore.PhotoSync.Store;
 using Photocore.Tray;
 namespace Photocore
 {
@@ -20,5 +21,11 @@ namespace Photocore
         internal FieldCameraModSystemBridge FieldCameraBridge => _fieldCameraBridge ??= new FieldCameraModSystemBridge(this);
         internal PhotoSyncModSystemBridge PhotoSyncModSystemBridge => _photoSyncBridge ??= new PhotoSyncModSystemBridge(this);
         internal TrayClientEvents TrayClientEvents => _trayClientEvents ??= new TrayClientEvents(this);
+
+        // Public read-only cross-mod entry point onto the photo store. Resolve this type via
+        // capi.ModLoader.GetModSystem<PhotocoreModSystem>(withInheritance: true) so a third-party
+        // mod works regardless of which head (collodion or kosphotography) is installed.
+        // Available only after Start has run (side selection needs ModApi); throws before that.
+        public IPhotoStore PhotoStore => PhotoSyncModSystemBridge.PhotoStore;
     }
 }

@@ -3,6 +3,7 @@ using Vintagestory.API.Server;
 using Photocore.PhotoMetadata;
 using Photocore.PhotoSync;
 using Photocore.PhotoSync.Runtime;
+using Photocore.PhotoSync.Store;
 
 namespace Photocore.PhotoSync.Integration
 {
@@ -10,6 +11,7 @@ namespace Photocore.PhotoSync.Integration
     {
         private readonly PhotocoreModSystem _owner;
         internal PhotoAssetSyncCore? Runtime;
+        private IPhotoStore? _photoStore;
 
         internal PhotoSyncModSystemBridge(PhotocoreModSystem owner)
         {
@@ -20,6 +22,26 @@ namespace Photocore.PhotoSync.Integration
         private PhotoAssetSyncCore GetOrCreatePhotoSyncRuntime()
         {
             return Runtime ??= new PhotoAssetSyncCore(_owner);
+        }
+
+        // Public IPhotoStore entry point (see PhotocoreModSystem.PhotoStore). The server is always
+        // authoritative so it reads local disk directly; the client routes through the sync runtime
+        // since its disk copy is only a cache. Side selection needs ModApi, so resolving before Start
+        // has run must fail loudly — memoizing a guess would permanently wire the wrong side.
+        internal IPhotoStore PhotoStore
+        {
+            get
+            {
+                if (_photoStore != null) return _photoStore;
+                if (_owner.ModApi == null)
+                {
+                    throw new InvalidOperationException(
+                        "PhotoStore is not available before mod startup; resolve it after PhotocoreModSystem.Start has run.");
+                }
+                return _photoStore = _owner.ModApi is ICoreServerAPI
+                    ? new ServerPhotoStore()
+                    : new ClientPhotoStore(GetOrCreatePhotoSyncRuntime());
+            }
         }
 
         // Registers PhotoSync packet DTOs on the shared channel, preserving wire-order invariants.
@@ -123,7 +145,12 @@ namespace Photocore.PhotoSync.Integration
         // Clears feature-owned sync/metadata runtime references during mod shutdown.
         internal void ClearPhotoSyncAndMetadataRuntimeReferences()
         {
+            // Cancel outstanding IPhotoStore waiters before dropping the runtime, or third-party
+            // awaits would hang forever across a world unload.
+            Runtime?.ClientAbandonAllPhotoWaiters();
+
             Runtime = null;
+            _photoStore = null;
             _serverPhotoSeenService = null;
         }
     }

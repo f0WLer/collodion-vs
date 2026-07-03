@@ -11,6 +11,9 @@
 - **`PhotoSeenPingIntervalSeconds` moved from `Client` to `PhotoSync`** in `photocore.json`, since it's really about photo-sync traffic rather than a general client preference -- and the server now sets this interval itself instead of trusting whatever the client says. If you had it tuned away from the 300s default, you'll need to re-set it under `PhotoSync`; it won't carry over on its own.
 - **`ConsumePlainClothOnPolish` and `PlainClothConsumedPerPolish` are now just one setting, `ClothConsumedPerPolish`.** Set it to 0 to turn cloth consumption off (still the default), or to whatever amount you want consumed per polish. If you'd enabled the old pair, re-set the amount under the new name.
 
+## Camera
+- **Fixed mounted-camera exposures silently failing to capture anything during dusk, dawn, a moonless or low-phase night, or heavy fog.** The virtual camera re-renders shadows every exposure tick to match its own heading, but didn't check whether shadows were worth drawing at all in that lighting -- so it crashed when they weren't, permanently ending the exposure with zero frames captured and no error shown. It now skips that work under the same conditions the game itself would, which also avoids some wasted rendering during those same moments.
+
 ## Misc
 - Default drying duration for plates was bumped to a 0.75 (45 minutes in-game).
 ## Under the hood

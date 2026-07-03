@@ -515,6 +515,17 @@ namespace Photocore.CameraCapture
             int quality = _main.AmbientManager.ShadowQuality;
             if (quality <= 0) return;
 
+            // Mirrors SystemRenderShadowMap's own gate: below this threshold the engine skips
+            // activating the chunkshadowmap shader, but SystemRenderTerrain.OnRenderShadow (also
+            // registered on this stage) has no matching guard and unconditionally tries to use it —
+            // "Can't set uniform on not active shader chunkshadowmap!" when we re-trigger the stage
+            // at a moment (dusk/dawn, moonless night, heavy fog) where DropShadowIntensity has faded
+            // below it. AmbientManager.DropShadowIntensity itself is internal to the game assembly;
+            // ShaderUniforms.DropShadowIntensity is the same value the engine copies out publicly,
+            // already updated for this frame (that copy happens at RenderOrder 0.0 in the Before
+            // stage, before this renderer's own RenderOrder 0.4).
+            if (_capi.Render.ShaderUniforms.DropShadowIntensity <= 0.01f) return;
+
             _main.TriggerRenderStage(EnumRenderStage.ShadowFar, dt);
             _main.TriggerRenderStage(EnumRenderStage.ShadowFarDone, dt);
             if (quality > 1)

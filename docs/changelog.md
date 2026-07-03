@@ -19,6 +19,8 @@
 
 ## Misc
 - Default drying duration for plates was bumped to a 0.75 (45 minutes in-game).
+- The exposure profile was tweaked to allow for better low-light photography.
+
 ## Under the hood
 - Some internal restructuring (naming, file organization) -- no gameplay changes.
 

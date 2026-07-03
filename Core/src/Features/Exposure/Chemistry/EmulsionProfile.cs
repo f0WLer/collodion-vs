@@ -63,7 +63,7 @@
         internal static readonly EmulsionProfile Iodide = new EmulsionProfile(
             "Iodide", durationSeconds: 8f, sampleCount: 40,
             redSensitivity: 0.12f, greenSensitivity: 0.45f, blueSensitivity: 1.00f,
-            developmentStrength: 8.0f, hdGamma: 1.10f, inertiaPoint: 0.10f,
+            developmentStrength: 8.0f, hdGamma: 1.10f, inertiaPoint: 0.04f,
             reciprocityExponent: 0.90f, exposureGain: 1.15f);
 
         /// <summary>

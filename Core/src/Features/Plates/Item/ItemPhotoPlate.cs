@@ -1,5 +1,6 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 
 using Photocore.Plates.Rendering;
 
@@ -35,6 +36,11 @@ namespace Photocore.Plates
             if (PlateAttributes.GetStage(stack) != PlateStage.Finished)
             {
                 PlateDryingTransition.AppendInfo(world, stack, dsc);
+            }
+
+            if (PlateAttributes.TryGetPhotographerName(stack, out string photographer))
+            {
+                dsc.AppendLine(Lang.Get("photocore:plate-captured-by", photographer));
             }
 
             if (PlateAttributes.TryGetCaptureDate(stack, out CaptureDate captured))

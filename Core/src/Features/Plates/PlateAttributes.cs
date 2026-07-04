@@ -131,6 +131,23 @@ namespace Photocore.Plates
         // Player UID of the photographer who started this exposure. Only the original photographer may develop the plate.
         public const string PhotographerUid = "photochemPhotographerUid";
 
+        private const string AttrPhotographerName = "photochemPhotographerName";
+
+        // Display name of the photographer, stamped alongside PhotographerUid at shutter-open.
+        // Unlike PhotographerUid (cleared once a plate is Finished, since ownership gating ends there),
+        // this is never removed -- it's the "Captured by" credit and should survive to the final photo.
+        public static void SetPhotographerName(ItemStack stack, string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return;
+            stack.Attributes.SetString(AttrPhotographerName, name);
+        }
+
+        public static bool TryGetPhotographerName(ItemStack? stack, out string name)
+        {
+            name = stack?.Attributes?.GetString(AttrPhotographerName) ?? string.Empty;
+            return !string.IsNullOrEmpty(name);
+        }
+
         private const string AttrDevelopmentStepApplications = "photochemDevelopmentStepApplications";
 
         public static int GetDevelopmentApplications(ItemStack? stack)

@@ -149,6 +149,7 @@
     "photocore:frame-info-displaying":   "Displaying: {0}",
 
     "photocore:plate-taken-on":          "Taken on {0} {1}, Year {2}",
+    "photocore:plate-captured-by":       "Captured by: {0}",
 
 
     "photocore:shuttergate-maxframes-message":  "photocore: this plate cannot be exposed any further (maximum {0} frames reached).",

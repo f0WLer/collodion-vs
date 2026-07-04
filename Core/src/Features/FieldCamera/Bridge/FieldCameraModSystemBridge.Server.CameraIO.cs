@@ -142,6 +142,7 @@ namespace Photocore.FieldCamera
                 if (string.IsNullOrEmpty(loadedPlate.Attributes.GetString(PlateAttributes.ExposureId, string.Empty)))
                     loadedPlate.Attributes.SetString(PlateAttributes.ExposureId, Guid.NewGuid().ToString("N"));
                 loadedPlate.Attributes.SetString(PlateAttributes.PhotographerUid, playerUid);
+                PlateAttributes.SetPhotographerName(loadedPlate, Api.World.PlayerByUid(playerUid)?.PlayerName);
                 PlateAttributes.SetCaptureDate(loadedPlate, Api.World.Calendar);
             }
 

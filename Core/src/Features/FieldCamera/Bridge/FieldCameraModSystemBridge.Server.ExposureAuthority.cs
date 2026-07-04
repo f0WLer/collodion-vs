@@ -59,6 +59,7 @@ namespace Photocore.FieldCamera
                 if (stage == PlateStage.Sensitized)
                 {
                     loadedPlate.Attributes.SetString(PlateAttributes.PhotographerUid, player.PlayerUID);
+                    PlateAttributes.SetPhotographerName(loadedPlate, player.PlayerName);
                     PlateAttributes.SetCaptureDate(loadedPlate, Api.World.Calendar);
                 }
                 if (!string.IsNullOrEmpty(packet.ExposureId))

@@ -119,13 +119,15 @@ namespace Photocore.Frame
                 return baseInfo;
             }
 
-            string caption = be.Inventory[0].Itemstack.ResolveCaption();
-            string label = string.IsNullOrEmpty(caption) ? Lang.Get("photocore:frame-info-photograph") : caption;
-            string line = Lang.Get("photocore:frame-info-displaying", label);
-
+            var lines = new List<string>();
+            if (PlateAttributes.TryGetPhotographerName(be.Inventory[0].Itemstack, out string photographer))
+                lines.Add(Lang.Get("photocore:plate-captured-by", photographer));
             if (PlateAttributes.TryGetCaptureDate(be.Inventory[0].Itemstack, out CaptureDate captured))
-                line += "\n" + captured.ToDisplayString();
+                lines.Add(captured.ToDisplayString());
 
+            if (lines.Count == 0) return baseInfo;
+
+            string line = string.Join("\n", lines);
             return string.IsNullOrEmpty(baseInfo) ? line : baseInfo + "\n" + line;
         }
 

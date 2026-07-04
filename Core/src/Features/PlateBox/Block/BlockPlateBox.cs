@@ -1,4 +1,5 @@
 ﻿using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
 namespace Photocore.PlateBox
@@ -39,6 +40,14 @@ namespace Photocore.PlateBox
                 CreativeInventoryTabs = Array.Empty<string>();
                 CreativeInventoryStacks = Array.Empty<CreativeTabAndStackList>();
             }
+        }
+
+        // Block's default held-item tooltip doesn't pick up "blockdesc-" the way Item's does with
+        // "itemdesc-" (that key is only consumed by GetPlacedBlockInfo), so add it explicitly.
+        public override void GetHeldItemInfo(ItemSlot inSlot, System.Text.StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
+        {
+            base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
+            dsc.AppendLine(Lang.Get("blockdesc-platebox"));
         }
 
         public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)

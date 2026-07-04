@@ -39,7 +39,7 @@ namespace Photocore.FieldCamera
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
             dsc.AppendLine(Lang.Get("photocore:camera-info-controls"));
-            dsc.AppendLine(Lang.Get("photocore:camera-info-tripod"));
+            dsc.AppendLine(Lang.Get("photocore:camera-info-load-attach-hint"));
 
             string? loadedPlate = inSlot?.Itemstack?.Attributes?.GetString(AttrLoadedPlate, null);
             if (!string.IsNullOrEmpty(loadedPlate))
@@ -51,14 +51,7 @@ namespace Photocore.FieldCamera
                 dsc.AppendLine(Lang.Get("photocore:camera-info-plate-none"));
             }
 
-            if (string.IsNullOrEmpty(loadedPlate))
-            {
-                dsc.AppendLine(Lang.Get("photocore:camera-info-load-hint"));
-            }
-            else
-            {
-                dsc.AppendLine(Lang.Get("photocore:camera-info-unload-hint"));
-            }
+            dsc.AppendLine(Lang.Get("photocore:camera-info-unload-detach-hint"));
         }
     }
 }

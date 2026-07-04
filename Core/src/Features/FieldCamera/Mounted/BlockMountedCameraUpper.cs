@@ -26,10 +26,10 @@ namespace Photocore.FieldCamera
             {
                 ox  = be.SubBlockOffsetX;
                 oz  = be.SubBlockOffsetZ;
-                top = Math.Max(0f, be.SelectionTopY - 1f);
+                top = Math.Max(0f, be.SelectionTopY - 1f) + 0.0625f;
             }
             if (top <= 0f) return Array.Empty<Cuboidf>();
-            return [new Cuboidf(0.3f + ox, 0f, 0.3f + oz, 0.7f + ox, top, 0.7f + oz)];
+            return [new Cuboidf(0.2375f + ox, 0f, 0.2375f + oz, 0.7625f + ox, top, 0.7625f + oz)];
         }
 
         public override Cuboidf[] GetCollisionBoxes(IBlockAccessor blockAccessor, BlockPos pos)

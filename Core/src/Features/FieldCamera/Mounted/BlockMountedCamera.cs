@@ -14,7 +14,7 @@ namespace Photocore.FieldCamera
                 ox = be.SubBlockOffsetX;
                 oz = be.SubBlockOffsetZ;
             }
-            return [new Cuboidf(0.3f + ox, 0f, 0.3f + oz, 0.7f + ox, 1f, 0.7f + oz)];
+            return [new Cuboidf(0.2375f + ox, 0f, 0.2375f + oz, 0.7625f + ox, 1f, 0.7625f + oz)];
         }
 
         public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)

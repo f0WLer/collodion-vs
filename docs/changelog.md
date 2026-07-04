@@ -18,6 +18,9 @@
 - **Fixed exposures locking as fully-exposed far earlier than they should have.** An exposure was being marked done as soon as its accumulated frames passed the chemistry's `SampleCount` -- a value meant only to describe exposure character and resource cost, not when to stop. Whether an exposure is actually finished (and locked from further resuming) now depends solely on whether it hit the hard accumulation-frame cap (`MaxAccumulatedFrames`) -- the same rule for every camera type -- so `SampleCount` is free to be tuned purely for image character without affecting how long an exposure can run.
 - **Finished photographs and framed photos now show "Taken on *month* *day*, Year *year*"**, stamped from the in-game calendar the moment the shutter first opens. Plates exposed before this update simply won't show this.
 
+## Modding
+- **Other mods can now read Photocore/Collodion photos through a new `IPhotoStore` API.** Get it from `PhotocoreModSystem.PhotoStore` (resolve via `capi.ModLoader.GetModSystem<PhotocoreModSystem>(withInheritance: true)` so it works whether Collodion or the Kos superset is installed). It's read-only: fetch a photo's bytes by id (waiting on the sync download client-side if needed), check whether one's cached locally, and enumerate known ids by type. Writing to the store isn't exposed.
+
 ## Misc
 - Default drying duration for plates was bumped to a 0.75 (45 minutes in-game).
 - The exposure profile was tweaked to allow for better low-light photography.

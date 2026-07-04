@@ -17,6 +17,7 @@
 - **Handheld cameras no longer create a photo the moment an exposure finishes.** Finishing a handheld exposure used to write the photo file and hand it to the server right there in the field -- with no tray involved at all, so the develop whitelist never actually gated it the way it gates every other camera. A finished handheld exposure now becomes a plate that's ready to develop, same as a mounted camera's; only pouring developer on it in a tray creates the photo. Trying to re-expose an already-finished plate now shows the same clear message ("this plate has been fully exposed and cannot be exposed further") on both handheld and mounted cameras, instead of mounted cameras silently doing nothing.
 - **Fixed exposures locking as fully-exposed far earlier than they should have.** An exposure was being marked done as soon as its accumulated frames passed the chemistry's `SampleCount` -- a value meant only to describe exposure character and resource cost, not when to stop. Whether an exposure is actually finished (and locked from further resuming) now depends solely on whether it hit the hard accumulation-frame cap (`MaxAccumulatedFrames`) -- the same rule for every camera type -- so `SampleCount` is free to be tuned purely for image character without affecting how long an exposure can run.
 - **Finished photographs and framed photos now show "Taken on *month* *day*, Year *year*"**, stamped from the in-game calendar the moment the shutter first opens. Plates exposed before this update simply won't show this.
+- **Finished photographs and framed photos now also show "Captured by *player*"**, stamped from whoever opened the shutter, the same moment as the capture date above. Plates exposed before this update won't show this either.
 
 ## Modding
 - **Other mods can now read Photocore/Collodion photos through a new `IPhotoStore` API.** Get it from `PhotocoreModSystem.PhotoStore` (resolve via `capi.ModLoader.GetModSystem<PhotocoreModSystem>(withInheritance: true)` so it works whether Collodion or the Kos superset is installed). It's read-only: fetch a photo's bytes by id (waiting on the sync download client-side if needed), check whether one's cached locally, and enumerate known ids by type. Writing to the store isn't exposed.
@@ -24,6 +25,9 @@
 ## Misc
 - Default drying duration for plates was bumped to a 0.75 (45 minutes in-game).
 - The exposure profile was tweaked to allow for better low-light photography.
+- Tightened hitboxes on the plate box (both open and closed), the mounted camera, and the standing photo frame -- all were harder to click on than they should have been.
+- Tightened held/ground/GUI transforms for the development trays, the standing and wall photo frames, the plate box, and the glass/sensitized/photo plate items.
+- The tripod and plate box now show a description when you hover over them in your inventory -- the tripod never had one, and the plate box's existed but wasn't actually wired up to the tooltip.
 
 ## Under the hood
 - Some internal restructuring (naming, file organization) -- no gameplay changes.

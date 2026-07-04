@@ -25,6 +25,10 @@
   "groundTransform": {
     "scale": 3.0
   },
+  "guiTransform": {
+    "translation": { "x": 0, "y": -4.8172045, "z": 0 },
+    "scale": 1.32
+  },
   "textures": {
     "oak": { "base": "game:block/wood/oak" },
     "leather": { "base": "game:block/leather/plain" },

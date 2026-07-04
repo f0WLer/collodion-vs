@@ -27,16 +27,21 @@
     "photoshape": "photocore:photooverlaywall",
     "photoUvRotation": 90
   },
-  "tpOffHandTransform": {
-		"translation": { "x": -0.31, "y": -0.40, "z": -0.54 },
-		"rotation": { "x": -80, "y": 10, "z": -100 },
-		"scale": 1
+  "tpHandTransform": {
+		"translation": { "x": -1.38, "y": -0.51, "z": -0.92 },
+		"rotation": { "x": -73.14, "y": -166.72, "z": -99.13 },
+		"scale": 0.5
 	},
   "guiTransform": {
 		"translation": { "x": 13.63, "y": 4.13, "z": 0 },
-		"rotation": { "x": -20, "y": 135, "z": 0 },
-		"scale": 1.67
+		"rotation": { "x": -22, "y": 135, "z": 0 },
+		"scale": 1.75
 	},
+  "groundTransform": {
+    "translation": { "x": 0, "y": 0.3407149, "z": 0 },
+    "rotation": { "x": -90, "y": -45, "z": 0 },
+    "scale": 3
+  },
   "variantgroups": [
     {
       "code": "side",

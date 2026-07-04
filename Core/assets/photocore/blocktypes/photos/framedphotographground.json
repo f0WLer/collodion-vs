@@ -28,7 +28,7 @@
     "photoUvRotation": 90
   },
   	"guiTransform": {
-		"translation": { "x": 0, "y": -13.63, "z": 0 },
+		"translation": { "x": -4.13, "y": -13.63, "z": 0 },
 		"rotation": { "x": -20, "y": 45, "z": 0 },
 		"scale": 2.19
 	},

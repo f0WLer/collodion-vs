@@ -171,9 +171,20 @@ namespace Photocore.Tray
             };
         }
 
+        // Creative still has to be holding enough of the chemical, it just doesn't spend it. The holding
+        // requirement is not this method's job: TryValidateTimedStepForAction already rejected the step
+        // server-side via HasConsumableChemical, on the same slot and amount, earlier in the same tick.
+        // Mirrors SensitizationRecipe.Consume, which likewise bypasses outright and leans on CanApply.
+        private bool TryConsumeChemicalUnlessCreative(IPlayer? byPlayer, ItemSlot? activeSlot, AssetLocation portionCode)
+        {
+            if (byPlayer?.WorldData?.CurrentGameMode == EnumGameMode.Creative) return true;
+
+            return PlateChemicalUtil.TryConsumeChemical(activeSlot, portionCode, GetChemicalUnitsPerUse());
+        }
+
         private bool TryApplyDeveloperPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate, bool isExposed, int currentPours)
         {
-            if (!PlateChemicalUtil.TryConsumeChemical(activeSlot, _developerPortionCode, GetChemicalUnitsPerUse()))
+            if (!TryConsumeChemicalUnlessCreative(byPlayer, activeSlot, _developerPortionCode))
             {
                 Tell(byPlayer, GetMissingChemicalMessage(TrayActionKind.Developer), pos);
                 return false;
@@ -211,7 +222,7 @@ namespace Photocore.Tray
 
         private bool TryApplyFixerPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate)
         {
-            if (!PlateChemicalUtil.TryConsumeChemical(activeSlot, _fixerPortionCode, GetChemicalUnitsPerUse()))
+            if (!TryConsumeChemicalUnlessCreative(byPlayer, activeSlot, _fixerPortionCode))
             {
                 Tell(byPlayer, GetMissingChemicalMessage(TrayActionKind.Fixer), pos);
                 return false;

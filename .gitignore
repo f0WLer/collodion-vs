@@ -12,6 +12,7 @@ obj/
 *.userosscache
 *.sln.docstates
 *.code-workspace
+docs/notestofowl.md
 
 # Package/restore and tooling artifacts
 packages/

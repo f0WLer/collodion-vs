@@ -288,12 +288,13 @@ namespace Photocore.Tray
 
         private static string GetMissingChemicalMessage(TrayActionKind actionKind)
         {
-            return actionKind switch
-            {
-                TrayActionKind.Developer => Lang.Get("photocore:msg-tray-need-developer"),
-                TrayActionKind.Fixer => Lang.Get("photocore:msg-tray-need-fixer"),
-                _ => Lang.Get("photocore:msg-tray-need-water")
-            };
+            // Names the chemical from its own item translation ("<domain>:item-<path>", the key the game
+            // itself resolves collectible names with) instead of one hand-written message per chemical.
+            // Water lives in the game domain, so this also picks up vanilla's name for it.
+            AssetLocation portionCode = GetPortionCode(actionKind);
+            string chemicalName = Lang.Get($"{portionCode.Domain}:item-{portionCode.Path}");
+
+            return Lang.Get("photocore:msg-tray-need-chemical", chemicalName);
         }
     }
 }

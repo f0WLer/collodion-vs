@@ -12,18 +12,14 @@
     "photocore:camera-info-load-attach-hint":   "<hk>shift</hk> + <icon>rightmousebutton</icon> with a Sensitized Plate or tripod in offhand to load or mount it.",
     "photocore:camera-info-unload-detach-hint": "<hk>shift</hk> + <icon>rightmousebutton</icon> with empty offhand to unload the plate, or remove the tripod once unloaded.",
 
+    "item-tripod":                      "Tripod",
     "itemdesc-tripod":                  "A folding wooden tripod that holds a field camera steady for long exposures.",
     "block-fieldcamera-tripod":         "Field Camera (Deployed)",
     "block-fieldcamera-tripod-upper":   "Field Camera (Deployed)",
-    "block-fieldcamera-resting-north":  "Field Camera",
-    "block-fieldcamera-resting-east":   "Field Camera",
-    "block-fieldcamera-resting-south":  "Field Camera",
-    "block-fieldcamera-resting-west":   "Field Camera",
+    "block-fieldcamera-resting-*":      "Field Camera",
 
 
-    "block-platebox":       "Plate Box",
-    "block-platebox-north": "Plate Box",
-    "block-platebox-open":  "Plate Box",
+    "block-platebox-*":     "Plate Box",
     "blockdesc-platebox":   "Stores and protects prepared plates. Use <icon>rightmousebutton</icon> on slots with a plate to store. <icon>rightmousebutton</icon> on a stored plate to retrieve it.",
     
     "photocore:platebox-info-slots":        "Plate slots: {0}/{1}",
@@ -57,9 +53,6 @@
 
 
 
-    "block-plate-rough":        "Rough Glass Plate",
-    "block-plate-clean":        "Clean Glass Plate",
-
     "item-glassplate":          "Glass Plate",
     "itemdesc-glassplate":      "Rough/Clean/Coated glass plate.",
     
@@ -72,8 +65,6 @@
     "photocore:plate-name-glass":               "Rough Glass Plate",
     "photocore:plate-name-glass-clean":         "Clean Glass Plate",
     "photocore:plate-name-glass-sensitizing":   "Coated Glass Plate",
-    "photocore:plate-name-coated":              "Collodion Coated Plate",
-    "photocore:plate-name-dried-coated":        "Dried Coated Plate",
     "photocore:plate-name-sensitized":          "Sensitized Plate",
     "photocore:plate-name-exposed":             "Exposed Plate",
     "photocore:plate-name-developing":          "Developing Plate",
@@ -83,8 +74,6 @@
 
     "photocore:heldhelp-cleanroughglass":       "Polish rough glass plate",
     "photocore:heldhelp-coatglassplate":        "Start sensitization with matching solution",
-    "photocore:heldhelp-plate-sensitize-dry":   "Pick up to speed up drying",
-    "photocore:heldhelp-plate-drying-wait":     "Drying… leave the plate to finish",
     "photocore:heldhelp-plate-sensitize-next":  "Continue sensitization process",
 
     "wetplate-wetness":             "Still wet: {0} min",
@@ -95,23 +84,11 @@
 
 
 
-    "item-framedphotograph":                    "Framed Photograph",
-    "itemdesc-framedphotograph":                "A photograph mounted in a simple wooden frame.",
-    "photocore:heldhelp-framedphoto-add":       "Add framed photo",
-    "photocore:heldhelp-framedphoto-remove":    "Remove framed photo",
-    
-    "block-framedphotographwall":       "Framed Photograph",
-    "block-framedphotographwall-north": "Framed Photograph",
-    "block-framedphotographwall-east":  "Framed Photograph",
-    "block-framedphotographwall-south": "Framed Photograph",
-    "block-framedphotographwall-west":  "Framed Photograph",
-    "blockdesc-framedphotographwall":   "A wall-mounted oak frame for displaying photographs. Hold a finished photo plate and <icon>rightmousebutton</icon> to insert; <icon>rightmousebutton</icon> with empty hand to remove.",
+    "block-framedphotographwall-*":     "Framed Photograph",
+    "blockdesc-framedphotographwall-*": "A wall-mounted oak frame for displaying photographs. Hold a finished photo plate and <icon>rightmousebutton</icon> to insert.",
 
-    "block-framedphotographground-north":   "Framed Photograph",
-    "block-framedphotographground-east":    "Framed Photograph",
-    "block-framedphotographground-south":   "Framed Photograph",
-    "block-framedphotographground-west":    "Framed Photograph",
-    "blockdesc-framedphotographground":     "A free-standing easel frame for displaying photographs. Hold a finished photo plate and <icon>rightmousebutton</icon> to insert; <icon>rightmousebutton</icon> with empty hand to remove.",
+    "block-framedphotographground-*":       "Framed Photograph",
+    "blockdesc-framedphotographground-*":   "A free-standing easel frame for displaying photographs. Hold a finished photo plate and <icon>rightmousebutton</icon> to insert.",
 
     "photocore:heldhelp-frame-insert": "Insert photo into frame",
     "photocore:heldhelp-frame-take":   "Take photo from frame",
@@ -155,30 +132,27 @@
 
 
     "photocore:msg-tip-f4-guiless":             "photocore: Tip - press <hk>togglehud</hk> to toggle gui-less mode (hide HUD) while using the viewfinder.",
-    "photocore:shuttergate-maxframes-message":  "photocore: this plate cannot be exposed any further (maximum {0} frames reached).",
-    "photocore:msg-plate-max-frames":           "photocore: this plate cannot be exposed any further.",
     "photocore:msg-plate-not-exposable":        "photocore: only fresh or paused exposure plates can be exposed.",
     "photocore:msg-plate-fully-exposed":        "photocore: this plate has been fully exposed and cannot be exposed further.",
-    "photocore:shuttergate-target-message":     "photocore: this exposure has reached its target and can't be resumed.",
-    "photocore:msg-exposure-save-failed":       "photocore: could not save exposure data to disk — partial exposures may not persist across sessions.",
+    "photocore:msg-plate-max-frames":           "photocore: this plate cannot be exposed any further (maximum {0} frames reached).",
+    "photocore:msg-exposure-target-reached":    "photocore: this exposure has reached its target and can't be resumed.",
     "photocore:msg-exposure-already-active":    "photocore: another exposure is already in progress.",
+    "photocore:msg-exposure-save-failed":       "photocore: could not save exposure data to disk — partial exposures may not persist across sessions.",
     "photocore:msg-load-sensitized-plate":      "photocore: load a sensitized plate to take a photo.",
     "photocore:msg-plate-other-photographer":   "photocore: this plate belongs to another photographer.",
     "photocore:msg-tray-other-photographer":    "photocore: only the original photographer can develop this plate.",
+    "photocore:msg-develop-not-whitelisted":    "photocore: you aren't on this server's develop whitelist — you can expose plates, but only whitelisted players can develop them. Your exposure has been kept.",
+    "photocore:msg-mounted-no-plate":           "photocore: no plate is loaded.",
+    "photocore:msg-mounted-load-hint":          "photocore: hold a sensitized plate and right-click to load.",
+    "photocore:msg-mounted-pause-first":        "photocore: pause the exposure first (<icon>rightmousebutton</icon>) before unloading.",
     "photocore:msg-mounted-other-active":       "photocore: someone else's exposure is in progress.",
     "photocore:msg-mounted-other-paused":       "photocore: someone else's paused exposure — <hk>shift</hk>+<icon>rightmousebutton</icon> to unload the plate, or <hk>shift</hk>+<hk>ctrl</hk>+<icon>rightmousebutton</icon> to recover the camera.",
-    "photocore:msg-mounted-no-plate":           "photocore: no plate is loaded.",
-    "photocore:msg-mounted-pause-first":        "photocore: pause the exposure first (<icon>rightmousebutton</icon>) before unloading.",
-    "photocore:msg-mounted-load-hint":          "photocore: hold a sensitized plate and right-click to load.",
     "photocore:msg-plate-dried-no-expose":      "photocore: this plate has dried out and can no longer be exposed.",
     "photocore:msg-plate-dried-reclaim":        "photocore: this plate has dried out — wash it in a development tray to reclaim the glass.",
-    "photocore:msg-plate-not-enough-cloth":     "photocore: you need {0} plain cloth to polish this plate.",
     "photocore:msg-tray-plate-dried":           "photocore: the plate has dried and can no longer be used.",
+    "photocore:msg-plate-not-enough-cloth":     "photocore: you need {0} plain cloth to polish this plate.",
     "photocore:msg-tray-underdeveloped":        "photocore: plate not fully developed ({0}/{1}).",
-    "photocore:msg-tray-need-developer":        "photocore: need developer (at least 1 portion).",
-    "photocore:msg-tray-need-fixer":            "photocore: need fixer (at least 1 portion).",
-    "photocore:msg-tray-need-water":            "photocore: need water (at least 1 portion).",
-    "photocore:msg-develop-not-whitelisted":    "photocore: you aren't on this server's develop whitelist — you can expose plates, but only whitelisted players can develop them. Your exposure has been kept.",
+    "photocore:msg-tray-need-chemical":         "photocore: need {0} (at least 1 portion).",
 
 
 

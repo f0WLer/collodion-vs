@@ -58,14 +58,14 @@ namespace Photocore.FieldCamera
                 if (!(resumeCondition?.CanResume(existingAcc.FramesAccumulated, existingAcc.TargetFrames) ?? true))
                 {
                     if (!silentIfBusy)
-                        ShowShutterGateMessageThrottled(Lang.Get("photocore:shuttergate-target-message"));
+                        ShowShutterGateMessageThrottled(Lang.Get("photocore:msg-exposure-target-reached"));
                     return false;
                 }
 
                 if (existingAcc.FramesAccumulated >= _maxFrames)
                 {
                     if (!silentIfBusy)
-                        ShowShutterGateMessageThrottled(Lang.Get("photocore:shuttergate-maxframes-message", _maxFrames));
+                        ShowShutterGateMessageThrottled(Lang.Get("photocore:msg-plate-max-frames", _maxFrames));
                     return false;
                 }
 
@@ -320,7 +320,7 @@ namespace Photocore.FieldCamera
                         // would otherwise accumulate one extra frame before stopping again).
                         if (renderer.FramesAccumulated >= _maxFrames)
                         {
-                            ShowShutterGateMessageThrottled(Lang.Get("photocore:msg-plate-max-frames"));
+                            ShowShutterGateMessageThrottled(Lang.Get("photocore:msg-plate-max-frames", _maxFrames));
                             renderer.Discard();
                             return;
                         }

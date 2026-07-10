@@ -152,7 +152,7 @@
       "comment": "photocore:configlib-photocapturemaxdimension-comment",
       "type": "integer",
       "default": 640,
-      "range": { "min": 128, "max": 2048 }
+      "range": { "min": 128, "max": 1024 }
     }
   ]
 }

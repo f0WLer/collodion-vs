@@ -7,10 +7,18 @@ namespace Photocore.Configuration
     public sealed class ViewfinderConfig
     {
         public const int MinPhotoCaptureMaxDimension = 128;
-        public const int MaxPhotoCaptureMaxDimension = 2048;
+        // 1024 is the largest photo that stays under PhotoSyncAdvancedConfig.MaxTransferBytes (2 MB) even
+        // for the grainiest captures (~1.45 bytes/px, measured across finished plates); a client silently
+        // skips uploading anything larger, so the photo would never reach the server. It also keeps a photo
+        // comfortably inside one texture-atlas page: atlases are capped at 4096x4096, and a 2048px photo is
+        // an entire page's height on installs whose maxTextureAtlasHeight never migrated off 2048.
+        public const int MaxPhotoCaptureMaxDimension = 1024;
         public const int DefaultPhotoCaptureMaxDimension = 640;
 
         public const int MinExposureReadbackMaxDimension     = 128;
+        // Never below MaxPhotoCaptureMaxDimension: the seal only ever downscales the accumulation buffer
+        // (PhotoCropMath.ScaleDownAndCenterCropToPlateAspect clamps its scale to 1), so this value is the
+        // real ceiling on captured photo size and a smaller one silently caps PhotoCaptureMaxDimension.
         public const int MaxExposureReadbackMaxDimension     = 2048;
         public const int DefaultExposureReadbackMaxDimension = 640;
 

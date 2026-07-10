@@ -160,7 +160,7 @@
     "photocore:msg-plate-fully-exposed":        "photocore: this plate has been fully exposed and cannot be exposed further.",
     "photocore:msg-plate-dried-no-expose":      "photocore: this plate has dried out and can no longer be exposed.",
     "photocore:msg-plate-other-photographer":   "photocore: this plate belongs to another photographer.",
-    "photocore:msg-tip-f4-guiless":             "photocore: Tip - press <hk>F4</hk> to toggle gui-less mode (hide HUD) while using the viewfinder.",
+    "photocore:msg-tip-f4-guiless":             "photocore: Tip - press <hk>togglehud</hk> to toggle gui-less mode (hide HUD) while using the viewfinder.",
     "photocore:msg-mounted-other-active":       "photocore: someone else's exposure is in progress.",
     "photocore:msg-mounted-no-plate":           "photocore: no plate is loaded.",
     "photocore:msg-mounted-pause-first":        "photocore: pause the exposure first (<icon>rightmousebutton</icon>) before unloading.",

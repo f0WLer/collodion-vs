@@ -49,11 +49,9 @@ namespace Photocore.Configuration
             }
         }
 
-        // Normalizes config and stores it best-effort.
-        internal static void TryStoreNormalized(ICoreAPICommon api, string fileName, PhotocoreConfig? cfg)
-        {
-            if (cfg == null) return;
-            TryStore(api, fileName, EnsureNormalized(cfg));
-        }
+        // Note: there is deliberately no "store the live in-memory config" helper here. On a client
+        // connected to a server, the in-memory config carries that server's authoritative overrides, so
+        // persisting it would write another server's settings into the player's own photocore.json.
+        // LoadOrCreate above only ever writes back what it just read from disk.
     }
 }

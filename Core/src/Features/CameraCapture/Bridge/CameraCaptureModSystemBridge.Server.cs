@@ -31,9 +31,13 @@ namespace Photocore.CameraCapture
                 ServerChannel,
                 (player, p) => OnServerConfigOverrideRequested(player));
         }
-        private void BroadcastServerConfigOverride(ICoreServerAPI api)
+        // Pushes the current authoritative values to every connected player. Run at startup (mainly
+        // relevant on hot-reload), and again whenever the server's config is reloaded at runtime.
+        // Clients otherwise receive this exactly once, in reply to their own join-time request, so a
+        // mid-session change would leave everyone already connected sealing photos with the values from
+        // when they joined — the cross-player divergence this override exists to prevent.
+        internal void BroadcastServerConfigOverride(ICoreServerAPI api)
         {
-            // Send once on startup for currently connected players (mainly relevant on hot-reload).
             foreach (IServerPlayer player in api.World.AllOnlinePlayers)
             {
                 OnServerConfigOverrideRequested(player);

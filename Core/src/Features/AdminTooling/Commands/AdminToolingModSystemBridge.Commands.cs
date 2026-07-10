@@ -195,7 +195,14 @@ namespace Photocore.AdminTooling
             {
                 cfg.Viewfinder ??= new ViewfinderConfig();
                 cfg.Viewfinder.ClampInPlace();
-                _owner.SaveClientConfig(_owner.ClientApi);
+
+                // Deliberately not persisted. Every DebugPreview* field this command touches is
+                // [JsonIgnore]'d, so writing photocore.json here would save none of them — while still
+                // serializing the rest of the in-memory config, including the server-authoritative values
+                // a connected server overwrote (PhotoCaptureMaxDimension, ApplyFinishingEffects,
+                // PhotoSeenPingIntervalSeconds). That baked a server's settings into the player's own
+                // config file, which then followed them back into singleplayer. Preview settings are
+                // live-only by design and reset on relaunch.
             }
 
             _owner.ClientApi.ShowChatMessage(

@@ -16,9 +16,9 @@ namespace Photocore
             FieldCameraBridge.ConfigureClientFieldCameraStartup(api);
             TrayClientEvents.ConfigureClientDevelopmentTrayInputListeners(api);
 
-            #if CONFIGLIB_ENABLED
-                if (ConfigLibIntegration.IsPresent(api)) ConfigLibIntegration.Register(api, this);
-            #endif
+            // Safe with or without ConfigLib installed: this only subscribes to an event bus name, and
+            // nothing pushes that event when ConfigLib is absent.
+            ConfigLibIntegration.RegisterClient(api, this);
         }
 
         // Lazily ensures the full client config tree is available before UI or render code reads from it.
@@ -37,16 +37,11 @@ namespace Photocore
             return Config;
         }
 
-        // Persists the current client config back to disk after clamping it into a safe range.
-        internal void SaveClientConfig(ICoreClientAPI capi)
-        {
-            if (Config == null) return;
-
-            ConfigLifecycle.TryStoreNormalized(capi, ConfigFileName, Config);
-            Config = ConfigLifecycle.EnsureNormalized(Config);
-            ClientConfig = Config.Client;
-        }
-
+        // No "save the in-memory client config to disk" helper on purpose. While connected to a server,
+        // Config carries that server's authoritative values (see ServerConfigOverridePacket), so writing
+        // it back to photocore.json would persist another server's settings into this player's own file
+        // and carry them into their singleplayer worlds. The only writer is ConfigLifecycle.LoadOrCreate,
+        // which normalizes what it just read from disk and applies overrides afterwards, in memory only.
     }
 }
 

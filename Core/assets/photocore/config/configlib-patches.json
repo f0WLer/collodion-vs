@@ -12,7 +12,8 @@
       "ingui": "photocore:configlib-showdebuglogs-name",
       "comment": "photocore:configlib-showdebuglogs-comment",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "clientSide": true
     },
     {
       "code": "Viewfinder/MaxAccumulatedFrames",
@@ -20,7 +21,8 @@
       "comment": "photocore:configlib-maxaccumulatedframes-comment",
       "type": "integer",
       "default": 600,
-      "range": { "min": 256, "max": 1000 }
+      "range": { "min": 256, "max": 1000 },
+      "clientSide": true
     },
     {
       "type": "separator",

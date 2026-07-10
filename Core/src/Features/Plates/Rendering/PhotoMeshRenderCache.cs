@@ -69,6 +69,36 @@ namespace Photocore.Plates.Rendering
             }
         }
 
+        // Drops just one photo's cached meshes, leaving every other photo's alone. Callers use this instead
+        // of ClearAndBumpVersion when only one photo's pixels became stale: bumping the version rewrites the
+        // atlas texture key for every photo, and the game's atlas has no way to re-upload into an existing
+        // region, so each bump re-allocates every subsequently rendered photo and orphans its old region.
+        internal int RemoveForPhoto(string photoFileName)
+        {
+            if (string.IsNullOrEmpty(photoFileName)) return 0;
+
+            // Mesh keys are "{photoFileName}|{variant}|..." — the separator keeps a short id from matching
+            // a longer one that starts with the same characters.
+            string prefix = photoFileName + "|";
+
+            lock (_syncRoot)
+            {
+                List<string> stale = new();
+                foreach (string key in _meshCache.Keys)
+                {
+                    if (key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) stale.Add(key);
+                }
+
+                foreach (string key in stale)
+                {
+                    _meshCache[key].MeshRef.Dispose();
+                    _meshCache.Remove(key);
+                }
+
+                return stale.Count;
+            }
+        }
+
         private int DisposeEntriesAndClear()
         {
             int cleared = 0;

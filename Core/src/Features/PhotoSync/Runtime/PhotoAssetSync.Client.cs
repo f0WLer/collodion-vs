@@ -151,10 +151,12 @@ namespace Photocore.PhotoSync.Runtime
             // so the render funnels stop drawing the placeholder and pull the real image.
             _clientConfirmedMissing.TryRemove(photoId, out _);
 
-            // Kick plate render cache so the next render pulls from disk.
+            // Kick this photo's render cache so the next render pulls from disk. Scoped to the one photo:
+            // a global clear would bump the atlas version and re-allocate an atlas region for every photo
+            // the client has rendered so far, orphaning the old ones for the rest of the session.
             // (After framed-display removal in prep for the kos-pm merge there is no separate per-item photo cache;
             // the new frame BE is expected to register its own invalidation if it adds caching.)
-            PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
+            PhotoPlateRenderUtil.InvalidatePhotoRenderCache(photoId);
 
             ClientMarkWaitingBlocksDirty(photoId);
             ClientResolvePhotoWaiters(photoId, PhotoFetchResult.Found(completed.Buffer));
@@ -238,7 +240,7 @@ namespace Photocore.PhotoSync.Runtime
             // (frames, trays) and held items switch to the placeholder. (Held items re-render every frame.)
             if (_clientConfirmedMissing.TryAdd(normalizedPhotoId, 0))
             {
-                PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
+                PhotoPlateRenderUtil.InvalidatePhotoRenderCache(normalizedPhotoId);
                 ClientMarkWaitingBlocksDirty(normalizedPhotoId);
             }
 

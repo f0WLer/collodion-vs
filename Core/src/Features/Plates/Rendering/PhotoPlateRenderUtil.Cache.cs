@@ -128,6 +128,42 @@ namespace Photocore.Plates.Rendering
         private static readonly Dictionary<string, float> _blockPhotoAspectCache = new(StringComparer.OrdinalIgnoreCase);
         private static readonly HashSet<string> _derivedPruneState = new(StringComparer.OrdinalIgnoreCase);
 
+        // Invalidates the render state for a single photo, without touching any other photo's.
+        //
+        // Prefer this over ClearClientRenderCacheAndBumpVersion for per-photo events (a download landing, a
+        // photo confirmed missing). The version bump is part of every atlas texture key, so bumping it makes
+        // the next render of *every* photo miss the atlas and allocate a fresh region — and nothing ever
+        // hands the old region back, because the meshes of placed blocks still reference it. Photo bytes are
+        // immutable once written (the server refuses to overwrite an existing photo, and derived variants
+        // carry their stage in the filename), so a per-photo event never needs a global invalidation.
+        public static int InvalidatePhotoRenderCache(string photoId)
+        {
+            string photoFileName = PhotoAssetStoragePaths.NormalizePhotoId(photoId);
+            if (string.IsNullOrEmpty(photoFileName)) return 0;
+
+            int cleared = _meshRenderCache.RemoveForPhoto(photoFileName);
+
+            string baseName = Path.GetFileNameWithoutExtension(photoFileName);
+            lock (_cacheLock)
+            {
+                foreach (string path in _blockPhotoAspectCache.Keys
+                             .Where(p => Path.GetFileName(p).StartsWith(baseName, StringComparison.OrdinalIgnoreCase))
+                             .ToList())
+                {
+                    _blockPhotoAspectCache.Remove(path);
+                }
+
+                foreach (string key in _derivedPruneState
+                             .Where(k => k.StartsWith(photoFileName + "|", StringComparison.OrdinalIgnoreCase))
+                             .ToList())
+                {
+                    _derivedPruneState.Remove(key);
+                }
+            }
+
+            return cleared;
+        }
+
         public static int ClearClientRenderCacheAndBumpVersion()
         {
             int cleared = _meshRenderCache.ClearAndBumpVersion();

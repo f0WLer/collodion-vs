@@ -42,6 +42,12 @@ namespace Photocore.PhotoSync.Store
         // server NACKs the id, or cancels if the token fires first. Client-side delivery is
         // best-effort (packets can be lost with no retry on this path), so callers that cannot wait
         // indefinitely should pass a token with a deadline rather than the default.
+        //
+        // The returned task's continuation resumes on a threadpool thread, not the main thread (there
+        // is no game synchronization context to capture). Bounce any UI/world/render work — including
+        // chat, texture upload, and mesh building — back onto the main thread yourself (e.g. via
+        // capi.Event.EnqueueMainThreadTask); touching engine state from the continuation races the
+        // render thread and crashes.
         Task<PhotoFetchResult> TryGetPhotoAsync(string photoId, CancellationToken ct = default);
 
         // Cheap local-cache probe; never triggers a fetch. On the client, false means "not synced

@@ -220,7 +220,7 @@ namespace Photocore.CameraCapture
 
         private void EnsureGpuAccumulator(int sourceWidth, int sourceHeight, int sampleCount)
         {
-            int maxDimension = PhotocoreConfigAccess.ResolveClientConfig(_capi)?.Viewfinder?.ExposureReadbackMaxDimension
+            int maxDimension = PhotocoreConfigAccess.ResolveClientConfig(_capi)?.Viewfinder?.EffectiveExposureReadbackMaxDimension
                 ?? ViewfinderConfig.DefaultExposureReadbackMaxDimension;
             GpuExposureAccumulator.ComputeTargetDimensions(sourceWidth, sourceHeight, maxDimension, out int w, out int h);
             // Recreate not only on resize but also when the requested sample count differs from the existing

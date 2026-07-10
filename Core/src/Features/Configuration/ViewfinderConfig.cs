@@ -40,6 +40,23 @@ namespace Photocore.Configuration
         [JsonIgnore]
         public int ExposureReadbackMaxDimension = DefaultExposureReadbackMaxDimension;
 
+        /// <summary>The accumulation buffer's longest side. Never smaller than the photo being captured from it.</summary>
+        // The seal only downscales (PhotoCropMath clamps its scale to 1), so a readback buffer smaller than
+        // PhotoCaptureMaxDimension silently caps the photo at the buffer's size. Read this rather than the
+        // raw field, and read it late: in multiplayer the server overwrites PhotoCaptureMaxDimension in
+        // memory after the config is clamped, so a server asking for photos larger than this client's own
+        // readback default would otherwise be quietly ignored.
+        //
+        // Above the capture size the extra resolution is supersampling — it costs GPU memory (40 bytes per
+        // pixel across the two Rgba32f accumulation targets and two Rgba8 helpers) and enlarges the partial
+        // exposure blobs written to disk (16 bytes per pixel), so the default leaves it equal to the capture
+        // size rather than paying for detail that gets scaled away.
+        [JsonIgnore]
+        public int EffectiveExposureReadbackMaxDimension => Math.Clamp(
+            Math.Max(ExposureReadbackMaxDimension, PhotoCaptureMaxDimension),
+            MinExposureReadbackMaxDimension,
+            MaxExposureReadbackMaxDimension);
+
         /// <summary>
         /// Max number of accumulated frames allowed during a single exposure. The accumulation buffer is a
         /// fixed Width x Height GPU target regardless of this value, so raising it doesn't cost extra memory —

@@ -353,7 +353,7 @@ namespace Photocore.CameraCapture
         {
             int sourceW = _clientApi.Render.FrameWidth;
             int sourceH = _clientApi.Render.FrameHeight;
-            int maxDim  = PhotocoreConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.ExposureReadbackMaxDimension
+            int maxDim  = PhotocoreConfigAccess.ResolveClientConfig(_clientApi)?.Viewfinder?.EffectiveExposureReadbackMaxDimension
                           ?? ViewfinderConfig.DefaultExposureReadbackMaxDimension;
 
             GpuExposureAccumulator.ComputeTargetDimensions(sourceW, sourceH, maxDim, out int w, out int h);

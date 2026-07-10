@@ -173,7 +173,11 @@ namespace Photocore
                 // here; without this, a relog reuses them and held photo plates render invisible.
                 if (ModApi is ICoreClientAPI)
                 {
+                    // No capi: a block redraw would be pointless against a world already being torn down.
                     Plates.Rendering.PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
+                    // The game rebuilds its atlases on the next world load, so every region we recorded is
+                    // about to become meaningless. Drop them rather than trust their stale dimensions.
+                    Plates.Rendering.PhotoAtlasTextures.Reset();
                     Exposure.ChemistryProfileRegistry.Clear();
 
                     // These suppression flags are static and would otherwise survive a single-player

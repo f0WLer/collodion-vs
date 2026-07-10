@@ -48,45 +48,53 @@ namespace Photocore.Plates.Rendering
             {
                 byte[]? pngBytesForInsert = null;
 
-                bool hasCachedAspect;
-                // Reuse aspect data to avoid repeated PNG header/bitmap reads.
+                bool hasCachedSize;
+                int photoWidth, photoHeight;
+                // Reuse size data to avoid repeated PNG header/bitmap reads.
                 lock (_cacheLock)
                 {
-                    hasCachedAspect = _blockPhotoAspectCache.TryGetValue(renderPath, out float cachedAspect);
-                    if (hasCachedAspect)
-                    {
-                        photoAspect = cachedAspect;
-                    }
+                    hasCachedSize = _blockPhotoSizeCache.TryGetValue(renderPath, out (int W, int H) cachedSize);
+                    photoWidth = cachedSize.W;
+                    photoHeight = cachedSize.H;
                 }
 
-                if (!hasCachedAspect)
+                if (!hasCachedSize)
                 {
                     pngBytesForInsert = File.ReadAllBytes(renderPath);
-
-                    photoAspect = 1f;
-                    if (PhotoImageProcessor.TryGetPngDimensions(pngBytesForInsert, out int pngW, out int pngH) && pngH > 0)
+                    if (!PhotoImageProcessor.TryGetPngDimensions(pngBytesForInsert, out photoWidth, out photoHeight)
+                        || photoWidth <= 0 || photoHeight <= 0)
                     {
-                        photoAspect = pngW / (float)pngH;
+                        return false;
                     }
 
                     lock (_cacheLock)
                     {
-                        _blockPhotoAspectCache[renderPath] = photoAspect;
+                        _blockPhotoSizeCache[renderPath] = (photoWidth, photoHeight);
                     }
                 }
 
-                string photoKey = Path.GetFileNameWithoutExtension(renderFileName);
-                AssetLocation texLoc = new AssetLocation("photocore", $"photo-block-{photoKey}-v{versionSnapshot}");
-                
-                // Lazily create atlas bitmap payload only when cache lookup misses.
-                capi.BlockTextureAtlas.GetOrInsertTexture(
+                photoAspect = photoWidth / (float)photoHeight;
+
+                // One atlas region per photo per medium, held for the session. The developer-pour stage and
+                // the atlas version live in the content key instead of the texture key, so advancing a pour
+                // or re-deriving after clearcache re-uploads into this same region rather than allocating a
+                // new one and orphaning the old. Glass and paper are separate regions because a plate and a
+                // print of the same photo can be on screen at once, with different pixels.
+                AssetLocation texLoc = BlockPhotoTextureLocation(inputs);
+                string contentKey = $"{renderFileName}|v{versionSnapshot}";
+
+                // Lazily create atlas bitmap payload only when the pixels are actually needed.
+                return PhotoAtlasTextures.TryResolve(
+                    capi,
+                    capi.BlockTextureAtlas,
                     texLoc,
-                    out int _,
-                    out texPos,
+                    contentKey,
+                    photoWidth,
+                    photoHeight,
                     () => capi.Render.BitmapCreateFromPng(pngBytesForInsert ?? File.ReadAllBytes(renderPath)),
-                    0.05f
-                );
-                return texPos != null && texPos != capi.BlockTextureAtlas.UnknownTexturePosition;
+                    0.05f,
+                    out texPos)
+                    && texPos != capi.BlockTextureAtlas.UnknownTexturePosition;
             }
             catch (Exception ex)
             {

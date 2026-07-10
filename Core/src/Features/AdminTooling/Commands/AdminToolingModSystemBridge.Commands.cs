@@ -61,7 +61,9 @@ namespace Photocore.AdminTooling
         {
             if (_owner.ClientApi == null) return;
 
-            int clearedPlates = PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion();
+            // capi so placed plates/trays/frames re-tessellate: their meshes live outside the mesh cache and
+            // would otherwise keep sampling the pixels uploaded before the derived images were deleted.
+            int clearedPlates = PhotoPlateRenderUtil.ClearClientRenderCacheAndBumpVersion(_owner.ClientApi);
             _owner.ClientApi.ShowChatMessage($"photocore: cleared {clearedPlates} plate renders (new photos will re-load from disk).");
         }
 

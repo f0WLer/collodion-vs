@@ -71,11 +71,13 @@ namespace Photocore.Plates.Rendering
                     photoAspect = 1f;
                 }
 
-                string photoKey = Path.GetFileNameWithoutExtension(renderFileName);
-                AssetLocation texLoc = new AssetLocation("photocore", $"photo-{photoKey}-v{inputs.VersionSnapshot}");
+                // Stable per photo+medium; the pour stage and atlas version ride in the content key so a
+                // changed image re-uploads into this region instead of allocating another one.
+                AssetLocation texLoc = ItemPhotoTextureLocation(inputs);
+                string contentKey = $"{renderFileName}|v{inputs.VersionSnapshot}";
 
                 // A paper print is an opaque reflective positive; a glass plate alpha-blends its density map.
-                return BuildAndCacheOverlayMesh(capi, itemstack, target, bitmap, photoAspect, texLoc,
+                return BuildAndCacheOverlayMesh(capi, itemstack, target, bitmap, photoAspect, texLoc, contentKey,
                     overlayFace, uvRotationDeg, mirrorX, opaque: isPaper, cacheKey, inputs.VersionSnapshot, ref renderinfo);
             }
             catch (Exception ex)

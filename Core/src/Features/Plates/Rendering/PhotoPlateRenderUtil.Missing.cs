@@ -64,8 +64,10 @@ namespace Photocore.Plates.Rendering
             IBitmap bitmap = capi.Render.BitmapCreateFromPng(bytes);
             try
             {
-                AssetLocation texLoc = new AssetLocation("photocore", $"photo-missing-{mediumKey}-v{versionSnapshot}");
-                return BuildAndCacheOverlayMesh(capi, itemstack, target, bitmap, photoAspect, texLoc,
+                // A placeholder's pixels come from a bundled asset and never change, so its content key is
+                // constant and the region is allocated exactly once for the session.
+                AssetLocation texLoc = new AssetLocation("photocore", $"photo-missing-{mediumKey}");
+                return BuildAndCacheOverlayMesh(capi, itemstack, target, bitmap, photoAspect, texLoc, mediumKey,
                     overlayFace, uvRotationDeg, mirrorX, opaque: true, cacheKey, versionSnapshot, ref renderinfo);
             }
             catch (Exception ex)
@@ -79,7 +81,7 @@ namespace Photocore.Plates.Rendering
             }
         }
 
-        // Placed-plate / tray / frame placeholder texture, inserted into the block atlas once per asset+version.
+        // Placed-plate / tray / frame placeholder texture, inserted into the block atlas once per asset.
         internal static bool TryGetMissingBlockTexture(ICoreClientAPI capi, AssetLocation missingTexLoc, int versionSnapshot, out TextureAtlasPosition texPos, out float photoAspect)
         {
             texPos = capi.BlockTextureAtlas.UnknownTexturePosition;
@@ -88,23 +90,30 @@ namespace Photocore.Plates.Rendering
             byte[]? bytes = GetMissingTextureBytes(capi, missingTexLoc);
             if (bytes == null) return false;
 
-            if (PhotoImageProcessor.TryGetPngDimensions(bytes, out int pngW, out int pngH) && pngH > 0)
+            if (!PhotoImageProcessor.TryGetPngDimensions(bytes, out int pngW, out int pngH) || pngW <= 0 || pngH <= 0)
             {
-                photoAspect = pngW / (float)pngH;
+                return false;
             }
 
-            AssetLocation texLoc = new AssetLocation("photocore", $"photo-block-missing-{MissingTextureKey(missingTexLoc)}-v{versionSnapshot}");
+            photoAspect = pngW / (float)pngH;
+
+            string mediumKey = MissingTextureKey(missingTexLoc);
+            AssetLocation texLoc = new AssetLocation("photocore", $"photo-block-missing-{mediumKey}");
 
             try
             {
-                capi.BlockTextureAtlas.GetOrInsertTexture(
+                // Bundled asset: pixels never change, so the content key is constant and this allocates once.
+                return PhotoAtlasTextures.TryResolve(
+                    capi,
+                    capi.BlockTextureAtlas,
                     texLoc,
-                    out int _,
-                    out texPos,
+                    mediumKey,
+                    pngW,
+                    pngH,
                     () => capi.Render.BitmapCreateFromPng(bytes),
-                    0.05f
-                );
-                return texPos != null && texPos != capi.BlockTextureAtlas.UnknownTexturePosition;
+                    0.05f,
+                    out texPos)
+                    && texPos != capi.BlockTextureAtlas.UnknownTexturePosition;
             }
             catch (Exception ex)
             {
@@ -116,15 +125,18 @@ namespace Photocore.Plates.Rendering
         // Shared by the real-photo and placeholder item paths so both build and cache the overlay identically.
         private static bool BuildAndCacheOverlayMesh(
             ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target,
-            IBitmap bitmap, float photoAspect, AssetLocation texLoc,
+            IBitmap bitmap, float photoAspect, AssetLocation texLoc, string contentKey,
             string overlayFace, int uvRotationDeg, bool mirrorX, bool opaque,
             string cacheKey, int versionSnapshot, ref ItemRenderInfo renderinfo)
         {
-            TextureAtlasPosition texPos;
-
-#pragma warning disable CS0618 // InsertTextureCached obsolete vs GetOrInsertTexture lazy-load; no gain here since bitmap is always needed for aspect ratio.
-            capi.ItemTextureAtlas.InsertTextureCached(texLoc, bitmap, out int _, out texPos, 0.05f);
-#pragma warning restore CS0618
+            // The bitmap is already decoded here, so hand it straight over rather than re-decoding; the
+            // factory only runs again if this location needs its pixels replaced in place.
+            if (!PhotoAtlasTextures.TryResolve(capi, capi.ItemTextureAtlas, texLoc, contentKey,
+                    bitmap.Width, bitmap.Height, () => bitmap, 0.05f, out TextureAtlasPosition texPos,
+                    ownsBitmap: false))
+            {
+                return false;
+            }
 
             Item? item = itemstack.Collectible as Item;
             if (item == null) return false;

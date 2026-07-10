@@ -1,6 +1,7 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.Client.NoObf;
 using Photocore.PhotoMetadata.Model;
 using Photocore.PhotoSync.Integration;
 using Photocore.PhotoSync;
@@ -122,11 +123,22 @@ namespace Photocore.Plates.Rendering
         }
         private static readonly PhotoMeshRenderCache _meshRenderCache = new();
 
-        // Auxiliary cache lock guards aspect-ratio and prune-state entries only.
+        // Auxiliary cache lock guards photo-size and prune-state entries only.
         // Mesh cache concurrency is handled internally by PhotoMeshRenderCache.
         private static readonly object _cacheLock = new();
-        private static readonly Dictionary<string, float> _blockPhotoAspectCache = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, (int W, int H)> _blockPhotoSizeCache = new(StringComparer.OrdinalIgnoreCase);
         private static readonly HashSet<string> _derivedPruneState = new(StringComparer.OrdinalIgnoreCase);
+
+        // A photo's atlas region is keyed by photo and medium only. Everything that changes its pixels
+        // without changing its size — the developer-pour stage, the atlas version — belongs in the content
+        // key handed to PhotoAtlasTextures, which re-uploads in place instead of allocating a new region.
+        private static string PhotoTextureMedium(in PhotoRenderInputs inputs) => inputs.IsPaper ? "paper" : "glass";
+
+        private static AssetLocation BlockPhotoTextureLocation(in PhotoRenderInputs inputs)
+            => new AssetLocation("photocore", $"photo-block-{Path.GetFileNameWithoutExtension(inputs.PhotoFileName)}-{PhotoTextureMedium(inputs)}");
+
+        private static AssetLocation ItemPhotoTextureLocation(in PhotoRenderInputs inputs)
+            => new AssetLocation("photocore", $"photo-{Path.GetFileNameWithoutExtension(inputs.PhotoFileName)}-{PhotoTextureMedium(inputs)}");
 
         // Invalidates the render state for a single photo, without touching any other photo's.
         //
@@ -146,11 +158,11 @@ namespace Photocore.Plates.Rendering
             string baseName = Path.GetFileNameWithoutExtension(photoFileName);
             lock (_cacheLock)
             {
-                foreach (string path in _blockPhotoAspectCache.Keys
+                foreach (string path in _blockPhotoSizeCache.Keys
                              .Where(p => Path.GetFileName(p).StartsWith(baseName, StringComparison.OrdinalIgnoreCase))
                              .ToList())
                 {
-                    _blockPhotoAspectCache.Remove(path);
+                    _blockPhotoSizeCache.Remove(path);
                 }
 
                 foreach (string key in _derivedPruneState
@@ -164,15 +176,24 @@ namespace Photocore.Plates.Rendering
             return cleared;
         }
 
-        public static int ClearClientRenderCacheAndBumpVersion()
+        // Full invalidation: every photo re-derives and re-uploads its pixels on next render. Pass capi so
+        // placed blocks re-tessellate — their meshes are not in the mesh cache, and without a redraw they
+        // would keep showing the pixels uploaded before the derived images were deleted below.
+        //
+        // Atlas regions are deliberately not freed. They are keyed by photo and medium only, so the very
+        // same regions get re-used by the re-render; freeing them would additionally be unsafe, since a
+        // block mesh keeps sampling its old UVs until its re-tessellation actually lands.
+        public static int ClearClientRenderCacheAndBumpVersion(ICoreClientAPI? capi = null)
         {
             int cleared = _meshRenderCache.ClearAndBumpVersion();
 
             lock (_cacheLock)
             {
-                _blockPhotoAspectCache.Clear();
+                _blockPhotoSizeCache.Clear();
                 _derivedPruneState.Clear();
             }
+
+            if (capi?.World is ClientMain clientMain) clientMain.RedrawAllBlocks();
 
             // Clear derived photo cache (best effort)
             try

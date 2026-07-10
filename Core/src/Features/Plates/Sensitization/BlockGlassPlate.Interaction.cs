@@ -1,5 +1,6 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
@@ -42,6 +43,17 @@ namespace Photocore.Plates
             ItemSlot? heldSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
 
             bool isPolish = state == "rough" && IsHoldingPlainCloth(byPlayer);
+            if (isPolish && !HasEnoughPolishCloth(byPlayer))
+            {
+                // Reject up front rather than partway through. Nothing else can claim this interaction: a
+                // rough plate never resolves a sensitization step, and a hand holding cloth isn't empty.
+                if (world.Side == EnumAppSide.Client)
+                {
+                    (world.Api as ICoreClientAPI)?.ShowChatMessage(
+                        Lang.Get("photocore:msg-plate-not-enough-cloth", GetClothConsumeCount()));
+                }
+                return false;
+            }
 
             SensitizationStep? sensitizeStep = null;
             if (state != "rough"
@@ -177,6 +189,10 @@ namespace Photocore.Plates
         private bool HandlePolishInteractionStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockPos pos)
         {
             if (!IsHoldingPlainCloth(byPlayer)) return false;
+            // Re-checked every step, not just at the start: the stack can shrink mid-polish (dropped,
+            // moved, used elsewhere), and the interaction should stop there rather than run to completion
+            // and fall through the affordability guard below without a word.
+            if (!HasEnoughPolishCloth(byPlayer)) return false;
             if (secondsUsed < GetPolishSeconds()) return true;
 
             if (world.Side != EnumAppSide.Server) return false;
@@ -227,6 +243,20 @@ namespace Photocore.Plates
             ItemSlot? activeSlot = player.InventoryManager?.ActiveHotbarSlot;
             ItemStack? held = activeSlot?.Itemstack;
             return held?.Collectible?.Code != null && held.Collectible.Code == _plainClothCode;
+        }
+
+        // Cloth is only spent when a polish completes, but whether the player can afford it has to be
+        // settled before the interaction begins. Deciding it at the end means the polish plays out in full
+        // and then fails silently, which ends the interaction and lets a held right-click restart it — an
+        // endless polish that never cleans the plate and never explains why.
+        private bool HasEnoughPolishCloth(IPlayer player)
+        {
+            if (player.WorldData?.CurrentGameMode == EnumGameMode.Creative) return true;
+
+            int consumeCount = GetClothConsumeCount();
+            if (consumeCount <= 0) return true;
+
+            return (player.InventoryManager?.ActiveHotbarSlot?.Itemstack?.StackSize ?? 0) >= consumeCount;
         }
 
         private static bool IsEmptyHand(IPlayer player)

@@ -31,7 +31,7 @@ namespace Photocore.Plates
         public static double ResolveWetDurationHours(ICoreAPI? api)
         {
             return PhotocoreConfigAccess.ResolveConfig(api)?.PlateProcessing?.WetDurationHours
-                ?? 0.66;
+                ?? 0.75;
         }
 
         // Per-plate wet window: the plate's chemistry profile decides. A profile window of 0 means the

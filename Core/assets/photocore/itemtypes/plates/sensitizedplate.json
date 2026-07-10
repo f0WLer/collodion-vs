@@ -17,7 +17,7 @@
   "transitionableProps": [
     {
       "type": "Dry",
-      "freshHours": { "avg": 0.66 },
+      "freshHours": { "avg": 0.75 },
       "transitionHours": { "avg": 0.001 },
       "transitionedStack": { "type": "item", "code": "photocore:sensitizedplate" },
       "transitionRatio": 1

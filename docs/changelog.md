@@ -37,12 +37,16 @@
 ## Misc
 - Default drying duration for plates was bumped to a 0.75 (45 minutes in-game).
 - The exposure profile was tweaked to allow for better low-light photography.
+- Exposures can run a little longer before locking. `MaxAccumulatedFrames` -- the accumulated-frame count at which an exposure locks as fully exposed -- now defaults to 600 instead of 400, and its highest configurable value is 1000 instead of 600.
+- Polishing a plate with too little cloth now fails immediately with a message instead of silently looping. With `ClothConsumedPerPolish` set above 1, holding right-click while carrying less cloth than that used to play the polish out and then repeat forever, consuming nothing and changing nothing; it now rejects the polish up front and says how much cloth you need.
+- Cleaned up and reorganized the English language file to make translating it easier, which also fixed some text that never displayed -- plate boxes facing any direction other than north had no name, and framed photos never showed their inventory description.
 - Tightened hitboxes on the plate box (both open and closed), the mounted camera, and the standing photo frame -- all were harder to click on than they should have been.
 - Tightened held/ground/GUI transforms for the development trays, the standing and wall photo frames, the plate box, and the glass/sensitized/photo plate items.
 - The tripod and plate box now show a description when you hover over them in your inventory -- the tripod never had one, and the plate box's existed but wasn't actually wired up to the tooltip.
 
 ## Under the hood
 - Some internal restructuring (naming, file organization) -- no gameplay changes.
+- Fixed a texture-atlas leak in photo sync. Every synced photo used to permanently claim a new atlas region, growing video-memory use over a play session and, in rare cases, making a placed photo render another photo's image. Each photo now reuses a single region.
 
 # Collodion -- v2.0.2 Changelog
 

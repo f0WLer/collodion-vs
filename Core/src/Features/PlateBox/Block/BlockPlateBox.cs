@@ -15,7 +15,9 @@ namespace Photocore.PlateBox
         private static readonly AssetLocation _closedBoxCode = new("photocore", "platebox-north");
         private static readonly Cuboidf[] _slotHitBoxes =
         [
-            // Matches platehb1..platehb8 in assets/collodion/shapes/block/platebox-open.json
+            // Matches platehb1..platehb8 in assets/collodion/shapes/block/platebox-open.json. Slot
+            // resolution uses only each box's X center (see GetNearestSlotIndex); the Y/Z extents are
+            // unused there but kept since they document the plate geometry.
             new(1.5f / 16f, 0.5f / 16f, 4.5f / 16f, 2.0f / 16f, 8.2f / 16f, 11.5f / 16f),
             new(3.0f / 16f, 0.5f / 16f, 4.5f / 16f, 3.5f / 16f, 8.2f / 16f, 11.5f / 16f),
             new(4.5f / 16f, 0.5f / 16f, 4.5f / 16f, 5.0f / 16f, 8.2f / 16f, 11.5f / 16f),

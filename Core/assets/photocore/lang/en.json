@@ -25,6 +25,8 @@
     "photocore:platebox-info-slots":        "Plate slots: {0}/{1}",
     "photocore:heldhelp-platebox-insert":   "Store plate in slot",
     "photocore:heldhelp-platebox-take":     "Take plate from slot",
+    "photocore:heldhelp-platebox-lid":      "Open / close lid",
+    "photocore:heldhelp-platebox-pickup":   "Pick up box",
 
 
 

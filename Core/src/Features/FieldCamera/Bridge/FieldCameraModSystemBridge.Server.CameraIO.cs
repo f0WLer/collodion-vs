@@ -11,6 +11,12 @@ namespace Photocore.FieldCamera
     {
         private readonly Dictionary<string, BlockPos> _mountedCameraPositionsByPlayerUid = new(StringComparer.Ordinal);
 
+        // Per-player clock for the hold-refire debounce in TryHandleMountedCameraBlockInteract.
+        private readonly Dictionary<string, long> _lastMountedInteractMsByPlayerUid = new(StringComparer.Ordinal);
+
+        // Above the 0.25s BuildRepeatDelay (collapses a hold), below deliberate tap spacing.
+        private const long MountedInteractDebounceMs = 500;
+
         private static bool IsFieldcameraStack(ItemStack? stack)
         {
             return stack?.Item is ItemFieldcamera;
@@ -70,6 +76,8 @@ namespace Photocore.FieldCamera
         // camera's chunk was already unloaded at disconnect time.
         private void OnPlayerDisconnect(IServerPlayer player)
         {
+            _lastMountedInteractMsByPlayerUid.Remove(player.PlayerUID);
+
             if (!TryGetMountedCameraEntity(player.PlayerUID, out BlockEntityMountedCamera? mountedBe) || mountedBe == null)
                 return; // dict entry already cleaned up by TryGetMountedCameraEntity on any failure path
 

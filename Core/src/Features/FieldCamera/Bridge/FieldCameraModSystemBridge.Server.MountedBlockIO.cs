@@ -16,6 +16,18 @@ namespace Photocore.FieldCamera
             ItemStack? cameraStack = mountedBe.GetStoredCameraStack(Api.World);
             if (cameraStack == null || !IsFieldcameraStack(cameraStack)) return false;
 
+            // A held right-click re-fires this handler every ~0.25s (BuildRepeatDelay) with no press-edge
+            // flag, which would toggle pause/resume back and forth. Collapse a hold to one action --
+            // refreshing the stamp on every repeat (not just acted ones) keeps it swallowed until release.
+            long nowMs = Api.World.ElapsedMilliseconds;
+            if (_lastMountedInteractMsByPlayerUid.TryGetValue(serverPlayer.PlayerUID, out long lastMs)
+                && nowMs - lastMs < MountedInteractDebounceMs)
+            {
+                _lastMountedInteractMsByPlayerUid[serverPlayer.PlayerUID] = nowMs;
+                return true;
+            }
+            _lastMountedInteractMsByPlayerUid[serverPlayer.PlayerUID] = nowMs;
+
             // Determine whether a foreign photographer's exposure is loaded, and whether it is
             // actively running. PhotographerUid is only stamped while exposing, so a non-empty,
             // non-matching UID means the loaded plate belongs to a different photographer.

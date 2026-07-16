@@ -178,6 +178,7 @@ namespace Photocore
                     // The game rebuilds its atlases on the next world load, so every region we recorded is
                     // about to become meaningless. Drop them rather than trust their stale dimensions.
                     Plates.Rendering.PhotoAtlasTextures.Reset();
+                    Plates.Rendering.HeldPlateDepthPatch.Remove();
                     Exposure.ChemistryProfileRegistry.Clear();
 
                     // These suppression flags are static and would otherwise survive a single-player

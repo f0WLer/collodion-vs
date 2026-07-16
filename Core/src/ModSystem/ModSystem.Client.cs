@@ -16,6 +16,9 @@ namespace Photocore
             FieldCameraBridge.ConfigureClientFieldCameraStartup(api);
             TrayClientEvents.ConfigureClientDevelopmentTrayInputListeners(api);
 
+            // Stop held translucent plates from depth-culling entities/frames behind them.
+            Plates.Rendering.HeldPlateDepthPatch.Apply(api);
+
             // Safe with or without ConfigLib installed: this only subscribes to an event bus name, and
             // nothing pushes that event when ConfigLib is absent.
             ConfigLibIntegration.RegisterClient(api, this);

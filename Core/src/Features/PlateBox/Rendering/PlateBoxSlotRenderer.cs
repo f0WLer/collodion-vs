@@ -13,6 +13,10 @@ namespace Photocore.PlateBox
         private readonly Matrixf _modelMat = new();
         private MeshRef? _slotMeshRef;   // south/north: thin in X, depth in Z  (PW × PH × PD)
         private MeshRef? _slotMeshRefEW; // east/west:   thin in Z, depth in X  (PD × PH × PW)
+        // GL id of the atlas page the plate texture actually lives on, captured with the mesh UVs.
+        // The block texture atlas spans many pages and "plate" rarely lands on page 0, so binding a
+        // fixed page (as this once did) sampled empty atlas space and the plates rendered invisibly.
+        private int _plateAtlasTextureId;
 
         public PlateBoxSlotRenderer(ICoreClientAPI capi, BlockEntityPlateBox owner)
         {
@@ -51,12 +55,9 @@ namespace Photocore.PlateBox
             bool cullDisabled = false;
             try
             {
-                if (_capi.BlockTextureAtlas.AtlasTextures.Count <= 0) return;
+                if (_plateAtlasTextureId == 0) return;
 
-                int atlasTextureId = _capi.BlockTextureAtlas.AtlasTextures[0].TextureId;
-                if (atlasTextureId == 0) return;
-
-                prog.Tex2D = atlasTextureId;
+                prog.Tex2D = _plateAtlasTextureId;
                 prog.ViewMatrix = _capi.Render.CameraMatrixOriginf;
                 prog.ProjectionMatrix = _capi.Render.CurrentProjectionMatrix;
 
@@ -129,6 +130,9 @@ namespace Photocore.PlateBox
                 ITexPositionSource source = _capi.Tesselator.GetTextureSource(_owner.Block);
                 TextureAtlasPosition? texPos = source["plate"];
                 if (texPos == null || texPos == _capi.BlockTextureAtlas.UnknownTexturePosition) return false;
+
+                // Bind whatever page WithTexPos remaps the UVs onto, not a fixed page.
+                _plateAtlasTextureId = texPos.atlasTextureId;
 
                 MeshData mesh = CubeMeshUtil.GetCube();
                 mesh = mesh.WithTexPos(texPos);

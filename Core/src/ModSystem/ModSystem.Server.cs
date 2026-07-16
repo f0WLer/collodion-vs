@@ -1,6 +1,7 @@
 ﻿using Vintagestory.API.Server;
 
 using Photocore.Exposure;
+using Photocore.PhotoSync;
 
 namespace Photocore
 {
@@ -11,6 +12,11 @@ namespace Photocore
         // Initializes server config, packet handlers, sync services, and periodic maintenance listeners.
         public override void StartServerSide(ICoreServerAPI api)
         {
+            // Wire the photo-store world scope before anything below can touch a photo path (the
+            // server's SavegameIdentifier is available as soon as the save is loaded, i.e. already
+            // by this point -- see DESIGN-photo-store-scoping.md).
+            PhotoAssetStoragePaths.SetWorldScopeIdProvider(() => api.World?.SavegameIdentifier);
+
             // AssetsLoaded only seeds the client-side registry (see ModSystem.cs); the server needs its
             // own load so ConfigureServerCameraCaptureStartup's broadcast has real data to send.
             ChemistryProfileRegistry.LoadAndSeed(api.Logger);

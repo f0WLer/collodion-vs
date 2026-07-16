@@ -10,7 +10,7 @@ namespace Photocore.PhotoSync.Store
         {
             string normalized = PhotoAssetStoragePaths.NormalizePhotoId(photoId);
             if (string.IsNullOrEmpty(normalized)) return false;
-            return File.Exists(PhotoAssetStoragePaths.GetPhotoPath(normalized));
+            return File.Exists(PhotoAssetStoragePaths.TryResolveReadPath(normalized));
         }
 
         public string GetTypeTag(string photoId) => PhotoAssetStoragePaths.GetTypeTag(photoId);

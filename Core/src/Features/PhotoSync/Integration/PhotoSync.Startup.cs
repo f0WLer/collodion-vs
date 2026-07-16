@@ -1,7 +1,6 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Server;
 using Photocore.PhotoMetadata;
-using Photocore.PhotoSync;
 using Photocore.PhotoSync.Runtime;
 using Photocore.PhotoSync.Store;
 
@@ -86,8 +85,21 @@ namespace Photocore.PhotoSync.Integration
             PhotoAssetSyncCore runtime = GetOrCreatePhotoSyncRuntime();
             _serverPhotoSyncPruneListenerId = api.Event.RegisterGameTickListener(_ => runtime.ServerPruneTick(Environment.TickCount64), 10_000);
 
-            _serverPhotoSeenService = ServerPhotoSeenService.LoadOrCreate(api, PhotocoreModSystem.ServerPhotoIndexFileName);
+            // The seen index must stay scoped in lockstep with the photo store, or every other
+            // world's rows would look stale (no backing file in this world's folder) to the audit.
+            string? scopeId = PhotoAssetStoragePaths.GetWorldScopeIdOrNull();
+            string indexFileName = scopeId == null
+                ? PhotocoreModSystem.ServerPhotoIndexFileName
+                : $"photocore-photoindex-{scopeId}.json";
+            _serverPhotoSeenService = ServerPhotoSeenService.LoadOrCreate(api, indexFileName);
             _serverPhotoLastSeenFlushListenerId = api.Event.RegisterGameTickListener(_ => _serverPhotoSeenService?.TryFlush(api), 10_000);
+
+            // Tripwire for the one realistic SavegameIdentifier collision (copied save folders) --
+            // see DESIGN-photo-store-scoping.md.
+            PhotoStoreSharedByMultipleWorlds = PhotoStoreWorldMarker.CheckAndUpdate(
+                PhotoAssetStoragePaths.GetPhotosDirectory(),
+                api.WorldManager.CurrentWorldFilepath,
+                api.WorldManager.SaveGame?.WorldName);
         }
 
         internal void ConfigureServerPhotoSyncTransferChannelHandlers()
@@ -152,6 +164,7 @@ namespace Photocore.PhotoSync.Integration
             Runtime = null;
             _photoStore = null;
             _serverPhotoSeenService = null;
+            PhotoStoreSharedByMultipleWorlds = false;
         }
     }
 }

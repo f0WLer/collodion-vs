@@ -10,6 +10,11 @@ namespace Photocore.PhotoSync.Integration
 
         internal ServerPhotoSeenService? PhotoSeenService => _serverPhotoSeenService;
 
+        // True when this machine holds multiple copies of the current world sharing one photo
+        // store (see PhotoStoreWorldMarker). /photoadmin's bulk time/count delete commands warn
+        // (not block) on this, since selection could otherwise target another copy's live photos.
+        internal bool PhotoStoreSharedByMultipleWorlds { get; private set; }
+
         private long _clientPhotoSeenLastPruneMs;
         private readonly Dictionary<string, long> _clientLastPhotoSeenPingMs = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 

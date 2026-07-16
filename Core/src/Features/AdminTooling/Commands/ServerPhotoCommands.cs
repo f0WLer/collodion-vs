@@ -150,7 +150,7 @@ namespace Photocore.AdminTooling
             int count = (int)args[0];
             bool confirm = IsConfirm(args[1]);
             DeletePlan plan = svc.PlanOldest(count, DateTime.UtcNow);
-            return RunPlan(svc, plan, confirm, $"oldest {count}");
+            return RunPlan(svc, plan, confirm, $"oldest {count}", warnIfShared: true);
         }
 
         private TextCommandResult OnDeleteOlderThan(TextCommandCallingArgs args)
@@ -161,7 +161,7 @@ namespace Photocore.AdminTooling
             int days = (int)args[0];
             bool confirm = IsConfirm(args[1]);
             DeletePlan plan = svc.PlanOlderThan(days, DateTime.UtcNow);
-            return RunPlan(svc, plan, confirm, $"older than {days}d");
+            return RunPlan(svc, plan, confirm, $"older than {days}d", warnIfShared: true);
         }
 
         private TextCommandResult OnDeleteById(TextCommandCallingArgs args)
@@ -195,13 +195,22 @@ namespace Photocore.AdminTooling
             return TextCommandResult.Success($"photoadmin: pruned {removed} stale index row(s).");
         }
 
-        private TextCommandResult RunPlan(PhotoDiskAuditService svc, DeletePlan plan, bool confirm, string label, IReadOnlyList<string>? missing = null, IReadOnlyList<string>? ambiguous = null)
+        // warnIfShared: set only by the bulk time/count selectors (oldest/olderthan), never by
+        // "by id" (a precise, admin-named selection that a shared store can't mis-target). See
+        // DESIGN-photo-store-scoping.md -- warn-plus-confirm, not hard-refuse.
+        private TextCommandResult RunPlan(PhotoDiskAuditService svc, DeletePlan plan, bool confirm, string label, IReadOnlyList<string>? missing = null, IReadOnlyList<string>? ambiguous = null, bool warnIfShared = false)
         {
             var sb = new StringBuilder();
             if (missing != null && missing.Count > 0)
                 sb.Append($"photoadmin: {missing.Count} id(s) not found and skipped: {string.Join(", ", missing)}\n");
             if (ambiguous != null && ambiguous.Count > 0)
                 sb.Append($"photoadmin: {ambiguous.Count} fragment(s) matched multiple photos and were skipped (be more specific): {string.Join(", ", ambiguous)}\n");
+
+            if (warnIfShared && _owner.PhotoSyncModSystemBridge.PhotoStoreSharedByMultipleWorlds)
+                sb.Append("photoadmin: WARNING -- this photo store appears shared by multiple copies of this world "
+                    + "(same savegame id, different save locations). Time/count selection may target another "
+                    + "copy's photos as \"stale\" even though they are live there. Use 'delete id' for precise, "
+                    + "safe deletes.\n");
 
             if (plan.IsEmpty)
             {

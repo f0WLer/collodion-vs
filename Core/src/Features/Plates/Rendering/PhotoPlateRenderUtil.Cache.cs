@@ -1,6 +1,5 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Config;
 using Vintagestory.Client.NoObf;
 using Photocore.PhotoMetadata.Model;
 using Photocore.PhotoSync.Integration;
@@ -115,7 +114,10 @@ namespace Photocore.Plates.Rendering
             }
 
             int versionSnapshot = _meshRenderCache.GetAtlasVersionSnapshot();
-            string sourcePath = PhotoAssetStoragePaths.GetPhotoPath(photoFileName);
+            // Fallback-aware and migrating: a photo minted before per-world scoping existed still
+            // renders on any frame/plate placed before the update, and drains into this world's
+            // folder the first time it is rendered.
+            string sourcePath = PhotoAssetStoragePaths.ResolveReadPathForUse(photoFileName);
 
             inputs = new PhotoRenderInputs(photoId, photoFileName, presentation, isPaper, effectsProfile,
                 developPours, maxDeveloperPours, versionSnapshot, sourcePath);
@@ -195,10 +197,11 @@ namespace Photocore.Plates.Rendering
 
             if (capi?.World is ClientMain clientMain) clientMain.RedrawAllBlocks();
 
-            // Clear derived photo cache (best effort)
+            // Clear derived photo cache (best effort). Scoped to the current world/session -- a
+            // stale derived file left in another world's folder is harmless residue, not a bug.
             try
             {
-                string derivedDir = Path.Combine(GamePaths.DataPath, "ModData", "photocore", "photos", "derived");
+                string derivedDir = PhotoAssetStoragePaths.GetDerivedDirectory();
                 if (Directory.Exists(derivedDir))
                 {
                     Directory.Delete(derivedDir, true);
@@ -218,10 +221,13 @@ namespace Photocore.Plates.Rendering
             return $"{baseName}__{profile}.png";
         }
 
+        // Always the CURRENT world's scoped derived dir, even when the source photo itself resolved
+        // via the legacy fallback (TryResolveReadPath) -- derived masks are a re-derivable cache, so
+        // there is no need to also maintain a separate legacy derived location.
         private static string GetDerivedPhotoPath(string photoFileName, string profile)
         {
             string derivedFileName = GetDerivedPhotoFileName(photoFileName, profile);
-            return Path.Combine(GamePaths.DataPath, "ModData", "photocore", "photos", "derived", derivedFileName);
+            return Path.Combine(PhotoAssetStoragePaths.GetDerivedDirectory(), derivedFileName);
         }
 
         private static void MaybePruneObsoleteDevelopedDerived(ICoreClientAPI capi, string photoFileName, ItemStack? itemstack, int developPours, int maxDeveloperPours, bool useDevelopedStage)
@@ -243,7 +249,7 @@ namespace Photocore.Plates.Rendering
             // Pruning is intentionally soft-fail to avoid breaking render paths on IO races.
             try
             {
-                string derivedDir = Path.Combine(GamePaths.DataPath, "ModData", "photocore", "photos", "derived");
+                string derivedDir = PhotoAssetStoragePaths.GetDerivedDirectory();
                 if (!Directory.Exists(derivedDir)) return;
 
                 string baseName = Path.GetFileNameWithoutExtension(photoFileName);

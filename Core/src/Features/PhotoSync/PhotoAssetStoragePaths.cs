@@ -48,17 +48,127 @@ namespace Photocore.PhotoSync
             return Path.Combine(GetPhotosDirectory(), normalized);
         }
 
-        // Root directory holding the ground-truth source photos. Derived silver-density masks and
-        // human-viewable exports live in the derived/ and exports/ subdirectories beneath it.
-        internal static string GetPhotosDirectory()
+        // Read fresh on every call rather than cached: on the client, SavegameIdentifier is empty
+        // until the join handshake with a remote server completes, so caching a value would depend
+        // on startup ordering. Set once per side in ModSystem.Server.cs / ModSystem.Client.cs.
+        private static Func<string?>? _scopeIdProvider;
+
+        internal static void SetWorldScopeIdProvider(Func<string?>? provider) => _scopeIdProvider = provider;
+
+        // Defensive: id crosses a game-API/network boundary this code doesn't control, so a
+        // malformed or spoofed value must never be able to escape the photos root. Empty result
+        // means "treat as unscoped".
+        internal static string SanitizeScopeFolderName(string id)
+        {
+            string trimmed = id.Trim();
+            if (trimmed.Length == 0) return string.Empty;
+            if (trimmed.IndexOfAny(['/', '\\', ':', '\0']) >= 0) return string.Empty;
+            if (trimmed == "." || trimmed == "..") return string.Empty;
+
+            char[] chars = trimmed.ToCharArray();
+            char[] invalid = Path.GetInvalidFileNameChars();
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (Array.IndexOf(invalid, chars[i]) >= 0) chars[i] = '_';
+            }
+
+            string safe = new string(chars);
+            return safe.Length > 128 ? safe.Substring(0, 128) : safe;
+        }
+
+        private static string? ResolveWorldScopeId()
+        {
+            string? id = _scopeIdProvider?.Invoke();
+            if (string.IsNullOrWhiteSpace(id)) return null;
+            string safe = SanitizeScopeFolderName(id);
+            return safe.Length == 0 ? null : safe;
+        }
+
+        // Exposed for other per-world file names (the seen index) that must stay in lockstep with
+        // the photo store's scoping.
+        internal static string? GetWorldScopeIdOrNull() => ResolveWorldScopeId();
+
+        // The un-scoped photos root. Nothing writes here anymore, but it is the fallback read
+        // location for photos minted before per-world scoping existed (see TryResolveReadPath).
+        private static string GetPhotosBaseDirectory()
             => Path.Combine(GamePaths.DataPath, "ModData", "photocore", "photos");
+
+        // The current world/session's photos root. Falls back to the flat legacy root when no world
+        // scope is available (defensive -- by the time any photo op runs, scoping is expected to be
+        // populated).
+        internal static string GetPhotosDirectory()
+        {
+            string? scopeId = ResolveWorldScopeId();
+            string baseDir = GetPhotosBaseDirectory();
+            return scopeId == null ? baseDir : Path.Combine(baseDir, scopeId);
+        }
 
         internal static string GetDerivedDirectory()
             => Path.Combine(GetPhotosDirectory(), "derived");
 
-        // Enumerates the normalized ids (file names) of every ground-truth source photo on disk.
-        // Top-level only — the derived/ and exports/ subdirectories are intentionally excluded.
-        // Optional typeTag filters to ids whose GetTypeTag matches (ordinal-insensitive).
+        // Scoped-then-legacy, so a photo minted before per-world scoping existed still resolves
+        // (old placed frames/plates keep working forever). Falls back to the scoped path -- whether
+        // or not it exists -- as the canonical "this is where it belongs" location.
+        internal static string TryResolveReadPath(string photoId)
+        {
+            string normalized = NormalizePhotoId(photoId);
+            if (string.IsNullOrEmpty(normalized)) return string.Empty;
+
+            string scopedPath = Path.Combine(GetPhotosDirectory(), normalized);
+            if (File.Exists(scopedPath)) return scopedPath;
+
+            string legacyPath = Path.Combine(GetPhotosBaseDirectory(), normalized);
+            if (File.Exists(legacyPath)) return legacyPath;
+
+            return scopedPath;
+        }
+
+        // Like TryResolveReadPath, but one-way migrates a legacy flat-root hit into the current
+        // world's folder so pre-scoping photos become enumerable by /photoadmin and the flat root
+        // drains as they are viewed. Only the world that actually references a photo migrates it,
+        // and that is always the world it belongs to (its id lives in that world's block/item
+        // attributes), so a flat root shared across worlds is never mis-attributed. Best-effort: a
+        // move that loses a race or hits a momentarily-locked file just serves this read from the
+        // legacy path and retries next time. Keep TryResolveReadPath (side-effect-free) for probes
+        // and deletes; route only genuine "load the bytes to use them" sites here. Removable once
+        // legacy stores have drained -- delete this and point its callers back at TryResolveReadPath.
+        internal static string ResolveReadPathForUse(string photoId)
+        {
+            string normalized = NormalizePhotoId(photoId);
+            if (string.IsNullOrEmpty(normalized)) return string.Empty;
+
+            string scopedPath = Path.Combine(GetPhotosDirectory(), normalized);
+            if (File.Exists(scopedPath)) return scopedPath;
+
+            // When unscoped the scoped and legacy paths are identical, so the check above already
+            // handled it; reaching here with a legacy hit means scoping is active and a move applies.
+            string legacyPath = Path.Combine(GetPhotosBaseDirectory(), normalized);
+            if (!File.Exists(legacyPath)) return scopedPath;
+
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(scopedPath)!);
+                File.Move(legacyPath, scopedPath);
+
+                // Reset the mtime so the audit treats a just-migrated photo as newly arrived. mtime is
+                // the audit's grace-reference fallback for files with no seen-index row (which every
+                // migrated photo is, until a seen-ping records it), and the rename preserves the old
+                // legacy write time -- without this a photo that was migrated *because* it is being
+                // actively viewed would look like an ancient never-seen orphan and could be swept by
+                // /photoadmin delete oldest|olderthan before its first ping lands.
+                try { File.SetLastWriteTimeUtc(scopedPath, DateTime.UtcNow); } catch { /* best-effort */ }
+
+                return scopedPath;
+            }
+            catch
+            {
+                return File.Exists(scopedPath) ? scopedPath : legacyPath;
+            }
+        }
+
+        // World-scoped (GetPhotosDirectory) -- legacy flat-root photos are individually readable via
+        // TryResolveReadPath but not enumerated here, since they can't be attributed to a world.
+        // Top-level only; typeTag optionally filters to ids whose GetTypeTag matches.
         internal static IReadOnlyList<string> EnumeratePhotoIds(string? typeTag = null)
         {
             string dir = GetPhotosDirectory();
@@ -99,7 +209,7 @@ namespace Photocore.PhotoSync
             if (string.IsNullOrEmpty(normalized)) return 0;
             try
             {
-                var info = new FileInfo(Path.Combine(GetPhotosDirectory(), normalized));
+                var info = new FileInfo(TryResolveReadPath(normalized));
                 return info.Exists ? info.Length : 0;
             }
             catch
@@ -116,7 +226,7 @@ namespace Photocore.PhotoSync
             if (string.IsNullOrEmpty(normalized)) return null;
             try
             {
-                string path = Path.Combine(GetPhotosDirectory(), normalized);
+                string path = TryResolveReadPath(normalized);
                 return File.Exists(path) ? File.GetLastWriteTimeUtc(path) : (DateTime?)null;
             }
             catch
@@ -136,7 +246,7 @@ namespace Photocore.PhotoSync
             bool removed = false;
             try
             {
-                string sourcePath = Path.Combine(GetPhotosDirectory(), normalized);
+                string sourcePath = TryResolveReadPath(normalized);
                 if (File.Exists(sourcePath))
                 {
                     File.Delete(sourcePath);
@@ -168,13 +278,14 @@ namespace Photocore.PhotoSync
             return removed;
         }
 
-        // Human-viewable exported composites live in photos/exports/. The caller supplies a
-        // friendly base name (e.g. caption + timestamp); we make it filesystem-safe and ensure
-        // a .png extension. The directory is created lazily by the writer, mirroring GetPhotoPath.
+        // Deliberately NOT world-scoped, so exports land in one predictable place regardless of
+        // which world produced them. The caller supplies a friendly base name (e.g. caption +
+        // timestamp); we make it filesystem-safe and ensure a .png extension. The directory is
+        // created lazily by the writer, mirroring GetPhotoPath.
         internal static string GetExportPath(string fileName)
         {
             string safe = SanitizeExportFileName(fileName);
-            return Path.Combine(GamePaths.DataPath, "ModData", "photocore", "photos", "exports", safe);
+            return Path.Combine(GetPhotosBaseDirectory(), "exports", safe);
         }
 
         // Strips path separators and invalid filename characters, caps length, and guarantees a

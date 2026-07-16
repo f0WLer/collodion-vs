@@ -43,7 +43,9 @@ namespace Photocore.PhotoSync.Runtime
 
             if (!TryNormalizePhotoId(photoId, out string normalizedPhotoId)) return;
 
-            string path = PhotoAssetStoragePaths.GetPhotoPath(normalizedPhotoId);
+            // Fallback-aware and migrating: don't re-download a photo this client already has cached
+            // from before per-world scoping existed; having it also drains it into this world's folder.
+            string path = PhotoAssetStoragePaths.ResolveReadPathForUse(normalizedPhotoId);
             if (File.Exists(path)) return;
 
             // Use a monotonic, process-wide clock so reconnecting (new World instance) doesn't break dedupe.

@@ -70,7 +70,9 @@ namespace Photocore.PhotoSync.Runtime
             bytes = null;
             error = null;
 
-            string path = PhotoAssetStoragePaths.GetPhotoPath(photoId);
+            // Fallback-aware and migrating: a client may request an id minted before per-world
+            // scoping existed; serving it also drains the legacy file into this world's folder.
+            string path = PhotoAssetStoragePaths.ResolveReadPathForUse(photoId);
             if (!File.Exists(path))
             {
                 error = "Photo not present on server";

@@ -1,3 +1,19 @@
+# Collodion -- v2.0.4 Changelog
+
+## Camera
+- **Fixed pausing a mounted-camera exposure being unreliable in multiplayer.** Right-clicking to pause would flip the camera to its paused pose for a split second and then go straight back to exposing, so the exposure never actually stopped.
+
+## Rendering
+- **Fixed objects disappearing when viewed through a held glass plate.** With a transparent plate held in first person, anything seen through it -- other players, dropped items, framed photos -- would vanish. The plate was filling in the depth buffer as if it were solid, culling everything drawn behind it. It now blends over what's behind without hiding it, and is still correctly covered by anything in front of it.
+
+## Photo storage
+- **Photos are now stored per world instead of all sharing one folder.** Previously every singleplayer world, every world you've hosted yourself, and every photo downloaded while visiting someone else's server all landed in the same `ModData/photocore/photos/` folder on your machine -- so photos from completely unrelated worlds piled up together. Each world now gets its own folder under `ModData/photocore/photos/<world-id>/`, so unrelated sessions no longer mix. Photos you already have keep working exactly as before (no action needed, nothing to move) -- they're read from their old shared location, and quietly relocated into the right world's folder the first time that world uses them.
+- **Old photos tidy themselves away as you play.** The first time a world shows or serves a photo that's still sitting in the old shared folder, that file is moved into the world's own folder -- so over time the shared folder empties on its own and `/photoadmin` can see those photos again (until it's moved, a photo still in the shared folder renders fine but is invisible to `stats`/`audit`/`delete`). Only the world a photo actually belongs to ever claims it, so nothing gets mixed up. Anything left in the shared folder is a photo no world references anymore -- safe to delete or sort by hand in your file explorer if you like.
+- **`/photoadmin` now only sees the current world's photos.** `stats`, `audit`, and `delete` operate on the world you're currently in; they can no longer see or accidentally delete another world's photos. If you kept more than one copy of the same world on this machine (e.g. a downloaded map you also host yourself), those copies still share one photo store, and `/photoadmin delete oldest`/`delete olderthan` will warn you about that before running -- use `delete id` if you see the warning, since it always targets exact photos and is unaffected.
+
+## Modding
+- **`IPhotoStore` now resolves photos within the current world/session.** Following the photo storage change above, a photoId taken in one world isn't visible from another -- `TryGetPhotoAsync` and `EnumerateIds` operate on the world you're currently in. Existing consumers need no changes; ids obtained from in-world blocks/items resolve as before.
+
 # Collodion -- v2.0.3 Changelog
 
 ## Migration

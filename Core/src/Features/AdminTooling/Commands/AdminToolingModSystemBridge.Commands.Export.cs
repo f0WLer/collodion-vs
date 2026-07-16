@@ -29,7 +29,8 @@ namespace Photocore.AdminTooling
                 return;
             }
 
-            string sourcePath = PhotoAssetStoragePaths.GetPhotoPath(photoId);
+            // Fallback-aware: the held plate may carry an id minted before per-world scoping existed.
+            string sourcePath = PhotoAssetStoragePaths.TryResolveReadPath(photoId);
             if (!File.Exists(sourcePath))
             {
                 capi.ShowChatMessage("photocore: that photo isn't synced yet — try again in a moment.");

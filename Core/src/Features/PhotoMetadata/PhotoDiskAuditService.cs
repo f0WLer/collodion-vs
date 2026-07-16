@@ -112,7 +112,10 @@ namespace Photocore.PhotoMetadata
             long bytes = 0;
             foreach (string id in plan.Ids)
             {
-                string sourcePath = PhotoAssetStoragePaths.GetPhotoPath(id);
+                // Ids here always come from EnumeratePhotoIds (scoped-only), so this always resolves
+                // to the scoped path in practice; TryResolveReadPath is used for consistency with the
+                // rest of the read surface, not because a legacy hit is expected here.
+                string sourcePath = PhotoAssetStoragePaths.TryResolveReadPath(id);
                 long size = PhotoAssetStoragePaths.GetPhotoSizeBytes(id);
                 bool removed = PhotoAssetStoragePaths.DeletePhotoAndDerived(id);
 

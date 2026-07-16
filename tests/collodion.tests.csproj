@@ -20,4 +20,14 @@
     <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 
+  <!-- Unlike Core/Collodion/Kosphotography (which must NOT bundle game DLLs into their mod zips),
+       tests run outside the game process, so a test that touches a game-API type at runtime (e.g.
+       GamePaths, to sandbox file-path tests) needs the real assembly available locally. Override
+       just the Private metadata on the shared Directory.Build.props reference for this project. -->
+  <ItemGroup>
+    <Reference Update="VintagestoryAPI">
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+
 </Project>

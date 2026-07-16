@@ -199,6 +199,11 @@ namespace Photocore
                 CameraCaptureBridge.ClearClientCameraCaptureRuntimeReferences();
                 FieldCameraBridge.ClearClientFieldCameraRuntimeReferences();
                 PhotoSyncModSystemBridge.ClearPhotoSyncAndMetadataRuntimeReferences();
+
+                // Static and process-wide, so clear it on every teardown (SP disposes both a client-
+                // and server-side instance) rather than gating on ModApi's side.
+                PhotoSync.PhotoAssetStoragePaths.SetWorldScopeIdProvider(null);
+
                 ClientChannel = null;
                 ServerChannel = null;
 

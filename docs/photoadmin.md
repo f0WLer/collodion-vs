@@ -1,6 +1,12 @@
 # /photoadmin -- managing the photo store
 
-The server keeps one source PNG per photograph on disk, under `ModData/photocore/photos/`.
+The server keeps one source PNG per photograph on disk, under
+`ModData/photocore/photos/<world-id>/` -- a folder per world/save, keyed by its savegame id, so
+singleplayer worlds, a self-hosted world, and photos downloaded from other servers never
+commingle on one machine. Photos minted before this per-world layout existed still live in the
+flat `ModData/photocore/photos/` root and keep working (rendered, exported, developed) via a
+fallback, but `/photoadmin` only ever audits and deletes the **current world's** folder -- it
+cannot see or touch another world's store, including that old flat-root residue.
 These are the originals every plate, frame, and downloaded client copy is built from, so the mod never deletes them on its own. On a long-running server they pile up -- including photos whose plates were scrapped, lost, or kept in the inventory of players who logged off and never came back.
 
 `/photoadmin` lets an operator find and remove the stale ones. It needs the `controlserver` privilege: you have it in single-player and as a LAN host; on a dedicated server, grant it with `/op` or a role. Every command that deletes anything is a dry run until you add `confirm`.

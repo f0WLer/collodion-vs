@@ -1,5 +1,6 @@
 ﻿using Vintagestory.API.Client;
 using Photocore.Configuration;
+using Photocore.PhotoSync;
 
 namespace Photocore
 {
@@ -10,6 +11,11 @@ namespace Photocore
         // Client startup wires networking, renderers, hotkeys, config, and the viewfinder polling loop.
         public override void StartClientSide(ICoreClientAPI api)
         {
+            // Wire the photo-store world scope first. On a remote server the join handshake may not
+            // have delivered SavegameIdentifier yet -- that's fine, GetPhotosDirectory() reads this
+            // provider fresh on every call, and no photo op runs before join completes anyway.
+            PhotoAssetStoragePaths.SetWorldScopeIdProvider(() => api.World?.SavegameIdentifier);
+
             AdminToolingBridge.ConfigureClientOperatorToolingStartup(api);
             PhotoSyncModSystemBridge.ConfigureClientPhotoSyncStartup();
             CameraCaptureBridge.ConfigureClientCameraCaptureStartup(api);

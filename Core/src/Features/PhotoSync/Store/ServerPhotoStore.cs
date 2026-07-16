@@ -10,7 +10,10 @@ namespace Photocore.PhotoSync.Store
         {
             ct.ThrowIfCancellationRequested();
 
-            string path = PhotoAssetStoragePaths.GetPhotoPath(photoId);
+            // Fallback-aware and migrating: a consumer holding an id minted before per-world scoping
+            // existed still resolves it, and the legacy file is drained into this world's folder on
+            // first use (see DESIGN-photo-store-scoping.md).
+            string path = PhotoAssetStoragePaths.ResolveReadPathForUse(photoId);
             if (!File.Exists(path)) return PhotoFetchResult.Missing;
 
             try

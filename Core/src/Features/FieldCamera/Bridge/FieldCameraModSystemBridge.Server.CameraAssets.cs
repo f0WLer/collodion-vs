@@ -12,6 +12,7 @@ namespace Photocore.FieldCamera
         private static readonly AssetLocation _fieldcameraLoadedExposedCode = new AssetLocation("photocore", "fieldcamera-loaded-exposed");
         private static readonly AssetLocation _cameraPlateLoadSound = new AssetLocation("photocore", "sounds/glass-slide1");
         private static readonly AssetLocation _cameraPlateUnloadSound = new AssetLocation("photocore", "sounds/glass-slide2");
+        private static readonly AssetLocation _mountedCameraSetSound = new AssetLocation("photocore", "sounds/tripod-set");
 
         private static AssetLocation GetBaseCode(ItemStack? cameraStack)
             => cameraStack?.Item is ItemFieldcamera cam ? cam.CameraBaseCode : _fieldcameraBaseCode;

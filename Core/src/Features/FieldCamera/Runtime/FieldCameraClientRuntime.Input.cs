@@ -10,6 +10,8 @@ namespace Photocore.FieldCamera
     {
         private const float RmbReleaseGraceSeconds = 0.04f;
 
+        private static readonly AssetLocation _tripodAttachSound = new("photocore", "sounds/tripod-attach");
+
         private readonly FieldCameraModSystemBridge _owner;
 
         private bool _suppressViewfinderUntilRmbReleased;
@@ -136,6 +138,8 @@ namespace Photocore.FieldCamera
                 if (CameraItemHelper.IsTripodItemStack(offstack) && !CameraItemHelper.HasMountedTripod(cameraStack))
                 {
                     _owner.ClientChannel.SendPacket(new CameraTripodPacket { Mount = true });
+                    // Played locally rather than server-side so only the attaching player hears it.
+                    AudioUtils.FireAndForgetEntitySound(_owner.ClientApi?.World, _tripodAttachSound, _owner.ClientApi?.World?.Player?.Entity, AudioUtils.NextRandomPitch(_owner.ClientApi?.World));
                     return;
                 }
 

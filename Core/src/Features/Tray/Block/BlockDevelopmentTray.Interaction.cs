@@ -11,6 +11,8 @@ namespace Photocore.Tray
     public sealed partial class BlockDevelopmentTray
     {
         private static readonly AssetLocation _chemicalPourSound = new("game:sounds/effect/water-fill");
+        private static readonly AssetLocation _plateInsertSound = new("photocore:sounds/devtray-insert");
+        private static readonly AssetLocation _plateRemoveSound = new("photocore:sounds/devtray-remove");
 
         private enum TrayStartKind { None, TakePlate, InsertPlate, ChemicalPour }
 
@@ -178,6 +180,7 @@ namespace Photocore.Tray
 
                     SwapTrayBlockForPlateStage(world, trayPos, null, null);
                     GiveOrDrop(world, byPlayer, taken, trayPos);
+                    world.PlaySoundAt(_plateRemoveSound, trayPos.X + 0.5, trayPos.Y + 0.5, trayPos.Z + 0.5, null);
                     return true;
                 }
 
@@ -212,6 +215,7 @@ namespace Photocore.Tray
 
             activeSlot.TakeOut(1);
             activeSlot.MarkDirty();
+            world.PlaySoundAt(_plateInsertSound, trayPos.X + 0.5, trayPos.Y + 0.5, trayPos.Z + 0.5, null);
             return true;
         }
 

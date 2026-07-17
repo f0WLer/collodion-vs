@@ -11,6 +11,7 @@ namespace Photocore.CameraCapture
         private bool _f4TipShownEver;
 
         private static readonly AssetLocation _viewfinderEnterSound = new AssetLocation("photocore", "sounds/cap-remove");
+        private static readonly AssetLocation _zoomTickSound = new AssetLocation("photocore", "sounds/brass-tick");
 
         private readonly object _viewfinderLock = new object();
         private int _viewfinderDepth;
@@ -123,6 +124,10 @@ namespace Photocore.CameraCapture
                     _viewfinderTargetFov  = _viewfinderZoomFovRad;
                     ClientApi.Render?.Reset3DProjection();
                 }
+
+                EntityAgent? playerEnt = ClientApi?.World?.Player?.Entity;
+                if (ClientApi?.World != null && playerEnt != null)
+                    AudioUtils.FireAndForgetEntitySound(ClientApi.World, _zoomTickSound, playerEnt, AudioUtils.NextRandomPitch(ClientApi.World));
             }
         }
 

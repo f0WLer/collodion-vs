@@ -14,6 +14,10 @@
 ## Sound
 - **Opening the viewfinder now plays a cap-removal sound** instead of the placeholder cloth-rustle sound.
 - **Polishing a rough plate with cloth now plays a dedicated glass-polishing sound** instead of the vanilla chalk-drawing sound it borrowed before.
+- **Scrolling to zoom the viewfinder now ticks with each step**, like a mechanical lens ring.
+- **Attaching a tripod to a field camera now plays a sound.**
+- **Setting down a mounted camera on its tripod now plays a sound others nearby can hear too.**
+- **Inserting or removing a plate from a development tray now plays a sound others nearby can hear too.**
 
 ## Photo storage
 - **Photos are now stored per world instead of all sharing one folder.** Previously every singleplayer world, every world you've hosted yourself, and every photo downloaded while visiting someone else's server all landed in the same `ModData/photocore/photos/` folder on your machine -- so photos from completely unrelated worlds piled up together. Each world now gets its own folder under `ModData/photocore/photos/<world-id>/`, so unrelated sessions no longer mix. Photos you already have keep working exactly as before (no action needed, nothing to move) -- they're read from their old shared location, and quietly relocated into the right world's folder the first time that world uses them.

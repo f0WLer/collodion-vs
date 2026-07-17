@@ -159,6 +159,7 @@ namespace Photocore.FieldCamera
             if (mountedBlock == null) return false;
 
             Api.World.BlockAccessor.SetBlock(mountedBlock.BlockId, pos);
+            Api.World.PlaySoundAt(_mountedCameraSetSound, pos.X + 0.5, pos.Y + 0.5, pos.Z + 0.5, null, true, 16f, 1f);
             SetMountedCameraPos(cameraStack, pos);
 
             if (Api.World.BlockAccessor.GetBlockEntity(pos) is not BlockEntityMountedCamera mountedBe) return false;

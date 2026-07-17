@@ -2,6 +2,7 @@
 
 using Photocore.Exposure;
 using Photocore.PhotoSync;
+using Photocore.PlateBox;
 
 namespace Photocore
 {
@@ -24,6 +25,7 @@ namespace Photocore
             AdminToolingBridge.ConfigureServerOperatorToolingStartup(api);
             CameraCaptureBridge.ConfigureServerCameraCaptureStartup(api);
             FieldCameraBridge.ConfigureServerFieldCameraStartup(api);
+            PlateBoxWalkSoundEvents.ConfigureServerPlateBoxWalkSound(api);
 
             // Server-enforced settings (PlateProcessing, tray timings) are read off this instance's
             // Config, so it needs its own reload when the ConfigLib GUI saves photocore.json. Safe

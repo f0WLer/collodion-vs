@@ -11,6 +11,7 @@
 - **Fixed plates not showing inside the plate box.** A plate placed into an open box slotted in but stayed invisible -- the slot renderer was drawing from the wrong texture atlas page. Plates now appear in their slots again.
 - **Reworked loading and unloading the plate box.** Placing plates had stopped working after the v2.0.3 hitbox change -- clicks just closed the box instead of inserting. Now a right-click anywhere on an open box stores the held plate or takes the nearest one, with no need to aim a specific slot. Shift + right-click opens or closes the lid, and Shift + Ctrl + right-click picks the box up with its contents.
 - **Setting down a loaded plate box now sounds the part.** Alongside the existing wood thud, each stored plate adds its own randomized glass thud at a random pitch, staggered slightly so a full box settles in with an audible clatter instead of landing silent.
+- **Carrying a loaded plate box now rattles as you walk**, the same way chainmail or scale armor jingles with your steps. Each stored plate has a chance to clink on a given step, so a fuller box rattles more than a near-empty one. Nearby players hear it too, not just whoever's carrying it.
 
 ## Sound
 - **Opening the viewfinder now plays a cap-removal sound** instead of the placeholder cloth-rustle sound.

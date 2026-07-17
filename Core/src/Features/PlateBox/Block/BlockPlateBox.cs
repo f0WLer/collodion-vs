@@ -29,7 +29,9 @@ namespace Photocore.PlateBox
         ];
         
         private static readonly AssetLocation _woodThudSound = new("photocore", "sounds/wood-thud");
-        private static readonly AssetLocation[] _glassThudSounds =
+        // Internal (not private): also reused by PlateBoxWalkSound so a carried box rattles with the
+        // same sounds and pacing it lands with.
+        internal static readonly AssetLocation[] _glassThudSounds =
         [
             new("photocore", "sounds/glass-thud1"),
             new("photocore", "sounds/glass-thud2")
@@ -130,8 +132,8 @@ namespace Photocore.PlateBox
             }
         }
 
-        private const int PlateThudStaggerMinMs = 18;
-        private const int PlateThudStaggerRangeMs = 25;
+        internal const int PlateThudStaggerMinMs = 18;
+        internal const int PlateThudStaggerRangeMs = 25;
 
         // A randomized glass thud per stored plate, layered on the wood-thud, so a loaded box lands
         // audibly heavier than an empty one. Random file + pitch per plate keep it from ringing as one

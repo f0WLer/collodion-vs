@@ -1,6 +1,7 @@
 ﻿using Vintagestory.API.Client;
 using Photocore.Configuration;
 using Photocore.PhotoSync;
+using Photocore.PlateBox;
 
 namespace Photocore
 {
@@ -21,6 +22,7 @@ namespace Photocore
             CameraCaptureBridge.ConfigureClientCameraCaptureStartup(api);
             FieldCameraBridge.ConfigureClientFieldCameraStartup(api);
             TrayClientEvents.ConfigureClientDevelopmentTrayInputListeners(api);
+            PlateBoxWalkSoundEvents.ConfigureClientPlateBoxWalkSound(api);
 
             // Stop held translucent plates from depth-culling entities/frames behind them.
             Plates.Rendering.HeldPlateDepthPatch.Apply(api);

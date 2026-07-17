@@ -161,6 +161,22 @@ namespace Photocore.PlateBox
             ReadSlotsFromAttributes(source.Attributes, ItemSlotPrefix, world);
         }
 
+        // Reads how many plates a held (not yet placed) box is carrying straight off the item stack's
+        // attributes -- the same ItemSlotPrefix keys SaveToItemStack/LoadFromItemStack use -- so callers
+        // like the walk-sound hook don't need a block entity for a stack that isn't placed anywhere.
+        public static int GetPlateCountFromItemStack(ItemStack? stack)
+        {
+            if (stack?.Attributes == null) return 0;
+
+            int count = 0;
+            for (int index = 0; index < SlotCount; index++)
+            {
+                if (stack.Attributes.HasAttribute(ItemSlotPrefix + index)) count++;
+            }
+
+            return count;
+        }
+
         public override void GetBlockInfo(IPlayer forPlayer, System.Text.StringBuilder dsc)
         {
             base.GetBlockInfo(forPlayer, dsc);

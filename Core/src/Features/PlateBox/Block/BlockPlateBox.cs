@@ -29,6 +29,11 @@ namespace Photocore.PlateBox
         ];
         
         private static readonly AssetLocation _woodThudSound = new("photocore", "sounds/wood-thud");
+        private static readonly AssetLocation[] _glassThudSounds =
+        [
+            new("photocore", "sounds/glass-thud1"),
+            new("photocore", "sounds/glass-thud2")
+        ];
         
         // Hides rotated variants in creative tabs so only the canonical north item appears.
         public override void OnLoaded(ICoreAPI api)
@@ -121,6 +126,28 @@ namespace Photocore.PlateBox
             if (world?.Side == EnumAppSide.Server)
             {
                 world.PlaySoundAt(_woodThudSound, blockPos.X + 0.5, blockPos.Y + 0.5, blockPos.Z + 0.5, null, true, 16f, 1f);
+                PlayPlateThuds(world, blockPos, be.PlateCount);
+            }
+        }
+
+        private const int PlateThudStaggerMinMs = 18;
+        private const int PlateThudStaggerRangeMs = 25;
+
+        // A randomized glass thud per stored plate, layered on the wood-thud, so a loaded box lands
+        // audibly heavier than an empty one. Random file + pitch per plate keep it from ringing as one
+        // tone, and staggering the delays (rather than firing all at once) reads as plates settling
+        // instead of a single simultaneous clatter.
+        private static void PlayPlateThuds(IWorldAccessor world, BlockPos pos, int plateCount)
+        {
+            double x = pos.X + 0.5, y = pos.Y + 0.5, z = pos.Z + 0.5;
+            int delayMs = 0;
+
+            for (int i = 0; i < plateCount; i++)
+            {
+                AssetLocation sound = _glassThudSounds[world.Rand.Next(_glassThudSounds.Length)];
+                float pitch = 0.92f + (float)world.Rand.NextDouble() * 0.16f;
+                PlaySoundWithDelay(world, x, y, z, sound, delayMs, pitch, 0.7f);
+                delayMs += PlateThudStaggerMinMs + world.Rand.Next(PlateThudStaggerRangeMs);
             }
         }
 

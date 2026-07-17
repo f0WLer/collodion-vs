@@ -65,6 +65,8 @@ namespace Photocore.PlateBox
             return changed;
         }
 
+        public int PlateCount => GetUsedSlotCount();
+
         private int GetUsedSlotCount()
         {
             int count = 0;

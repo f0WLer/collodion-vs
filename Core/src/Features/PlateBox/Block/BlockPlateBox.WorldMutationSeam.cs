@@ -93,11 +93,13 @@ namespace Photocore.PlateBox
             PlaySoundWithDelay(world, x, y, z, _hingeSound, OpenCloseSoundDelayMs * 2);
         }
 
-        private static void PlaySoundWithDelay(IWorldAccessor world, double x, double y, double z, AssetLocation sound, int delayMs)
+        // pitch null keeps the original randomize-pitch behavior; callers that already rolled their
+        // own pitch (e.g. per-plate thuds) pass it through explicitly instead of rolling a second one.
+        private static void PlaySoundWithDelay(IWorldAccessor world, double x, double y, double z, AssetLocation sound, int delayMs, float? pitch = null, float volume = 1f)
         {
             if (delayMs <= 0)
             {
-                world.PlaySoundAt(sound, x, y, z, null, true, 16f, 1f);
+                PlaySoundNow(world, x, y, z, sound, pitch, volume);
                 return;
             }
 
@@ -108,7 +110,7 @@ namespace Photocore.PlateBox
                     try
                     {
                         if (world.Side != EnumAppSide.Server) return;
-                        world.PlaySoundAt(sound, x, y, z, null, true, 16f, 1f);
+                        PlaySoundNow(world, x, y, z, sound, pitch, volume);
                     }
                     catch (Exception ex) { Log.Debug(world.Logger, "PlaySoundWithDelay callback failed: {0}", ex.Message); }
                 }, delayMs);
@@ -116,8 +118,14 @@ namespace Photocore.PlateBox
             catch (Exception ex)
             {
                 Log.Warn(world.Logger, "PlaySoundWithDelay scheduling failed, using immediate fallback: {0}", ex.Message);
-                world.PlaySoundAt(sound, x, y, z, null, true, 16f, 1f);
+                PlaySoundNow(world, x, y, z, sound, pitch, volume);
             }
+        }
+
+        private static void PlaySoundNow(IWorldAccessor world, double x, double y, double z, AssetLocation sound, float? pitch, float volume)
+        {
+            if (pitch.HasValue) world.PlaySoundAt(sound, x, y, z, null, pitch.Value, 16f, volume);
+            else world.PlaySoundAt(sound, x, y, z, null, true, 16f, volume);
         }
     }
 }

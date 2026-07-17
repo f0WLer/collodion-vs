@@ -2,6 +2,7 @@
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Photocore.PhotoMetadata.Model;
+using Photocore.PhotoSync.Integration;
 
 using Photocore.Plates;
 namespace Photocore.Tray
@@ -9,7 +10,7 @@ namespace Photocore.Tray
     // Development-tray block entity. Holds the placed plate stack + facing,
     // mediates client-side mesh refresh through partial hooks (ClientInitialize/ClientPlateChanged),
     // and serializes plate signature for change detection. Server logic lives in tray Block partials.
-    public sealed partial class BlockEntityDevelopmentTray : BlockEntity
+    public sealed partial class BlockEntityDevelopmentTray : BlockEntity, IPhotoWaitingBlockEntity
     {
         private const string AttrPlateStack = "photochemPlateStack";
         private const string AttrPlacementFacing = "photochemPlacementFacing";

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Vintagestory.API.MathTools;
 using Photocore.Plates.Rendering;
+using Photocore.PhotoSync.Integration;
 using Photocore.PhotoSync.Store;
 
 namespace Photocore.PhotoSync.Runtime
@@ -218,6 +219,11 @@ namespace Photocore.PhotoSync.Runtime
                     try
                     {
                         _mod.ClientApi.World.BlockAccessor.MarkBlockDirty(p);
+
+                        if (_mod.ClientApi.World.BlockAccessor.GetBlockEntity(p) is IPhotoWaitingBlockEntity waiting)
+                        {
+                            waiting.OnPhotoDelivered();
+                        }
                     }
                     catch { /* intentional: best-effort non-critical path */ }
                 }

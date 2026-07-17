@@ -10,6 +10,10 @@ namespace Photocore.Tray
     {
         private bool _clientMeshQueued;
 
+        // The plate's own signature (code|photoId|stage|pours) doesn't change when the photo file
+        // itself lands, so OnTesselation's signature check would never ask for a rebuild on its own.
+        public void OnPhotoDelivered() => RequestClientMeshRebuild();
+
         // Queues exactly one main-thread tray mesh rebuild even if multiple dirty signals arrive in quick succession.
         private void RequestClientMeshRebuild()
         {

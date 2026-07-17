@@ -5,6 +5,7 @@
 
 ## Rendering
 - **Fixed objects disappearing when viewed through a held glass plate.** With a transparent plate held in first person, anything seen through it -- other players, dropped items, framed photos -- would vanish. The plate was filling in the depth buffer as if it were solid, culling everything drawn behind it. It now blends over what's behind without hiding it, and is still correctly covered by anything in front of it.
+- **Fixed a developed or finished plate in a development tray showing no image to a client who joins after it was developed.** The tray still downloaded the photo correctly, but had nothing telling it to redraw once the download finished, so the plate stayed blank until it was taken out and put back in. It now redraws itself as soon as the photo lands.
 
 ## Plate box
 - **Fixed plates not showing inside the plate box.** A plate placed into an open box slotted in but stayed invisible -- the slot renderer was drawing from the wrong texture atlas page. Plates now appear in their slots again.

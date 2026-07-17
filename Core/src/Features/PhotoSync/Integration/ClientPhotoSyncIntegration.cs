@@ -45,4 +45,13 @@ namespace Photocore.PhotoSync.Integration
             ResolveClientPhotoSync(capi)?.ClientNoteBlockWaitingForPhoto(photoId, pos);
         }
     }
+
+    // Counterpart to NoteBlockWaitingForPhoto above. MarkBlockDirty alone only helps a block entity that
+    // re-derives its mesh from scratch on every tesselation; one that caches a mesh behind its own
+    // change-signature check would keep re-adding the stale mesh forever, since the photo arriving
+    // doesn't change that signature.
+    public interface IPhotoWaitingBlockEntity
+    {
+        void OnPhotoDelivered();
+    }
 }

@@ -26,6 +26,19 @@ namespace Photocore.PhotoSync.Integration
             _serverPhotoSeenService?.Touch(normalized);
         }
 
+        // Paired here, rather than left to callers, so gameplay that destroys a photo for good (a plate
+        // reclaimed back to glass) cannot do half of it and orphan an index row against a deleted file.
+        // Same two steps /photoadmin's delete runs per id.
+        internal void ServerDeletePhoto(string photoId)
+        {
+            if (string.IsNullOrEmpty(photoId)) return;
+            string normalized = PhotoAssetStoragePaths.NormalizePhotoId(photoId);
+            if (string.IsNullOrEmpty(normalized)) return;
+
+            PhotoAssetStoragePaths.DeletePhotoAndDerived(normalized);
+            _serverPhotoSeenService?.RemoveEntry(normalized);
+        }
+
         internal void ClientMaybeSendPhotoSeen(string photoId)
         {
             if (_owner.ClientApi == null || _owner.ClientChannel == null) return;

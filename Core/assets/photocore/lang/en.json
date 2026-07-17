@@ -127,6 +127,7 @@
     "photocore:heldhelp-developmenttray-takeplate":     "Take plate from tray",
     "photocore:heldhelp-developmenttray-develop":       "Develop exposed plate",
     "photocore:heldhelp-developmenttray-fix":           "Fix developed plate",
+    "photocore:heldhelp-developmenttray-reclaim":       "Reclaim plate to rough glass (destroys the image)",
     
     "photocore:tray-info-plate":        "Plate: {0}",
     "photocore:tray-info-plate-none":   "Plate: (none)",
@@ -193,6 +194,8 @@
     "photocore:configlib-wetdurationhours-comment":             "How long a freshly-sensitized plate stays wet, in in-game hours (runs faster or slower with the world's time speed). The host's value decides the real drying window.",
     "photocore:configlib-plateboxdryingmultiplier-name":      "Plate box drying rate",
     "photocore:configlib-plateboxdryingmultiplier-comment":     "How fast plates dry inside a plate box. 0 pauses drying entirely (the default), 1 dries at the same rate as open air. The host's value decides the real rate.",
+    "photocore:configlib-allowreclaimingothersexposures-name":  "Allow reclaiming others' exposures",
+    "photocore:configlib-allowreclaimingothersexposures-comment": "Whether players can wash away an exposed plate that someone else exposed. Only covers plates exposed but not yet developed -- once a plate has been developed, anyone can reclaim it either way. The host's value decides.",
 
     "photocore:configlib-section-developmenttray":          "Development Tray",
     "photocore:configlib-developerpourduration-name":         "Developer pour duration",

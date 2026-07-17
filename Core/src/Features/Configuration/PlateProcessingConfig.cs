@@ -20,6 +20,9 @@
         /// <summary>How fast plates dry while inside a plate box. 0 = paused (default), 1 = full open-air rate.</summary>
         public float PlateBoxDryingMultiplier = 0f;
 
+        /// <summary>Whether players can reclaim an exposed plate someone else exposed. Only affects plates that have been exposed but not yet developed -- once developed, the exposure is sealed into the photo and any player can reclaim it regardless of this setting.</summary>
+        public bool AllowReclaimingOthersExposures = true;
+
         internal void ClampInPlace()
         {
             DevelopmentTrayChemicalUnitsPerUse = Math.Clamp(DevelopmentTrayChemicalUnitsPerUse, 1, 5000);

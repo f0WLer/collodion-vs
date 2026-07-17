@@ -10,6 +10,7 @@ namespace Photocore.Plates
     {
         public string? ChemistryId;
         public int StepIndex; // number of completed recipe steps; current step = recipe.Steps[StepIndex]
+        public int ReclaimCount;
 
         public override void Initialize(ICoreAPI api)
         {
@@ -29,6 +30,7 @@ namespace Photocore.Plates
             base.FromTreeAttributes(tree, worldAccessForResolve);
             ChemistryId = tree.GetString("chemistryId", null);
             StepIndex = tree.GetInt("stepIndex", 0);
+            ReclaimCount = tree.GetInt("reclaimCount", 0);
         }
 
         public override void ToTreeAttributes(ITreeAttribute tree)
@@ -36,6 +38,7 @@ namespace Photocore.Plates
             base.ToTreeAttributes(tree);
             if (ChemistryId != null) tree.SetString("chemistryId", ChemistryId);
             tree.SetInt("stepIndex", StepIndex);
+            tree.SetInt("reclaimCount", ReclaimCount);
         }
     }
 }

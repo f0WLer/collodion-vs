@@ -101,6 +101,13 @@
       "range": { "min": 0.0, "max": 1.0 }
     },
     {
+      "code": "PlateProcessing/AllowReclaimingOthersExposures",
+      "ingui": "photocore:configlib-allowreclaimingothersexposures-name",
+      "comment": "photocore:configlib-allowreclaimingothersexposures-comment",
+      "type": "boolean",
+      "default": true
+    },
+    {
       "type": "separator",
       "title": "photocore:configlib-section-developmenttray"
     },

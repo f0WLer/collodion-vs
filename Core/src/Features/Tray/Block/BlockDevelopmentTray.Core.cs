@@ -1,4 +1,5 @@
 ﻿using Photocore.Configuration;
+using Photocore.Plates;
 
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -112,5 +113,27 @@ namespace Photocore.Tray
         private float GetFixerPourSeconds()     => PourSeconds(Cfg?.DevelopmentTrayInteractions?.Fixer);
         private float GetWaterPourSeconds()     => PourSeconds(Cfg?.DevelopmentTrayInteractions?.Water);
 
+        // A plate still holding an exposure that is someone's, before developing seals it into a photo.
+        // Named so the ownership rule in CanReclaimOthersExposure states which band it means instead of
+        // re-listing the two stages.
+        internal static bool IsPreDevelopmentExposure(PlateStage stage)
+            => stage == PlateStage.Exposed || stage == PlateStage.ExposurePaused;
+
+        // Stages reclaimable on demand rather than only once dried out. Drives both eligibility here and
+        // the flat cost doubling below from one list, so a stage added to one and missed in the other
+        // can't quietly diverge.
+        internal static bool IsOnDemandReclaimable(PlateStage stage)
+            => IsPreDevelopmentExposure(stage) || stage == PlateStage.Developing || stage == PlateStage.Developed || stage == PlateStage.Finished;
+
+        private int GetReclaimUnits(PlateStage stage)
+            => IsOnDemandReclaimable(stage) ? GetChemicalUnitsPerUse() * 2 : GetChemicalUnitsPerUse();
+
+        private float GetReclaimSeconds(PlateStage stage)
+            => IsOnDemandReclaimable(stage) ? GetWaterPourSeconds() * 2 : GetWaterPourSeconds();
+
+        private int GetRequiredUnits(TrayActionKind actionKind, BlockEntityDevelopmentTray? be)
+            => actionKind == TrayActionKind.Water
+                ? GetReclaimUnits(PlateAttributes.GetStage(be?.PlateStack))
+                : GetChemicalUnitsPerUse();
     }
 }

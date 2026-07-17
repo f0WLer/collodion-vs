@@ -26,7 +26,7 @@ namespace Photocore.Tray
             BlockEntityDevelopmentTray? be = world.BlockAccessor.GetBlockEntity(pos) as BlockEntityDevelopmentTray;
             ItemStack? plate = be?.PlateStack;
 
-            if (plate == null)
+            if (be == null || plate == null)
             {
                 AddInsertPlateInteractions(world, interactions);
                 return interactions.ToArray();
@@ -66,7 +66,7 @@ namespace Photocore.Tray
             });
         }
 
-        private void AddPlatePresentInteractions(IWorldAccessor world, BlockEntityDevelopmentTray? be, ItemStack plate, List<WorldInteraction> interactions)
+        private void AddPlatePresentInteractions(IWorldAccessor world, BlockEntityDevelopmentTray be, ItemStack plate, List<WorldInteraction> interactions)
         {
             interactions.Add(new WorldInteraction
             {
@@ -74,23 +74,13 @@ namespace Photocore.Tray
                 MouseButton = EnumMouseButton.Right
             });
 
-            bool canDevelop;
-            bool canFix;
+            bool canDevelop = TryGetDeveloperPourContext(be, out _, out _, out int currentPours)
+                && currentPours < RequiredDeveloperPours;
 
-            if (be != null)
-            {
-                canDevelop = TryGetDeveloperPourContext(be, out _, out _, out int currentPours)
-                    && currentPours < RequiredDeveloperPours;
+            bool canFix = TryGetFixerPourContext(be, out _, out int pours)
+                && pours >= RequiredDeveloperPours;
 
-                canFix = TryGetFixerPourContext(be, out _, out int pours)
-                    && pours >= RequiredDeveloperPours;
-            }
-            else
-            {
-                canDevelop = PlateAttributes.GetStage(plate) == PlateStage.Exposed
-                    || PlateAttributes.GetStage(plate) == PlateStage.Developing;
-                canFix = PlateAttributes.GetStage(plate) == PlateStage.Developed;
-            }
+            bool canReclaim = TryGetReclaimContext(be, world, out _);
 
             if (canDevelop)
             {
@@ -100,6 +90,12 @@ namespace Photocore.Tray
             if (canFix)
             {
                 AddChemicalInteraction(world, interactions, "photocore:heldhelp-developmenttray-fix", _fixerPortionCode, GetChemicalUnitsPerUse());
+            }
+
+            if (canReclaim)
+            {
+                AddChemicalInteraction(world, interactions, "photocore:heldhelp-developmenttray-reclaim", _waterPortionCode,
+                    GetReclaimUnits(PlateAttributes.GetStage(plate)));
             }
         }
 

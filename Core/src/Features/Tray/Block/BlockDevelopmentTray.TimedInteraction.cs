@@ -2,6 +2,8 @@
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
+using Photocore.Configuration;
+using Photocore.PhotoMetadata.Model;
 using Photocore.Plates;
 namespace Photocore.Tray
 {
@@ -29,7 +31,8 @@ namespace Photocore.Tray
                 if (world?.Side == EnumAppSide.Client && blockSel?.Position != null)
                 {
                     BlockPos pos = blockSel.Position;
-                    if (TryResolveTimedActionKind(byPlayer, pos, out TrayActionKind actionKind) && secondsUsed >= GetDurationSeconds(actionKind))
+                    BlockEntityDevelopmentTray? stopBe = world.BlockAccessor.GetBlockEntity(pos) as BlockEntityDevelopmentTray;
+                    if (TryResolveTimedActionKind(byPlayer, pos, out TrayActionKind actionKind) && secondsUsed >= GetDurationSeconds(actionKind, stopBe))
                     {
                         TrayTimedInteractionState.SetNeedsRelease(byPlayer);
                     }
@@ -65,7 +68,7 @@ namespace Photocore.Tray
                 return false;
             }
 
-            if (secondsUsed < GetDurationSeconds(actionKind)) return true;
+            if (secondsUsed < GetDurationSeconds(actionKind, be)) return true;
 
             // Latch until RMB release to prevent auto-starting the next action.
             if (world.Side == EnumAppSide.Client) TrayTimedInteractionState.SetNeedsRelease(byPlayer);
@@ -109,13 +112,13 @@ namespace Photocore.Tray
             return false;
         }
 
-        private float GetDurationSeconds(TrayActionKind actionKind)
+        private float GetDurationSeconds(TrayActionKind actionKind, BlockEntityDevelopmentTray? be)
         {
             return actionKind switch
             {
                 TrayActionKind.Developer => GetDeveloperPourSeconds(),
                 TrayActionKind.Fixer => GetFixerPourSeconds(),
-                _ => GetWaterPourSeconds()
+                _ => GetReclaimSeconds(PlateAttributes.GetStage(be?.PlateStack))
             };
         }
 
@@ -126,7 +129,7 @@ namespace Photocore.Tray
             currentApplications = 0;
 
             AssetLocation portionCode = GetPortionCode(actionKind);
-            int amountPerUse = GetChemicalUnitsPerUse();
+            int amountPerUse = GetRequiredUnits(actionKind, be);
             if (!IsHoldingChemical(activeSlot, portionCode)) return false;
             if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, portionCode, amountPerUse))
             {
@@ -167,7 +170,7 @@ namespace Photocore.Tray
             {
                 TrayActionKind.Developer => TryApplyDeveloperPourServer(world, byPlayer, pos, be, activeSlot, plate, isExposed, currentApplications),
                 TrayActionKind.Fixer => TryApplyFixerPourServer(world, byPlayer, pos, be, activeSlot, plate),
-                _ => TryApplyWaterPourServer(world, byPlayer, pos, activeSlot)
+                _ => TryApplyWaterPourServer(world, byPlayer, pos, activeSlot, plate)
             };
         }
 
@@ -175,16 +178,16 @@ namespace Photocore.Tray
         // requirement is not this method's job: TryValidateTimedStepForAction already rejected the step
         // server-side via HasConsumableChemical, on the same slot and amount, earlier in the same tick.
         // Mirrors SensitizationRecipe.Consume, which likewise bypasses outright and leans on CanApply.
-        private bool TryConsumeChemicalUnlessCreative(IPlayer? byPlayer, ItemSlot? activeSlot, AssetLocation portionCode)
+        private bool TryConsumeChemicalUnlessCreative(IPlayer? byPlayer, ItemSlot? activeSlot, AssetLocation portionCode, int amount)
         {
             if (byPlayer?.WorldData?.CurrentGameMode == EnumGameMode.Creative) return true;
 
-            return PlateChemicalUtil.TryConsumeChemical(activeSlot, portionCode, GetChemicalUnitsPerUse());
+            return PlateChemicalUtil.TryConsumeChemical(activeSlot, portionCode, amount);
         }
 
         private bool TryApplyDeveloperPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate, bool isExposed, int currentPours)
         {
-            if (!TryConsumeChemicalUnlessCreative(byPlayer, activeSlot, _developerPortionCode))
+            if (!TryConsumeChemicalUnlessCreative(byPlayer, activeSlot, _developerPortionCode, GetChemicalUnitsPerUse()))
             {
                 Tell(byPlayer, GetMissingChemicalMessage(TrayActionKind.Developer), pos);
                 return false;
@@ -222,7 +225,7 @@ namespace Photocore.Tray
 
         private bool TryApplyFixerPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, BlockEntityDevelopmentTray be, ItemSlot? activeSlot, ItemStack plate)
         {
-            if (!TryConsumeChemicalUnlessCreative(byPlayer, activeSlot, _fixerPortionCode))
+            if (!TryConsumeChemicalUnlessCreative(byPlayer, activeSlot, _fixerPortionCode, GetChemicalUnitsPerUse()))
             {
                 Tell(byPlayer, GetMissingChemicalMessage(TrayActionKind.Fixer), pos);
                 return false;
@@ -248,9 +251,10 @@ namespace Photocore.Tray
         }
 
         // The tray empties immediately — rough plates cannot re-enter the development workflow.
-        private bool TryApplyWaterPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, ItemSlot? activeSlot)
+        private bool TryApplyWaterPourServer(IWorldAccessor world, IPlayer byPlayer, BlockPos pos, ItemSlot? activeSlot, ItemStack plate)
         {
-            if (!PlateChemicalUtil.TryConsumeChemical(activeSlot, _waterPortionCode, GetChemicalUnitsPerUse()))
+            PlateStage stage = PlateAttributes.GetStage(plate);
+            if (!TryConsumeChemicalUnlessCreative(byPlayer, activeSlot, _waterPortionCode, GetReclaimUnits(stage)))
             {
                 Tell(byPlayer, GetMissingChemicalMessage(TrayActionKind.Water), pos);
                 return false;
@@ -259,14 +263,28 @@ namespace Photocore.Tray
             Item? glassPlateItem = world.GetItem(_glassPlateItemCode);
             if (glassPlateItem == null) return false;
 
+            DestroyPhotoData(world, plate);
+
             ItemStack roughPlate = new ItemStack(glassPlateItem);
             PlateAttributes.SetStage(roughPlate, PlateStage.Rough);
             PlateAttributes.SetNameLangCode(roughPlate, "photocore:plate-name-glass");
             roughPlate.Attributes.SetString("plateBlockState", "rough");
+            // Fresh stack, so the wash count is the one thing carried over from the plate destroyed above.
+            PlateAttributes.SetReclaimCount(roughPlate, PlateAttributes.GetReclaimCount(plate) + 1);
 
             SwapTrayBlockForPlateStage(world, pos, null, null);
             GiveOrDrop(world, byPlayer, roughPlate, pos);
             return true;
+        }
+
+        // Keyed on the photo id rather than the plate's stage: sealing only happens on the first
+        // developer pour, so a plate can sit exposed indefinitely with nothing on disk to remove.
+        private static void DestroyPhotoData(IWorldAccessor world, ItemStack plate)
+        {
+            string photoId = plate.ResolvePhotoId();
+            if (string.IsNullOrEmpty(photoId)) return;
+
+            PhotocoreConfigAccess.ResolveModSystem(world.Api)?.PhotoSyncModSystemBridge?.ServerDeletePhoto(photoId);
         }
 
         private static string GetActionString(TrayActionKind actionKind) => actionKind switch

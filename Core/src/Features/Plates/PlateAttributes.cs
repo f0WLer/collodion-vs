@@ -166,6 +166,21 @@ namespace Photocore.Plates
             stack.Attributes.RemoveAttribute(AttrDevelopmentStepApplications);
         }
 
+        private const string AttrReclaimCount = "photochemPlateReclaimCount";
+
+        // Belongs to the physical glass rather than to any process stage, so unlike everything else here
+        // it is never reset -- it has to survive a plate being washed down and prepared all over again.
+        public static int GetReclaimCount(ItemStack? stack)
+        {
+            int count = stack?.Attributes?.GetInt(AttrReclaimCount, 0) ?? 0;
+            return count < 0 ? 0 : count;
+        }
+
+        public static void SetReclaimCount(ItemStack stack, int count)
+        {
+            stack.Attributes.SetInt(AttrReclaimCount, count < 0 ? 0 : count);
+        }
+
         private const string AttrCapturedYear  = "photochemCapturedYear";
         private const string AttrCapturedMonth = "photochemCapturedMonth";
         private const string AttrCapturedDay   = "photochemCapturedDay";

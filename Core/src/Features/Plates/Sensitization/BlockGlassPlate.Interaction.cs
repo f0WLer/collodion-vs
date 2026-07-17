@@ -122,7 +122,7 @@ namespace Photocore.Plates
             {
                 Block? coated = GetBlockForState(world, "coated");
                 if (coated == null) return;
-                world.BlockAccessor.SetBlock(coated.Id, pos);
+                SwapPlateStateBlock(world, pos, coated);
             }
             if (world.BlockAccessor.GetBlockEntity(pos) is BlockEntityGlassPlate be)
             {
@@ -161,6 +161,12 @@ namespace Photocore.Plates
             ItemStack sensitizedPlate = new ItemStack(sensitizedItem, 1);
             PlateAttributes.SetStage(sensitizedPlate, PlateStage.Sensitized);
             PlateAttributes.SetChemistry(sensitizedPlate, chemistryId);
+
+            // Mints a fresh stack instead of merging the old one, so the glass's history would reset
+            // here every time a plate was re-sensitized unless it is carried across by hand.
+            if (world.BlockAccessor.GetBlockEntity(pos) is BlockEntityGlassPlate be && be.ReclaimCount > 0)
+                PlateAttributes.SetReclaimCount(sensitizedPlate, be.ReclaimCount);
+
             // Pin the glass-plate name; other substrates fall back to their own itemtype name.
             if (Substrate == "glass")
                 PlateAttributes.SetNameLangCode(sensitizedPlate, "photocore:plate-name-sensitized");
@@ -214,7 +220,7 @@ namespace Photocore.Plates
                 }
             }
 
-            world.BlockAccessor.SetBlock(cleanBlock.Id, pos);
+            SwapPlateStateBlock(world, pos, cleanBlock);
             world.BlockAccessor.MarkBlockDirty(pos);
 
             if (!isCreative && consumeCount > 0)

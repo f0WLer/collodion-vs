@@ -1,6 +1,7 @@
 {
   "code": "plate-rough",
   "class": "GlassPlate",
+  "entityClass": "BlockEntityGlassPlate",
   "blockmaterial": "Glass",
   "drawtype": "json",
   "shape": { "base": "photocore:block/plates/plate" },

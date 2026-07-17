@@ -136,14 +136,14 @@ namespace Photocore.Tray
             if (plateStack != null)
             {
                 PlateStage stage = PlateAttributes.GetStage(plateStack);
-                bool isWetStage = stage == PlateStage.Sensitized
-                    || stage == PlateStage.Exposing
-                    || stage == PlateStage.ExposurePaused
-                    || stage == PlateStage.Exposed
-                    || stage == PlateStage.Developing
-                    || stage == PlateStage.Developed;
 
-                if (isWetStage && PlateDryingTransition.IsDry(world, plateStack))
+                // Past exposure the doubled cost is the gate, so those reclaim wet or dry -- throwing away
+                // a good photo is the player's call to make. Earlier stages keep the original rule: the
+                // glass is only recoverable once drying has already cost them the plate.
+                bool eligible = IsOnDemandReclaimable(stage)
+                    || (OnlyReclaimableOnceDried(stage) && PlateDryingTransition.IsDry(world, plateStack));
+
+                if (eligible)
                 {
                     plate = plateStack;
                     return true;
@@ -152,6 +152,22 @@ namespace Photocore.Tray
 
             plate = null!;
             return false;
+        }
+
+        private static bool OnlyReclaimableOnceDried(PlateStage stage)
+            => stage == PlateStage.Sensitized || stage == PlateStage.Exposing;
+
+        // Pre-development exposures still belong to whoever opened the shutter: the accumulating frames
+        // live on that player's client and the plate still names them. Once developing, the exposure is
+        // sealed into a photo on a shared object, so there is no session left to protect and any player
+        // may reclaim it regardless of the setting.
+        private bool CanReclaimOthersExposure(IPlayer byPlayer, ItemStack plate)
+        {
+            if (!IsPreDevelopmentExposure(PlateAttributes.GetStage(plate))) return true;
+            if (Cfg?.PlateProcessing?.AllowReclaimingOthersExposures ?? true) return true;
+
+            string? owner = plate.Attributes?.GetString(PlateAttributes.PhotographerUid);
+            return string.IsNullOrEmpty(owner) || string.Equals(owner, byPlayer.PlayerUID, StringComparison.Ordinal);
         }
     }
 }

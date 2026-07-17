@@ -49,12 +49,18 @@ namespace Photocore.Plates
 
             world.BlockAccessor.SetBlock(plateBlock.Id, placePos);
 
-            // Restore fine sensitization progress (chemistry + step) onto the placed block entity.
-            string? plateChemistry = slot.Itemstack.Attributes.GetString("plateChemistry", null);
-            if (plateChemistry != null && world.BlockAccessor.GetBlockEntity(placePos) is BlockEntityGlassPlate be)
+            // The reclaim count is restored outside the chemistry check: a reclaimed plate is rough and
+            // has no chemistry, so gating on it would drop the count from exactly the plates that have one.
+            if (world.BlockAccessor.GetBlockEntity(placePos) is BlockEntityGlassPlate be)
             {
-                be.ChemistryId = plateChemistry;
-                be.StepIndex = slot.Itemstack.Attributes.GetInt("plateStep", 1);
+                string? plateChemistry = slot.Itemstack.Attributes.GetString("plateChemistry", null);
+                if (plateChemistry != null)
+                {
+                    be.ChemistryId = plateChemistry;
+                    be.StepIndex = slot.Itemstack.Attributes.GetInt("plateStep", 1);
+                }
+
+                be.ReclaimCount = PlateAttributes.GetReclaimCount(slot.Itemstack);
                 be.MarkDirty(true);
             }
 

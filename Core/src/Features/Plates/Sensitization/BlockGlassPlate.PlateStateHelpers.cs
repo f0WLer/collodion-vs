@@ -63,6 +63,22 @@ namespace Photocore.Plates
             return world?.GetBlock(new AssetLocation(Code?.Domain ?? "photocore", $"{StateBlockPrefix}-{state}"));
         }
 
+        // SetBlock discards the old block entity and builds a fresh one, so anything belonging to the
+        // glass itself rather than to the state being left behind has to be lifted across by hand.
+        // Every rough/clean/coated transition goes through here so there is one place to do that.
+        private static void SwapPlateStateBlock(IWorldAccessor world, BlockPos pos, Block target)
+        {
+            int reclaims = (world.BlockAccessor.GetBlockEntity(pos) as BlockEntityGlassPlate)?.ReclaimCount ?? 0;
+
+            world.BlockAccessor.SetBlock(target.Id, pos);
+
+            if (reclaims > 0 && world.BlockAccessor.GetBlockEntity(pos) is BlockEntityGlassPlate be)
+            {
+                be.ReclaimCount = reclaims;
+                be.MarkDirty(true);
+            }
+        }
+
         private bool TryCreatePlateItemStack(IWorldAccessor world, BlockPos pos, out ItemStack stack)
         {
             stack = default!;
@@ -83,11 +99,17 @@ namespace Photocore.Plates
             PlateAttributes.SetStage(stack, stage);
             stack.Attributes.SetString("plateBlockState", state);
 
-            // Carry the fine sensitization progress so a picked-up coated plate resumes correctly when re-placed.
-            if (state == "coated" && world?.BlockAccessor?.GetBlockEntity(pos) is BlockEntityGlassPlate be && be.ChemistryId != null)
+            if (world?.BlockAccessor?.GetBlockEntity(pos) is BlockEntityGlassPlate be)
             {
-                stack.Attributes.SetString("plateChemistry", be.ChemistryId);
-                stack.Attributes.SetInt("plateStep", be.StepIndex);
+                // Carry the fine sensitization progress so a picked-up coated plate resumes correctly when re-placed.
+                if (state == "coated" && be.ChemistryId != null)
+                {
+                    stack.Attributes.SetString("plateChemistry", be.ChemistryId);
+                    stack.Attributes.SetInt("plateStep", be.StepIndex);
+                }
+
+                // Unlike chemistry, this belongs to the glass itself, so it rides every state out.
+                if (be.ReclaimCount > 0) PlateAttributes.SetReclaimCount(stack, be.ReclaimCount);
             }
 
             // Glass-specific display names; other substrates fall back to their own itemtype name.

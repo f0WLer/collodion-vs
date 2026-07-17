@@ -74,10 +74,19 @@ namespace Photocore.Tray
             return TrayActionKind.Water;
         }
 
+        // Picks the tray block variant to render the insert as, which is deliberately coarser than the
+        // plate's own stage (a half-developed plate shows the developed tray), so it is resolved here
+        // rather than read off the stack.
         private static PlateStage ResolveInsertStage(IWorldAccessor world, ItemStack held)
         {
             if (IsDrySensitizedForReclaim(world, held)) return PlateStage.Exposed;
-            return IsDevelopingStage(held) ? PlateStage.Developed : PlateStage.Exposed;
+
+            return PlateAttributes.GetStage(held) switch
+            {
+                PlateStage.Finished => PlateStage.Finished,
+                PlateStage.Developing or PlateStage.Developed => PlateStage.Developed,
+                _ => PlateStage.Exposed
+            };
         }
 
         // Receives the already-resolved kind so it never independently re-derives the product-level action.
@@ -154,10 +163,11 @@ namespace Photocore.Tray
 
                 case TrayActionKind.Water:
                 {
-                    if (!TryGetReclaimContext(be, world, out _)) return false;
-                    if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _waterPortionCode, GetChemicalUnitsPerUse())) return false;
+                    if (!TryGetReclaimContext(be, world, out ItemStack reclaimPlate)) return false;
+                    PlateStage reclaimStage = PlateAttributes.GetStage(reclaimPlate);
+                    if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, _waterPortionCode, GetReclaimUnits(reclaimStage))) return false;
 
-                    TrayTimedInteractionState.Begin(byPlayer, blockSel.Position, ActionWater, GetWaterPourSeconds());
+                    TrayTimedInteractionState.Begin(byPlayer, blockSel.Position, ActionWater, GetReclaimSeconds(reclaimStage));
                     return true;
                 }
 
@@ -260,12 +270,17 @@ namespace Photocore.Tray
                     }
                     break;
                 default:
-                    if (!TryGetReclaimContext(be, world, out _)) return false;
+                    if (!TryGetReclaimContext(be, world, out ItemStack reclaimPlate)) return false;
+                    if (!CanReclaimOthersExposure(byPlayer, reclaimPlate))
+                    {
+                        Tell(byPlayer, Lang.Get("photocore:msg-tray-other-photographer"), pos);
+                        return false;
+                    }
                     break;
             }
 
             AssetLocation portionCode = GetPortionCode(actionKind);
-            int amountPerUse = GetChemicalUnitsPerUse();
+            int amountPerUse = GetRequiredUnits(actionKind, be);
             if (!PlateChemicalUtil.HasConsumableChemical(activeSlot, portionCode, amountPerUse))
             {
                 Tell(byPlayer, GetMissingChemicalMessage(actionKind), pos);
@@ -280,7 +295,7 @@ namespace Photocore.Tray
             if (!TryValidateStartForAction(world, byPlayer, trayPos, be, activeSlot, chemKind)) return false;
 
             world.PlaySoundAt(_chemicalPourSound, trayPos.X + 0.5, trayPos.Y + 0.5, trayPos.Z + 0.5, null);
-            TrayTimedInteractionState.Begin(byPlayer, trayPos, GetActionString(chemKind), GetDurationSeconds(chemKind));
+            TrayTimedInteractionState.Begin(byPlayer, trayPos, GetActionString(chemKind), GetDurationSeconds(chemKind, be));
             return true;
         }
 
@@ -291,23 +306,11 @@ namespace Photocore.Tray
             return PlateAttributes.GetStage(stack) == PlateStage.Sensitized;
         }
 
-        // Allows exposed, paused-exposure, developing, and developed plates to enter the tray workflow.
+        // Every stage that can be washed back to glass on demand can also be inserted -- a finished
+        // plate has no chemistry left to advance it, but still belongs here for the two things that do
+        // apply to a sealed photo: sitting on display, and reclaim. Reuses IsOnDemandReclaimable rather
+        // than keeping a second copy of the same stage list.
         private static bool IsInsertablePlate(ItemStack? stack)
-        {
-            if (stack == null) return false;
-
-            PlateStage stage = PlateAttributes.GetStage(stack);
-            return stage == PlateStage.Exposed
-                || stage == PlateStage.ExposurePaused
-                || IsDevelopingStage(stack);
-        }
-
-        private static bool IsDevelopingStage(ItemStack? stack)
-        {
-            if (stack == null) return false;
-
-            PlateStage stage = PlateAttributes.GetStage(stack);
-            return stage == PlateStage.Developing || stage == PlateStage.Developed;
-        }
+            => stack != null && IsOnDemandReclaimable(PlateAttributes.GetStage(stack));
     }
 }

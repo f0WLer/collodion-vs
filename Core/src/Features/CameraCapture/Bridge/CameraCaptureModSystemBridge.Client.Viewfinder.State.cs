@@ -10,7 +10,7 @@ namespace Photocore.CameraCapture
         private bool _f4TipShownThisViewfinder;
         private bool _f4TipShownEver;
 
-        private static readonly AssetLocation _viewfinderEnterSound = new AssetLocation("photocore", "sounds/rustle");
+        private static readonly AssetLocation _viewfinderEnterSound = new AssetLocation("photocore", "sounds/cap-remove");
 
         private readonly object _viewfinderLock = new object();
         private int _viewfinderDepth;

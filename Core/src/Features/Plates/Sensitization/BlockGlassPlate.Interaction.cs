@@ -9,7 +9,7 @@ namespace Photocore.Plates
     public sealed partial class BlockGlassPlate
     {
         private static readonly AssetLocation _plainClothCode = new("game", "cloth-plain");
-        private static readonly AssetLocation _polishSound = new("game:sounds/player/chalkdraw");
+        private static readonly AssetLocation _polishSound = new("photocore:sounds/glass-polish");
 
         // Resolves the recipe + the step the plate is waiting for. On a clean plate the chemistry is
         // chosen by the held item (which recipe's first step it matches); on a coated plate it's fixed by

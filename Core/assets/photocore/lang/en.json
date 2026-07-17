@@ -152,7 +152,7 @@
     "photocore:msg-plate-dried-no-expose":      "photocore: this plate has dried out and can no longer be exposed.",
     "photocore:msg-plate-dried-reclaim":        "photocore: this plate has dried out — wash it in a development tray to reclaim the glass.",
     "photocore:msg-tray-plate-dried":           "photocore: the plate has dried and can no longer be used.",
-    "photocore:msg-plate-not-enough-cloth":     "photocore: you need {0} plain cloth to polish this plate.",
+    "photocore:msg-plate-not-enough-cloth":     "photocore: you need {0} of the same cloth to polish this plate.",
     "photocore:msg-tray-underdeveloped":        "photocore: plate not fully developed ({0}/{1}).",
     "photocore:msg-tray-need-chemical":         "photocore: need {0} (at least 1 portion).",
 

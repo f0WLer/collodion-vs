@@ -3,12 +3,16 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.API.Util;
 
 namespace Photocore.Plates
 {
     public sealed partial class BlockGlassPlate
     {
-        private static readonly AssetLocation _plainClothCode = new("game", "cloth-plain");
+        // Any base-game cloth polishes. game:cloth-* is the 13 color variants of the single `cloth`
+        // item (plain, mordant, dyes). Domain-locked to "game" by the wildcard and matched on the item
+        // code.
+        private static readonly AssetLocation _polishClothWildcard = new("game", "cloth-*");
         private static readonly AssetLocation _polishSound = new("photocore:sounds/glass-polish");
 
         // Resolves the recipe + the step the plate is waiting for. On a clean plate the chemistry is
@@ -42,7 +46,7 @@ namespace Photocore.Plates
             string state = GetPlateState();
             ItemSlot? heldSlot = byPlayer.InventoryManager?.ActiveHotbarSlot;
 
-            bool isPolish = state == "rough" && IsHoldingPlainCloth(byPlayer);
+            bool isPolish = state == "rough" && IsHoldingPolishCloth(byPlayer);
             if (isPolish && !HasEnoughPolishCloth(byPlayer))
             {
                 // Reject up front rather than partway through. Nothing else can claim this interaction: a
@@ -188,7 +192,7 @@ namespace Photocore.Plates
 
         private bool HandlePolishInteractionStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockPos pos)
         {
-            if (!IsHoldingPlainCloth(byPlayer)) return false;
+            if (!IsHoldingPolishCloth(byPlayer)) return false;
             // Re-checked every step, not just at the start: the stack can shrink mid-polish (dropped,
             // moved, used elsewhere), and the interaction should stop there rather than run to completion
             // and fall through the affordability guard below without a word.
@@ -222,10 +226,12 @@ namespace Photocore.Plates
             return false;
         }
 
+        private ItemStack[]? _polishClothStacks;
+
         private WorldInteraction[] BuildPolishInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
         {
-            Item? clothItem = world.GetItem(_plainClothCode);
-            if (clothItem == null) return base.GetPlacedBlockInteractionHelp(world, selection, forPlayer);
+            _polishClothStacks ??= ResolvePolishClothStacks(world);
+            if (_polishClothStacks.Length == 0) return base.GetPlacedBlockInteractionHelp(world, selection, forPlayer);
 
             return
             [
@@ -233,16 +239,24 @@ namespace Photocore.Plates
                 {
                     ActionLangCode = "photocore:heldhelp-cleanroughglass",
                     MouseButton = EnumMouseButton.Right,
-                    Itemstacks = [new ItemStack(clothItem)]
+                    Itemstacks = _polishClothStacks
                 }
             ];
         }
 
-        private static bool IsHoldingPlainCloth(IPlayer player)
+        // Base-game cloth set is fixed once assets load, so resolve once per block instance.
+        private static ItemStack[] ResolvePolishClothStacks(IWorldAccessor world)
         {
-            ItemSlot? activeSlot = player.InventoryManager?.ActiveHotbarSlot;
-            ItemStack? held = activeSlot?.Itemstack;
-            return held?.Collectible?.Code != null && held.Collectible.Code == _plainClothCode;
+            Item[] items = world.SearchItems(_polishClothWildcard);
+            var stacks = new ItemStack[items.Length];
+            for (int i = 0; i < items.Length; i++) stacks[i] = new ItemStack(items[i]);
+            return stacks;
+        }
+
+        private static bool IsHoldingPolishCloth(IPlayer player)
+        {
+            AssetLocation? code = player.InventoryManager?.ActiveHotbarSlot?.Itemstack?.Collectible?.Code;
+            return code != null && WildcardUtil.Match(_polishClothWildcard, code);
         }
 
         // Cloth is only spent when a polish completes, but whether the player can afford it has to be

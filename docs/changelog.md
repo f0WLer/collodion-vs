@@ -19,6 +19,9 @@
 - **Setting down a mounted camera on its tripod now plays a sound others nearby can hear too.**
 - **Inserting or removing a plate from a development tray now plays a sound others nearby can hear too.**
 
+## Plates
+- **Rough glass plates can now be polished with any base-game cloth**, not just plain cloth -- mordanted cloth and every dyed variant (red, blue, and so on) work too. The consume amount and "not enough cloth" checks apply the same way regardless of which cloth you use.
+
 ## Photo storage
 - **Photos are now stored per world instead of all sharing one folder.** Previously every singleplayer world, every world you've hosted yourself, and every photo downloaded while visiting someone else's server all landed in the same `ModData/photocore/photos/` folder on your machine -- so photos from completely unrelated worlds piled up together. Each world now gets its own folder under `ModData/photocore/photos/<world-id>/`, so unrelated sessions no longer mix. Photos you already have keep working exactly as before (no action needed, nothing to move) -- they're read from their old shared location, and quietly relocated into the right world's folder the first time that world uses them.
 - **Old photos tidy themselves away as you play.** The first time a world shows or serves a photo that's still sitting in the old shared folder, that file is moved into the world's own folder -- so over time the shared folder empties on its own and `/photoadmin` can see those photos again (until it's moved, a photo still in the shared folder renders fine but is invisible to `stats`/`audit`/`delete`). Only the world a photo actually belongs to ever claims it, so nothing gets mixed up. Anything left in the shared folder is a photo no world references anymore -- safe to delete or sort by hand in your file explorer if you like.

@@ -13,6 +13,8 @@ namespace Photocore.FieldCamera
         private static readonly AssetLocation _cameraPlateLoadSound = new AssetLocation("photocore", "sounds/glass-slide1");
         private static readonly AssetLocation _cameraPlateUnloadSound = new AssetLocation("photocore", "sounds/glass-slide2");
         private static readonly AssetLocation _mountedCameraSetSound = new AssetLocation("photocore", "sounds/tripod-set");
+        // Shutter open/close, shared by handheld and mounted -- both funnel through OnExposureStateReceived.
+        private static readonly AssetLocation _exposureShutterSound = new AssetLocation("photocore", "sounds/dark-slide");
 
         private static AssetLocation GetBaseCode(ItemStack? cameraStack)
             => cameraStack?.Item is ItemFieldcamera cam ? cam.CameraBaseCode : _fieldcameraBaseCode;

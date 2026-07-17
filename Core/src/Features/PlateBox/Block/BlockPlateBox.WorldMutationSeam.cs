@@ -7,8 +7,7 @@ namespace Photocore.PlateBox
     public sealed partial class BlockPlateBox
     {
         private static readonly AssetLocation _padlockSound = new("game", "sounds/tool/padlock");
-        private static readonly AssetLocation _hingeSound = new("photocore", "sounds/hinge");
-        private const int OpenCloseSoundDelayMs = 35;
+        private const int OpenCloseSoundDelayMs = 80;
 
         private bool TryPickupBoxAndGiveDrop(IWorldAccessor world, IPlayer byPlayer, BlockPos pos)
         {
@@ -90,7 +89,6 @@ namespace Photocore.PlateBox
 
             PlaySoundWithDelay(world, x, y, z, _padlockSound, 0);
             PlaySoundWithDelay(world, x, y, z, _padlockSound, OpenCloseSoundDelayMs);
-            PlaySoundWithDelay(world, x, y, z, _hingeSound, OpenCloseSoundDelayMs * 2);
         }
 
         // pitch null keeps the original randomize-pitch behavior; callers that already rolled their

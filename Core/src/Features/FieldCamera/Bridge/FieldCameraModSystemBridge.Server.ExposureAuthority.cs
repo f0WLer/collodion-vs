@@ -66,6 +66,10 @@ namespace Photocore.FieldCamera
                     loadedPlate.Attributes.SetString(PlateAttributes.ExposureId, packet.ExposureId);
                 if (packet.TargetFrames > 0)
                     loadedPlate.Attributes.SetInt(PlateAttributes.ExposureTargetFrames, packet.TargetFrames);
+
+                // Server-authoritative and entity-attached (not client-local) so bystanders hear the
+                // shutter too, for both handheld and mounted -- this is the one place both funnel through.
+                AudioUtils.FireAndForgetEntitySound(Api.World, _exposureShutterSound, player.Entity, AudioUtils.NextRandomPitch(Api.World));
             }
             else
             {
@@ -82,6 +86,8 @@ namespace Photocore.FieldCamera
                 PlateAttributes.SetStage(loadedPlate, packet.ReachedCap ? PlateStage.Exposed : PlateStage.ExposurePaused);
                 loadedPlate.Attributes.SetInt(PlateAttributes.ExposedFrames, packet.ExposedFrames);
                 BestEffortLogger?.Notification($"photocore[diag]: server wrote ExposedFrames={packet.ExposedFrames} to plate (reachedCap={packet.ReachedCap})");
+
+                AudioUtils.FireAndForgetEntitySound(Api.World, _exposureShutterSound, player.Entity, AudioUtils.NextRandomPitch(Api.World));
             }
 
             SetLoadedPlateAttributes(cameraStack, loadedPlate);

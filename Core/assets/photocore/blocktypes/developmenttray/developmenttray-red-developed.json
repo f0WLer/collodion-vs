@@ -24,9 +24,9 @@
   "resistance": 1.0,
   "lightAbsorption": 0,
   "sounds": {
-    "place": "game:block/glass",
-    "break": "game:block/glass",
-    "hit": "game:block/glass"
+    "place": "photocore:devtray-place",
+    "break": "photocore:devtray-place",
+    "hit": "photocore:devtray-place"
   },
   "collisionbox": { "x1": 0.0625, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.25, "z2": 0.9375 },
   "selectionbox": { "x1": 0.0625, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.25, "z2": 0.9375 },

@@ -1,6 +1,7 @@
 ﻿using Photocore.CameraCapture;
 using Photocore.Exposure;
 using Photocore.Plates;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
@@ -15,6 +16,11 @@ namespace Photocore.FieldCamera
         private VirtualCameraState? _pendingMountedCameraState;
         private long _lastShutterGateChatMs;
         private int _maxFrames = ViewfinderConfig.DefaultMaxAccumulatedFrames;
+
+        // Chains background partial-exposure saves per exposureId so a rapid pause/resume/pause can't
+        // let an older, less-progressed write finish after a newer one and clobber it on disk.
+        private readonly Dictionary<string, Task> _pendingExposureSaves = new(StringComparer.Ordinal);
+        private readonly object _pendingExposureSavesLock = new();
 
         // Temporary startup-race diagnostics (gated on ShowDebugLogs). See the exposure-flakiness plan.
         private void Diag(string msg) => _owner.BestEffortLogger?.Notification("photocore[diag]: " + msg);
@@ -166,11 +172,34 @@ namespace Photocore.FieldCamera
                 && !string.IsNullOrEmpty(exposureId))
             {
                 byte[]? blob = viewportAcc.ExportPartial();
-                if (blob != null && !ExposureAccumulationStore.Save(exposureId, blob))
-                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photocore:msg-exposure-save-failed"));
+                if (blob != null) SavePartialExposureAsync(exposureId, blob);
             }
 
             SendExposureStatePacket(isExposing: false, acc.FramesAccumulated, exposureId, acc.TargetFrames, reachedCap);
+        }
+
+        // The compress-and-write has no GL dependency once ExportPartial()'s readback has already
+        // happened, so it doesn't need to hold up the frame that just paused an exposure. Chained onto
+        // this exposureId's previous save (see _pendingExposureSaves) so writes land in call order even
+        // if the thread pool would otherwise run them out of order. Chat is not safe to touch off the
+        // main thread, so a failure is bounced back via EnqueueMainThreadTask.
+        private void SavePartialExposureAsync(string exposureId, byte[] blob)
+        {
+            ICoreClientAPI? clientApi = _owner.ClientApi;
+
+            lock (_pendingExposureSavesLock)
+            {
+                Task previous = _pendingExposureSaves.TryGetValue(exposureId, out Task? p) ? p : Task.CompletedTask;
+                Task next = previous.ContinueWith(_ =>
+                {
+                    if (ExposureAccumulationStore.Save(exposureId, blob)) return;
+                    clientApi?.Event.EnqueueMainThreadTask(
+                        () => clientApi.ShowChatMessage(Lang.Get("photocore:msg-exposure-save-failed")),
+                        "photocore-exposure-save-failed");
+                }, TaskScheduler.Default);
+
+                _pendingExposureSaves[exposureId] = next;
+            }
         }
 
         private void SendExposureStatePacket(bool isExposing, int exposedFrames, string exposureId, int targetFrames, bool reachedCap = false)
@@ -293,6 +322,17 @@ namespace Photocore.FieldCamera
                     return;
                 }
 
+                // A Paused renderer can only be sitting here because of the resumable-in-place pause
+                // below (Discard() always forces State back to Idle first), so its buffer and camera
+                // are still valid for this exposure -- resume directly instead of tearing down and
+                // reloading the partial from disk.
+                if (renderer.State == ExposureState.Paused)
+                {
+                    renderer.Resume();
+                    SendExposureStatePacket(true, renderer.FramesAccumulated, _mountedExposureId, renderer.CapFrameCount);
+                    return;
+                }
+
                 if (_pendingMountedCameraState is VirtualCameraState cameraState)
                 {
                     var clientApi = _owner.ClientApi;
@@ -335,21 +375,41 @@ namespace Photocore.FieldCamera
                 return;
             }
 
-            if (renderer.State != ExposureState.Capturing) return;
+            // Nothing to stop unless an exposure is live or held paused. A paused renderer can reach
+            // here because a plain pause now keeps its buffer resident (see below), so a later
+            // unload/pickup/break stop must still run to release that buffer.
+            if (renderer.State != ExposureState.Capturing && renderer.State != ExposureState.Paused) return;
 
-            renderer.Pause();
-
+            bool wasCapturing = renderer.State == ExposureState.Capturing;
             int framesAtPause = renderer.FramesAccumulated;
-            if (framesAtPause > 0 && !string.IsNullOrEmpty(_mountedExposureId))
+
+            if (wasCapturing)
             {
-                byte[]? blob = renderer.ExportPartial();
-                if (blob != null && !ExposureAccumulationStore.Save(_mountedExposureId, blob))
-                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photocore:msg-exposure-save-failed"));
+                renderer.Pause();
+
+                if (framesAtPause > 0 && !string.IsNullOrEmpty(_mountedExposureId))
+                {
+                    byte[]? blob = renderer.ExportPartial();
+                    if (blob != null) SavePartialExposureAsync(_mountedExposureId, blob);
+                }
             }
 
-            renderer.Discard();
+            // Keep the GPU buffer and camera resident only for a plain pause of the same exposure that
+            // is still mounted, so a resume skips tearing down and reloading the just-saved partial from
+            // disk. Every other stop (plate unload/swap, camera pickup, block broken) must discard, or a
+            // later exposure could resume onto this one's accumulated frames.
+            bool sameExposureStillMounted = packet.HasMountBlock
+                && !string.IsNullOrEmpty(packet.ExposureId)
+                && string.Equals(packet.ExposureId, _mountedExposureId, StringComparison.Ordinal);
 
-            SendExposureStatePacket(false, framesAtPause, _mountedExposureId, renderer.CapFrameCount);
+            if (!sameExposureStillMounted)
+                renderer.Discard();
+
+            // Only the live capture just paused needs to report its frame count to the server; an
+            // already-paused renderer being torn down has nothing new to persist (matching the prior
+            // early-return that sent no packet in that case).
+            if (wasCapturing)
+                SendExposureStatePacket(false, framesAtPause, _mountedExposureId, renderer.CapFrameCount);
         }
 
         // Only reached via OnClientViewfinderTick's Done-state check, which for the mounted renderer
@@ -363,8 +423,7 @@ namespace Photocore.FieldCamera
             if (renderer.FramesAccumulated > 0 && !string.IsNullOrEmpty(_mountedExposureId))
             {
                 byte[]? blob = renderer.ExportPartial();
-                if (blob != null && !ExposureAccumulationStore.Save(_mountedExposureId, blob))
-                    _owner.ClientApi?.ShowChatMessage(Lang.Get("photocore:msg-exposure-save-failed"));
+                if (blob != null) SavePartialExposureAsync(_mountedExposureId, blob);
             }
 
             SendExposureStatePacket(false, renderer.FramesAccumulated, _mountedExposureId, renderer.CapFrameCount, reachedCap: true);

@@ -168,7 +168,10 @@ namespace Photocore.CameraCapture
 
         internal bool TryGetIdleCameraForPreview(out VirtualCamera camera)
         {
-            if (State == ExposureState.Idle && _camera != null)
+            // Paused counts as idle here too: the lens is still live, just not accumulating, and a
+            // resumable-in-place pause (see Pause/Resume) now holds this state for as long as the
+            // player leaves the exposure paused rather than flashing through it back to Idle.
+            if ((State == ExposureState.Idle || State == ExposureState.Paused) && _camera != null)
             {
                 camera = _camera;
                 return true;
@@ -177,7 +180,7 @@ namespace Photocore.CameraCapture
             return false;
         }
 
-        internal bool HasIdleCameraForPreview => State == ExposureState.Idle && _camera != null;
+        internal bool HasIdleCameraForPreview => (State == ExposureState.Idle || State == ExposureState.Paused) && _camera != null;
 
         internal void ClearCamera() => DestroyCamera();
 
@@ -218,6 +221,7 @@ namespace Photocore.CameraCapture
                 _pauseStartedMs = _clientApi.ElapsedMilliseconds;
                 _shutterFrozenMs = _pauseStartedMs;
                 State = ExposureState.Paused;
+                ExposurePreviewSink?.EndExposurePassthrough();
             }
         }
 
@@ -230,6 +234,7 @@ namespace Photocore.CameraCapture
                 _pauseStartedMs = 0;
                 _shutterFrozenMs = 0;
                 State = ExposureState.Capturing;
+                ExposurePreviewSink?.BeginExposurePassthrough();
             }
         }
 

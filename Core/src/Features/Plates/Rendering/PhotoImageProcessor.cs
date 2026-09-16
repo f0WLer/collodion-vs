@@ -1,5 +1,6 @@
 ﻿using SkiaSharp;
 using Vintagestory.API.Client;
+using Vintagestory.API.MathTools;
 
 namespace Photocore.Plates.Rendering
 {
@@ -16,9 +17,7 @@ namespace Photocore.Plates.Rendering
             for (int i = 0; i < 256; i++)
             {
                 if (identity) { lut[i] = (byte)i; continue; }
-                float lifted = MathF.Pow(i / 255f, gamma) * 255f;
-                if (lifted < 0f) lifted = 0f;
-                if (lifted > 255f) lifted = 255f;
+                float lifted = GameMath.Clamp(MathF.Pow(i / 255f, gamma) * 255f, 0f, 255f);
                 lut[i] = (byte)(lifted + 0.5f);
             }
             return lut;
@@ -98,8 +97,7 @@ namespace Photocore.Plates.Rendering
                 }
 
                 float t = maxDeveloperPours <= 1 ? 1f : (developPours - 1) / (float)(maxDeveloperPours - 1);
-                if (t < 0f) t = 0f;
-                if (t > 1f) t = 1f;
+                t = GameMath.Clamp(t, 0f, 1f);
 
                 if (useDevelopedStage)
                 {
@@ -326,8 +324,7 @@ namespace Photocore.Plates.Rendering
         private static SKColor PaperPixel(float r, float g, float b, float gamma, float strength, byte depR, byte depG, byte depB)
         {
             float lum = 0.299f * r + 0.587f * g + 0.114f * b;
-            float deposit = MathF.Pow(1f - lum, gamma) * strength;
-            if (deposit < 0f) deposit = 0f; else if (deposit > 1f) deposit = 1f;
+            float deposit = GameMath.Clamp(MathF.Pow(1f - lum, gamma) * strength, 0f, 1f);
             byte or = (byte)(PaperBaseR + (depR - PaperBaseR) * deposit);
             byte og = (byte)(PaperBaseG + (depG - PaperBaseG) * deposit);
             byte ob = (byte)(PaperBaseB + (depB - PaperBaseB) * deposit);
@@ -341,20 +338,19 @@ namespace Photocore.Plates.Rendering
         private static void ApplyNegativeSilverVisuals(SKBitmap bmp, float t)
         {
             if (bmp == null) return;
-            if (t < 0f) t = 0f;
-            if (t > 1f) t = 1f;
+            t = GameMath.Clamp(t, 0f, 1f);
 
             // Smoothstep the progress so the reveal is middle-heavy: a faint first pour,
             // the bulk of the image emerging across pours 2-4, and only the deepest shadows
             // left to fill on the final pour (avoids the abrupt jump at the last step).
-            float te = t * t * (3f - 2f * t);
+            float te = GameMath.SmoothStep(t);
 
             // Density gate: at te=0 only top 15% density passes; at te=1 everything passes.
-            float gate = Lerp(0.85f, 0f, te);
+            float gate = GameMath.Lerp(0.85f, 0f, te);
             // Max alpha for pixels that pass the gate: faint at first, full at te=1.
-            float maxAlpha = Lerp(0.4f, 1f, te);
+            float maxAlpha = GameMath.Lerp(0.4f, 1f, te);
             // Edge fade: early pours develop center first; corners fill in last.
-            float edgeFade = Lerp(0.55f, 0f, te);
+            float edgeFade = GameMath.Lerp(0.55f, 0f, te);
 
             int w = bmp.Width;
             int h = bmp.Height;
@@ -414,21 +410,13 @@ namespace Photocore.Plates.Rendering
                             effectiveAlpha *= (1f - edge * edgeFade);
                         }
 
-                        if (effectiveAlpha < 0f) effectiveAlpha = 0f;
-                        if (effectiveAlpha > 1f) effectiveAlpha = 1f;
+                        effectiveAlpha = GameMath.Clamp(effectiveAlpha, 0f, 1f);
 
                         row[i + 3] = (byte)(effectiveAlpha * 255f);
                         // RGB (silver color) is unchanged.
                     }
                 }
             }
-        }
-
-        private static float Lerp(float a, float b, float t)
-        {
-            if (t < 0f) t = 0f;
-            if (t > 1f) t = 1f;
-            return a + (b - a) * t;
         }
     }
 }

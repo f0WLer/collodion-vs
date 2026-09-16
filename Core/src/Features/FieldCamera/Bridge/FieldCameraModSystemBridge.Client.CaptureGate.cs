@@ -36,7 +36,7 @@ namespace Photocore.FieldCamera
                         camStack,
                         owner.ClientApi.World,
                         out loadedPlateStack,
-                        ex => Log.Debug(owner.ClientApi.Logger, "viewfinder loaded plate resolve failed: {0}", ex.Message));
+                        ex => owner.ClientApi.Logger.Debug("viewfinder loaded plate resolve failed: {0}", ex.Message));
 
                     // Keep capture gate permissive when only the lightweight loaded-code attribute exists.
                     if (loadedPlateStack != null && !CameraEligibility.IsPlateExposable(loadedPlateStack))
@@ -78,7 +78,7 @@ namespace Photocore.FieldCamera
                 }
                 catch (Exception ex)
                 {
-                    if (owner.IsBestEffortDebugLoggingEnabled) Log.Warn(owner.ClientApi.Logger, "capture request validation failed: {0}", ex.Message);
+                    if (owner.IsBestEffortDebugLoggingEnabled) owner.ClientApi.Logger.Warning("capture request validation failed: {0}", ex.Message);
                     return false;
                 }
 

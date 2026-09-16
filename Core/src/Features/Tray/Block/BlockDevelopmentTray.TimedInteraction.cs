@@ -40,7 +40,7 @@ namespace Photocore.Tray
             }
             catch (Exception ex)
             {
-                Log.Debug(world.Logger, "OnBlockInteractStop timed-release check failed: {0}", ex.Message);
+                world.Logger.Debug("OnBlockInteractStop timed-release check failed: {0}", ex.Message);
             }
 
             TrayTimedInteractionState.Clear(byPlayer);
@@ -206,7 +206,7 @@ namespace Photocore.Tray
 
                 newPlate = new ItemStack(photoPlateItem);
                 try { newPlate.Attributes.MergeTree(plate.Attributes.Clone()); }
-                catch (Exception ex) { Log.Warn(world?.Logger, "TryApplyDeveloperPourServer: attribute merge failed: {0}", ex.Message); }
+                catch (Exception ex) { world?.Logger.Warning("TryApplyDeveloperPourServer: attribute merge failed: {0}", ex.Message); }
             }
 
             int newPours = currentPours + 1;
@@ -239,7 +239,7 @@ namespace Photocore.Tray
 
             ItemStack finishedPlate = new ItemStack(photoPlateItem);
             try { finishedPlate.Attributes.MergeTree(plate.Attributes.Clone()); }
-            catch (Exception ex) { Log.Warn(world?.Logger, "TryApplyFixerPourServer: attribute merge failed: {0}", ex.Message); }
+            catch (Exception ex) { world?.Logger.Warning("TryApplyFixerPourServer: attribute merge failed: {0}", ex.Message); }
 
             finishedPlate.Attributes.RemoveAttribute(PlateAttributes.PhotographerUid);
             PlateAttributes.SetStage(finishedPlate, PlateStage.Finished);

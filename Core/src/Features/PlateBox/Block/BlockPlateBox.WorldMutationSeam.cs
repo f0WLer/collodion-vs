@@ -110,12 +110,12 @@ namespace Photocore.PlateBox
                         if (world.Side != EnumAppSide.Server) return;
                         PlaySoundNow(world, x, y, z, sound, pitch, volume);
                     }
-                    catch (Exception ex) { Log.Debug(world.Logger, "PlaySoundWithDelay callback failed: {0}", ex.Message); }
+                    catch (Exception ex) { world.Logger.Debug("PlaySoundWithDelay callback failed: {0}", ex.Message); }
                 }, delayMs);
             }
             catch (Exception ex)
             {
-                Log.Warn(world.Logger, "PlaySoundWithDelay scheduling failed, using immediate fallback: {0}", ex.Message);
+                world.Logger.Warning("PlaySoundWithDelay scheduling failed, using immediate fallback: {0}", ex.Message);
                 PlaySoundNow(world, x, y, z, sound, pitch, volume);
             }
         }

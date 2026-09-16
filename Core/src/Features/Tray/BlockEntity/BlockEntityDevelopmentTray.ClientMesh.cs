@@ -36,7 +36,7 @@ namespace Photocore.Tray
             }
             catch (Exception ex)
             {
-                Log.Debug(capi.Logger, "RequestClientMeshRebuild enqueue failed: {0}", ex.Message);
+                capi.Logger.Debug("RequestClientMeshRebuild enqueue failed: {0}", ex.Message);
                 lock (_clientMeshLock) _clientMeshQueued = false;
             }
         }

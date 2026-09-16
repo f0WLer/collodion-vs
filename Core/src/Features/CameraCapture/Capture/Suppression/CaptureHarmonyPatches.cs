@@ -71,8 +71,6 @@ namespace Photocore.CameraCapture
                 _modelMatChecked = true;
                 FieldInfo? f = AccessTools.Field(__instance.GetType(), "ModelMat");
                 _modelMatField = f?.FieldType == typeof(float[]) ? f : null;
-                if (_modelMatField == null)
-                    Log.Warn(null, "'ModelMat' field not found on player shape renderer — self-portrait matrix correction disabled.");
             }
             if (_modelMatField == null) return;
 

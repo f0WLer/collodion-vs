@@ -133,7 +133,7 @@ namespace Photocore.Tray
             }
             catch (Exception ex)
             {
-                Log.Debug(capi.Logger, "TryGetPourOverlayAlpha failed: {0}", ex.Message);
+                capi.Logger.Debug("TryGetPourOverlayAlpha failed: {0}", ex.Message);
                 return false;
             }
         }
@@ -171,7 +171,7 @@ namespace Photocore.Tray
             }
             catch (Exception ex)
             {
-                Log.Debug(capi?.Logger, "development tray interaction config lookup failed: {0}", ex.Message);
+                capi?.Logger.Debug("development tray interaction config lookup failed: {0}", ex.Message);
                 return null;
             }
         }

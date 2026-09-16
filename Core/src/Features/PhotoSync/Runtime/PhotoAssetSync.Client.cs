@@ -108,7 +108,7 @@ namespace Photocore.PhotoSync.Runtime
 
             if (bytes.Length <= 0 || bytes.Length > GetMaxTransferBytes())
             {
-                Log.Warn(_mod.ClientApi.Logger, $"not uploading photo {normalizedPhotoId} (size {bytes.Length} bytes exceeds limit)");
+                _mod.ClientApi.Logger.Warning($"not uploading photo {normalizedPhotoId} (size {bytes.Length} bytes exceeds limit)");
                 return;
             }
 
@@ -134,7 +134,7 @@ namespace Photocore.PhotoSync.Runtime
 
             if (!LooksLikePng(completed.Buffer, completed.TotalSize))
             {
-                Log.Warn(_mod.ClientApi.Logger, $"downloaded bytes for {photoId} do not look like PNG; ignoring");
+                _mod.ClientApi.Logger.Warning($"downloaded bytes for {photoId} do not look like PNG; ignoring");
                 // Terminal for this transfer and nothing re-requests on a store waiter's behalf —
                 // resolve as missing rather than parking waiters until their tokens fire.
                 ClientResolvePhotoWaiters(photoId, PhotoFetchResult.Missing);
@@ -143,7 +143,7 @@ namespace Photocore.PhotoSync.Runtime
 
             if (!TryWritePhotoBytes(photoId, completed.Buffer, writeLock: null, skipIfExists: false, out string? error))
             {
-                Log.Warn(_mod.ClientApi.Logger, $"failed writing downloaded photo {photoId}: {error ?? "Unknown write error"}");
+                _mod.ClientApi.Logger.Warning($"failed writing downloaded photo {photoId}: {error ?? "Unknown write error"}");
                 // The transfer itself succeeded — hand waiters the in-memory bytes even though the
                 // disk cache write failed; the render funnels retry the disk read on their own cadence.
                 ClientResolvePhotoWaiters(photoId, PhotoFetchResult.Found(completed.Buffer));
@@ -237,7 +237,7 @@ namespace Photocore.PhotoSync.Runtime
 
             if (packet.Ok) return;
 
-            Log.Warn(_mod.ClientApi.Logger, $"photo transfer ack failed for {packet.PhotoId}: {packet.Error}");
+            _mod.ClientApi.Logger.Warning($"photo transfer ack failed for {packet.PhotoId}: {packet.Error}");
 
             // Only download NACKs mean "this photo is unavailable" — an upload NACK is about bytes we still
             // hold locally and is often transient, so it must not flag the photo as missing.

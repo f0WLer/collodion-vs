@@ -63,7 +63,7 @@ namespace Photocore
 
             if (!policy.WarnOnFailure)
             {
-                Log.Debug(logger, "best-effort '{0}' failed: {1}", operation, ex.Message);
+                logger.Debug("best-effort '{0}' failed: {1}", operation, ex.Message);
                 return;
             }
 
@@ -84,11 +84,11 @@ namespace Photocore
 
             if (shouldWarn)
             {
-                Log.Warn(logger, "best-effort '{0}' failed: {1}", operation, ex.Message);
+                logger.Warning("best-effort '{0}' failed: {1}", operation, ex.Message);
                 return;
             }
 
-            Log.Debug(logger, "best-effort '{0}' failed (suppressed warn): {1}", operation, ex.Message);
+            logger.Debug("best-effort '{0}' failed (suppressed warn): {1}", operation, ex.Message);
         }
     }
 }

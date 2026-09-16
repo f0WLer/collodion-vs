@@ -95,7 +95,7 @@ namespace Photocore.PlateBox
             }
             catch (Exception ex)
             {
-                Log.Warn(world.Logger, "PlateBoxWalkSound delay scheduling failed, using immediate fallback: {0}", ex.Message);
+                world.Logger.Warning("PlateBoxWalkSound delay scheduling failed, using immediate fallback: {0}", ex.Message);
                 PlaySoundAtEntityNow(world, atEntity, dualCallByPlayer, sound, pitch, volume);
             }
         }
@@ -108,7 +108,7 @@ namespace Photocore.PlateBox
             }
             catch (Exception ex)
             {
-                Log.Debug(world.Logger, "PlateBoxWalkSound play failed: {0}", ex.Message);
+                world.Logger.Debug("PlateBoxWalkSound play failed: {0}", ex.Message);
             }
         }
     }

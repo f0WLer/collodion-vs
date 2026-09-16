@@ -14,7 +14,7 @@ namespace Photocore
         {
             if (api == null || api.Side != EnumAppSide.Server) return;
             if (PhotocoreConfigAccess.ResolveConfig(api)?.Client?.ShowDebugLogs != true) return;
-            Log.Notify(api.Logger, format, args);
+            api.Logger.Notification(format, args);
         }
     }
 }

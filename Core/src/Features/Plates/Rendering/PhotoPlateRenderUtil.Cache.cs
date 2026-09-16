@@ -91,7 +91,7 @@ namespace Photocore.Plates.Rendering
             }
             catch (Exception ex)
             {
-                Log.Debug(capi.Logger, logContext + " photo-seen notification failed: {0}", ex.Message);
+                capi.Logger.Debug(logContext + " photo-seen notification failed: {0}", ex.Message);
             }
 
             // Physical medium (glass density map vs opaque paper positive), from the item's plateMedium attribute.

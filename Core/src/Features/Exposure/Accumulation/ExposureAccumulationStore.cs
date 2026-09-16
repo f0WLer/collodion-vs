@@ -29,9 +29,8 @@ namespace Photocore.Exposure
                 gz.Write(data, 0, data.Length);
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Log.Warn(null, $"photocore: failed to save partial exposure '{exposureId}': {e.Message}");
                 return false;
             }
         }
@@ -53,9 +52,8 @@ namespace Photocore.Exposure
                 data = ms.ToArray();
                 return data.Length > 0;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Log.Warn(null, $"photocore: partial exposure '{exposureId}' is corrupt or unreadable — starting fresh: {e.Message}");
                 return false;
             }
         }
@@ -79,7 +77,7 @@ namespace Photocore.Exposure
         {
             if (string.IsNullOrEmpty(exposureId)) return;
             try { File.Delete(GetStorePath(exposureId)); }
-            catch (Exception e) { Log.Warn(null, $"photocore: could not delete partial exposure '{exposureId}': {e.Message}"); }
+            catch (Exception) { }
         }
     }
 }

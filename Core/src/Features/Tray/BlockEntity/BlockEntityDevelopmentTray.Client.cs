@@ -66,7 +66,7 @@ namespace Photocore.Tray
                 }
                 catch (Exception ex)
                 {
-                    Log.Warn(capiInit.Logger, "ClientInitialize: body mesh tessellation failed: {0}", ex.Message);
+                    capiInit.Logger.Warning("ClientInitialize: body mesh tessellation failed: {0}", ex.Message);
                 }
             }
 
@@ -102,7 +102,7 @@ namespace Photocore.Tray
                         RequestClientMeshRebuild();
 
                         try { capi.World.BlockAccessor.MarkBlockDirty(Pos); }
-                        catch (Exception ex) { Log.Debug(capi.Logger, "overlay tick: MarkBlockDirty failed: {0}", ex.Message); }
+                        catch (Exception ex) { capi.Logger.Debug("overlay tick: MarkBlockDirty failed: {0}", ex.Message); }
                         return;
                     }
 
@@ -115,12 +115,12 @@ namespace Photocore.Tray
                     RequestClientMeshRebuild();
 
                     try { capi.World.BlockAccessor.MarkBlockDirty(Pos); }
-                    catch (Exception ex) { Log.Debug(capi.Logger, "overlay tick: MarkBlockDirty failed: {0}", ex.Message); }
+                    catch (Exception ex) { capi.Logger.Debug("overlay tick: MarkBlockDirty failed: {0}", ex.Message); }
                 }, 50);
             }
             catch (Exception ex)
             {
-                Log.Warn(api.Logger, "ClientInitialize: failed to register overlay tick listener: {0}", ex.Message);
+                api.Logger.Warning("ClientInitialize: failed to register overlay tick listener: {0}", ex.Message);
             }
         }
 

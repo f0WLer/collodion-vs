@@ -1,6 +1,7 @@
 # Build outputs (includes the packaged <modid>-*-Debug.zip written to each project's bin/)
 bin/
 obj/
+Releases/
 
 # User- and IDE-specific files
 .vs/

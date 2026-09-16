@@ -3,6 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- One level deeper than the usual bin\$(Configuration) so the output lands as a mod folder inside a
+         folder of mods, which is the shape the game's addModPath option wants for F5 debugging. The zip
+         ZipBuild produces below leaves the .pdb out, so breakpoints only bind against this loose copy. -->
+    <OutputPath>bin\$(Configuration)\Mods\kosphotography</OutputPath>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

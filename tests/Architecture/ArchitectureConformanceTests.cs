@@ -96,4 +96,16 @@ public class ArchitectureConformanceTests
             .ToList();
         Assert.True(offenders.Count == 0, $"{project}/assets contains foreign domain(s): " + string.Join(", ", offenders));
     }
+
+    // IMM discovers config/imm.json by mod id, so both heads must ship their own copy even though
+    // it describes the one shared photocore.json -- there's no way to point IMM at a single Core
+    // asset the way ConfigLib's domain-keyed lookup allows. Both copies must therefore stay
+    // byte-identical; this catches one being edited without the other.
+    [Fact]
+    public void ImmDescriptorsAreIdenticalAcrossHeads()
+    {
+        string collodion = File.ReadAllText(Path.Combine(RepoRoot, "Collodion/assets/collodion/config/imm.json"));
+        string kosphotography = File.ReadAllText(Path.Combine(RepoRoot, "Kosphotography/assets/kosphotography/config/imm.json"));
+        Assert.Equal(collodion, kosphotography);
+    }
 }

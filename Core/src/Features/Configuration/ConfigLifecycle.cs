@@ -8,8 +8,8 @@ namespace Photocore.Configuration
     {
         // Loads persisted config, falling back to defaults when missing/invalid. Always rewrites the
         // file after normalizing so its on-disk shape stays complete (e.g. a newly added field appears
-        // for existing players too) — needed for external tools like ConfigLib that bind directly to
-        // this file's paths rather than going through EnsureNormalized/ClampInPlace themselves.
+        // for existing players too) - needed for external tools like ConfigLib/IMM that bind directly
+        // to this file's paths rather than going through EnsureNormalized/ClampInPlace themselves.
         internal static PhotocoreConfig LoadOrCreate(ICoreAPICommon api, string fileName)
         {
             PhotocoreConfig? cfg;

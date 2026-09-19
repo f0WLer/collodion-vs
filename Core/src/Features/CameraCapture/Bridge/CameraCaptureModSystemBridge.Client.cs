@@ -80,9 +80,9 @@ namespace Photocore.CameraCapture
 
         private long? _clientConfigOverrideRetryTickListenerId;
 
-        // Cached so a later local reload (e.g. a ConfigLib edit) can re-pin these to the server's value
-        // in multiplayer instead of letting a joining player's own local file value leak back in —
-        // see ConfigLibIntegration.ReapplyConfig.
+        // Cached so a later local reload (e.g. a ConfigLib or IMM edit) can re-pin these to the server's
+        // value in multiplayer instead of letting a joining player's own local file value leak back in -
+        // see ExternalConfigIntegration.OnClientConfigSaved.
         internal int? ServerPhotoCaptureMaxDimensionOverride { get; private set; }
         internal bool? ServerApplyFinishingEffectsOverride { get; private set; }
         internal int? ServerPhotoSeenPingIntervalSecondsOverride { get; private set; }

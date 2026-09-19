@@ -1,0 +1,137 @@
+{
+  "Configuration": [
+    {
+      "ConfigFile": "photocore.json",
+      "ConfigLabel": "photocore:configlib-section-clientonly",
+      "ConfigSide": "Client",
+      "Settings": [
+        {
+          "Type": "Boolean",
+          "Label": "photocore:configlib-showdebuglogs-name",
+          "Description": "photocore:imm-showdebuglogs-comment",
+          "Map": "Client.ShowDebugLogs"
+        },
+        {
+          "Type": "Integer",
+          "Label": "photocore:configlib-maxaccumulatedframes-name",
+          "Description": "photocore:imm-maxaccumulatedframes-comment",
+          "Map": "Viewfinder.MaxAccumulatedFrames"
+        }
+      ]
+    },
+    {
+      "ConfigFile": "photocore.json",
+      "ConfigLabel": "photocore:configlib-section-photosync",
+      "Settings": [
+        {
+          "Type": "Integer",
+          "Label": "photocore:configlib-photoseenpinginterval-name",
+          "Description": "photocore:imm-photoseenpinginterval-comment",
+          "Map": "PhotoSync.PhotoSeenPingIntervalSeconds"
+        },
+        {
+          "Type": "Decimal",
+          "Label": "photocore:configlib-photodeletegracehours-name",
+          "Description": "photocore:imm-photodeletegracehours-comment",
+          "Map": "PhotoSync.PhotoDeleteGraceHours"
+        }
+      ]
+    },
+    {
+      "ConfigFile": "photocore.json",
+      "ConfigLabel": "photocore:configlib-section-plateprocessing",
+      "Settings": [
+        {
+          "Type": "Integer",
+          "Label": "photocore:configlib-chemicalunitsperuse-name",
+          "Description": "photocore:imm-chemicalunitsperuse-comment",
+          "Map": "PlateProcessing.DevelopmentTrayChemicalUnitsPerUse"
+        },
+        {
+          "Type": "Decimal",
+          "Label": "photocore:configlib-polishseconds-name",
+          "Description": "photocore:imm-polishseconds-comment",
+          "Map": "PlateProcessing.PolishSeconds"
+        },
+        {
+          "Type": "Decimal",
+          "Label": "photocore:configlib-sensitizationpourseconds-name",
+          "Description": "photocore:imm-sensitizationpourseconds-comment",
+          "Map": "PlateProcessing.SensitizationPourSeconds"
+        },
+        {
+          "Type": "Integer",
+          "Label": "photocore:configlib-clothconsumedperpolish-name",
+          "Description": "photocore:imm-clothconsumedperpolish-comment",
+          "Map": "PlateProcessing.ClothConsumedPerPolish"
+        },
+        {
+          "Type": "Decimal",
+          "Label": "photocore:configlib-wetdurationhours-name",
+          "Description": "photocore:imm-wetdurationhours-comment",
+          "Map": "PlateProcessing.WetDurationHours"
+        },
+        {
+          "Type": "Decimal",
+          "Label": "photocore:configlib-plateboxdryingmultiplier-name",
+          "Description": "photocore:imm-plateboxdryingmultiplier-comment",
+          "Map": "PlateProcessing.PlateBoxDryingMultiplier"
+        },
+        {
+          "Type": "Boolean",
+          "Label": "photocore:configlib-allowreclaimingothersexposures-name",
+          "Description": "photocore:imm-allowreclaimingothersexposures-comment",
+          "Map": "PlateProcessing.AllowReclaimingOthersExposures"
+        }
+      ]
+    },
+    {
+      "ConfigFile": "photocore.json",
+      "ConfigLabel": "photocore:configlib-section-developmenttray",
+      "Settings": [
+        {
+          "Type": "Decimal",
+          "Label": "photocore:configlib-developerpourduration-name",
+          "Description": "photocore:imm-developerpourduration-comment",
+          "Map": "DevelopmentTrayInteractions.Developer.DurationSeconds"
+        },
+        {
+          "Type": "Decimal",
+          "Label": "photocore:configlib-fixerpourduration-name",
+          "Description": "photocore:imm-fixerpourduration-comment",
+          "Map": "DevelopmentTrayInteractions.Fixer.DurationSeconds"
+        },
+        {
+          "Type": "Decimal",
+          "Label": "photocore:configlib-waterpourduration-name",
+          "Description": "photocore:imm-waterpourduration-comment",
+          "Map": "DevelopmentTrayInteractions.Water.DurationSeconds"
+        }
+      ]
+    },
+    {
+      "ConfigFile": "photocore.json",
+      "ConfigLabel": "photocore:configlib-section-viewfinder",
+      "Settings": [
+        {
+          "Type": "Boolean",
+          "Label": "photocore:configlib-pausedryingduringexposure-name",
+          "Description": "photocore:imm-pausedryingduringexposure-comment",
+          "Map": "Viewfinder.PauseDryingDuringExposure"
+        },
+        {
+          "Type": "Boolean",
+          "Label": "photocore:configlib-applyfinishingeffects-name",
+          "Description": "photocore:imm-applyfinishingeffects-comment",
+          "Map": "Viewfinder.ApplyFinishingEffects"
+        },
+        {
+          "Type": "Integer",
+          "Label": "photocore:configlib-photocapturemaxdimension-name",
+          "Description": "photocore:imm-photocapturemaxdimension-comment",
+          "Map": "Viewfinder.PhotoCaptureMaxDimension"
+        }
+      ]
+    }
+  ]
+}

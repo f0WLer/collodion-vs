@@ -28,9 +28,9 @@ namespace Photocore
             PlateBoxWalkSoundEvents.ConfigureServerPlateBoxWalkSound(api);
 
             // Server-enforced settings (PlateProcessing, tray timings) are read off this instance's
-            // Config, so it needs its own reload when the ConfigLib GUI saves photocore.json. Safe
-            // whether or not ConfigLib is installed.
-            Configuration.ConfigLibIntegration.RegisterServer(api, this);
+            // Config, so it needs its own reload when the ConfigLib or IMM GUI saves photocore.json.
+            // Safe whether or not either mod is installed.
+            Configuration.ExternalConfigIntegration.RegisterServer(api, this);
         }
     }
 }

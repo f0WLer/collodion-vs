@@ -27,9 +27,9 @@ namespace Photocore
             // Stop held translucent plates from depth-culling entities/frames behind them.
             Plates.Rendering.HeldPlateDepthPatch.Apply(api);
 
-            // Safe with or without ConfigLib installed: this only subscribes to an event bus name, and
-            // nothing pushes that event when ConfigLib is absent.
-            ConfigLibIntegration.RegisterClient(api, this);
+            // Safe with or without ConfigLib/IMM installed: this only subscribes to event bus names, and
+            // nothing pushes those events when the owning mod is absent.
+            ExternalConfigIntegration.RegisterClient(api, this);
         }
 
         // Lazily ensures the full client config tree is available before UI or render code reads from it.
